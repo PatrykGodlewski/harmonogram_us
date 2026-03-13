@@ -1,0 +1,25 @@
+{
+  "name": "@repo/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./auth/hash": "./src/auth/hash.ts",
+    "./auth/session": "./src/auth/session.ts",
+    "./auth/middleware": "./src/auth/middleware.ts",
+    "./handlers/login": "./src/handlers/login.ts",
+    "./handlers/events": "./src/handlers/events.ts",
+    "./procedures": "./src/procedures.ts",
+    "./events": "./src/handlers/events.ts"
+  },
+  "dependencies": {
+    "@repo/db": "workspace:*",
+    "@tanstack/react-start": "^1.166.9"
+  },
+  "scripts": {
+    "lint": "biome check ."
+  },
+  "devDependencies": {
+    "@repo/config": "workspace:*"
+  }
+}

@@ -1,0 +1,12 @@
+---
+description: Do not create barrel/index files in packages/api
+globs: packages/api/**/*
+alwaysApply: false
+---
+
+# packages/api: No Barrel Files
+
+**Do not create barrel files in `packages/api`.** No index.ts that re-exports from sibling files, including a main `src/index.ts`.
+
+- Use direct subpath imports: `@repo/api/auth/hash`, `@repo/api/handlers/login`, etc.
+- Export directly from each file via package.json exports
