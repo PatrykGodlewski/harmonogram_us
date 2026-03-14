@@ -1,42 +1,43 @@
 {
-  "name": "web",
-  "version": "0.0.0",
-  "private": true,
-  "sideEffects": false,
-  "type": "module",
-  "scripts": {
-    "dev": "vite dev",
-    "lint": "biome check .",
-    "build": "vite build",
-    "start": "node .output/server/index.mjs"
-  },
-  "dependencies": {
-    "@repo/api": "workspace:*",
-    "@repo/env": "workspace:*",
-    "@repo/db": "workspace:*",
-    "@repo/ui": "workspace:*",
-    "@tanstack/react-query": "^5.90.21",
-    "@tanstack/react-query-devtools": "^5.91.3",
-    "@tanstack/react-router": "^1.167.0",
-    "@tanstack/react-router-ssr-query": "^1.166.7",
-    "@tanstack/react-start": "^1.166.10",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "^2.4.7",
-    "@repo/config": "workspace:*",
-    "@tailwindcss/vite": "^4.2.1",
-    "@types/node": "^25.5.0",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
-    "autoprefixer": "^10.4.27",
-    "babel-plugin-react-compiler": "^1.0.0",
-    "tailwindcss": "^4.2.1",
-    "tailwindcss-animate": "^1.0.7",
-    "typescript": "^5.9.3",
-    "vite": "^8.0.0",
-    "vite-tsconfig-paths": "^6.1.1"
-  }
+	"name": "web",
+	"version": "0.0.0",
+	"private": true,
+	"sideEffects": false,
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev",
+		"lint": "biome check .",
+		"build": "vite build",
+		"start": "node .output/server/index.mjs"
+	},
+	"dependencies": {
+		"@repo/api": "workspace:*",
+		"@repo/env": "workspace:*",
+		"@repo/db": "workspace:*",
+		"@repo/ui": "workspace:*",
+		"@tanstack/react-form": "^1.28.4",
+		"@tanstack/react-query": "^5.90.21",
+		"@tanstack/react-query-devtools": "^5.91.3",
+		"@tanstack/react-router": "^1.167.0",
+		"@tanstack/react-router-ssr-query": "^1.166.7",
+		"@tanstack/react-start": "^1.166.10",
+		"react": "^19.2.4",
+		"react-dom": "^19.2.4"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.7",
+		"@repo/config": "workspace:*",
+		"@tailwindcss/vite": "^4.2.1",
+		"@types/node": "^25.5.0",
+		"@types/react": "^19.2.14",
+		"@types/react-dom": "^19.2.3",
+		"@vitejs/plugin-react": "^6.0.1",
+		"autoprefixer": "^10.4.27",
+		"babel-plugin-react-compiler": "^1.0.0",
+		"tailwindcss": "^4.2.1",
+		"tailwindcss-animate": "^1.0.7",
+		"typescript": "^5.9.3",
+		"vite": "^8.0.0",
+		"vite-tsconfig-paths": "^6.1.1"
+	}
 }

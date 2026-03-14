@@ -1,14 +1,14 @@
 {
-  "extends": "@repo/config/tsconfig.base.json",
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@repo/db/client": ["../db/src/client.ts"],
-      "@repo/db/queries/users": ["../db/src/queries/users.ts"],
-      "@repo/db/schema/events": ["../db/src/schema/events.ts"],
-      "@repo/db/schema/users": ["../db/src/schema/users.ts"]
-    }
-  },
-  "include": ["./src/**/*.ts"],
-  "exclude": ["node_modules", "dist"]
+	"extends": "@repo/config/tsconfig.base.json",
+	"compilerOptions": {
+		"baseUrl": ".",
+		"paths": {
+			"@repo/db/client": ["../db/src/client.ts"],
+			"@repo/db/queries/users": ["../db/src/queries/users.ts"],
+			"@repo/db/schema/events": ["../db/src/schema/events.ts"],
+			"@repo/db/schema/users": ["../db/src/schema/users.ts"]
+		}
+	},
+	"include": ["./src/**/*.ts"],
+	"exclude": ["node_modules", "dist"]
 }

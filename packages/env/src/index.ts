@@ -4,9 +4,7 @@ import { z } from 'zod';
 
 export const env = createEnv({
 	server: {
-		NODE_ENV: z
-			.enum(['development', 'production', 'test'])
-			.default('development'),
+		NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 		SESSION_SECRET: z
 			.string({ message: 'SESSION_SECRET must be provided' })
 			.min(32, 'SESSION_SECRET must be at least 32 characters'),

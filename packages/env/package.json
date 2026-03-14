@@ -1,20 +1,20 @@
 {
-  "name": "@repo/env",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
-  },
-  "scripts": {
-    "lint": "biome check ."
-  },
-  "dependencies": {
-    "@t3-oss/env-core": "^0.13.0",
-    "dotenv": "^16.4.5",
-    "zod": "^3.25.0"
-  },
-  "devDependencies": {
-    "@repo/config": "workspace:*"
-  }
+	"name": "@repo/env",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"scripts": {
+		"lint": "biome check ."
+	},
+	"dependencies": {
+		"@t3-oss/env-core": "^0.13.0",
+		"dotenv": "^16.4.5",
+		"zod": "^3.25.0"
+	},
+	"devDependencies": {
+		"@repo/config": "workspace:*"
+	}
 }

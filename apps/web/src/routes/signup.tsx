@@ -1,8 +1,10 @@
-import { signupFn, type SignupInput, type SignupResult } from '@repo/api/handlers/signup';
+import { type SignupInput, type SignupResult, signupFn } from '@repo/api/handlers/signup';
 import { Auth } from '@repo/ui/composed/auth';
+import { useForm } from '@tanstack/react-form';
 import { useMutation } from '@tanstack/react-query';
 import { createFileRoute, useRouter } from '@tanstack/react-router';
 import { useServerFn } from '@tanstack/react-start';
+import { getErrorMessage } from '../utils/validation-error';
 
 export const Route = createFileRoute('/signup')({
 	component: SignupComp,
@@ -20,6 +22,21 @@ function SignupComp() {
 		},
 	});
 
+	const form = useForm({
+		defaultValues: {
+			email: '',
+			password: '',
+		},
+		onSubmit: ({ value }) => {
+			signupMutation.mutate({
+				data: {
+					email: value.email,
+					password: value.password,
+				},
+			});
+		},
+	});
+
 	return (
 		<div className="flex min-h-[50vh] items-center justify-center p-8">
 			<Auth
@@ -29,18 +46,11 @@ function SignupComp() {
 				loadingLabel="Signing up..."
 				onSubmit={(e) => {
 					e.preventDefault();
-					const form = e.target as HTMLFormElement;
-					const formData = new FormData(form);
-					signupMutation.mutate({
-						data: {
-							email: formData.get('email') as string,
-							password: formData.get('password') as string,
-						},
-					});
+					form.handleSubmit();
 				}}
 				afterSubmit={
 					signupMutation.isError ? (
-						<span role="alert">{signupMutation.error?.message ?? 'Something went wrong'}</span>
+						<span role="alert">{getErrorMessage(signupMutation.error)}</span>
 					) : signupMutation.data?.error ? (
 						<span role="alert">{signupMutation.data.message}</span>
 					) : signupMutation.isSuccess && !signupMutation.data?.error ? (
@@ -50,32 +60,44 @@ function SignupComp() {
 					) : null
 				}
 			>
-				<div>
-					<label htmlFor="email" className="block text-sm font-medium">
-						Email
-					</label>
-					<input
-						id="email"
-						name="email"
-						type="email"
-						required
-						disabled={signupMutation.isPending}
-						className="mt-1 w-full rounded-md border px-3 py-2"
-					/>
-				</div>
-				<div>
-					<label htmlFor="password" className="block text-sm font-medium">
-						Password
-					</label>
-					<input
-						id="password"
-						name="password"
-						type="password"
-						required
-						disabled={signupMutation.isPending}
-						className="mt-1 w-full rounded-md border px-3 py-2"
-					/>
-				</div>
+				<form.Field name="email">
+					{(field) => (
+						<div>
+							<label htmlFor={field.name} className="block text-sm font-medium">
+								Email
+							</label>
+							<input
+								id={field.name}
+								name={field.name}
+								type="email"
+								value={field.state.value}
+								onBlur={field.handleBlur}
+								onChange={(e) => field.handleChange(e.target.value)}
+								disabled={signupMutation.isPending}
+								className="mt-1 w-full rounded-md border px-3 py-2"
+							/>
+						</div>
+					)}
+				</form.Field>
+				<form.Field name="password">
+					{(field) => (
+						<div>
+							<label htmlFor={field.name} className="block text-sm font-medium">
+								Password
+							</label>
+							<input
+								id={field.name}
+								name={field.name}
+								type="password"
+								value={field.state.value}
+								onBlur={field.handleBlur}
+								onChange={(e) => field.handleChange(e.target.value)}
+								disabled={signupMutation.isPending}
+								className="mt-1 w-full rounded-md border px-3 py-2"
+							/>
+						</div>
+					)}
+				</form.Field>
 			</Auth>
 		</div>
 	);

@@ -1,0 +1,17 @@
+---
+description: Forbid type casting (as) in TypeScript
+globs: **/*.{ts,tsx}
+alwaysApply: true
+---
+
+# No Type Casting
+
+**Do not use type casting** (`as` or angle-bracket assertions) in this repo. Type assertions bypass type checking and hide bugs.
+
+Instead of casting:
+
+- Use type guards or predicates (`value is T`)
+- Narrow types with runtime checks and conditionals
+- Use generics or overloads where appropriate
+- Add proper types to APIs so inference works
+- Use `satisfies` when you need to narrow without widening

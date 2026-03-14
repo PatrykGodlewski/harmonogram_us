@@ -10,9 +10,7 @@ export const authMiddleware = createMiddleware({
 	const authHeader = request.headers.get('Authorization');
 	const sessionToken = authHeader?.replace(/^Bearer\s+/i, '');
 
-	const user = sessionToken
-		? { id: 1, email: 'admin@university.edu', name: 'Admin User' }
-		: null;
+	const user = sessionToken ? { id: 1, email: 'admin@university.edu', name: 'Admin User' } : null;
 
 	return next({
 		context: {

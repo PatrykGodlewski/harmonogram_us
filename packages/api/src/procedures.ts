@@ -8,6 +8,4 @@ import { authMiddleware } from './auth/middleware';
  */
 export const publicQueryFn = createServerFn({ method: 'GET' });
 
-export const protectedActionFn = createServerFn({ method: 'POST' }).middleware([
-	authMiddleware,
-]);
+export const protectedActionFn = createServerFn({ method: 'POST' }).middleware([authMiddleware]);

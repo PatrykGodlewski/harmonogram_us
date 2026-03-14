@@ -1,7 +1,11 @@
 import { hash, verify } from '@node-rs/argon2';
 
-export async function hashPassword(password: string): Promise<string> {
-	return hash(password, {
+export async function hashPassword(password: string | number | null | undefined): Promise<string> {
+	const pw = password != null ? String(password).trim() : '';
+	if (!pw) {
+		throw new Error('Password must be a non-empty string');
+	}
+	return hash(pw, {
 		memoryCost: 19456,
 		timeCost: 2,
 		outputLen: 32,
@@ -9,13 +13,11 @@ export async function hashPassword(password: string): Promise<string> {
 	});
 }
 
-export async function verifyPasswordHash(
-	storedHash: string,
-	password: string,
-): Promise<boolean> {
+export async function verifyPasswordHash(storedHash: string, password: string): Promise<boolean> {
 	if (!storedHash || typeof storedHash !== 'string') return false;
+	const pw = typeof password === 'string' ? password : String(password ?? '');
 	try {
-		return await verify(storedHash, password);
+		return await verify(storedHash, pw);
 	} catch {
 		return false;
 	}

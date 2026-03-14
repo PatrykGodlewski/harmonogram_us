@@ -8,9 +8,6 @@ export async function findUserByEmail(email: string) {
 }
 
 export async function createUser(email: string, password: string) {
-	const [user] = await db
-		.insert(users)
-		.values({ email, password })
-		.returning();
+	const [user] = await db.insert(users).values({ email, password }).returning();
 	return user;
 }

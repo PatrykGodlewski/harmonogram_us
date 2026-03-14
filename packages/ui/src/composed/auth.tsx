@@ -29,9 +29,7 @@ export function Auth({
 					{isLoading ? (loadingLabel ?? 'Loading...') : submitLabel}
 				</Button>
 			</form>
-			{afterSubmit ? (
-				<div className="mt-4 text-sm text-destructive">{afterSubmit}</div>
-			) : null}
+			{afterSubmit ? <div className="mt-4 text-sm text-destructive">{afterSubmit}</div> : null}
 		</div>
 	);
 }

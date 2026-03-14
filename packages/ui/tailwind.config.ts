@@ -1,4 +1,4 @@
-import type { Config } from "tailwindcss";
+import type { Config } from 'tailwindcss';
 
 /**
  * Tailwind v4 uses CSS-first config. Theme (@theme) and content (@source) live in
@@ -6,5 +6,5 @@ import type { Config } from "tailwindcss";
  * need content paths.
  */
 export default {
-	content: ["./src/**/*.{ts,tsx}"],
+	content: ['./src/**/*.{ts,tsx}'],
 } satisfies Config;

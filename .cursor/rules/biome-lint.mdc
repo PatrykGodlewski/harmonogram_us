@@ -1,0 +1,12 @@
+---
+description: Always verify changes with Biome linting
+alwaysApply: true
+---
+
+# Biome Linting
+
+**Always check Biome linting** when editing code in this repo.
+
+- After making edits, run `pnpm exec biome check .` (or `pnpm run lint`) to ensure no new lint or format issues.
+- Fix any Biome errors or warnings before considering the task done.
+- The project uses Biome for formatting and linting; keep changes consistent with `biome.json`.

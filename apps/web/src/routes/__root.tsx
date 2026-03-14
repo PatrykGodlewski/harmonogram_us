@@ -1,18 +1,19 @@
 /// <reference types="vite/client" />
-import appCss from '~/app.css?url';
+
+import { useAppSession } from '@repo/api/auth/session';
+import type { QueryClient } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import {
+	createRootRouteWithContext,
 	HeadContent,
 	Link,
 	Outlet,
 	Scripts,
-	createRootRouteWithContext,
 } from '@tanstack/react-router';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { QueryClientProvider } from '@tanstack/react-query';
-import type { QueryClient } from '@tanstack/react-query';
-import type { ReactNode } from 'react';
 import { createServerFn } from '@tanstack/react-start';
-import { useAppSession } from '@repo/api/auth/session';
+import type { ReactNode } from 'react';
+import appCss from '~/app.css?url';
 
 const getCurrentUserFn = createServerFn({ method: 'GET' }).handler(async () => {
 	const session = await useAppSession();

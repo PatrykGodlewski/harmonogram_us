@@ -1,7 +1,9 @@
 /// <reference types="node" />
 import { env } from '@repo/env';
-import { drizzle } from 'drizzle-orm/postgres-js';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { Pool } from 'pg';
 import { events } from './schema/events';
 import { users } from './schema/users';
 
-export const db = drizzle(env.DATABASE_URL, { schema: { events, users } });
+const pool = new Pool({ connectionString: env.DATABASE_URL });
+export const db = drizzle({ client: pool, schema: { events, users } });

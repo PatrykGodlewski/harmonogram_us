@@ -1,13 +1,8 @@
 /// <reference types="vite/client" />
-import appCss from '~/app.css?url';
-import {
-	HeadContent,
-	Link,
-	Outlet,
-	Scripts,
-	createRootRoute,
-} from '@tanstack/react-router';
+
+import { createRootRoute, HeadContent, Link, Outlet, Scripts } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
+import appCss from '~/app.css?url';
 
 function NotFound() {
 	return (

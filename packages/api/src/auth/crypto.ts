@@ -1,9 +1,13 @@
+import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
 import { DynamicBuffer } from '@oslojs/binary';
 import { decodeBase64 } from '@oslojs/encoding';
-import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
 import { env } from '@repo/env';
 
-const key = decodeBase64(env.ENCRYPTION_KEY) as Uint8Array;
+const raw = env.ENCRYPTION_KEY;
+if (typeof raw !== 'string' || !raw) {
+	throw new Error('ENCRYPTION_KEY must be a base64 string (16 bytes). Check .env at project root.');
+}
+const key = decodeBase64(raw) as Uint8Array;
 
 export function encrypt(data: Uint8Array): Uint8Array {
 	const iv = randomBytes(16);
@@ -24,16 +28,10 @@ export function decrypt(encrypted: Uint8Array): Uint8Array {
 	if (encrypted.byteLength < 33) {
 		throw new Error('Invalid encrypted data');
 	}
-	const decipher = createDecipheriv(
-		'aes-128-gcm',
-		key,
-		encrypted.slice(0, 16),
-	);
+	const decipher = createDecipheriv('aes-128-gcm', key, encrypted.slice(0, 16));
 	decipher.setAuthTag(encrypted.slice(encrypted.byteLength - 16));
 	const decrypted = new DynamicBuffer(0);
-	decrypted.write(
-		decipher.update(encrypted.slice(16, encrypted.byteLength - 16)),
-	);
+	decrypted.write(decipher.update(encrypted.slice(16, encrypted.byteLength - 16)));
 	decrypted.write(decipher.final());
 	return decrypted.bytes();
 }

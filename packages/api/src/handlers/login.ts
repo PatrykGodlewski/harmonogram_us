@@ -1,28 +1,39 @@
 import { findUserByEmail } from '@repo/db/queries/users';
 import { createServerFn } from '@tanstack/react-start';
-import { useAppSession } from '../auth/session';
-import type { AuthCredentials } from '../auth/schemas';
-import { loginInputSchema } from '../auth/schemas';
 import { verifyPasswordHash } from '../auth/hash';
+import { loginInputSchema } from '../auth/schemas';
+import { useAppSession } from '../auth/session';
 
-const loginErrors = {
-	userNotFound: {
-		error: true as const,
-		userNotFound: true,
-		message: 'User not found',
-	},
-	invalidPassword: { error: true as const, message: 'Incorrect password' },
+interface LoginError {
+	readonly error: true;
+	readonly message: string;
+}
+
+interface UserNotFoundError extends LoginError {
+	readonly userNotFound: true;
+}
+
+const USER_NOT_FOUND: UserNotFoundError = {
+	error: true,
+	userNotFound: true,
+	message: 'User not found',
+};
+
+const INVALID_PASSWORD: LoginError = {
+	error: true,
+	message: 'Incorrect password',
 };
 
 export const loginFn = createServerFn({ method: 'POST' })
 	.inputValidator((input) => loginInputSchema.parse(input))
-	.handler(async (ctx) => {
-		const { email, password } = (ctx as unknown as { data: AuthCredentials }).data;
+	.handler(async (input) => {
+		const { email, password } = input.data.data;
+
 		const user = await findUserByEmail(email);
-		if (!user?.password) return loginErrors.userNotFound;
+		if (!user?.password) return USER_NOT_FOUND;
 
 		const isValid = await verifyPasswordHash(user.password, password);
-		if (!isValid) return loginErrors.invalidPassword;
+		if (!isValid) return INVALID_PASSWORD;
 
 		const session = await useAppSession();
 		await session.update({
