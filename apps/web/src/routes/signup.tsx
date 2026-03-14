@@ -1,6 +1,6 @@
 import { findUserByEmail, createUser } from '@repo/db/queries/users';
-import { hashPassword } from '@repo/api/auth/hash';
 import { useAppSession } from '@repo/api/auth/session';
+import { hashPassword, verifyPasswordHash } from '@repo/api/auth/hash';
 import { Auth } from '@repo/ui/composed/auth';
 import { useMutation } from '@tanstack/react-query';
 import { createFileRoute, redirect } from '@tanstack/react-router';
@@ -11,22 +11,23 @@ export const signupFn = createServerFn({ method: 'POST' })
 	.handler(async ({ data }) => {
 		const found = await findUserByEmail(data.email);
 		const hashedPassword = await hashPassword(data.password);
-		const session = await useAppSession();
 
 		if (found) {
-			if (found.password !== hashedPassword) {
+			if (!found.password || !(await verifyPasswordHash(found.password, data.password))) {
 				return {
 					error: true,
 					userExists: true,
 					message: 'User already exists',
 				};
 			}
-			await session.update({ userEmail: found.email });
+			const session = await useAppSession();
+			await session.update({ userId: found.id, email: found.email });
 			throw redirect({ to: data.redirectUrl || '/' });
 		}
 
 		const user = await createUser(data.email, hashedPassword);
-		await session.update({ userEmail: user.email });
+		const session = await useAppSession();
+		await session.update({ userId: user.id, email: user.email });
 		throw redirect({ to: data.redirectUrl || '/' });
 	});
 

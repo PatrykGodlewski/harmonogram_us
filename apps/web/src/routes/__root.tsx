@@ -14,10 +14,11 @@ import type { ReactNode } from 'react';
 import { createServerFn } from '@tanstack/react-start';
 import { useAppSession } from '@repo/api/auth/session';
 
-const fetchUser = createServerFn({ method: 'GET' }).handler(async () => {
+const getCurrentUserFn = createServerFn({ method: 'GET' }).handler(async () => {
 	const session = await useAppSession();
-	if (!session.data.userEmail) return null;
-	return { email: session.data.userEmail };
+	const { userId, email } = session.data;
+	if (!userId || !email) return null;
+	return { id: userId, email };
 });
 
 function NotFound() {
@@ -51,7 +52,7 @@ export const Route = createRootRouteWithContext<{
 	notFoundComponent: NotFound,
 	errorComponent: ErrorComponent,
 	beforeLoad: async () => {
-		const user = await fetchUser();
+		const user = await getCurrentUserFn();
 		return { user };
 	},
 	shellComponent: RootDocument,
