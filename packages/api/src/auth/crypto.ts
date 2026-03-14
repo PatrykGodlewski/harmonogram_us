@@ -1,20 +1,9 @@
 import { DynamicBuffer } from '@oslojs/binary';
 import { decodeBase64 } from '@oslojs/encoding';
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
-import { z } from 'zod';
+import { env } from '@repo/env';
 
-const encryptionKeySchema = z
-	.string({ required_error: 'ENCRYPTION_KEY must be provided' })
-	.min(1, 'ENCRYPTION_KEY must not be empty')
-	.transform((val) => {
-		const decoded = decodeBase64(val);
-		if (decoded.byteLength !== 16) {
-			throw new Error('ENCRYPTION_KEY must be a base64-encoded 16-byte key');
-		}
-		return decoded;
-	});
-
-const key = encryptionKeySchema.parse(process.env.ENCRYPTION_KEY);
+const key = decodeBase64(env.ENCRYPTION_KEY) as Uint8Array;
 
 export function encrypt(data: Uint8Array): Uint8Array {
 	const iv = randomBytes(16);

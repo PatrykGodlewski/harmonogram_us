@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import { env } from '@repo/env';
 import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
@@ -6,8 +7,6 @@ export default defineConfig({
 	schema: './src/schema/*.ts',
 	out: './src/migrations',
 	dbCredentials: {
-		url:
-			process.env.DATABASE_URL ??
-			'postgresql://postgres:postgres@localhost:5432/harmonogram_us',
+		url: env.DATABASE_URL,
 	},
 });

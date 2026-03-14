@@ -6,21 +6,27 @@
   "exports": {
     "./auth/crypto": "./src/auth/crypto.ts",
     "./auth/hash": "./src/auth/hash.ts",
+    "./auth/schemas": "./src/auth/schemas.ts",
     "./auth/session": "./src/auth/session.ts",
     "./auth/middleware": "./src/auth/middleware.ts",
     "./handlers/login": "./src/handlers/login.ts",
+    "./handlers/signup": {
+      "import": "./src/handlers/signup.ts",
+      "default": "./src/handlers/signup.ts"
+    },
     "./handlers/events": "./src/handlers/events.ts",
     "./procedures": "./src/procedures.ts",
     "./events": "./src/handlers/events.ts"
   },
   "dependencies": {
-    "@node-rs/argon2": "^2.0.0",
+    "@node-rs/argon2": "^2.0.2",
+    "@repo/env": "workspace:*",
     "@oslojs/binary": "^1.0.0",
-    "@oslojs/crypto": "^1.0.0",
+    "@oslojs/crypto": "^1.0.1",
     "@oslojs/encoding": "^1.1.0",
     "@repo/db": "workspace:*",
-    "@tanstack/react-start": "^1.166.9",
-    "zod": "^3.25.0"
+    "@tanstack/react-start": "^1.166.10",
+    "zod": "^4.3.6"
   },
   "scripts": {
     "lint": "biome check ."

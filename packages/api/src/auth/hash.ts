@@ -13,7 +13,12 @@ export async function verifyPasswordHash(
 	storedHash: string,
 	password: string,
 ): Promise<boolean> {
-	return verify(storedHash, password);
+	if (!storedHash || typeof storedHash !== 'string') return false;
+	try {
+		return await verify(storedHash, password);
+	} catch {
+		return false;
+	}
 }
 
 export async function verifyPasswordStrength(password: string): Promise<boolean> {

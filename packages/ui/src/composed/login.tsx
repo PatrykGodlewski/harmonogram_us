@@ -3,10 +3,11 @@ import { Auth } from './auth';
 export interface LoginProps {
 	onLogin: (data: { email: string; password: string }) => void;
 	error?: { message?: string } | null;
+	success?: boolean;
 	isLoading?: boolean;
 }
 
-export function Login({ onLogin, error, isLoading }: LoginProps) {
+export function Login({ onLogin, error, success, isLoading }: LoginProps) {
 	return (
 		<Auth
 			title="Log in"
@@ -22,7 +23,15 @@ export function Login({ onLogin, error, isLoading }: LoginProps) {
 					password: formData.get('password') as string,
 				});
 			}}
-			afterSubmit={error ? <span>{error.message}</span> : null}
+			afterSubmit={
+				error ? (
+					<span role="alert">{error.message}</span>
+				) : success ? (
+					<span className="text-green-600 dark:text-green-400" role="status">
+						Logged in! Redirecting...
+					</span>
+				) : null
+			}
 		>
 			<div>
 				<label htmlFor="email" className="block text-sm font-medium">

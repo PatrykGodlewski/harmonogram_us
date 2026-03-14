@@ -11,11 +11,12 @@ pnpm monorepo (Turbo) with React 19, TanStack Router/Query/Start, Drizzle ORM, a
 
 ```bash
 pnpm install
+cp .env.example .env   # then fill in SESSION_SECRET, ENCRYPTION_KEY
 docker compose up -d
 pnpm db:push
 ```
 
-Use Postgres at `postgresql://postgres:postgres@localhost:5432/harmonogram_us`, or set `DATABASE_URL`.
+Put `.env` at the project root. Required vars: `SESSION_SECRET` (min 32 chars), `ENCRYPTION_KEY` (base64, 16 bytes). Use Postgres at `postgresql://postgres:postgres@localhost:5432/harmonogram_us`, or set `DATABASE_URL`.
 
 ## Scripts
 

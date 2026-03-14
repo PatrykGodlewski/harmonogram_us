@@ -1,6 +1,8 @@
 import { findUserByEmail } from '@repo/db/queries/users';
 import { createServerFn } from '@tanstack/react-start';
 import { useAppSession } from '../auth/session';
+import type { AuthCredentials } from '../auth/schemas';
+import { loginInputSchema } from '../auth/schemas';
 import { verifyPasswordHash } from '../auth/hash';
 
 const loginErrors = {
@@ -13,12 +15,13 @@ const loginErrors = {
 };
 
 export const loginFn = createServerFn({ method: 'POST' })
-	.inputValidator((d: { email: string; password: string }) => d)
-	.handler(async ({ data }) => {
-		const user = await findUserByEmail(data.email);
+	.inputValidator((input) => loginInputSchema.parse(input))
+	.handler(async (ctx) => {
+		const { email, password } = (ctx as unknown as { data: AuthCredentials }).data;
+		const user = await findUserByEmail(email);
 		if (!user?.password) return loginErrors.userNotFound;
 
-		const isValid = await verifyPasswordHash(user.password, data.password);
+		const isValid = await verifyPasswordHash(user.password, password);
 		if (!isValid) return loginErrors.invalidPassword;
 
 		const session = await useAppSession();
@@ -27,3 +30,6 @@ export const loginFn = createServerFn({ method: 'POST' })
 			email: user.email,
 		});
 	});
+
+export type LoginInput = Parameters<typeof loginFn>[0];
+export type LoginResult = Awaited<ReturnType<typeof loginFn>>;

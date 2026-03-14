@@ -1,44 +1,23 @@
-import { findUserByEmail, createUser } from '@repo/db/queries/users';
-import { useAppSession } from '@repo/api/auth/session';
-import { hashPassword, verifyPasswordHash } from '@repo/api/auth/hash';
+import { signupFn, type SignupInput, type SignupResult } from '@repo/api/handlers/signup';
 import { Auth } from '@repo/ui/composed/auth';
 import { useMutation } from '@tanstack/react-query';
-import { createFileRoute, redirect } from '@tanstack/react-router';
-import { createServerFn, useServerFn } from '@tanstack/react-start';
-
-export const signupFn = createServerFn({ method: 'POST' })
-	.inputValidator((d: { email: string; password: string; redirectUrl?: string }) => d)
-	.handler(async ({ data }) => {
-		const found = await findUserByEmail(data.email);
-		const hashedPassword = await hashPassword(data.password);
-
-		if (found) {
-			if (!found.password || !(await verifyPasswordHash(found.password, data.password))) {
-				return {
-					error: true,
-					userExists: true,
-					message: 'User already exists',
-				};
-			}
-			const session = await useAppSession();
-			await session.update({ userId: found.id, email: found.email });
-			throw redirect({ to: data.redirectUrl || '/' });
-		}
-
-		const user = await createUser(data.email, hashedPassword);
-		const session = await useAppSession();
-		await session.update({ userId: user.id, email: user.email });
-		throw redirect({ to: data.redirectUrl || '/' });
-	});
+import { createFileRoute, useRouter } from '@tanstack/react-router';
+import { useServerFn } from '@tanstack/react-start';
 
 export const Route = createFileRoute('/signup')({
 	component: SignupComp,
 });
 
 function SignupComp() {
+	const router = useRouter();
 	const signup = useServerFn(signupFn);
-	const signupMutation = useMutation({
-		mutationFn: (vars: Parameters<typeof signup>[0]) => signup(vars),
+	const signupMutation = useMutation<SignupResult, Error, SignupInput>({
+		mutationFn: (vars) => signup(vars),
+		onSuccess: (data) => {
+			if (!data?.error) {
+				setTimeout(() => router.navigate({ to: '/' }), 1500);
+			}
+		},
 	});
 
 	return (
@@ -60,8 +39,14 @@ function SignupComp() {
 					});
 				}}
 				afterSubmit={
-					signupMutation.data?.error ? (
-						<span>{signupMutation.data.message}</span>
+					signupMutation.isError ? (
+						<span role="alert">{signupMutation.error?.message ?? 'Something went wrong'}</span>
+					) : signupMutation.data?.error ? (
+						<span role="alert">{signupMutation.data.message}</span>
+					) : signupMutation.isSuccess && !signupMutation.data?.error ? (
+						<span className="text-green-600 dark:text-green-400" role="status">
+							Account created! Redirecting...
+						</span>
 					) : null
 				}
 			>
