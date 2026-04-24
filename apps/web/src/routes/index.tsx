@@ -1,8 +1,8 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { getEvents } from '@repo/api/handlers/events';
-import { Button } from '@repo/ui/components/button';
+import { getEvents } from "@repo/api/handlers/events";
+import { Button } from "@repo/ui/components/button";
+import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute('/')({
+export const Route = createFileRoute("/")({
 	component: HomePage,
 	loader: async () => {
 		return getEvents();
@@ -14,9 +14,7 @@ function HomePage() {
 
 	return (
 		<div className="mx-auto max-w-4xl p-8">
-			<h1 className="mb-6 text-2xl font-bold">
-				University Event Registration
-			</h1>
+			<h1 className="mb-6 text-2xl font-bold">University Event Registration</h1>
 			<p className="mb-8 text-muted-foreground">
 				Browse and register for upcoming university events.
 			</p>
@@ -36,7 +34,7 @@ function HomePage() {
 								<div>
 									<h2 className="font-semibold">{event.title}</h2>
 									<p className="text-sm text-muted-foreground">
-										{new Date(event.date).toLocaleDateString()} ·{' '}
+										{new Date(event.date).toLocaleDateString()} ·{" "}
 										{event.availableSeats} seats available
 									</p>
 								</div>

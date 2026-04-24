@@ -1,0 +1,20 @@
+{
+  "name": "@repo/router-utils",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./require-auth": "./src/require-auth.ts"
+  },
+  "scripts": {
+    "lint": "biome check ."
+  },
+  "dependencies": {
+    "@tanstack/react-router": "^1.168.23"
+  },
+  "devDependencies": {
+    "@repo/config": "workspace:*",
+    "typescript": "^6.0.3"
+  }
+}

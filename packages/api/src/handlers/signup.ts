@@ -1,26 +1,26 @@
-import { findUserByEmail, createUser } from '@repo/db/queries/users';
-import { createServerFn } from '@tanstack/react-start';
-import { useAppSession } from '../auth/session';
-import { signupInputSchema } from '../auth/schemas';
-import { hashPassword, verifyPasswordStrength } from '../auth/hash';
+import { createUser, findUserByEmail } from "@repo/db/queries/users";
+import { createServerFn } from "@tanstack/react-start";
+import { hashPassword, verifyPasswordStrength } from "../auth/hash";
+import { signupInputSchema } from "../auth/schemas";
+import { useAppSession } from "../auth/session";
 
 const signupErrors = {
 	userExists: {
 		error: true as const,
 		userExists: true,
-		message: 'User already exists',
+		message: "User already exists",
 	},
 	passwordsDoNotMatch: {
 		error: true as const,
-		message: 'Passwords do not match',
+		message: "Passwords do not match",
 	},
 	invalidPassword: {
 		error: true as const,
-		message: 'Password does not meet security requirements',
+		message: "Password does not meet security requirements",
 	},
 };
 
-export const signupFn = createServerFn({ method: 'POST' })
+export const signupFn = createServerFn({ method: "POST" })
 	.inputValidator((input) => signupInputSchema.parse(input))
 	.handler(async ({ data }) => {
 		const { email, password, confirmPassword } = data;

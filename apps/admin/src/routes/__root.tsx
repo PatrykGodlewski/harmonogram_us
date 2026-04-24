@@ -1,20 +1,28 @@
 /// <reference types="vite/client" />
-import appCss from '~/app.css?url';
+
 import {
+	error_title,
+	go_home,
+	not_found_title,
+	title_document_admin,
+} from "@repo/i18n/paraglide/messages";
+import { getLocale } from "@repo/i18n/paraglide/runtime";
+import {
+	createRootRoute,
 	HeadContent,
 	Link,
 	Outlet,
 	Scripts,
-	createRootRoute,
-} from '@tanstack/react-router';
-import type { ReactNode } from 'react';
+} from "@tanstack/react-router";
+import type { ReactNode } from "react";
+import appCss from "~/app.css?url";
 
 function NotFound() {
 	return (
 		<div className="flex min-h-[50vh] flex-col items-center justify-center gap-4">
-			<h1 className="text-2xl font-bold">Page not found</h1>
+			<h1 className="text-2xl font-bold">{not_found_title()}</h1>
 			<Link to="/" className="text-primary hover:underline">
-				Go home
+				{go_home()}
 			</Link>
 		</div>
 	);
@@ -23,12 +31,12 @@ function NotFound() {
 function ErrorComponent({ error }: { error: unknown }) {
 	return (
 		<div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 p-8">
-			<h1 className="text-xl font-bold text-red-600">Something went wrong</h1>
+			<h1 className="text-xl font-bold text-red-600">{error_title()}</h1>
 			<p className="text-muted-foreground">
 				{error instanceof Error ? error.message : String(error)}
 			</p>
 			<Link to="/" className="text-primary hover:underline">
-				Go home
+				{go_home()}
 			</Link>
 		</div>
 	);
@@ -37,13 +45,18 @@ function ErrorComponent({ error }: { error: unknown }) {
 export const Route = createRootRoute({
 	notFoundComponent: NotFound,
 	errorComponent: ErrorComponent,
+	beforeLoad: () => {
+		if (typeof document !== "undefined") {
+			document.documentElement.setAttribute("lang", getLocale());
+		}
+	},
 	head: () => ({
 		meta: [
-			{ charSet: 'utf-8' },
-			{ name: 'viewport', content: 'width=device-width, initial-scale=1' },
-			{ title: 'University Event Registration | Admin' },
+			{ charSet: "utf-8" },
+			{ name: "viewport", content: "width=device-width, initial-scale=1" },
+			{ title: String(title_document_admin()) },
 		],
-		links: [{ rel: 'stylesheet', href: appCss }],
+		links: [{ rel: "stylesheet", href: appCss }],
 	}),
 	component: RootComponent,
 });
@@ -58,7 +71,7 @@ function RootComponent() {
 
 function RootDocument({ children }: { children: ReactNode }) {
 	return (
-		<html lang="en" suppressHydrationWarning>
+		<html lang={getLocale()} suppressHydrationWarning>
 			<head suppressHydrationWarning>
 				<HeadContent />
 			</head>

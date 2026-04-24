@@ -1,12 +1,12 @@
-import { createMiddleware } from '@tanstack/react-start';
-import { getCurrentUser } from './user';
+import { createMiddleware } from "@tanstack/react-start";
+import { getCurrentUser } from "./user";
 
 export const authMiddleware = createMiddleware({
-	type: 'function',
+	type: "function",
 }).server(async ({ next }) => {
 	const user = await getCurrentUser();
 	if (!user) {
-		throw new Error('UNAUTHORIZED');
+		throw new Error("UNAUTHORIZED");
 	}
 
 	return next({

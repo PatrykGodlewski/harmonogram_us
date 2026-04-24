@@ -1,5 +1,5 @@
-import { findUserById } from '@repo/db/queries/users';
-import { useAppSession } from './session';
+import { findUserById } from "@repo/db/queries/users";
+import { useAppSession } from "./session";
 
 export type AuthenticatedUser = {
 	id: number;

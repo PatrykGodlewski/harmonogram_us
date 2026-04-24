@@ -1,8 +1,7 @@
 {
   "extends": "@repo/config/tsconfig.base.json",
   "compilerOptions": {
-    "types": ["node"],
-    "moduleResolution": "node16"
+    "types": ["node"]
   },
   "include": ["./src/**/*.ts"],
   "exclude": ["node_modules", "dist"]

@@ -3,13 +3,20 @@
   "private": true,
   "type": "module",
   "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "lightningcss"
+    ],
     "overrides": {
-      "react": "^19.2.4",
-      "react-dom": "^19.2.4",
-      "vite": "8.0.0"
+      "react": "^19.2.5",
+      "react-dom": "^19.2.5",
+      "vite": "8.0.10"
     }
   },
   "scripts": {
+    "deps:bump": "taze major -r -f -l -w",
+    "messages:compile": "pnpm --filter @repo/i18n run compile",
+    "prepare": "pnpm run messages:compile",
     "dev": "turbo dev --filter=web --filter=admin",
     "build": "turbo build",
     "lint": "turbo lint",
@@ -17,11 +24,12 @@
     "clean": "turbo clean && rm -rf node_modules"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.7",
-    "turbo": "^2.8.17"
+    "@biomejs/biome": "^2.4.13",
+    "taze": "^19.11.0",
+    "turbo": "^2.9.6"
   },
-  "packageManager": "pnpm@10.32.1",
+  "packageManager": "pnpm@10.33.2",
   "engines": {
-    "node": ">=20"
+    "node": ">=22.12.0"
   }
 }

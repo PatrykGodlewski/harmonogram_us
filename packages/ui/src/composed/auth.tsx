@@ -1,12 +1,8 @@
-import * as React from 'react';
-import {
-	Alert,
-	AlertDescription,
-	AlertTitle,
-} from '../components/alert';
-import { Button } from '../components/button';
-import { Input } from '../components/input';
-import { Label } from '../components/label';
+import * as React from "react";
+import { Alert, AlertDescription, AlertTitle } from "../components/alert";
+import { Button } from "../components/button";
+import { Input } from "../components/input";
+import { Label } from "../components/label";
 
 type AuthContextValue = {
 	isLoading: boolean;
@@ -17,7 +13,7 @@ const AuthContext = React.createContext<AuthContextValue | null>(null);
 export function useAuthForm() {
 	const context = React.useContext(AuthContext);
 	if (!context) {
-		throw new Error('useAuthForm must be used within Auth.Root');
+		throw new Error("useAuthForm must be used within Auth.Root");
 	}
 	return context;
 }
@@ -42,7 +38,7 @@ export function useAuthStatus({
 		if (isRequestError) {
 			return {
 				error: {
-					message: requestErrorMessage ?? 'Something went wrong',
+					message: requestErrorMessage ?? "Something went wrong",
 				},
 			};
 		}
@@ -52,18 +48,13 @@ export function useAuthStatus({
 }
 
 export interface AuthRootProps {
-	onSubmit: React.ComponentProps<'form'>['onSubmit'];
+	onSubmit: React.ComponentProps<"form">["onSubmit"];
 	title: string;
 	isLoading?: boolean;
 	children: React.ReactNode;
 }
 
-function Root({
-	onSubmit,
-	title,
-	isLoading = false,
-	children,
-}: AuthRootProps) {
+function Root({ onSubmit, title, isLoading = false, children }: AuthRootProps) {
 	return (
 		<AuthContext.Provider value={{ isLoading }}>
 			<div className="mx-auto max-w-sm rounded-lg border p-6">
@@ -76,23 +67,32 @@ function Root({
 	);
 }
 
-interface AuthFieldProps extends Omit<React.ComponentProps<typeof Input>, 'id' | 'name' | 'type'> {
+interface AuthFieldProps
+	extends Omit<React.ComponentProps<typeof Input>, "id" | "name" | "type"> {
 	name: string;
 	label: string;
-	type?: React.ComponentProps<typeof Input>['type'];
+	type?: React.ComponentProps<typeof Input>["type"];
 }
 
-function Field({ name, label, type = 'text', ...props }: AuthFieldProps) {
+function Field({ name, label, type = "text", ...props }: AuthFieldProps) {
 	const { isLoading } = useAuthForm();
 	return (
 		<div>
 			<Label htmlFor={name}>{label}</Label>
-			<Input id={name} name={name} type={type} className="mt-1" disabled={isLoading} {...props} />
+			<Input
+				id={name}
+				name={name}
+				type={type}
+				className="mt-1"
+				disabled={isLoading}
+				{...props}
+			/>
 		</div>
 	);
 }
 
-interface AuthSubmitProps extends Omit<React.ComponentProps<typeof Button>, 'type'> {
+interface AuthSubmitProps
+	extends Omit<React.ComponentProps<typeof Button>, "type"> {
 	label: string;
 	loadingLabel?: string;
 }
@@ -101,7 +101,7 @@ function Submit({ label, loadingLabel, children, ...props }: AuthSubmitProps) {
 	const { isLoading } = useAuthForm();
 	return (
 		<Button type="submit" disabled={isLoading} className="w-full" {...props}>
-			{isLoading ? (loadingLabel ?? 'Loading...') : (children ?? label)}
+			{isLoading ? (loadingLabel ?? "Loading...") : (children ?? label)}
 		</Button>
 	);
 }
@@ -123,14 +123,16 @@ function Status({
 	error,
 	success,
 	successMessage,
-	errorTitle = 'Something went wrong',
-	successTitle = 'Success',
+	errorTitle = "Something went wrong",
+	successTitle = "Success",
 }: AuthStatusProps) {
 	if (error) {
 		return (
 			<Alert variant="destructive">
 				<AlertTitle>{errorTitle}</AlertTitle>
-				<AlertDescription>{error.message ?? 'Please try again.'}</AlertDescription>
+				<AlertDescription>
+					{error.message ?? "Please try again."}
+				</AlertDescription>
 			</Alert>
 		);
 	}

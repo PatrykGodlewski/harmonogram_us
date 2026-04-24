@@ -1,0 +1,27 @@
+{
+  "name": "@repo/collections",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./local-notes": "./src/local-notes.ts"
+  },
+  "scripts": {
+    "lint": "biome check ."
+  },
+  "dependencies": {
+    "@tanstack/db": "^0.6.5",
+    "@tanstack/react-db": "^0.1.83",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@repo/config": "workspace:*",
+    "@types/react": "^19.2.14",
+    "react": "^19.2.5",
+    "typescript": "^6.0.3"
+  },
+  "peerDependencies": {
+    "react": "^18 || ^19"
+  }
+}

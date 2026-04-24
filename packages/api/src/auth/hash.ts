@@ -1,4 +1,4 @@
-import { hash, verify } from '@node-rs/argon2';
+import { hash, verify } from "@node-rs/argon2";
 
 export async function hashPassword(password: string): Promise<string> {
 	return hash(password, {
@@ -13,7 +13,7 @@ export async function verifyPasswordHash(
 	storedHash: string,
 	password: string,
 ): Promise<boolean> {
-	if (!storedHash || typeof storedHash !== 'string') return false;
+	if (!storedHash || typeof storedHash !== "string") return false;
 	try {
 		return await verify(storedHash, password);
 	} catch {
@@ -21,6 +21,8 @@ export async function verifyPasswordHash(
 	}
 }
 
-export async function verifyPasswordStrength(password: string): Promise<boolean> {
+export async function verifyPasswordStrength(
+	password: string,
+): Promise<boolean> {
 	return password.length >= 8 && password.length <= 255;
 }

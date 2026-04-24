@@ -1,17 +1,32 @@
-import tailwindcss from '@tailwindcss/vite';
-import { tanstackStart } from '@tanstack/react-start/plugin/vite';
-import viteReact from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
-import tsConfigPaths from 'vite-tsconfig-paths';
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { paraglideVitePlugin } from "@inlang/paraglide-js";
+import babel from "@rolldown/plugin-babel";
+import tailwindcss from "@tailwindcss/vite";
+import { devtools } from "@tanstack/devtools-vite";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react";
+import { nitro } from "nitro/vite";
+import { defineConfig } from "vite";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const i18nRoot = path.resolve(__dirname, "../../packages/i18n");
 
 export default defineConfig({
-	// Cast needed: TanStack Start resolves Vite 8 types while app uses Vite 7
+	resolve: { tsconfigPaths: true },
 	plugins: [
-		tsConfigPaths(),
+		devtools(),
+		paraglideVitePlugin({
+			project: path.join(i18nRoot, "project.inlang"),
+			outdir: path.join(i18nRoot, "src/paraglide"),
+			strategy: ["url", "baseLocale"],
+		}),
+		nitro({ rollupConfig: { external: [/^@sentry\//] } }),
+		tailwindcss(),
 		tanstackStart(),
 		viteReact(),
-		tailwindcss(),
-	] as any,
+		babel({ presets: [reactCompilerPreset()] }),
+	],
 	server: {
 		port: 3001,
 		strictPort: true,

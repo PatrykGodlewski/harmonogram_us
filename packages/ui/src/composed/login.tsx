@@ -1,10 +1,10 @@
-import { Auth, useAuthStatus } from './auth';
-import { useState } from 'react';
-import { z } from 'zod';
+import { useState } from "react";
+import { z } from "zod";
+import { Auth, useAuthStatus } from "./auth";
 
 const loginFormSchema = z.object({
-	email: z.string().email('Please provide a valid email address'),
-	password: z.string().min(1, 'Password is required'),
+	email: z.string().email("Please provide a valid email address"),
+	password: z.string().min(1, "Password is required"),
 });
 
 export interface LoginProps {
@@ -36,11 +36,13 @@ export function Login({ onLogin, status }: LoginProps) {
 				const form = e.target as HTMLFormElement;
 				const formData = new FormData(form);
 				const parsed = loginFormSchema.safeParse({
-					email: formData.get('email'),
-					password: formData.get('password'),
+					email: formData.get("email"),
+					password: formData.get("password"),
 				});
 				if (!parsed.success) {
-					setClientError(parsed.error.issues[0]?.message ?? 'Invalid form data');
+					setClientError(
+						parsed.error.issues[0]?.message ?? "Invalid form data",
+					);
 					return;
 				}
 				setClientError(null);

@@ -1,0 +1,10 @@
+{
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"title_document_students": "Rejestracja na wydarzenia uczelniane | Studenci",
+	"title_document_admin": "Rejestracja na wydarzenia uczelniane | Admin",
+	"not_found_title": "Nie znaleziono strony",
+	"go_home": "Strona główna",
+	"error_title": "Coś poszło nie tak",
+	"language_label": "Język",
+	"current_locale": "Aktualny język: {locale}"
+}

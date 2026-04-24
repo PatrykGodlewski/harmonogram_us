@@ -1,6 +1,6 @@
-import { config } from 'dotenv';
-import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
+import { config } from "dotenv";
 
 /**
  * Load .env from project root or monorepo root.
@@ -9,9 +9,9 @@ import { resolve } from 'node:path';
 function loadEnv(): void {
 	const cwd = process.cwd();
 	const paths = [
-		resolve(cwd, '.env'),
-		resolve(cwd, '../../.env'),
-		resolve(cwd, '../.env'),
+		resolve(cwd, ".env"),
+		resolve(cwd, "../../.env"),
+		resolve(cwd, "../.env"),
 	];
 	for (const p of paths) {
 		if (existsSync(p)) {

@@ -1,17 +1,17 @@
-import { findUserByEmail } from '@repo/db/queries/users';
-import { createServerFn } from '@tanstack/react-start';
-import { useAppSession } from '../auth/session';
-import { loginInputSchema } from '../auth/schemas';
-import { verifyPasswordHash } from '../auth/hash';
+import { findUserByEmail } from "@repo/db/queries/users";
+import { createServerFn } from "@tanstack/react-start";
+import { verifyPasswordHash } from "../auth/hash";
+import { loginInputSchema } from "../auth/schemas";
+import { useAppSession } from "../auth/session";
 
 const loginErrors = {
 	invalidCredentials: {
 		error: true as const,
-		message: 'Invalid email or password',
+		message: "Invalid email or password",
 	},
 };
 
-export const loginFn = createServerFn({ method: 'POST' })
+export const loginFn = createServerFn({ method: "POST" })
 	.inputValidator((input) => loginInputSchema.parse(input))
 	.handler(async ({ data }) => {
 		const { email, password } = data;

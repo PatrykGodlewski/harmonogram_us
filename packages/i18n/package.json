@@ -1,0 +1,22 @@
+{
+	"name": "@repo/i18n",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./paraglide/runtime": "./src/paraglide/runtime.js",
+		"./paraglide/messages": "./src/paraglide/messages.js"
+	},
+	"scripts": {
+		"compile": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide --strategy url baseLocale",
+		"build": "pnpm run compile",
+		"lint": "biome check ."
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.13",
+		"@inlang/paraglide-js": "^2.16.0",
+		"@inlang/plugin-m-function-matcher": "^2.2.4",
+		"@inlang/plugin-message-format": "^4.4.0",
+		"@repo/config": "workspace:*"
+	}
+}

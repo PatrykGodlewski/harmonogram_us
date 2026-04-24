@@ -1,13 +1,17 @@
-import { signupFn, type SignupInput, type SignupResult } from '@repo/api/handlers/signup';
-import { Signup } from '@repo/ui/composed/signup';
-import { useMutation } from '@tanstack/react-query';
-import { createFileRoute, redirect, useRouter } from '@tanstack/react-router';
-import { useServerFn } from '@tanstack/react-start';
+import {
+	type SignupInput,
+	type SignupResult,
+	signupFn,
+} from "@repo/api/handlers/signup";
+import { Signup } from "@repo/ui/composed/signup";
+import { useMutation } from "@tanstack/react-query";
+import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 
-export const Route = createFileRoute('/signup')({
+export const Route = createFileRoute("/signup")({
 	beforeLoad: ({ context }) => {
 		if (context.user) {
-			throw redirect({ to: '/' });
+			throw redirect({ to: "/" });
 		}
 	},
 	component: SignupComp,
@@ -20,7 +24,7 @@ function SignupComp() {
 		mutationFn: signup,
 		onSuccess: (data) => {
 			if (!data?.error) {
-				router.navigate({ to: '/' });
+				router.navigate({ to: "/" });
 			}
 		},
 	});

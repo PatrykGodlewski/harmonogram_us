@@ -1,15 +1,19 @@
-import { Auth, useAuthStatus } from './auth';
-import { useState } from 'react';
-import { z } from 'zod';
+import { useState } from "react";
+import { z } from "zod";
+import { Auth, useAuthStatus } from "./auth";
 
 const signupFormSchema = z.object({
-	email: z.string().email('Please provide a valid email address'),
-	password: z.string().min(1, 'Password is required'),
-	confirmPassword: z.string().min(1, 'Confirm password is required'),
+	email: z.string().email("Please provide a valid email address"),
+	password: z.string().min(1, "Password is required"),
+	confirmPassword: z.string().min(1, "Confirm password is required"),
 });
 
 export interface SignupProps {
-	onSignup: (data: { email: string; password: string; confirmPassword: string }) => void;
+	onSignup: (data: {
+		email: string;
+		password: string;
+		confirmPassword: string;
+	}) => void;
 	status: {
 		isRequestError: boolean;
 		requestErrorMessage?: string;
@@ -37,19 +41,21 @@ export function Signup({ onSignup, status }: SignupProps) {
 				const form = e.target as HTMLFormElement;
 				const formData = new FormData(form);
 				const parsed = signupFormSchema.safeParse({
-					email: formData.get('email'),
-					password: formData.get('password'),
-					confirmPassword: formData.get('confirmPassword'),
+					email: formData.get("email"),
+					password: formData.get("password"),
+					confirmPassword: formData.get("confirmPassword"),
 				});
 				if (!parsed.success) {
-					setClientError(parsed.error.issues[0]?.message ?? 'Invalid form data');
+					setClientError(
+						parsed.error.issues[0]?.message ?? "Invalid form data",
+					);
 					return;
 				}
 
 				const { email, password, confirmPassword } = parsed.data;
 
 				if (password !== confirmPassword) {
-					setClientError('Passwords do not match');
+					setClientError("Passwords do not match");
 					return;
 				}
 				setClientError(null);

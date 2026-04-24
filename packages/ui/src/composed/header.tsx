@@ -1,16 +1,21 @@
+import type { ReactNode } from "react";
+
 export interface HeaderProps {
 	user?: {
 		email: string;
 	} | null;
+	/** Optional slot (e.g. Paraglide locale switcher) rendered before auth links */
+	localeSwitcher?: ReactNode;
 }
 
-export function Header({ user }: HeaderProps) {
+export function Header({ user, localeSwitcher }: HeaderProps) {
 	return (
 		<nav className="flex items-center justify-between border-b px-6 py-4">
 			<a href="/" className="font-semibold">
 				University Events
 			</a>
-			<div className="flex gap-4">
+			<div className="flex flex-wrap items-center justify-end gap-4">
+				{localeSwitcher}
 				{user ? (
 					<>
 						<span className="text-muted-foreground">{user.email}</span>

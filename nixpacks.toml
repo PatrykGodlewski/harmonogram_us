@@ -1,0 +1,19 @@
+# Railway (Nixpacks) — builds and runs the TanStack Start `web` app from the monorepo root.
+# This does not use docker-compose.yml: that file is for local Postgres only. On Railway,
+# attach a Postgres plugin (or external DB) and set DATABASE_URL, SESSION_SECRET, ENCRYPTION_KEY, etc.
+
+[phases.setup]
+nixPkgs = ["nodejs_22"]
+
+[phases.install]
+cmds = [
+	"corepack enable",
+	"corepack prepare pnpm@10.32.1 --activate",
+	"pnpm install --frozen-lockfile",
+]
+
+[phases.build]
+cmds = ["pnpm exec turbo run build --filter=web"]
+
+[start]
+cmd = "pnpm --filter web run start"

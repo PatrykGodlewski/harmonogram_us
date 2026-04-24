@@ -1,16 +1,20 @@
-import { loginFn, type LoginInput, type LoginResult } from '@repo/api/handlers/login';
-import { Login } from '@repo/ui/composed/login';
-import { useMutation } from '@tanstack/react-query';
-import { createFileRoute, redirect, useRouter } from '@tanstack/react-router';
-import { useServerFn } from '@tanstack/react-start';
+import {
+	type LoginInput,
+	type LoginResult,
+	loginFn,
+} from "@repo/api/handlers/login";
+import { Login } from "@repo/ui/composed/login";
+import { useMutation } from "@tanstack/react-query";
+import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 
-export const Route = createFileRoute('/login')({
+export const Route = createFileRoute("/login")({
 	validateSearch: (search: Record<string, unknown>) => ({
-		redirect: typeof search.redirect === 'string' ? search.redirect : undefined,
+		redirect: typeof search.redirect === "string" ? search.redirect : undefined,
 	}),
 	beforeLoad: ({ context }) => {
 		if (context.user) {
-			throw redirect({ to: '/' });
+			throw redirect({ to: "/" });
 		}
 	},
 	component: LoginComp,
@@ -19,7 +23,7 @@ export const Route = createFileRoute('/login')({
 function LoginComp() {
 	const router = useRouter();
 	const { redirect } = Route.useSearch();
-	const redirectTo = redirect?.startsWith('/') ? redirect : '/';
+	const redirectTo = redirect?.startsWith("/") ? redirect : "/";
 	const login = useServerFn(loginFn);
 	const loginMutation = useMutation<LoginResult, Error, LoginInput>({
 		mutationFn: login,

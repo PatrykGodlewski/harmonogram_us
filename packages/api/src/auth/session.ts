@@ -1,5 +1,5 @@
-import { useSession } from '@tanstack/react-start/server';
-import { env } from '@repo/env';
+import { env } from "@repo/env";
+import { useSession } from "@tanstack/react-start/server";
 
 export type SessionData = {
 	userId?: number;
@@ -8,13 +8,13 @@ export type SessionData = {
 
 export function useAppSession() {
 	return useSession<SessionData>({
-		name: 'session',
+		name: "session",
 		password: env.SESSION_SECRET,
 		cookie: {
-			secure: env.NODE_ENV === 'production',
-			sameSite: 'lax',
+			secure: env.NODE_ENV === "production",
+			sameSite: "lax",
 			httpOnly: true,
-			path: '/',
+			path: "/",
 		},
 	});
 }
