@@ -21,6 +21,9 @@
     "add:ui": "pnpm dlx shadcn@latest add -c . -p src/components"
   },
   "dependencies": {
+    "@repo/api": "workspace:*",
+    "@repo/i18n": "workspace:*",
+    "@tanstack/react-router": "^1.168.23",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-slot": "^1.2.4",
     "class-variance-authority": "^0.7.1",

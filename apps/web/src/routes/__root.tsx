@@ -22,7 +22,6 @@ import {
 import { createServerFn } from "@tanstack/react-start";
 import type { ReactNode } from "react";
 import appCss from "~/app.css?url";
-import LocaleSwitcher from "~/components/LocaleSwitcher";
 
 const getCurrentUserFn = createServerFn({ method: "GET" }).handler(async () => {
 	return getCurrentUser();
@@ -82,7 +81,7 @@ function RootComponent() {
 	return (
 		<QueryClientProvider client={queryClient}>
 			<ReactQueryDevtools buttonPosition="bottom-right" />
-			<Header user={user} localeSwitcher={<LocaleSwitcher />} />
+			<Header user={user} />
 			<Outlet />
 		</QueryClientProvider>
 	);

@@ -6,5 +6,9 @@
 	"go_home": "Strona główna",
 	"error_title": "Coś poszło nie tak",
 	"language_label": "Język",
-	"current_locale": "Aktualny język: {locale}"
+	"current_locale": "Aktualny język: {locale}",
+	"header_brand": "Wydarzenia uczelniane",
+	"header_logout": "Wyloguj",
+	"header_login": "Zaloguj",
+	"header_signup": "Zarejestruj się"
 }

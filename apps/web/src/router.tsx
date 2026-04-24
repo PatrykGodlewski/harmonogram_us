@@ -1,3 +1,4 @@
+import { createParaglideRouterRewrite } from "@repo/router-utils/paraglide-router-rewrite";
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
@@ -10,6 +11,7 @@ export function getRouter() {
 		routeTree,
 		context: { queryClient },
 		scrollRestoration: true,
+		rewrite: createParaglideRouterRewrite(),
 	});
 
 	setupRouterSsrQueryIntegration({ router, queryClient });

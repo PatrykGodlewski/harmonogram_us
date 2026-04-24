@@ -6,5 +6,9 @@
 	"go_home": "Go home",
 	"error_title": "Something went wrong",
 	"language_label": "Language",
-	"current_locale": "Current locale: {locale}"
+	"current_locale": "Current locale: {locale}",
+	"header_brand": "University Events",
+	"header_logout": "Logout",
+	"header_login": "Login",
+	"header_signup": "Sign up"
 }

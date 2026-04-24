@@ -3,12 +3,16 @@
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
+	"imports": {
+		"#paraglide-runtime": "./src/paraglide/runtime.js"
+	},
 	"exports": {
 		"./paraglide/runtime": "./src/paraglide/runtime.js",
-		"./paraglide/messages": "./src/paraglide/messages.js"
+		"./paraglide/messages": "./src/paraglide/messages.js",
+		"./paraglide/server": "./src/paraglide/server.js"
 	},
 	"scripts": {
-		"compile": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide --strategy url baseLocale",
+		"compile": "node ./scripts/compile-paraglide.mjs",
 		"build": "pnpm run compile",
 		"lint": "biome check ."
 	},
