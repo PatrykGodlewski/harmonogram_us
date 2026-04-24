@@ -14,6 +14,7 @@ export function useAppSession() {
 			secure: env.NODE_ENV === 'production',
 			sameSite: 'lax',
 			httpOnly: true,
+			path: '/',
 		},
 	});
 }

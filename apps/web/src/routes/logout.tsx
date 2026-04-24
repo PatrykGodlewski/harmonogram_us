@@ -4,7 +4,7 @@ import { createServerFn } from '@tanstack/react-start';
 
 const logoutFn = createServerFn().handler(async () => {
 	const session = await useAppSession();
-	session.clear();
+	await session.clear();
 	throw redirect({ to: '/' });
 });
 

@@ -1,20 +1,20 @@
 import { z } from 'zod';
 
-export const authCredentialsSchema = z.object({
-	email: z.string().email('Invalid email address'),
+export const loginInputSchema = z.object({
+	email: z.email('Invalid email address'),
 	password: z.string().min(8, 'Password must be at least 8 characters').max(255),
 });
 
-const credentialsLike = z.union([
-	z.object({ data: authCredentialsSchema }),
-	authCredentialsSchema,
-]);
+export const signupInputSchema = z
+	.object({
+		email: z.email('Invalid email address'),
+		password: z.string().min(8, 'Password must be at least 8 characters').max(255),
+		confirmPassword: z.string().min(8, 'Password must be at least 8 characters').max(255),
+	})
+	.refine(({ password, confirmPassword }) => password === confirmPassword, {
+		message: 'Passwords do not match',
+		path: ['confirmPassword'],
+	});
 
-export const signupInputSchema = credentialsLike.transform(
-	(val): { data: z.infer<typeof authCredentialsSchema> } =>
-		'data' in val && val.data != null ? val : { data: val },
-);
-
-export const loginInputSchema = signupInputSchema;
-
-export type AuthCredentials = z.infer<typeof authCredentialsSchema>;
+export type LoginInput = z.infer<typeof loginInputSchema>;
+export type SignupInput = z.infer<typeof signupInputSchema>;

@@ -12,13 +12,11 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import type { QueryClient } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { createServerFn } from '@tanstack/react-start';
-import { useAppSession } from '@repo/api/auth/session';
+import { getCurrentUser } from '@repo/api/auth/user';
+import { Header } from '@repo/ui/composed/header';
 
 const getCurrentUserFn = createServerFn({ method: 'GET' }).handler(async () => {
-	const session = await useAppSession();
-	const { userId, email } = session.data;
-	if (!userId || !email) return null;
-	return { id: userId, email };
+	return getCurrentUser();
 });
 
 function NotFound() {
@@ -72,30 +70,7 @@ function RootComponent() {
 	return (
 		<QueryClientProvider client={queryClient}>
 			<ReactQueryDevtools buttonPosition="bottom-right" />
-			<nav className="flex items-center justify-between border-b px-6 py-4">
-				<Link to="/" className="font-semibold">
-					University Events
-				</Link>
-				<div className="flex gap-4">
-					{user ? (
-						<>
-							<span className="text-muted-foreground">{user.email}</span>
-							<Link to="/logout" className="text-primary hover:underline">
-								Logout
-							</Link>
-						</>
-					) : (
-						<>
-							<Link to="/login" className="text-primary hover:underline">
-								Login
-							</Link>
-							<Link to="/signup" className="text-primary hover:underline">
-								Sign up
-							</Link>
-						</>
-					)}
-				</div>
-			</nav>
+			<Header user={user} />
 			<Outlet />
 		</QueryClientProvider>
 	);

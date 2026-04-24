@@ -4,10 +4,15 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./button": "./src/components/button.tsx",
+    "./components/*": {
+      "import": "./src/components/*.tsx",
+      "default": "./src/components/*.tsx"
+    },
+    "./composed/*": {
+      "import": "./src/composed/*.tsx",
+      "default": "./src/composed/*.tsx"
+    },
     "./utils": "./src/utils.ts",
-    "./composed/auth": "./src/composed/auth.tsx",
-    "./composed/login": "./src/composed/login.tsx",
     "./tailwind": "./tailwind.css"
   },
   "scripts": {
@@ -16,10 +21,12 @@
     "add:ui": "npx shadcn@latest add -c . -p src/components"
   },
   "dependencies": {
+    "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-slot": "^1.2.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "tailwind-merge": "^3.5.0"
+    "tailwind-merge": "^3.5.0",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@repo/config": "workspace:*",

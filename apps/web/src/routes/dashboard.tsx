@@ -1,23 +1,9 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
+import { requireAuthenticatedUser } from '~/lib/route-auth';
 
 export const Route = createFileRoute('/dashboard')({
 	beforeLoad: ({ context }) => {
-		if (!context.user) {
-			throw new Error('Not authenticated');
-		}
-	},
-	errorComponent: ({ error }) => {
-		if (error.message === 'Not authenticated') {
-			return (
-				<div className="flex flex-col items-center gap-4 p-8">
-					<p>You must be logged in to view this page.</p>
-					<Link to="/login" className="text-primary underline">
-						Log in
-					</Link>
-				</div>
-			);
-		}
-		throw error;
+		requireAuthenticatedUser(context);
 	},
 	component: DashboardPage,
 });

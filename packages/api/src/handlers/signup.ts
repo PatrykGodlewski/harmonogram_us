@@ -1,9 +1,8 @@
 import { findUserByEmail, createUser } from '@repo/db/queries/users';
 import { createServerFn } from '@tanstack/react-start';
 import { useAppSession } from '../auth/session';
-import type { AuthCredentials } from '../auth/schemas';
 import { signupInputSchema } from '../auth/schemas';
-import { hashPassword, verifyPasswordHash } from '../auth/hash';
+import { hashPassword, verifyPasswordStrength } from '../auth/hash';
 
 const signupErrors = {
 	userExists: {
@@ -11,24 +10,31 @@ const signupErrors = {
 		userExists: true,
 		message: 'User already exists',
 	},
+	passwordsDoNotMatch: {
+		error: true as const,
+		message: 'Passwords do not match',
+	},
+	invalidPassword: {
+		error: true as const,
+		message: 'Password does not meet security requirements',
+	},
 };
 
 export const signupFn = createServerFn({ method: 'POST' })
 	.inputValidator((input) => signupInputSchema.parse(input))
-	.handler(async (ctx) => {
-		const { email, password } = (ctx as unknown as { data: AuthCredentials }).data;
-		const found = await findUserByEmail(email);
-		const hashedPassword = await hashPassword(password);
-
-		if (found) {
-			if (!found.password || !(await verifyPasswordHash(found.password, password))) {
-				return signupErrors.userExists;
-			}
-			const session = await useAppSession();
-			await session.update({ userId: found.id, email: found.email });
-			return;
+	.handler(async ({ data }) => {
+		const { email, password, confirmPassword } = data;
+		if (password !== confirmPassword) {
+			return signupErrors.passwordsDoNotMatch;
+		}
+		if (!(await verifyPasswordStrength(password))) {
+			return signupErrors.invalidPassword;
 		}
 
+		const found = await findUserByEmail(email);
+		if (found) return signupErrors.userExists;
+
+		const hashedPassword = await hashPassword(password);
 		const user = await createUser(email, hashedPassword);
 		const session = await useAppSession();
 		await session.update({ userId: user.id, email: user.email });

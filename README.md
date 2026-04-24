@@ -18,6 +18,35 @@ pnpm db:push
 
 Put `.env` at the project root. Required vars: `SESSION_SECRET` (min 32 chars), `ENCRYPTION_KEY` (base64, 16 bytes). Use Postgres at `postgresql://postgres:postgres@localhost:5432/harmonogram_us`, or set `DATABASE_URL`.
 
+## Database (Docker)
+
+This project uses PostgreSQL via Docker Compose.
+
+```bash
+# start database in background
+docker compose up -d
+
+# stop database
+docker compose stop
+
+# view database logs
+docker compose logs -f
+```
+
+If you're starting the database for the first time (or after schema changes), run:
+
+```bash
+pnpm db:push
+```
+
+To reset the local database container and data completely:
+
+```bash
+docker compose down -v
+docker compose up -d
+pnpm db:push
+```
+
 ## Scripts
 
 | Command       | Description                          |

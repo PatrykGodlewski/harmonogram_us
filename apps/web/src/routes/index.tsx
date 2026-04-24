@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { getEvents } from '@repo/api/handlers/events';
-import { Button } from '@repo/ui/button';
+import { Button } from '@repo/ui/components/button';
 
 export const Route = createFileRoute('/')({
 	component: HomePage,

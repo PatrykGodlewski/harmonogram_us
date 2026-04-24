@@ -8,6 +8,7 @@
     "./auth/hash": "./src/auth/hash.ts",
     "./auth/schemas": "./src/auth/schemas.ts",
     "./auth/session": "./src/auth/session.ts",
+    "./auth/user": "./src/auth/user.ts",
     "./auth/middleware": "./src/auth/middleware.ts",
     "./handlers/login": "./src/handlers/login.ts",
     "./handlers/signup": {
