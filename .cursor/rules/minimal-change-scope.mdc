@@ -1,0 +1,14 @@
+---
+description: Keep changes focused on requested scope and avoid unrelated edits
+alwaysApply: true
+---
+
+# Minimal Change Scope
+
+Implement only what the task requires.
+
+- Modify the smallest relevant surface area that solves the request.
+- Avoid drive-by cleanup, renames, or architectural rewrites unless asked.
+- Preserve existing behavior unless the task explicitly changes it.
+- Prefer incremental edits over large rewrites in active files.
+- If a larger refactor seems necessary, stop and ask first.

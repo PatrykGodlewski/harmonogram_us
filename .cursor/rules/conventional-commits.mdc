@@ -1,0 +1,16 @@
+---
+description: Use conventional commits when creating commit messages
+alwaysApply: true
+---
+
+# Conventional Commits
+
+When creating commits, follow conventional commit format:
+
+`<type>[optional scope]: <description>`
+
+- Use `feat` for new features and `fix` for bug fixes.
+- Use other standard types when appropriate: `docs`, `refactor`, `test`, `chore`, `perf`, `build`, `ci`.
+- Keep description concise and action-oriented.
+- Add body/footer only when needed for context or breaking changes.
+- Mark breaking changes with `!` in the header or `BREAKING CHANGE:` in footer.

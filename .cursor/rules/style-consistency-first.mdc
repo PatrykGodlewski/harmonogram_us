@@ -1,0 +1,14 @@
+---
+description: Match existing repo patterns before introducing new styles
+alwaysApply: true
+---
+
+# Style Consistency First
+
+Before coding, inspect similar files in this repository and mirror their style.
+
+- Prefer established naming, import order, and file structure over personal preference.
+- Match existing patterns in the same app/package before introducing new abstractions.
+- Favor libraries and utilities already used in this repo.
+- If conventions look inconsistent, follow the most recent local pattern in the touched area.
+- Do not perform broad style refactors unless explicitly requested.

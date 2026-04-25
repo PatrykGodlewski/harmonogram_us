@@ -1,0 +1,16 @@
+---
+description: TypeScript and React quality defaults for app and package code
+globs: **/*.{ts,tsx}
+alwaysApply: false
+---
+
+# TypeScript and React Quality
+
+Use clear, maintainable TypeScript and React patterns.
+
+- Prefer explicit types at module boundaries and public APIs.
+- Use early returns to reduce nesting and keep control flow readable.
+- Keep components and functions small; extract helpers only when reuse or clarity improves.
+- Name handlers with `handle*` when they respond to events.
+- Prefer immutable updates and predictable data flow.
+- Avoid adding comments for obvious code; add concise comments only for non-obvious logic.

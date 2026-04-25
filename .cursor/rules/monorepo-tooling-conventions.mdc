@@ -1,0 +1,14 @@
+---
+description: Follow repo-native monorepo workflow and tooling choices
+alwaysApply: true
+---
+
+# Monorepo Tooling Conventions
+
+Align changes with the repository's existing toolchain.
+
+- Use `pnpm` for package management and scripts.
+- Use Turbo task boundaries rather than ad-hoc cross-package scripts.
+- Respect Biome formatting/linting conventions in touched files.
+- Preserve package-level exports and direct subpath imports.
+- Prefer existing workspace packages (`@repo/*`) over introducing new dependencies.
