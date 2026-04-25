@@ -7,5 +7,5 @@ alwaysApply: true
 
 **Do not create barrel files in this repo.** No `index.ts` (or similar) that re-exports from sibling files, including main package `src/index.ts`.
 
-- Use direct subpath imports: `@repo/api/auth/hash`, `@repo/ui/composed/auth`, `@repo/db/schema/users`, etc.
+- Use direct subpath imports: `@repo/api/auth/hash`, `@repo/ui/composed/login`, `@repo/db/schema/users`, etc.
 - Export directly from each file via package.json exports

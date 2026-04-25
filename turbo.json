@@ -13,7 +13,16 @@
       "dependsOn": ["^build"],
       "cache": false
     },
+    "format": {
+      "cache": false
+    },
     "db:push": {
+      "cache": false
+    },
+    "db:generate": {
+      "cache": false
+    },
+    "db:migrate": {
       "cache": false
     },
     "clean": {

@@ -14,12 +14,13 @@
 	"scripts": {
 		"compile": "node ./scripts/compile-paraglide.mjs",
 		"build": "pnpm run compile",
-		"lint": "biome check ."
+		"lint": "biome check .",
+		"format": "biome check --write ."
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.13",
-		"@inlang/paraglide-js": "^2.16.0",
-		"@inlang/plugin-m-function-matcher": "^2.2.4",
+		"@inlang/paraglide-js": "^2.16.1",
+		"@inlang/plugin-m-function-matcher": "^2.2.5",
 		"@inlang/plugin-message-format": "^4.4.0",
 		"@repo/config": "workspace:*"
 	}

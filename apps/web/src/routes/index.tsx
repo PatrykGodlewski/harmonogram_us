@@ -1,47 +1,36 @@
-import { getEvents } from "@repo/api/handlers/events";
+import {
+	account_title,
+	home_cta_login,
+	home_cta_signup,
+	home_title,
+} from "@repo/i18n/paraglide/messages";
 import { Button } from "@repo/ui/components/button";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
 	component: HomePage,
-	loader: async () => {
-		return getEvents();
-	},
 });
 
 function HomePage() {
-	const events = Route.useLoaderData();
+	const { user } = Route.useRouteContext();
 
 	return (
-		<div className="mx-auto max-w-4xl p-8">
-			<h1 className="mb-6 text-2xl font-bold">University Event Registration</h1>
-			<p className="mb-8 text-muted-foreground">
-				Browse and register for upcoming university events.
-			</p>
-
-			<div className="space-y-4">
-				{events.length === 0 ? (
-					<p className="text-muted-foreground">
-						No events available at the moment.
-					</p>
+		<div className="mx-auto flex max-w-3xl flex-col items-start gap-6 p-8">
+			<h1 className="text-2xl font-bold">{home_title()}</h1>
+			<div className="flex flex-wrap items-center gap-3">
+				{user ? (
+					<Button asChild>
+						<Link to="/account">{account_title()}</Link>
+					</Button>
 				) : (
-					<ul className="divide-y divide-border rounded-lg border">
-						{events.map((event) => (
-							<li
-								key={event.id}
-								className="flex items-center justify-between p-4"
-							>
-								<div>
-									<h2 className="font-semibold">{event.title}</h2>
-									<p className="text-sm text-muted-foreground">
-										{new Date(event.date).toLocaleDateString()} ·{" "}
-										{event.availableSeats} seats available
-									</p>
-								</div>
-								<Button size="sm">Register</Button>
-							</li>
-						))}
-					</ul>
+					<>
+						<Button asChild>
+							<Link to="/login">{home_cta_login()}</Link>
+						</Button>
+						<Button asChild variant="outline">
+							<Link to="/signup">{home_cta_signup()}</Link>
+						</Button>
+					</>
 				)}
 			</div>
 		</div>

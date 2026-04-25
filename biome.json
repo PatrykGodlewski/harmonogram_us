@@ -19,6 +19,7 @@
 			"!**/packages/i18n/src/paraglide",
 			"!**/project.inlang/.meta.json",
 			"!**/project.inlang/cache",
+			"!**/packages/db/src/migrations/**",
 			"!**/src/styles.css",
 			"!**/src/app.css"
 		]

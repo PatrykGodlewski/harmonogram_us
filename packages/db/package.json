@@ -5,14 +5,15 @@
   "type": "module",
   "exports": {
     "./client": "./src/client.ts",
-    "./queries/users": "./src/queries/users.ts",
-    "./schema/events": "./src/schema/events.ts",
-    "./schema/users": "./src/schema/users.ts"
+    "./schema/better-auth": "./src/schema/better-auth.ts",
+    "./queries/users": "./src/queries/users.ts"
   },
   "scripts": {
     "db:push": "drizzle-kit push",
     "lint": "biome check .",
-    "db:generate": "drizzle-kit generate"
+    "format": "biome check --write .",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
     "@repo/env": "workspace:*",

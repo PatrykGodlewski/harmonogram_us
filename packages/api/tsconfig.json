@@ -1,16 +1,18 @@
 {
-  "extends": "@repo/config/tsconfig.base.json",
+  "extends": "../config/tsconfig.base.json",
   "compilerOptions": {
     "paths": {
       "#/*": ["./src/*"],
       "@/*": ["./src/*"],
       "~/*": ["./src/*"],
+      "@repo/i18n/paraglide/messages": ["../i18n/src/paraglide/messages.js"],
+      "@repo/i18n/paraglide/runtime": ["../i18n/src/paraglide/runtime.js"],
+      "@repo/i18n/paraglide/server": ["../i18n/src/paraglide/server.js"],
+      "@react-email/components": ["./src/types/react-email-components.d.ts"],
       "@repo/db/client": ["../db/src/client.ts"],
-      "@repo/db/queries/users": ["../db/src/queries/users.ts"],
-      "@repo/db/schema/events": ["../db/src/schema/events.ts"],
-      "@repo/db/schema/users": ["../db/src/schema/users.ts"]
+      "@repo/db/queries/users": ["../db/src/queries/users.ts"]
     }
   },
-  "include": ["./src/**/*.ts"],
+  "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/**/*.d.ts"],
   "exclude": ["node_modules", "dist"]
 }

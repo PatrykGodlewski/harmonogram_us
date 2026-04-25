@@ -4,13 +4,14 @@ import { config } from "dotenv";
 
 /**
  * Load .env from project root or monorepo root.
- * Tries: cwd/.env, cwd/../../.env (for apps/*)
+ * Prefer monorepo root .env for server runtime in apps/*.
+ * Tries: cwd/../../.env, cwd/.env, cwd/../.env
  */
 function loadEnv(): void {
 	const cwd = process.cwd();
 	const paths = [
-		resolve(cwd, ".env"),
 		resolve(cwd, "../../.env"),
+		resolve(cwd, ".env"),
 		resolve(cwd, "../.env"),
 	];
 	for (const p of paths) {

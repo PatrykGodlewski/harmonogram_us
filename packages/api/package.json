@@ -4,35 +4,40 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./auth/crypto": "./src/auth/crypto.ts",
-    "./auth/hash": "./src/auth/hash.ts",
-    "./auth/schemas": "./src/auth/schemas.ts",
-    "./auth/session": "./src/auth/session.ts",
-    "./auth/user": "./src/auth/user.ts",
-    "./auth/middleware": "./src/auth/middleware.ts",
-    "./handlers/login": "./src/handlers/login.ts",
-    "./handlers/signup": {
-      "import": "./src/handlers/signup.ts",
-      "default": "./src/handlers/signup.ts"
-    },
-    "./handlers/events": "./src/handlers/events.ts",
-    "./procedures": "./src/procedures.ts",
-    "./events": "./src/handlers/events.ts"
+    "./auth/*": "./src/auth/*.ts",
+    "./handlers/*": "./src/handlers/*.ts",
+    "./procedures": "./src/procedures.ts"
   },
   "dependencies": {
+    "@better-auth/i18n": "^1.6.9",
     "@node-rs/argon2": "^2.0.2",
     "@oslojs/binary": "^1.0.0",
     "@oslojs/crypto": "^1.0.1",
     "@oslojs/encoding": "^1.1.0",
+    "@react-email/components": "^1.0.12",
+    "@react-email/render": "^2.0.7",
     "@repo/db": "workspace:*",
     "@repo/env": "workspace:*",
-    "@tanstack/react-start": "^1.167.42",
+    "@repo/i18n": "workspace:*",
+    "@tanstack/react-start": "^1.167.45",
+    "better-auth": "^1.6.9",
+    "deep-email-validator": "^0.1.27",
+    "disposable-email-domains": "^1.0.62",
+    "drizzle-orm": "^0.45.2",
+    "ioredis": "^5.10.1",
+    "nodemailer": "^8.0.6",
+    "rate-limiter-flexible": "^11.0.1",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
     "zod": "^4.3.6"
   },
   "scripts": {
-    "lint": "biome check ."
+    "lint": "biome check .",
+    "format": "biome check --write ."
   },
   "devDependencies": {
-    "@repo/config": "workspace:*"
+    "@repo/config": "workspace:*",
+    "@types/nodemailer": "^8.0.0",
+    "@types/react": "^19.2.14"
   }
 }

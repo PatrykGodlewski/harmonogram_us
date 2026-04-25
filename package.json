@@ -20,6 +20,9 @@
     "dev": "turbo dev --filter=web --filter=admin",
     "build": "turbo build",
     "lint": "turbo lint",
+    "format": "turbo format",
+    "db:generate": "turbo db:generate",
+    "db:migrate": "turbo db:migrate",
     "db:push": "turbo db:push",
     "clean": "turbo clean && rm -rf node_modules"
   },

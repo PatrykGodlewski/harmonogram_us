@@ -4,17 +4,18 @@
   "private": true,
   "type": "module",
   "sideEffects": false,
-	"exports": {
-		"./require-auth": "./src/require-auth.ts",
-		"./paraglide-router-rewrite": "./src/paraglide-router-rewrite.ts"
-	},
-  "scripts": {
-    "lint": "biome check ."
+  "exports": {
+    "./require-auth": "./src/require-auth.ts",
+    "./paraglide-router-rewrite": "./src/paraglide-router-rewrite.ts"
   },
-	"dependencies": {
-		"@repo/i18n": "workspace:*",
-		"@tanstack/react-router": "^1.168.23"
-	},
+  "scripts": {
+    "lint": "biome check .",
+    "format": "biome check --write ."
+  },
+  "dependencies": {
+    "@repo/i18n": "workspace:*",
+    "@tanstack/react-router": "^1.168.23"
+  },
   "devDependencies": {
     "@repo/config": "workspace:*",
     "typescript": "^6.0.3"

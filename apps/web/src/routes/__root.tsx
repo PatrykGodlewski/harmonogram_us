@@ -8,6 +8,7 @@ import {
 	title_document_students,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
+import { Toaster } from "@repo/ui/components/sonner";
 import { Header } from "@repo/ui/composed/header";
 import type { QueryClient } from "@tanstack/react-query";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -83,6 +84,7 @@ function RootComponent() {
 			<ReactQueryDevtools buttonPosition="bottom-right" />
 			<Header user={user} />
 			<Outlet />
+			<Toaster />
 		</QueryClientProvider>
 	);
 }

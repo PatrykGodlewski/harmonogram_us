@@ -1,0 +1,11 @@
+# Prefer `z.email()` over deprecated `z.string().email()`
+
+When defining email validators with Zod in this repository:
+
+- Do not use `z.string().email()` (deprecated signature warning).
+- Use `z.email()` instead.
+
+Examples:
+
+- Preferred: `z.email()`
+- Avoid: `z.string().email()`

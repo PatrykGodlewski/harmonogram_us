@@ -1,6 +1,21 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { getCurrentUser } from "@repo/api/auth/user";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
+
+const getCurrentUserFn = createServerFn({ method: "GET" }).handler(async () => {
+	return getCurrentUser();
+});
 
 export const Route = createFileRoute("/")({
+	beforeLoad: async ({ location }) => {
+		const user = await getCurrentUserFn();
+		if (!user) {
+			throw redirect({
+				to: "/login",
+				search: { redirect: location.href },
+			});
+		}
+	},
 	component: AdminHomePage,
 });
 

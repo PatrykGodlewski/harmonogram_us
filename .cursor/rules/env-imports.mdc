@@ -1,0 +1,16 @@
+---
+description: Use @repo/env for environment variable access
+alwaysApply: true
+---
+
+# Environment Access Convention
+
+When working with environment variables, use:
+
+```ts
+import { env } from "@repo/env";
+```
+
+- Use `env.*` instead of direct `process.env.*` reads in application code.
+- Keep environment validation and typing centralized in `@repo/env`.
+- For browser-only values, use the app's client-safe env mechanism (for example `import.meta.env` with `VITE_*`) and do not expose server secrets.

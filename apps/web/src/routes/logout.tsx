@@ -1,13 +1,21 @@
-import { useAppSession } from "@repo/api/auth/session";
-import { createFileRoute, redirect } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
-
-const logoutFn = createServerFn().handler(async () => {
-	const session = await useAppSession();
-	await session.clear();
-	throw redirect({ to: "/" });
-});
+import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { authClient } from "~/lib/auth-client";
 
 export const Route = createFileRoute("/logout")({
-	loader: () => logoutFn(),
+	component: LogoutPage,
 });
+
+function LogoutPage() {
+	const router = useRouter();
+
+	useEffect(() => {
+		void authClient.signOut().finally(() => {
+			void router.invalidate().finally(() => {
+				router.navigate({ to: "/" });
+			});
+		});
+	}, [router]);
+
+	return null;
+}
