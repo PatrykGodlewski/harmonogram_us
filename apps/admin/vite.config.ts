@@ -30,8 +30,6 @@ export default defineConfig({
 			strategy: ["url", "baseLocale"],
 			urlPatterns: paraglideUrlPatterns,
 		}),
-		nitro({ rollupConfig: { external: [/^@sentry\//] } }),
-		tailwindcss(),
 		tanstackStart({
 			start: {
 				entry: "./src/server.ts",
@@ -39,6 +37,8 @@ export default defineConfig({
 		}),
 		viteReact(),
 		babel({ presets: [reactCompilerPreset()] }),
+		tailwindcss(),
+		nitro({ rollupConfig: { external: [/^@sentry\//] } }),
 	],
 	server: {
 		port: 3001,

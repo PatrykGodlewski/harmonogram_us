@@ -1,6 +1,6 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { authClient } from "../lib/auth-client";
+import { authClient } from "~/lib/auth-client";
 
 export const Route = createFileRoute("/logout")({
 	component: AdminLogoutPage,
@@ -11,7 +11,9 @@ function AdminLogoutPage() {
 
 	useEffect(() => {
 		void authClient.signOut().finally(() => {
-			router.navigate({ to: "/login", search: { redirect: undefined } });
+			void router.invalidate().finally(() => {
+				router.navigate({ to: "/login", search: { redirect: undefined } });
+			});
 		});
 	}, [router]);
 

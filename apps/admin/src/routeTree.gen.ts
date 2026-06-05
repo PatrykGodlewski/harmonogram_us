@@ -11,7 +11,12 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedEventsRouteImport } from './routes/_authenticated/events'
+import { Route as AuthenticatedEventTypesRouteImport } from './routes/_authenticated/event-types'
+import { Route as AuthenticatedEventLocationsRouteImport } from './routes/_authenticated/event-locations'
+import { Route as AuthenticatedEventFacultiesRouteImport } from './routes/_authenticated/event-faculties'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const LogoutRoute = LogoutRouteImport.update({
@@ -24,11 +29,37 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedEventsRoute = AuthenticatedEventsRouteImport.update({
+  id: '/events',
+  path: '/events',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedEventTypesRoute = AuthenticatedEventTypesRouteImport.update({
+  id: '/event-types',
+  path: '/event-types',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedEventLocationsRoute =
+  AuthenticatedEventLocationsRouteImport.update({
+    id: '/event-locations',
+    path: '/event-locations',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedEventFacultiesRoute =
+  AuthenticatedEventFacultiesRouteImport.update({
+    id: '/event-faculties',
+    path: '/event-faculties',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -36,34 +67,73 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
+  '/event-faculties': typeof AuthenticatedEventFacultiesRoute
+  '/event-locations': typeof AuthenticatedEventLocationsRoute
+  '/event-types': typeof AuthenticatedEventTypesRoute
+  '/events': typeof AuthenticatedEventsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
+  '/event-faculties': typeof AuthenticatedEventFacultiesRoute
+  '/event-locations': typeof AuthenticatedEventLocationsRoute
+  '/event-types': typeof AuthenticatedEventTypesRoute
+  '/events': typeof AuthenticatedEventsRoute
+  '/': typeof AuthenticatedIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
+  '/_authenticated/event-faculties': typeof AuthenticatedEventFacultiesRoute
+  '/_authenticated/event-locations': typeof AuthenticatedEventLocationsRoute
+  '/_authenticated/event-types': typeof AuthenticatedEventTypesRoute
+  '/_authenticated/events': typeof AuthenticatedEventsRoute
+  '/_authenticated/': typeof AuthenticatedIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/logout' | '/api/auth/$'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/logout'
+    | '/event-faculties'
+    | '/event-locations'
+    | '/event-types'
+    | '/events'
+    | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/logout' | '/api/auth/$'
-  id: '__root__' | '/' | '/login' | '/logout' | '/api/auth/$'
+  to:
+    | '/login'
+    | '/logout'
+    | '/event-faculties'
+    | '/event-locations'
+    | '/event-types'
+    | '/events'
+    | '/'
+    | '/api/auth/$'
+  id:
+    | '__root__'
+    | '/_authenticated'
+    | '/login'
+    | '/logout'
+    | '/_authenticated/event-faculties'
+    | '/_authenticated/event-locations'
+    | '/_authenticated/event-types'
+    | '/_authenticated/events'
+    | '/_authenticated/'
+    | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
   LogoutRoute: typeof LogoutRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -85,12 +155,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/': {
+      id: '/_authenticated/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/events': {
+      id: '/_authenticated/events'
+      path: '/events'
+      fullPath: '/events'
+      preLoaderRoute: typeof AuthenticatedEventsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/event-types': {
+      id: '/_authenticated/event-types'
+      path: '/event-types'
+      fullPath: '/event-types'
+      preLoaderRoute: typeof AuthenticatedEventTypesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/event-locations': {
+      id: '/_authenticated/event-locations'
+      path: '/event-locations'
+      fullPath: '/event-locations'
+      preLoaderRoute: typeof AuthenticatedEventLocationsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/event-faculties': {
+      id: '/_authenticated/event-faculties'
+      path: '/event-faculties'
+      fullPath: '/event-faculties'
+      preLoaderRoute: typeof AuthenticatedEventFacultiesRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/api/auth/$': {
       id: '/api/auth/$'
@@ -102,8 +207,28 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedRouteChildren {
+  AuthenticatedEventFacultiesRoute: typeof AuthenticatedEventFacultiesRoute
+  AuthenticatedEventLocationsRoute: typeof AuthenticatedEventLocationsRoute
+  AuthenticatedEventTypesRoute: typeof AuthenticatedEventTypesRoute
+  AuthenticatedEventsRoute: typeof AuthenticatedEventsRoute
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedEventFacultiesRoute: AuthenticatedEventFacultiesRoute,
+  AuthenticatedEventLocationsRoute: AuthenticatedEventLocationsRoute,
+  AuthenticatedEventTypesRoute: AuthenticatedEventTypesRoute,
+  AuthenticatedEventsRoute: AuthenticatedEventsRoute,
+  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
   LogoutRoute: LogoutRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,

@@ -10,6 +10,7 @@ services:
       POSTGRES_DB: harmonogram_us
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    command: ["postgres", "-c", "wal_level=logical"]
 
   mailpit:
     image: axllent/mailpit:latest
@@ -26,6 +27,17 @@ services:
     volumes:
       - redis_data:/data
     command: ["redis-server", "--appendonly", "yes"]
+
+  electric:
+    image: electricsql/electric:latest
+    restart: unless-stopped
+    ports:
+      - "5133:3000"
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      ELECTRIC_SECRET: ${ELECTRIC_SECRET}
+    depends_on:
+      - db
 
 volumes:
   postgres_data:

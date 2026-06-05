@@ -14,6 +14,7 @@ import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiElectricEventSeatCountsRouteImport } from './routes/api/electric/event-seat-counts'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const SignupRoute = SignupRouteImport.update({
@@ -41,6 +42,12 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiElectricEventSeatCountsRoute =
+  ApiElectricEventSeatCountsRouteImport.update({
+    id: '/api/electric/event-seat-counts',
+    path: '/api/electric/event-seat-counts',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -54,6 +61,7 @@ export interface FileRoutesByFullPath {
   '/logout': typeof LogoutRoute
   '/signup': typeof SignupRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/electric/event-seat-counts': typeof ApiElectricEventSeatCountsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +70,7 @@ export interface FileRoutesByTo {
   '/logout': typeof LogoutRoute
   '/signup': typeof SignupRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/electric/event-seat-counts': typeof ApiElectricEventSeatCountsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,12 +80,27 @@ export interface FileRoutesById {
   '/logout': typeof LogoutRoute
   '/signup': typeof SignupRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/electric/event-seat-counts': typeof ApiElectricEventSeatCountsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/account' | '/login' | '/logout' | '/signup' | '/api/auth/$'
+  fullPaths:
+    | '/'
+    | '/account'
+    | '/login'
+    | '/logout'
+    | '/signup'
+    | '/api/auth/$'
+    | '/api/electric/event-seat-counts'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/account' | '/login' | '/logout' | '/signup' | '/api/auth/$'
+  to:
+    | '/'
+    | '/account'
+    | '/login'
+    | '/logout'
+    | '/signup'
+    | '/api/auth/$'
+    | '/api/electric/event-seat-counts'
   id:
     | '__root__'
     | '/'
@@ -85,6 +109,7 @@ export interface FileRouteTypes {
     | '/logout'
     | '/signup'
     | '/api/auth/$'
+    | '/api/electric/event-seat-counts'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -94,6 +119,7 @@ export interface RootRouteChildren {
   LogoutRoute: typeof LogoutRoute
   SignupRoute: typeof SignupRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiElectricEventSeatCountsRoute: typeof ApiElectricEventSeatCountsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -133,6 +159,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/electric/event-seat-counts': {
+      id: '/api/electric/event-seat-counts'
+      path: '/api/electric/event-seat-counts'
+      fullPath: '/api/electric/event-seat-counts'
+      preLoaderRoute: typeof ApiElectricEventSeatCountsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -150,6 +183,7 @@ const rootRouteChildren: RootRouteChildren = {
   LogoutRoute: LogoutRoute,
   SignupRoute: SignupRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiElectricEventSeatCountsRoute: ApiElectricEventSeatCountsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
