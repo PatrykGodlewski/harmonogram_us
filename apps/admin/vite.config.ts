@@ -18,6 +18,7 @@ export default defineConfig({
 	resolve: {
 		tsconfigPaths: true,
 		alias: {
+			"~": path.join(__dirname, "src"),
 			"#paraglide-runtime": path.join(i18nRoot, "src/paraglide/runtime.js"),
 		},
 	},

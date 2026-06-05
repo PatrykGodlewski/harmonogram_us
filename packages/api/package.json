@@ -4,9 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./auth/*": "./src/auth/*.ts",
-    "./handlers/*": "./src/handlers/*.ts",
-    "./procedures": "./src/procedures.ts"
+    "./*": "./src/*.ts",
+    "./*/*": "./src/*/*.ts"
   },
   "dependencies": {
     "@better-auth/i18n": "^1.6.9",

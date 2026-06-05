@@ -8,7 +8,6 @@
       "@repo/i18n/paraglide/messages": ["../i18n/src/paraglide/messages.js"],
       "@repo/i18n/paraglide/runtime": ["../i18n/src/paraglide/runtime.js"],
       "@repo/i18n/paraglide/server": ["../i18n/src/paraglide/server.js"],
-      "@react-email/components": ["./src/types/react-email-components.d.ts"],
       "@repo/db/client": ["../db/src/client.ts"],
       "@repo/db/queries/users": ["../db/src/queries/users.ts"]
     }

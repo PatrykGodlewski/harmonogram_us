@@ -132,9 +132,7 @@ function AccountPage() {
 		? serverErrorMessage
 		: null;
 	const generalServerErrorMessage =
-		serverErrorMessage &&
-		!currentPasswordServerError &&
-		!newPasswordServerError
+		serverErrorMessage && !currentPasswordServerError && !newPasswordServerError
 			? serverErrorMessage
 			: null;
 
