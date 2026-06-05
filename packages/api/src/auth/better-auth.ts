@@ -24,6 +24,8 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { captcha, magicLink } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
+import validateEmail from "deep-email-validator";
+import disposableDomainList from "disposable-email-domains";
 import { Redis } from "ioredis";
 import { RateLimiterRedis } from "rate-limiter-flexible";
 import { z } from "zod";
@@ -136,18 +138,26 @@ function normalizeText(value: unknown): string | null {
 	return normalized.length > 0 ? normalized : null;
 }
 
+function getBodyValue(
+	body: unknown,
+	key: "email" | "password" | "newPassword",
+): unknown {
+	if (!body || typeof body !== "object") return undefined;
+	return Reflect.get(body, key);
+}
+
 function getBodyValueAsString(
 	body: unknown,
 	key: "email" | "password" | "newPassword",
 ): string | null {
-	if (!body || typeof body !== "object") return null;
+	const value = getBodyValue(body, key);
 	if (key === "email") {
-		return normalizeEmail((body as Record<string, unknown>).email);
+		return normalizeEmail(value);
 	}
 	if (key === "password") {
-		return normalizeText((body as Record<string, unknown>).password);
+		return normalizeText(value);
 	}
-	return normalizeText((body as Record<string, unknown>).newPassword);
+	return normalizeText(value);
 }
 
 async function consumeRateLimit(
@@ -163,16 +173,10 @@ async function consumeRateLimit(
 	}
 }
 
-async function loadDisposableDomains(): Promise<Set<string>> {
+function getDisposableDomains(): Set<string> {
 	if (disposableDomainSet) return disposableDomainSet;
-	const disposableModule = await import("disposable-email-domains");
-	const candidate =
-		(disposableModule as { default?: unknown }).default ?? disposableModule;
-	const domainList = Array.isArray(candidate) ? candidate : [];
 	disposableDomainSet = new Set(
-		domainList
-			.filter((value): value is string => typeof value === "string")
-			.map((domain) => domain.toLowerCase()),
+		disposableDomainList.map((domain) => domain.toLowerCase()),
 	);
 	return disposableDomainSet;
 }
@@ -183,36 +187,20 @@ async function assertEmailIsAllowed(email: string): Promise<void> {
 		throw new APIError("BAD_REQUEST", { message: "Invalid email address." });
 	}
 
-	const disposableDomains = await loadDisposableDomains();
+	const disposableDomains = getDisposableDomains();
 	if (disposableDomains.has(domain)) {
 		throw new APIError("BAD_REQUEST", {
 			message: "Disposable email addresses are not allowed.",
 		});
 	}
 
-	const emailValidatorModule = await import("deep-email-validator");
-	const validateFn =
-		(emailValidatorModule as { validate?: unknown }).validate ??
-		(emailValidatorModule as { default?: unknown }).default;
-
-	if (typeof validateFn !== "function") {
-		throw new APIError("INTERNAL_SERVER_ERROR", {
-			message: "Email validation is not configured correctly.",
-		});
-	}
-
-	const result = (await (
-		validateFn as (options: Record<string, unknown>) => Promise<{
-			valid: boolean;
-			[extra: string]: unknown;
-		}>
-	)({
+	const result = await validateEmail({
 		email,
 		validateRegex: true,
 		validateMx: true,
 		validateTypo: true,
 		validateDisposable: false,
-	})) ?? { valid: false };
+	});
 
 	if (!result.valid) {
 		throw new APIError("BAD_REQUEST", {
@@ -339,6 +327,7 @@ function resolveMagicLinkLocale(params: {
 export const auth = betterAuth({
 	baseURL: env.BETTER_AUTH_URL,
 	secret: env.BETTER_AUTH_SECRET,
+	trustedOrigins: [env.ADMIN_URL],
 	database: drizzleAdapter(db, {
 		provider: "pg",
 		schema: {

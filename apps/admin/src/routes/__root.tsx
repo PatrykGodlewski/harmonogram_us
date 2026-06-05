@@ -1,18 +1,25 @@
 /// <reference types="vite/client" />
 
+import { ensureCurrentUser } from "@repo/api/auth/current-user-query";
+import { syncDocumentLocale } from "@repo/i18n/localization/sync-document-locale";
 import {
 	error_title,
 	go_home,
 	not_found_title,
-	title_document_admin,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
+import { createAdminRootDocumentHead } from "@repo/router-utils/metadata/admin-root-document-head";
+import { Toaster } from "@repo/ui/components/sonner";
+import { AdminHeader } from "@repo/ui/composed/admin-header";
+import type { QueryClient } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import {
-	createRootRoute,
+	createRootRouteWithContext,
 	HeadContent,
 	Link,
 	Outlet,
 	Scripts,
+	useRouterState,
 } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import appCss from "~/app.css?url";
@@ -42,40 +49,45 @@ function ErrorComponent({ error }: { error: unknown }) {
 	);
 }
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<{
+	queryClient: QueryClient;
+}>()({
 	notFoundComponent: NotFound,
 	errorComponent: ErrorComponent,
-	beforeLoad: () => {
-		if (typeof document !== "undefined") {
-			document.documentElement.setAttribute("lang", getLocale());
-		}
+	beforeLoad: async ({ context: { queryClient } }) => {
+		syncDocumentLocale();
+		const user = await ensureCurrentUser(queryClient);
+		return { user };
 	},
-	head: () => ({
-		meta: [
-			{ charSet: "utf-8" },
-			{ name: "viewport", content: "width=device-width, initial-scale=1" },
-			{ title: String(title_document_admin()) },
-		],
-		links: [{ rel: "stylesheet", href: appCss }],
-	}),
+	shellComponent: RootDocument,
+	head: createAdminRootDocumentHead(appCss),
 	component: RootComponent,
 });
 
 function RootComponent() {
+	const { user } = Route.useRouteContext();
+	const pathname = useRouterState({
+		select: (state) => state.location.pathname,
+	});
+	const showHeader = !user || pathname === "/login" || pathname === "/logout";
+
 	return (
-		<RootDocument>
+		<>
+			<ReactQueryDevtools buttonPosition="bottom-right" />
+			{showHeader ? <AdminHeader user={user} /> : null}
 			<Outlet />
-		</RootDocument>
+			<Toaster />
+		</>
 	);
 }
 
 function RootDocument({ children }: { children: ReactNode }) {
 	return (
 		<html lang={getLocale()} suppressHydrationWarning>
-			<head suppressHydrationWarning>
+			<head>
 				<HeadContent />
 			</head>
-			<body suppressHydrationWarning>
+			<body>
 				{children}
 				<Scripts />
 			</body>

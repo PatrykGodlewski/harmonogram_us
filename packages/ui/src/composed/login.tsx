@@ -3,16 +3,12 @@ import { enabledSocialProviders } from "@repo/api/auth/social-providers";
 import { env } from "@repo/env/client";
 import {
 	auth_button_password_login,
-	auth_error_login_failed,
 	auth_error_try_again,
 	auth_field_email,
-	auth_field_invalid_value,
 	auth_field_password,
 	auth_status_success_title,
 	auth_submit_magic_link,
 	auth_submit_sending_magic_link,
-	auth_success_logged_in_message,
-	auth_success_logged_in_title,
 	auth_title_login,
 	auth_toggle_hide_password_login,
 	auth_toggle_show_password_login,
@@ -33,22 +29,12 @@ import { Button } from "../components/button";
 import { FormMessage } from "../components/form-message";
 import { Input } from "../components/input";
 import { Label } from "../components/label";
+import { formatFieldError, usePasswordLogin } from "./auth/password-login";
 import { type AuthSocialProvider, authSocialButtonLabel } from "./auth-social";
-
-const fieldErrorSchema = z.object({
-	message: z.string(),
-});
 
 const authClient = createAuthClient({
 	plugins: [magicLinkClient()],
 });
-
-function formatFieldError(error: unknown): string {
-	if (typeof error === "string") return error;
-	const parsed = fieldErrorSchema.safeParse(error);
-	if (parsed.success) return parsed.data.message;
-	return auth_field_invalid_value();
-}
 
 type LoginStatus = {
 	isRequestError: boolean;
@@ -56,22 +42,6 @@ type LoginStatus = {
 	serverError?: { message?: string } | null;
 	isLoading?: boolean;
 };
-
-type AuthClientErrorShape = {
-	message?: string | null;
-	code?: string | null;
-	status?: number | null;
-};
-
-function resolvePasswordLoginErrorMessage(error: AuthClientErrorShape): string {
-	if (error.code === "INVALID_EMAIL_OR_PASSWORD" || error.status === 401) {
-		return auth_error_login_failed();
-	}
-	if (error.message && error.message.trim().length > 0) {
-		return error.message;
-	}
-	return auth_error_login_failed();
-}
 
 function resolveLoginErrorMessage(status: LoginStatus): string | null {
 	if (status.isRequestError) return status.requestErrorMessage ?? error_title();
@@ -177,7 +147,7 @@ export function Login({ redirectTo }: LoginProps) {
 									id={field.name}
 									name={field.name}
 									type="password"
-									containerClassName="mt-1"
+									className="mt-1"
 									disabled={isBusy}
 									value={String(field.state.value ?? "")}
 									onBlur={field.handleBlur}
@@ -264,9 +234,9 @@ export function Login({ redirectTo }: LoginProps) {
 	);
 }
 
-type PasswordLoginData = { email: string; password: string };
-
 function useLogin(redirectTo: string, captchaToken: string | null) {
+	const passwordMutation = usePasswordLogin(redirectTo, captchaToken);
+
 	const magicLinkMutation = useMutation({
 		mutationFn: async (email: string) => {
 			const { error } = await authClient.signIn.magicLink({
@@ -295,33 +265,6 @@ function useLogin(redirectTo: string, captchaToken: string | null) {
 		},
 	});
 
-	const passwordMutation = useMutation({
-		mutationFn: async (data: PasswordLoginData) => {
-			const { error } = await authClient.signIn.email({
-				email: data.email,
-				password: data.password,
-				callbackURL: redirectTo,
-				fetchOptions: captchaToken
-					? {
-							headers: {
-								"x-captcha-response": captchaToken,
-							},
-						}
-					: undefined,
-			});
-			if (error) {
-				throw new Error(
-					resolvePasswordLoginErrorMessage(error as AuthClientErrorShape),
-				);
-			}
-		},
-		onSuccess: () => {
-			toast.success(auth_success_logged_in_title(), {
-				description: auth_success_logged_in_message(),
-			});
-		},
-	});
-
 	const socialMutation = useMutation({
 		mutationFn: async (provider: AuthSocialProvider) => {
 			const { error } = await authClient.signIn.social({
@@ -342,7 +285,7 @@ function useLogin(redirectTo: string, captchaToken: string | null) {
 			magicLinkMutation.reset();
 			magicLinkMutation.mutate(data.email);
 		},
-		onPasswordLogin: (data: PasswordLoginData) => {
+		onPasswordLogin: (data: { email: string; password: string }) => {
 			magicLinkMutation.reset();
 			socialMutation.reset();
 			passwordMutation.reset();

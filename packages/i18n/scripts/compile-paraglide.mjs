@@ -2,6 +2,7 @@ import { compile } from "@inlang/paraglide-js";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { paraglideRouteStrategies } from "../paraglide-route-strategies.js";
 import { paraglideUrlPatterns } from "../paraglide-url-patterns.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -12,6 +13,7 @@ await compile({
 	outdir: path.join(pkgRoot, "src/paraglide"),
 	strategy: ["url", "baseLocale"],
 	urlPatterns: paraglideUrlPatterns,
+	routeStrategies: paraglideRouteStrategies,
 });
 
 /**

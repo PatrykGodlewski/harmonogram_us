@@ -31,6 +31,7 @@ export const env = createEnv({
 			.string({ message: "BETTER_AUTH_SECRET must be provided" })
 			.min(32, "BETTER_AUTH_SECRET must be at least 32 characters"),
 		BETTER_AUTH_URL: z.url().default("http://localhost:3000"),
+		ADMIN_URL: z.url().default("http://localhost:3001"),
 		TURNSTILE_SECRET_KEY: z.string().optional(),
 		REDIS_URL: z.string().optional(),
 		REDIS_PASSWORD: z.string().optional(),
@@ -44,6 +45,9 @@ export const env = createEnv({
 		SMTP_USER: z.string().optional(),
 		SMTP_PASSWORD: z.string().optional(),
 		SMTP_FROM: z.string().optional(),
+
+		ELECTRIC_URL: z.url().optional().default("http://localhost:5133"),
+		ELECTRIC_SECRET: z.string().optional(),
 	},
 	runtimeEnv: process.env,
 	emptyStringAsUndefined: true,

@@ -8,6 +8,7 @@ import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react";
 import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
+import { paraglideRouteStrategies } from "../../packages/i18n/paraglide-route-strategies.js";
 import { paraglideUrlPatterns } from "../../packages/i18n/paraglide-url-patterns.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -30,9 +31,8 @@ export default defineConfig({
 			outdir: path.join(i18nRoot, "src/paraglide"),
 			strategy: ["url", "baseLocale"],
 			urlPatterns: paraglideUrlPatterns,
+			routeStrategies: paraglideRouteStrategies,
 		}),
-		nitro({ rollupConfig: { external: [/^@sentry\//] } }),
-		tailwindcss(),
 		tanstackStart({
 			start: {
 				entry: "./src/server.ts",
@@ -40,6 +40,8 @@ export default defineConfig({
 		}),
 		viteReact(),
 		babel({ presets: [reactCompilerPreset()] }),
+		tailwindcss(),
+		nitro({ rollupConfig: { external: [/^@sentry\//] } }),
 	],
 	server: {
 		port: 3000,
