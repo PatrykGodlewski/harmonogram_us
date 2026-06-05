@@ -7,16 +7,6 @@ import {
 	admin_nav_section,
 	header_logout,
 } from "@repo/i18n/paraglide/messages";
-import { Link, useRouterState } from "@tanstack/react-router";
-import {
-	CalendarDaysIcon,
-	GraduationCapIcon,
-	LayoutDashboardIcon,
-	LogOutIcon,
-	MapPinIcon,
-	TagIcon,
-} from "lucide-react";
-import type { ReactNode } from "react";
 import {
 	Sidebar,
 	SidebarContent,
@@ -32,6 +22,16 @@ import {
 	SidebarProvider,
 	SidebarTrigger,
 } from "@repo/ui/components/sidebar";
+import { Link, useRouterState } from "@tanstack/react-router";
+import {
+	CalendarDaysIcon,
+	GraduationCapIcon,
+	LayoutDashboardIcon,
+	LogOutIcon,
+	MapPinIcon,
+	TagIcon,
+} from "lucide-react";
+import type { ReactNode } from "react";
 import { AdminLogo } from "../logo/admin-logo";
 
 const navItems = [

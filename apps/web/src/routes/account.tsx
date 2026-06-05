@@ -180,7 +180,7 @@ function AccountPage() {
 										id={field.name}
 										name={field.name}
 										type="password"
-										containerClassName="mt-1"
+										className="mt-1"
 										disabled={updatePassword.isPending}
 										value={String(field.state.value ?? "")}
 										onBlur={field.handleBlur}
@@ -210,7 +210,7 @@ function AccountPage() {
 									id={field.name}
 									name={field.name}
 									type="password"
-									containerClassName="mt-1"
+									className="mt-1"
 									disabled={updatePassword.isPending}
 									value={String(field.state.value ?? "")}
 									onBlur={field.handleBlur}
@@ -239,7 +239,7 @@ function AccountPage() {
 									id={field.name}
 									name={field.name}
 									type="password"
-									containerClassName="mt-1"
+									className="mt-1"
 									disabled={updatePassword.isPending}
 									value={String(field.state.value ?? "")}
 									onBlur={field.handleBlur}

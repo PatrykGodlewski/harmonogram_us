@@ -1,3 +1,9 @@
+import { getEventFilterOptions, getEvents } from "@repo/db/queries/events";
+import {
+	getEventFaculties,
+	getEventLocations,
+	getEventTypes,
+} from "@repo/db/queries/lookups";
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { authMiddleware } from "../auth/middleware";
@@ -11,10 +17,7 @@ const protectedQueryFn = createServerFn({ method: "GET" }).middleware([
 
 export const fetchAdminEventsServer = protectedQueryFn
 	.inputValidator((input: unknown) => adminEventsQuerySchema.parse(input))
-	.handler(async ({ data }) => {
-		const { getEvents } = await import("@repo/db/queries/events");
-		return getEvents({ sortOrder: data.sortOrder });
-	});
+	.handler(async ({ data }) => getEvents({ sortOrder: data.sortOrder }));
 
 export const adminEventsQueryOptions = (sortOrder: "asc" | "desc" = "desc") =>
 	queryOptions({
@@ -22,10 +25,9 @@ export const adminEventsQueryOptions = (sortOrder: "asc" | "desc" = "desc") =>
 		queryFn: () => fetchAdminEventsServer({ data: { sortOrder } }),
 	});
 
-export const fetchAdminEventTypesServer = protectedQueryFn.handler(async () => {
-	const { getEventTypes } = await import("@repo/db/queries/lookups");
-	return getEventTypes();
-});
+export const fetchAdminEventTypesServer = protectedQueryFn.handler(async () =>
+	getEventTypes(),
+);
 
 export const adminEventTypesQueryOptions = queryOptions({
 	queryKey: ["admin", "event-types"] as const,
@@ -33,10 +35,7 @@ export const adminEventTypesQueryOptions = queryOptions({
 });
 
 export const fetchAdminEventLocationsServer = protectedQueryFn.handler(
-	async () => {
-		const { getEventLocations } = await import("@repo/db/queries/lookups");
-		return getEventLocations();
-	},
+	async () => getEventLocations(),
 );
 
 export const adminEventLocationsQueryOptions = queryOptions({
@@ -45,10 +44,7 @@ export const adminEventLocationsQueryOptions = queryOptions({
 });
 
 export const fetchAdminEventFacultiesServer = protectedQueryFn.handler(
-	async () => {
-		const { getEventFaculties } = await import("@repo/db/queries/lookups");
-		return getEventFaculties();
-	},
+	async () => getEventFaculties(),
 );
 
 export const adminEventFacultiesQueryOptions = queryOptions({
@@ -57,10 +53,7 @@ export const adminEventFacultiesQueryOptions = queryOptions({
 });
 
 export const fetchAdminEventFilterOptionsServer = protectedQueryFn.handler(
-	async () => {
-		const { getEventFilterOptions } = await import("@repo/db/queries/events");
-		return getEventFilterOptions();
-	},
+	async () => getEventFilterOptions(),
 );
 
 export const adminEventFilterOptionsQueryOptions = queryOptions({

@@ -1,4 +1,7 @@
 import { z } from "zod";
+import { optionalIdSchema } from "./optional-id-schema";
+
+export { formOptionalIdSchema, optionalIdSchema } from "./optional-id-schema";
 
 export const lookupSchema = z.object({
 	id: z.string().min(1).max(100),
@@ -7,7 +10,9 @@ export const lookupSchema = z.object({
 	sortOrder: z.number().int().min(0).default(0),
 });
 
-export const createLookupSchema = lookupSchema;
+export const createLookupSchema = lookupSchema.extend({
+	id: optionalIdSchema,
+});
 
 export const updateLookupSchema = z.object({
 	id: z.string().min(1),

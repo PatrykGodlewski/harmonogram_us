@@ -6,7 +6,8 @@
   "sideEffects": false,
   "exports": {
     "./require-auth": "./src/require-auth.ts",
-    "./paraglide-router-rewrite": "./src/paraglide-router-rewrite.ts"
+    "./paraglide-router-rewrite": "./src/paraglide-router-rewrite.ts",
+    "./metadata/*": "./src/metadata/*.ts"
   },
   "scripts": {
     "lint": "biome check .",

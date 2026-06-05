@@ -1,10 +1,16 @@
-import { sql } from "drizzle-orm";
+import { hashPassword } from "better-auth/crypto";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "../client";
-import { eventFaculties } from "../schema/event-faculties";
-import { eventLocations } from "../schema/event-locations";
-import { eventTypes } from "../schema/event-types";
+import { authAccounts, authUsers } from "../schema/better-auth";
+import {
+	eventFaculties,
+	eventLocations,
+	eventTypes,
+} from "../schema/event-lookups";
+import { eventSeatCounts } from "../schema/event-registrations";
 import { events } from "../schema/events";
 import {
+	adminUserSeed,
 	eventFacultySeeds,
 	eventLocationSeeds,
 	eventSeeds,
@@ -56,7 +62,7 @@ export async function seedSampleEvents() {
 				id: event.id,
 				title: event.title,
 				date: addDays(now, event.daysFromNow),
-				availableSeats: event.availableSeats,
+				maxSeats: event.maxSeats,
 				typeId: event.typeId,
 				locationId: event.locationId,
 				facultyId: event.facultyId,
@@ -66,17 +72,79 @@ export async function seedSampleEvents() {
 				set: {
 					title: sql`excluded.title`,
 					date: sql`excluded.date`,
-					availableSeats: sql`excluded.available_seats`,
+					maxSeats: sql`excluded.max_seats`,
 					typeId: sql`excluded.type_id`,
 					locationId: sql`excluded.location_id`,
 					facultyId: sql`excluded.faculty_id`,
 					updatedAt: new Date(),
 				},
 			});
+
+		await db
+			.insert(eventSeatCounts)
+			.values({
+				eventId: event.id,
+				seatsRemaining: event.maxSeats,
+				maxSeats: event.maxSeats,
+			})
+			.onConflictDoUpdate({
+				target: eventSeatCounts.eventId,
+				set: {
+					maxSeats: sql`excluded.max_seats`,
+					seatsRemaining: sql`excluded.seats_remaining`,
+					updatedAt: new Date(),
+				},
+			});
 	}
+}
+
+export async function seedAdminUser() {
+	const email = adminUserSeed.email;
+	const passwordHash = await hashPassword(adminUserSeed.password);
+
+	const [existingUser] = await db
+		.select({ id: authUsers.id })
+		.from(authUsers)
+		.where(eq(authUsers.email, email))
+		.limit(1);
+
+	const userId = existingUser?.id ?? adminUserSeed.id;
+
+	if (!existingUser) {
+		await db.insert(authUsers).values({
+			id: userId,
+			email,
+			name: adminUserSeed.name,
+			emailVerified: true,
+		});
+	}
+
+	const [existingAccount] = await db
+		.select({ id: authAccounts.id })
+		.from(authAccounts)
+		.where(
+			and(
+				eq(authAccounts.userId, userId),
+				eq(authAccounts.providerId, "credential"),
+			),
+		)
+		.limit(1);
+
+	if (existingAccount) {
+		return;
+	}
+
+	await db.insert(authAccounts).values({
+		id: crypto.randomUUID(),
+		userId,
+		providerId: "credential",
+		accountId: userId,
+		password: passwordHash,
+	});
 }
 
 export async function seedDatabase() {
 	await seedEventLookups();
 	await seedSampleEvents();
+	await seedAdminUser();
 }

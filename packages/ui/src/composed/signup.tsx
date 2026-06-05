@@ -165,7 +165,7 @@ export function Signup({ redirectTo = "/account" }: SignupProps) {
 										name={field.name}
 										type="password"
 										required
-										containerClassName="mt-1"
+										className="mt-1"
 										disabled={isBusy}
 										value={String(field.state.value ?? "")}
 										onBlur={field.handleBlur}

@@ -2,7 +2,6 @@ import {
 	admin_action_cancel,
 	admin_action_save,
 } from "@repo/i18n/paraglide/messages";
-import type { ReactNode } from "react";
 import { Button } from "@repo/ui/components/button";
 import {
 	Dialog,
@@ -11,6 +10,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@repo/ui/components/dialog";
+import type { ReactNode } from "react";
 
 export interface AdminFormDialogProps {
 	open: boolean;

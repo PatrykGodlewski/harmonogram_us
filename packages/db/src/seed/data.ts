@@ -12,7 +12,12 @@ export const eventTypeSeeds: LookupSeed[] = [
 	{ id: "conference", slug: "conference", label: "Konferencje", sortOrder: 4 },
 	{ id: "exhibition", slug: "exhibition", label: "Wystawy", sortOrder: 5 },
 	{ id: "competition", slug: "competition", label: "Konkursy", sortOrder: 6 },
-	{ id: "celebration", slug: "celebration", label: "Uroczystości", sortOrder: 7 },
+	{
+		id: "celebration",
+		slug: "celebration",
+		label: "Uroczystości",
+		sortOrder: 7,
+	},
 	{
 		id: "special-event",
 		slug: "special-event",
@@ -69,7 +74,7 @@ export type EventSeed = {
 	id: string;
 	title: string;
 	daysFromNow: number;
-	availableSeats: number;
+	maxSeats: number;
 	typeId: string;
 	locationId: string;
 	facultyId: string;
@@ -80,7 +85,7 @@ export const eventSeeds: EventSeed[] = [
 		id: "evt-1",
 		title: "Warsztaty z programowania",
 		daysFromNow: 7,
-		availableSeats: 30,
+		maxSeats: 30,
 		typeId: "workshop",
 		locationId: "katowice",
 		facultyId: "wnst",
@@ -89,7 +94,7 @@ export const eventSeeds: EventSeed[] = [
 		id: "evt-2",
 		title: "Wykład o historii sztuki",
 		daysFromNow: 14,
-		availableSeats: 100,
+		maxSeats: 100,
 		typeId: "lecture",
 		locationId: "sosnowiec",
 		facultyId: "wh",
@@ -98,9 +103,16 @@ export const eventSeeds: EventSeed[] = [
 		id: "evt-3",
 		title: "Konferencja naukowa",
 		daysFromNow: 21,
-		availableSeats: 50,
+		maxSeats: 50,
 		typeId: "conference",
 		locationId: "online",
 		facultyId: "wns",
 	},
 ];
+
+export const adminUserSeed = {
+	id: "00000000-0000-4000-8000-000000000001",
+	email: "admin@harmonogram.local",
+	name: "Admin",
+	password: "Admin123!",
+} as const;

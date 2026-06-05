@@ -6,6 +6,8 @@ import {
 	admin_dialog_edit_title,
 	admin_error_generic,
 	admin_field_id,
+	admin_field_id_optional,
+	admin_field_id_placeholder,
 	admin_field_label,
 	admin_field_slug,
 	admin_field_sort_order,
@@ -18,18 +20,18 @@ import { AdminEntityTable } from "@repo/ui/composed/admin/admin-entity-table";
 import { AdminFormDialog } from "@repo/ui/composed/admin/admin-form-dialog";
 import { useForm } from "@tanstack/react-form";
 import {
+	type QueryKey,
 	useMutation,
 	useQuery,
 	useQueryClient,
-	type QueryKey,
 } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { formatFieldError } from "../lib/format-field-error";
+import { formatMutationError } from "../lib/format-mutation-error";
 
-type LookupMutation<TInput> = {
-	(data: { data: TInput }): Promise<unknown>;
-};
+type LookupMutation<TInput> = (data: { data: TInput }) => Promise<unknown>;
 
 export interface AdminLookupPageProps {
 	entityName: string;
@@ -38,7 +40,7 @@ export interface AdminLookupPageProps {
 	queryKey: QueryKey;
 	queryFn: () => Promise<LookupRow[]>;
 	createFn: LookupMutation<{
-		id: string;
+		id?: string;
 		slug: string;
 		label: string;
 		sortOrder: number;
@@ -69,7 +71,7 @@ export function AdminLookupPage({
 	const lookupSchema = useMemo(
 		() =>
 			z.object({
-				id: z.string().min(1).max(100),
+				id: z.string().max(100),
 				slug: z.string().min(1).max(100),
 				label: z.string().min(1).max(200),
 				sortOrder: z.number().int().min(0),
@@ -96,7 +98,14 @@ export function AdminLookupPage({
 					},
 				});
 			}
-			return createFn({ data: values });
+			return createFn({
+				data: {
+					...(values.id.trim() ? { id: values.id.trim() } : {}),
+					slug: values.slug,
+					label: values.label,
+					sortOrder: values.sortOrder,
+				},
+			});
 		},
 		onSuccess: async () => {
 			await invalidate();
@@ -104,8 +113,8 @@ export function AdminLookupPage({
 			setEditingRow(null);
 			toast.success(admin_save_success());
 		},
-		onError: () => {
-			toast.error(admin_error_generic());
+		onError: (error) => {
+			toast.error(formatMutationError(error, admin_error_generic));
 		},
 	});
 
@@ -115,8 +124,8 @@ export function AdminLookupPage({
 			await invalidate();
 			toast.success(admin_delete_success());
 		},
-		onError: () => {
-			toast.error(admin_error_generic());
+		onError: (error) => {
+			toast.error(formatMutationError(error, admin_error_generic));
 		},
 	});
 
@@ -212,17 +221,24 @@ export function AdminLookupPage({
 				<form.Field name="id">
 					{(field) => (
 						<div>
-							<Label htmlFor={field.name}>{admin_field_id()}</Label>
+							<Label htmlFor={field.name}>
+								{editingRow ? admin_field_id() : admin_field_id_optional()}
+							</Label>
 							<Input
 								id={field.name}
 								className="mt-1"
 								disabled={Boolean(editingRow) || saveMutation.isPending}
+								placeholder={
+									editingRow ? undefined : admin_field_id_placeholder()
+								}
 								value={String(field.state.value ?? "")}
 								onBlur={field.handleBlur}
 								onChange={(event) => field.handleChange(event.target.value)}
 							/>
 							{field.state.meta.errors.length > 0 ? (
-								<FormMessage>{String(field.state.meta.errors[0])}</FormMessage>
+								<FormMessage>
+									{formatFieldError(field.state.meta.errors[0])}
+								</FormMessage>
 							) : null}
 						</div>
 					)}
@@ -241,7 +257,9 @@ export function AdminLookupPage({
 								onChange={(event) => field.handleChange(event.target.value)}
 							/>
 							{field.state.meta.errors.length > 0 ? (
-								<FormMessage>{String(field.state.meta.errors[0])}</FormMessage>
+								<FormMessage>
+									{formatFieldError(field.state.meta.errors[0])}
+								</FormMessage>
 							) : null}
 						</div>
 					)}
@@ -260,7 +278,9 @@ export function AdminLookupPage({
 								onChange={(event) => field.handleChange(event.target.value)}
 							/>
 							{field.state.meta.errors.length > 0 ? (
-								<FormMessage>{String(field.state.meta.errors[0])}</FormMessage>
+								<FormMessage>
+									{formatFieldError(field.state.meta.errors[0])}
+								</FormMessage>
 							) : null}
 						</div>
 					)}
@@ -283,7 +303,9 @@ export function AdminLookupPage({
 								}
 							/>
 							{field.state.meta.errors.length > 0 ? (
-								<FormMessage>{String(field.state.meta.errors[0])}</FormMessage>
+								<FormMessage>
+									{formatFieldError(field.state.meta.errors[0])}
+								</FormMessage>
 							) : null}
 						</div>
 					)}

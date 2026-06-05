@@ -6,10 +6,11 @@ import {
 import {
 	adminEventFilterOptionsQueryOptions,
 	adminEventsQueryOptions,
+	type EventWithRelations,
 	fetchAdminEventFilterOptionsServer,
 	fetchAdminEventsServer,
-	type EventWithRelations,
 } from "@repo/api/admin/queries";
+import { formOptionalIdSchema } from "@repo/api/admin/schemas";
 import {
 	admin_delete_confirm,
 	admin_delete_success,
@@ -21,6 +22,8 @@ import {
 	admin_field_date,
 	admin_field_faculty,
 	admin_field_id,
+	admin_field_id_optional,
+	admin_field_id_placeholder,
 	admin_field_location,
 	admin_field_max_seats,
 	admin_field_none,
@@ -46,6 +49,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { formatFieldError } from "../lib/format-field-error";
+import { formatMutationError } from "../lib/format-mutation-error";
 
 const NONE_VALUE = "__none__";
 
@@ -66,7 +71,7 @@ export function AdminEventsPage() {
 	const eventSchema = useMemo(
 		() =>
 			z.object({
-				id: z.string().min(1).max(100),
+				id: formOptionalIdSchema,
 				title: z.string().min(1).max(500),
 				date: z.string().min(1),
 				maxSeats: z.coerce.number().int().min(0),
@@ -99,7 +104,7 @@ export function AdminEventsPage() {
 	const saveMutation = useMutation({
 		mutationFn: async (values: z.infer<typeof eventSchema>) => {
 			const payload = {
-				id: values.id,
+				...(values.id.trim() ? { id: values.id.trim() } : {}),
 				title: values.title,
 				date: parseDateTimeLocal(values.date),
 				maxSeats: values.maxSeats,
@@ -109,7 +114,9 @@ export function AdminEventsPage() {
 			};
 
 			if (editingRow) {
-				return updateAdminEventServer({ data: payload });
+				return updateAdminEventServer({
+					data: { ...payload, id: editingRow.id },
+				});
 			}
 			return createAdminEventServer({ data: payload });
 		},
@@ -119,8 +126,8 @@ export function AdminEventsPage() {
 			setEditingRow(null);
 			toast.success(admin_save_success());
 		},
-		onError: () => {
-			toast.error(admin_error_generic());
+		onError: (error) => {
+			toast.error(formatMutationError(error, admin_error_generic));
 		},
 	});
 
@@ -130,8 +137,8 @@ export function AdminEventsPage() {
 			await invalidate();
 			toast.success(admin_delete_success());
 		},
-		onError: () => {
-			toast.error(admin_error_generic());
+		onError: (error) => {
+			toast.error(formatMutationError(error, admin_error_generic));
 		},
 	});
 
@@ -247,17 +254,24 @@ export function AdminEventsPage() {
 				<form.Field name="id">
 					{(field) => (
 						<div>
-							<Label htmlFor={field.name}>{admin_field_id()}</Label>
+							<Label htmlFor={field.name}>
+								{editingRow ? admin_field_id() : admin_field_id_optional()}
+							</Label>
 							<Input
 								id={field.name}
 								className="mt-1"
 								disabled={Boolean(editingRow) || saveMutation.isPending}
+								placeholder={
+									editingRow ? undefined : admin_field_id_placeholder()
+								}
 								value={String(field.state.value ?? "")}
 								onBlur={field.handleBlur}
 								onChange={(event) => field.handleChange(event.target.value)}
 							/>
 							{field.state.meta.errors.length > 0 ? (
-								<FormMessage>{String(field.state.meta.errors[0])}</FormMessage>
+								<FormMessage>
+									{formatFieldError(field.state.meta.errors[0])}
+								</FormMessage>
 							) : null}
 						</div>
 					)}
@@ -276,7 +290,9 @@ export function AdminEventsPage() {
 								onChange={(event) => field.handleChange(event.target.value)}
 							/>
 							{field.state.meta.errors.length > 0 ? (
-								<FormMessage>{String(field.state.meta.errors[0])}</FormMessage>
+								<FormMessage>
+									{formatFieldError(field.state.meta.errors[0])}
+								</FormMessage>
 							) : null}
 						</div>
 					)}
@@ -296,7 +312,9 @@ export function AdminEventsPage() {
 								onChange={(event) => field.handleChange(event.target.value)}
 							/>
 							{field.state.meta.errors.length > 0 ? (
-								<FormMessage>{String(field.state.meta.errors[0])}</FormMessage>
+								<FormMessage>
+									{formatFieldError(field.state.meta.errors[0])}
+								</FormMessage>
 							) : null}
 						</div>
 					)}
@@ -319,7 +337,9 @@ export function AdminEventsPage() {
 								}
 							/>
 							{field.state.meta.errors.length > 0 ? (
-								<FormMessage>{String(field.state.meta.errors[0])}</FormMessage>
+								<FormMessage>
+									{formatFieldError(field.state.meta.errors[0])}
+								</FormMessage>
 							) : null}
 						</div>
 					)}
@@ -346,7 +366,9 @@ export function AdminEventsPage() {
 								</SelectContent>
 							</Select>
 							{field.state.meta.errors.length > 0 ? (
-								<FormMessage>{String(field.state.meta.errors[0])}</FormMessage>
+								<FormMessage>
+									{formatFieldError(field.state.meta.errors[0])}
+								</FormMessage>
 							) : null}
 						</div>
 					)}

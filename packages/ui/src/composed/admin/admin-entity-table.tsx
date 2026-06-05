@@ -4,7 +4,6 @@ import {
 	admin_action_edit,
 	admin_table_empty,
 } from "@repo/i18n/paraglide/messages";
-import type { ReactNode } from "react";
 import { Button } from "@repo/ui/components/button";
 import {
 	Table,
@@ -14,6 +13,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@repo/ui/components/table";
+import type { ReactNode } from "react";
 
 export type AdminTableColumn<T> = {
 	key: string;

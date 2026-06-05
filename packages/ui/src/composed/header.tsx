@@ -7,6 +7,7 @@ import {
 import { Link } from "@tanstack/react-router";
 import { Button } from "../components/button";
 import { LocaleSwitcher } from "./locale-switcher";
+import { ClientLogo } from "./logo/client-logo";
 
 export interface HeaderProps {
 	user?: AuthenticatedUser | null;
@@ -17,15 +18,7 @@ export function Header({ user }: HeaderProps) {
 		<header className="border-b bg-background">
 			<nav className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
 				<Link to="/" className="flex items-center gap-3">
-					<span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary">
-						H
-					</span>
-					<div className="leading-tight">
-						<p className="text-sm font-semibold tracking-wide text-foreground">
-							Harmonogram
-						</p>
-						<p className="text-xs text-muted-foreground">University Services</p>
-					</div>
+					<ClientLogo />
 				</Link>
 
 				<div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">

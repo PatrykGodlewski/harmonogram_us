@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@repo/env": "workspace:*",
+    "better-auth": "^1.6.9",
     "drizzle-orm": "^0.45.2",
     "postgres": "^3.4.9"
   },
@@ -24,6 +25,7 @@
     "@repo/config": "workspace:*",
     "@types/node": "^25.6.0",
     "drizzle-kit": "^0.31.10",
+    "tsx": "^4.21.0",
     "typescript": "^6.0.3"
   }
 }

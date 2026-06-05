@@ -1,17 +1,17 @@
 /// <reference types="vite/client" />
 
-import { getCurrentUser } from "@repo/api/auth/user";
+import { ensureCurrentUser } from "@repo/api/auth/current-user-query";
+import { syncDocumentLocale } from "@repo/i18n/localization/sync-document-locale";
 import {
 	error_title,
 	go_home,
 	not_found_title,
-	title_document_students,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
+import { createStudentsRootDocumentHead } from "@repo/router-utils/metadata/students-root-document-head";
 import { Toaster } from "@repo/ui/components/sonner";
 import { Header } from "@repo/ui/composed/header";
 import type { QueryClient } from "@tanstack/react-query";
-import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import {
 	createRootRouteWithContext,
@@ -20,13 +20,9 @@ import {
 	Outlet,
 	Scripts,
 } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
 import type { ReactNode } from "react";
 import appCss from "~/app.css?url";
-
-const getCurrentUserFn = createServerFn({ method: "GET" }).handler(async () => {
-	return getCurrentUser();
-});
+import { EventSeatCountsSync } from "~/components/event-seat-counts-sync";
 
 function NotFound() {
 	return (
@@ -58,34 +54,26 @@ export const Route = createRootRouteWithContext<{
 }>()({
 	notFoundComponent: NotFound,
 	errorComponent: ErrorComponent,
-	beforeLoad: async () => {
-		if (typeof document !== "undefined") {
-			document.documentElement.setAttribute("lang", getLocale());
-		}
-		const user = await getCurrentUserFn();
+	beforeLoad: async ({ context: { queryClient } }) => {
+		syncDocumentLocale();
+		const user = await ensureCurrentUser(queryClient);
 		return { user };
 	},
 	shellComponent: RootDocument,
-	head: () => ({
-		meta: [
-			{ charSet: "utf-8" },
-			{ name: "viewport", content: "width=device-width, initial-scale=1" },
-			{ title: String(title_document_students()) },
-		],
-		links: [{ rel: "stylesheet", href: appCss }],
-	}),
+	head: createStudentsRootDocumentHead(appCss),
 	component: RootComponent,
 });
 
 function RootComponent() {
-	const { queryClient, user } = Route.useRouteContext();
+	const { user } = Route.useRouteContext();
 	return (
-		<QueryClientProvider client={queryClient}>
+		<>
+			<EventSeatCountsSync />
 			<ReactQueryDevtools buttonPosition="bottom-right" />
 			<Header user={user} />
 			<Outlet />
 			<Toaster />
-		</QueryClientProvider>
+		</>
 	);
 }
 

@@ -5,7 +5,8 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    "./local-notes": "./src/local-notes.ts"
+    "./local-notes": "./src/local-notes.ts",
+    "./event-seat-counts": "./src/event-seat-counts.ts"
   },
   "scripts": {
     "lint": "biome check .",
@@ -13,6 +14,7 @@
   },
   "dependencies": {
     "@tanstack/db": "^0.6.5",
+    "@tanstack/electric-db-collection": "^0.3.6",
     "@tanstack/react-db": "^0.1.83",
     "zod": "^4.3.6"
   },

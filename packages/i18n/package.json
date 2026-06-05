@@ -9,7 +9,8 @@
 	"exports": {
 		"./paraglide/runtime": "./src/paraglide/runtime.js",
 		"./paraglide/messages": "./src/paraglide/messages.js",
-		"./paraglide/server": "./src/paraglide/server.js"
+		"./paraglide/server": "./src/paraglide/server.js",
+		"./localization/*": "./src/localization/*.ts"
 	},
 	"scripts": {
 		"compile": "node ./scripts/compile-paraglide.mjs",
