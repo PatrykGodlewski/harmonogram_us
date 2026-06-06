@@ -16,6 +16,7 @@ const i18nRoot = path.resolve(__dirname, "../../packages/i18n");
 const workspaceRoot = path.resolve(__dirname, "../..");
 
 export default defineConfig({
+	envDir: workspaceRoot,
 	resolve: {
 		tsconfigPaths: true,
 		alias: {
