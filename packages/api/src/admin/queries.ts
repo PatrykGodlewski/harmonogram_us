@@ -11,7 +11,7 @@ import {
 } from "@repo/db/queries/lookups";
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
-import { authMiddleware } from "../auth/middleware";
+import { adminMiddleware } from "../auth/admin-middleware";
 import { adminEventIdSchema, adminEventsQuerySchema } from "./schemas";
 
 export type { AgendaItem } from "@repo/db/queries/agenda-items";
@@ -23,7 +23,7 @@ export type {
 } from "@repo/db/queries/events";
 
 const protectedQueryFn = createServerFn({ method: "GET" }).middleware([
-	authMiddleware,
+	adminMiddleware,
 ]);
 
 export const fetchAdminEventsServer = protectedQueryFn

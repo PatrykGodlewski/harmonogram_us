@@ -16,7 +16,7 @@ import {
 	updateEventType,
 } from "@repo/db/queries/lookups";
 import { createServerFn } from "@tanstack/react-start";
-import { authMiddleware } from "../auth/middleware";
+import { adminMiddleware } from "../auth/admin-middleware";
 import { withDomainErrors } from "../errors";
 import {
 	createAgendaItemSchema,
@@ -29,7 +29,7 @@ import {
 } from "./schemas";
 
 const protectedActionFn = createServerFn({ method: "POST" }).middleware([
-	authMiddleware,
+	adminMiddleware,
 ]);
 
 export const createAdminEventServer = protectedActionFn

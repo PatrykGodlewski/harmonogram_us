@@ -1,4 +1,5 @@
 import { db } from "@repo/db/client";
+import { isAdmin } from "@repo/db/queries/roles";
 import { authAccounts } from "@repo/db/schema/better-auth";
 import { error_title } from "@repo/i18n/paraglide/messages";
 import { getRequestHeaders } from "@tanstack/react-start/server";
@@ -14,6 +15,7 @@ export type AuthenticatedUser = {
 	id: string;
 	email: string;
 	hasPassword: boolean;
+	isAdmin: boolean;
 };
 
 export async function getCurrentSession() {
@@ -24,21 +26,25 @@ export async function getCurrentSession() {
 export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
 	const session = await getCurrentSession();
 	if (!session?.user) return null;
-	const credentialAccount = await db.query.authAccounts.findFirst({
-		where: and(
-			eq(authAccounts.userId, session.user.id),
-			eq(authAccounts.providerId, "credential"),
-			isNotNull(authAccounts.password),
-		),
-		columns: {
-			id: true,
-		},
-	});
+	const [credentialAccount, admin] = await Promise.all([
+		db.query.authAccounts.findFirst({
+			where: and(
+				eq(authAccounts.userId, session.user.id),
+				eq(authAccounts.providerId, "credential"),
+				isNotNull(authAccounts.password),
+			),
+			columns: {
+				id: true,
+			},
+		}),
+		isAdmin(session.user.id),
+	]);
 
 	return {
 		id: session.user.id,
 		email: session.user.email,
 		hasPassword: Boolean(credentialAccount),
+		isAdmin: admin,
 	};
 }
 

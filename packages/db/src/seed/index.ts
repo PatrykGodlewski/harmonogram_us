@@ -141,7 +141,13 @@ export async function seedAdminUser() {
 			email,
 			name: adminUserSeed.name,
 			emailVerified: true,
+			role: "admin",
 		});
+	} else {
+		await db
+			.update(authUsers)
+			.set({ role: "admin" })
+			.where(eq(authUsers.id, userId));
 	}
 
 	const [existingAccount] = await db
