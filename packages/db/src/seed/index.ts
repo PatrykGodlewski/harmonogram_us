@@ -1,6 +1,7 @@
 import { hashPassword } from "better-auth/crypto";
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "../client";
+import { agendaItems } from "../schema/agenda";
 import { authAccounts, authUsers } from "../schema/better-auth";
 import {
 	eventFaculties,
@@ -10,6 +11,7 @@ import {
 import { events } from "../schema/events";
 import {
 	adminUserSeed,
+	agendaItemSeeds,
 	eventFacultySeeds,
 	eventLocationSeeds,
 	eventSeeds,
@@ -81,6 +83,46 @@ export async function seedSampleEvents() {
 	}
 }
 
+export async function seedSampleAgenda() {
+	const now = new Date();
+
+	for (const item of agendaItemSeeds) {
+		const event = eventSeeds.find((seed) => seed.id === item.eventId);
+		if (!event) {
+			continue;
+		}
+		const startsAt = addDays(now, event.daysFromNow);
+		startsAt.setUTCHours(9, 0, 0, 0);
+		startsAt.setTime(startsAt.getTime() + item.startHour * 3_600_000);
+		const endsAt = new Date(startsAt.getTime() + item.durationMinutes * 60_000);
+
+		await db
+			.insert(agendaItems)
+			.values({
+				id: item.id,
+				eventId: item.eventId,
+				title: item.title,
+				startsAt,
+				endsAt,
+				locationId: item.locationId,
+				maxSeats: item.maxSeats,
+				requiresRegistration: item.requiresRegistration,
+			})
+			.onConflictDoUpdate({
+				target: agendaItems.id,
+				set: {
+					title: sql`excluded.title`,
+					startsAt: sql`excluded.starts_at`,
+					endsAt: sql`excluded.ends_at`,
+					locationId: sql`excluded.location_id`,
+					maxSeats: sql`excluded.max_seats`,
+					requiresRegistration: sql`excluded.requires_registration`,
+					updatedAt: new Date(),
+				},
+			});
+	}
+}
+
 export async function seedAdminUser() {
 	const email = adminUserSeed.email;
 	const passwordHash = await hashPassword(adminUserSeed.password);
@@ -129,5 +171,6 @@ export async function seedAdminUser() {
 export async function seedDatabase() {
 	await seedEventLookups();
 	await seedSampleEvents();
+	await seedSampleAgenda();
 	await seedAdminUser();
 }

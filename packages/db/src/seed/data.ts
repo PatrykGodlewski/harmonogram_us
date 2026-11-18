@@ -110,6 +110,61 @@ export const eventSeeds: EventSeed[] = [
 	},
 ];
 
+export type AgendaItemSeed = {
+	id: string;
+	eventId: string;
+	title: string;
+	/** Start, in hours after 09:00 UTC on the event's day. */
+	startHour: number;
+	durationMinutes: number;
+	locationId: string | null;
+	maxSeats: number | null;
+	requiresRegistration: boolean;
+};
+
+export const agendaItemSeeds: AgendaItemSeed[] = [
+	{
+		id: "agenda-evt-1-opening",
+		eventId: "evt-1",
+		title: "Otwarcie i wprowadzenie",
+		startHour: 0,
+		durationMinutes: 60,
+		locationId: "katowice",
+		maxSeats: null,
+		requiresRegistration: true,
+	},
+	{
+		id: "agenda-evt-1-web",
+		eventId: "evt-1",
+		title: "Warsztat: aplikacje webowe",
+		startHour: 1.5,
+		durationMinutes: 90,
+		locationId: "katowice",
+		maxSeats: 15,
+		requiresRegistration: true,
+	},
+	{
+		id: "agenda-evt-1-robotics",
+		eventId: "evt-1",
+		title: "Warsztat: robotyka",
+		startHour: 2,
+		durationMinutes: 90,
+		locationId: "chorzow",
+		maxSeats: 10,
+		requiresRegistration: true,
+	},
+	{
+		id: "agenda-evt-1-break",
+		eventId: "evt-1",
+		title: "Przerwa kawowa",
+		startHour: 3.5,
+		durationMinutes: 30,
+		locationId: null,
+		maxSeats: null,
+		requiresRegistration: false,
+	},
+];
+
 export const adminUserSeed = {
 	id: "00000000-0000-4000-8000-000000000001",
 	email: "admin@harmonogram.local",

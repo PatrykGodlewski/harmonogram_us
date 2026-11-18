@@ -7,6 +7,11 @@ import {
 } from "../schema/event-lookups";
 import { eventSeatCounts } from "../schema/event-registrations";
 import { events } from "../schema/events";
+import { type AgendaItem, listAgendaItems } from "./agenda-items";
+import {
+	getEffectiveEventEnd,
+	mapConstraintError,
+} from "./event-registrations";
 
 export type EventFilters = {
 	search?: string;
@@ -19,7 +24,9 @@ export type EventFilters = {
 export type EventWithRelations = {
 	id: string;
 	title: string;
+	description: string | null;
 	date: Date;
+	endsAt: Date | null;
 	maxSeats: number;
 	seatsRemaining: number;
 	typeId: string;
@@ -81,7 +88,18 @@ export async function getEventFilterOptions(): Promise<EventFilterOptions> {
 export async function getEvents(
 	filters?: EventFilters,
 ): Promise<EventWithRelations[]> {
+	return queryEvents(filters);
+}
+
+async function queryEvents(
+	filters?: EventFilters,
+	eventId?: string,
+): Promise<EventWithRelations[]> {
 	const conditions = [];
+
+	if (eventId) {
+		conditions.push(eq(events.id, eventId));
+	}
 
 	if (filters?.search) {
 		conditions.push(ilike(events.title, `%${filters.search}%`));
@@ -106,7 +124,9 @@ export async function getEvents(
 		.select({
 			id: events.id,
 			title: events.title,
+			description: events.description,
 			date: events.date,
+			endsAt: events.endsAt,
 			maxSeats: events.maxSeats,
 			seatsRemainingFromCounts: eventSeatCounts.seatsRemaining,
 			typeId: events.typeId,
@@ -138,7 +158,9 @@ export async function getEvents(
 export type CreateEventInput = {
 	id?: string;
 	title: string;
+	description?: string | null;
 	date: Date;
+	endsAt?: Date | null;
 	maxSeats: number;
 	typeId: string;
 	locationId?: string | null;
@@ -151,7 +173,9 @@ export async function createEvent(input: CreateEventInput) {
 		.values({
 			...(input.id ? { id: input.id } : {}),
 			title: input.title,
+			description: input.description ?? null,
 			date: input.date,
+			endsAt: input.endsAt ?? null,
 			maxSeats: input.maxSeats,
 			typeId: input.typeId,
 			locationId: input.locationId ?? null,
@@ -164,7 +188,9 @@ export async function createEvent(input: CreateEventInput) {
 export type UpdateEventInput = {
 	id: string;
 	title?: string;
+	description?: string | null;
 	date?: Date;
+	endsAt?: Date | null;
 	maxSeats?: number;
 	typeId?: string;
 	locationId?: string | null;
@@ -173,12 +199,16 @@ export type UpdateEventInput = {
 
 export async function updateEvent(input: UpdateEventInput) {
 	const { id, ...values } = input;
-	const [event] = await db
-		.update(events)
-		.set({ ...values, updatedAt: new Date() })
-		.where(eq(events.id, id))
-		.returning();
-	return event ?? null;
+	try {
+		const [event] = await db
+			.update(events)
+			.set({ ...values, updatedAt: new Date() })
+			.where(eq(events.id, id))
+			.returning();
+		return event ?? null;
+	} catch (error) {
+		mapConstraintError(error, "capacity");
+	}
 }
 
 export async function deleteEvent(id: string) {
@@ -187,4 +217,26 @@ export async function deleteEvent(id: string) {
 		.where(eq(events.id, id))
 		.returning({ id: events.id });
 	return event ?? null;
+}
+
+export type EventDetails = EventWithRelations & {
+	effectiveEndsAt: Date;
+	agenda: AgendaItem[];
+};
+
+export async function getEventById(id: string): Promise<EventDetails | null> {
+	const [event] = await queryEvents(undefined, id);
+	if (!event) {
+		return null;
+	}
+	const [agenda, effectiveEndsAt] = await Promise.all([
+		listAgendaItems(id),
+		getEffectiveEventEnd(db, id),
+	]);
+	return {
+		...event,
+		agenda,
+		effectiveEndsAt:
+			effectiveEndsAt ?? new Date(event.date.getTime() + 86_400_000),
+	};
 }

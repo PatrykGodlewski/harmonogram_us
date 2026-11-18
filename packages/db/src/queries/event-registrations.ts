@@ -1,6 +1,7 @@
-import { and, eq, max, sql } from "drizzle-orm";
+import { and, asc, eq, max, sql } from "drizzle-orm";
 import { db } from "../client";
 import { agendaItemRegistrations, agendaItems } from "../schema/agenda";
+import { authUsers } from "../schema/better-auth";
 import {
 	eventRegistrations,
 	eventSeatCounts,
@@ -333,4 +334,42 @@ export async function getMyRegistrations(
 		eventIds,
 		agendaItemIds: itemRows.map((row) => row.agendaItemId),
 	};
+}
+
+export type EventRegistrant = {
+	registrationId: string;
+	userId: string;
+	email: string;
+	name: string | null;
+	registeredAt: Date;
+	agendaItemIds: string[];
+};
+
+export async function getEventRegistrants(
+	eventId: string,
+): Promise<EventRegistrant[]> {
+	const rows = await db
+		.select({
+			registrationId: eventRegistrations.id,
+			userId: eventRegistrations.userId,
+			email: authUsers.email,
+			name: authUsers.name,
+			registeredAt: eventRegistrations.createdAt,
+			agendaItemIds: sql<string[]>`coalesce(
+				array_agg(${agendaItemRegistrations.agendaItemId})
+					filter (where ${agendaItemRegistrations.agendaItemId} is not null),
+				'{}'
+			)`,
+		})
+		.from(eventRegistrations)
+		.innerJoin(authUsers, eq(eventRegistrations.userId, authUsers.id))
+		.leftJoin(
+			agendaItemRegistrations,
+			eq(agendaItemRegistrations.eventRegistrationId, eventRegistrations.id),
+		)
+		.where(eq(eventRegistrations.eventId, eventId))
+		.groupBy(eventRegistrations.id, authUsers.id)
+		.orderBy(asc(eventRegistrations.createdAt));
+
+	return rows;
 }
