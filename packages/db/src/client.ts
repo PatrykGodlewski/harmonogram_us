@@ -26,6 +26,14 @@ import {
 	eventSeatCountsRelations,
 } from "./schema/event-registrations";
 import { events, eventsRelations } from "./schema/events";
+import {
+	registrationGroupItems,
+	registrationGroupMemberItems,
+	registrationGroupMembers,
+	registrationGroupMembersRelations,
+	registrationGroups,
+	registrationGroupsRelations,
+} from "./schema/groups";
 
 export const db = drizzle(env.DATABASE_URL, {
 	schema: {
@@ -47,5 +55,11 @@ export const db = drizzle(env.DATABASE_URL, {
 		agendaItemRegistrations,
 		agendaItemRegistrationsRelations,
 		agendaItemSeatCounts,
+		registrationGroups,
+		registrationGroupsRelations,
+		registrationGroupItems,
+		registrationGroupMembers,
+		registrationGroupMembersRelations,
+		registrationGroupMemberItems,
 	},
 });

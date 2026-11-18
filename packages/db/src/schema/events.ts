@@ -11,6 +11,8 @@ export const events = pgTable("events", {
 	}).notNull(),
 	endsAt: timestamp("ends_at", { withTimezone: true }),
 	maxSeats: integer("max_seats").notNull(),
+	/** Group places are released this many hours before `date`. */
+	groupDeadlineHours: integer("group_deadline_hours").notNull().default(48),
 	typeId: text("type_id")
 		.notNull()
 		.references(() => eventTypes.id),

@@ -6,6 +6,12 @@ import {
 	agendaItems,
 } from "../src/schema/agenda";
 import { authUsers } from "../src/schema/better-auth";
+import {
+	registrationGroupItems,
+	registrationGroupMemberItems,
+	registrationGroupMembers,
+	registrationGroups,
+} from "../src/schema/groups";
 import { eventTypes } from "../src/schema/event-lookups";
 import { eventSeatCounts } from "../src/schema/event-registrations";
 import { events } from "../src/schema/events";
@@ -14,7 +20,8 @@ const TEST_TYPE_ID = "test-type";
 
 export async function resetDb(): Promise<void> {
 	await db.execute(sql`
-		TRUNCATE agenda_item_registrations, agenda_item_seat_counts, agenda_items,
+		TRUNCATE registration_group_member_items, registration_group_members,
+			registration_group_items, registration_groups, agenda_item_registrations, agenda_item_seat_counts, agenda_items,
 			event_registrations, event_seat_counts, events, event_types,
 			event_locations, event_faculties, "user" CASCADE
 	`);
@@ -141,4 +148,52 @@ export async function rejectionCode(promise: Promise<unknown>) {
 				? String((error as { code: unknown }).code)
 				: String(error),
 	);
+}
+
+export async function createGroupRow(
+	eventId: string,
+	ownerUserId: string,
+	opts: { places: number; itemIds?: string[]; status?: "open" | "closed" | "cancelled" },
+): Promise<string> {
+	const [group] = await db
+		.insert(registrationGroups)
+		.values({
+			eventId,
+			ownerUserId,
+			places: opts.places,
+			status: opts.status ?? "open",
+		})
+		.returning({ id: registrationGroups.id });
+	if (!group) throw new Error("group insert failed");
+	if (opts.itemIds?.length) {
+		await db
+			.insert(registrationGroupItems)
+			.values(opts.itemIds.map((agendaItemId) => ({ groupId: group.id, agendaItemId })));
+	}
+	return group.id;
+}
+
+export async function addMemberRow(
+	groupId: string,
+	email: string,
+	opts: { status?: "invited" | "confirmed"; itemIds?: string[]; eventRegistrationId?: string; userId?: string } = {},
+): Promise<string> {
+	const [member] = await db
+		.insert(registrationGroupMembers)
+		.values({
+			groupId,
+			email,
+			status: opts.status ?? "invited",
+			invitedVia: "email",
+			eventRegistrationId: opts.eventRegistrationId ?? null,
+			userId: opts.userId ?? null,
+		})
+		.returning({ id: registrationGroupMembers.id });
+	if (!member) throw new Error("member insert failed");
+	if (opts.itemIds?.length) {
+		await db
+			.insert(registrationGroupMemberItems)
+			.values(opts.itemIds.map((agendaItemId) => ({ memberId: member.id, agendaItemId })));
+	}
+	return member.id;
 }

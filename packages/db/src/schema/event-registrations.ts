@@ -9,6 +9,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { authUsers } from "./better-auth";
 import { events } from "./events";
+import { registrationGroups } from "./groups";
 
 export const eventRegistrations = pgTable(
 	"event_registrations",
@@ -20,6 +21,9 @@ export const eventRegistrations = pgTable(
 		userId: text("user_id")
 			.notNull()
 			.references(() => authUsers.id, { onDelete: "cascade" }),
+		groupId: text("group_id").references(() => registrationGroups.id, {
+			onDelete: "set null",
+		}),
 		createdAt: timestamp("created_at", { withTimezone: true })
 			.notNull()
 			.defaultNow(),
