@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@electric-sql/client": "1.5.20",
-    "@tanstack/db": "^0.6.5",
+    "@tanstack/db": "^0.6.8",
     "@tanstack/electric-db-collection": "^0.3.6",
     "@tanstack/react-db": "^0.1.83",
     "zod": "^4.3.6"

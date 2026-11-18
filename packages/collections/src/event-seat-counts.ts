@@ -1,6 +1,7 @@
 import { createCollection } from "@tanstack/db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { z } from "zod";
+import { handleShapeError } from "./shape-errors";
 import { shapeUrl } from "./shape-url";
 import { shapes } from "./shapes";
 
@@ -22,7 +23,7 @@ export const eventSeatCountsCollection = createCollection(
 		startSync: false,
 		shapeOptions: {
 			url: shapeUrl(shapes.eventSeatCounts.path),
-			onError: () => ({}),
+			onError: handleShapeError,
 		},
 	}),
 );

@@ -10,7 +10,8 @@
     "overrides": {
       "react": "^19.2.5",
       "react-dom": "^19.2.5",
-      "vite": "8.0.10"
+      "vite": "8.0.10",
+      "@tanstack/db": "0.6.8"
     }
   },
   "scripts": {

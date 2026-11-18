@@ -1,6 +1,7 @@
 import { createCollection } from "@tanstack/db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { z } from "zod";
+import { handleShapeError } from "./shape-errors";
 import { shapeUrl } from "./shape-url";
 import { shapes } from "./shapes";
 
@@ -24,7 +25,7 @@ export const agendaItemSeatCountsCollection = createCollection(
 		startSync: false,
 		shapeOptions: {
 			url: shapeUrl(shapes.agendaItemSeatCounts.path),
-			onError: () => ({}),
+			onError: handleShapeError,
 		},
 	}),
 );

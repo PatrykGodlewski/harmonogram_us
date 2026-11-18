@@ -8,6 +8,7 @@ overrides:
   react: ^19.2.5
   react-dom: ^19.2.5
   vite: 8.0.10
+  '@tanstack/db': 0.6.8
 
 importers:
 
@@ -323,8 +324,8 @@ importers:
         specifier: 1.5.20
         version: 1.5.20
       '@tanstack/db':
-        specifier: ^0.6.5
-        version: 0.6.5(typescript@6.0.3)
+        specifier: 0.6.8
+        version: 0.6.8(typescript@6.0.3)
       '@tanstack/electric-db-collection':
         specifier: ^0.3.6
         version: 0.3.6(typescript@6.0.3)
@@ -2597,11 +2598,6 @@ packages:
 
   '@tanstack/db-ivm@0.1.18':
     resolution: {integrity: sha512-+pZJiRKdoKRM5Epq9T7otD9ZJl82pRFauo7LKuJGrarjVKQ7r+QQlPe3kGdN9LEKSnuNGIWjX9OOY4M8kH4eLw==}
-    peerDependencies:
-      typescript: '>=4.7'
-
-  '@tanstack/db@0.6.5':
-    resolution: {integrity: sha512-gtCuAo4UtC9SR/kTMu5fVEff6qZ2R1FZi9X7MybtHKA6wve7RePifGG6qBI4OmMB+7juT5/+glNbnqZOrG0/pg==}
     peerDependencies:
       typescript: '>=4.7'
 
@@ -6068,13 +6064,6 @@ snapshots:
       sorted-btree: 1.8.1
       typescript: 6.0.3
 
-  '@tanstack/db@0.6.5(typescript@6.0.3)':
-    dependencies:
-      '@standard-schema/spec': 1.1.0
-      '@tanstack/db-ivm': 0.1.18(typescript@6.0.3)
-      '@tanstack/pacer-lite': 0.2.1
-      typescript: 6.0.3
-
   '@tanstack/db@0.6.8(typescript@6.0.3)':
     dependencies:
       '@standard-schema/spec': 1.1.0
@@ -6142,7 +6131,7 @@ snapshots:
 
   '@tanstack/react-db@0.1.83(react@19.2.5)(typescript@6.0.3)':
     dependencies:
-      '@tanstack/db': 0.6.5(typescript@6.0.3)
+      '@tanstack/db': 0.6.8(typescript@6.0.3)
       react: 19.2.5
       use-sync-external-store: 1.6.0(react@19.2.5)
     transitivePeerDependencies:
