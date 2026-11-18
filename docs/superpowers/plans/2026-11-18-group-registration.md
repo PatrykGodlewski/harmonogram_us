@@ -34,7 +34,7 @@
   - `invited_via`: `email` | `link`
 - Tokens: 32 random bytes as base64url. Store `sha256(token)` as hex in `token_hash`. Join codes: 16 random bytes as base64url (22 characters).
 - Deadline: `events.date - events.group_deadline_hours * interval '1 hour'`, default 48. The single SQL helper `group_deadline(event_id)` is used by both the queries and the cron.
-- Queues (exact names): `group-invitation-email` with payload `{ memberId: string, locale: "pl" | "en" }`, and `close-expired-groups` with cron `*/5 * * * *` in tz `Europe/Warsaw`.
+- Queues (exact names): `group-invitations` (policy `short`, `singletonKey = memberId`; jobs are queued inside the data transaction via `fromDrizzle`) with payload `{ memberId: string, locale: "pl" | "en" }`, and `close-expired-groups` with cron `*/5 * * * *` in tz `Europe/Warsaw`.
 - Before every commit: `pnpm test && pnpm typecheck && pnpm lint`.
 
 ## Review Focus

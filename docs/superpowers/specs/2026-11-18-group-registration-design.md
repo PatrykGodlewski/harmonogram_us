@@ -214,6 +214,18 @@ My calls:
 - **When accepting:** items that have ended or don't need registration are skipped silently, and the student is confirmed for the rest.
 - **Email locale:** the inviter's request locale for email invitations, and the joiner's locale for join links.
 
+### Job reliability (decided 2026-11-18, after comparing DBOS and pg-boss)
+
+- We keep pg-boss, hardened:
+  - Invitation jobs are queued inside the same database transaction as the group change (pg-boss `fromDrizzle(tx, sql)`), so they commit or roll back together.
+  - The invitations queue (`group-invitations`) uses policy `short` with `singletonKey = memberId`, so at most one send per member is queued.
+  - Handlers are idempotent: a member who is no longer invited, or a group that is closed, is skipped.
+- DBOS was considered and set aside for now:
+  - Its exactly-once DB steps need all queries routed through its Drizzle datasource.
+  - Recovering workflows across deploys needs a pinned application version and `DBOS.patch()`, or Enterprise auto-upgrade with Conductor.
+  - Our pipelines are short: one transaction, then a fan-out of emails.
+- "Revert" means DB transactions roll back automatically. No tool can undo a sent email, so compensations are explicit jobs.
+
 ## Left to the builder
 
 - Exact component structure, the QR rendering details, and copy (pl and en).

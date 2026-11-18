@@ -65,6 +65,26 @@ export type PublicGroupInfo = {
 
 export type ActorOptions = { actorIsAdmin?: boolean };
 
+/**
+ * Runs inside the group transaction, just before commit. Used to enqueue
+ * invitation emails atomically (transactional outbox) without @repo/db
+ * depending on the job queue.
+ */
+export type InvitationHooks = {
+	onInvited?: (tx: TransactionClient, refs: GroupMemberRef[]) => Promise<void>;
+};
+
+async function runInvitedHook(
+	tx: TransactionClient,
+	hooks: InvitationHooks | undefined,
+	refs: GroupMemberRef[],
+) {
+	const toSend = refs.filter((ref) => ref.token);
+	if (hooks?.onInvited && toSend.length > 0) {
+		await hooks.onInvited(tx, toSend);
+	}
+}
+
 type LockedGroup = typeof registrationGroups.$inferSelect;
 
 export function normalizeEmails(emails: string[]): string[] {
@@ -233,15 +253,18 @@ async function addMembers(
 	return refs;
 }
 
-export async function createGroup(input: {
-	eventId: string;
-	ownerUserId: string;
-	places: number;
-	itemIds: string[];
-	name?: string | null;
-	emails: string[];
-	joinLinkEnabled: boolean;
-}): Promise<{
+export async function createGroup(
+	input: {
+		eventId: string;
+		ownerUserId: string;
+		places: number;
+		itemIds: string[];
+		name?: string | null;
+		emails: string[];
+		joinLinkEnabled: boolean;
+	},
+	hooks?: InvitationHooks,
+): Promise<{
 	groupId: string;
 	joinCode: string | null;
 	invited: GroupMemberRef[];
@@ -295,6 +318,7 @@ export async function createGroup(input: {
 				);
 			}
 			const invited = await addMembers(tx, group, emails, "email");
+			await runInvitedHook(tx, hooks, invited);
 			return { groupId: group.id, joinCode: group.joinCode, invited };
 		});
 	} catch (error) {
@@ -307,13 +331,21 @@ export async function inviteToGroup(
 	actorUserId: string,
 	emails: string[],
 	opts?: ActorOptions,
+	hooks?: InvitationHooks,
 ): Promise<GroupMemberRef[]> {
 	try {
 		return await db.transaction(async (tx) => {
 			const group = await lockGroup(tx, { id: groupId });
 			assertOwner(group, actorUserId, opts);
 			await assertGroupAcceptsMembers(tx, group);
-			return addMembers(tx, group, normalizeEmails(emails), "email");
+			const refs = await addMembers(
+				tx,
+				group,
+				normalizeEmails(emails),
+				"email",
+			);
+			await runInvitedHook(tx, hooks, refs);
+			return refs;
 		});
 	} catch (error) {
 		mapConstraintError(error, "group");
@@ -323,6 +355,7 @@ export async function inviteToGroup(
 export async function joinGroup(
 	joinCode: string,
 	email: string,
+	hooks?: InvitationHooks,
 ): Promise<GroupMemberRef> {
 	try {
 		return await db.transaction(async (tx) => {
@@ -337,6 +370,7 @@ export async function joinGroup(
 			if (!ref) {
 				throw new EventRegistrationError("INVITATION_INVALID");
 			}
+			await runInvitedHook(tx, hooks, [ref]);
 			return ref;
 		});
 	} catch (error) {
@@ -348,6 +382,7 @@ export async function resendInvitation(
 	memberId: string,
 	actorUserId: string,
 	opts?: ActorOptions,
+	hooks?: InvitationHooks,
 ): Promise<GroupMemberRef> {
 	return db.transaction(async (tx) => {
 		const [member] = await tx
@@ -367,6 +402,7 @@ export async function resendInvitation(
 		if (!ref) {
 			throw new EventRegistrationError("INVITATION_INVALID");
 		}
+		await runInvitedHook(tx, hooks, [ref]);
 		return ref;
 	});
 }

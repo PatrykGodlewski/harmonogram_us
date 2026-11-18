@@ -1,6 +1,7 @@
 import { z } from "zod";
 
-export const QUEUE_GROUP_INVITATION_EMAIL = "group-invitation-email";
+/** Policy "short" + singletonKey=memberId: at most one queued send per member. */
+export const QUEUE_GROUP_INVITATION_EMAIL = "group-invitations";
 export const QUEUE_CLOSE_EXPIRED_GROUPS = "close-expired-groups";
 
 /** Every 5 minutes, Warsaw time. */
@@ -17,6 +18,6 @@ export type GroupInvitationEmailPayload = z.infer<
 >;
 
 export const QUEUES = [
-	QUEUE_GROUP_INVITATION_EMAIL,
-	QUEUE_CLOSE_EXPIRED_GROUPS,
+	{ name: QUEUE_GROUP_INVITATION_EMAIL, policy: "short" },
+	{ name: QUEUE_CLOSE_EXPIRED_GROUPS, policy: "standard" },
 ] as const;

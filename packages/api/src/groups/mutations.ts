@@ -2,7 +2,7 @@ import { removeMember, setMemberItems } from "@repo/db/queries/group-members";
 import {
 	closeGroup,
 	createGroup,
-	type GroupMemberRef,
+	type InvitationHooks,
 	inviteToGroup,
 	joinGroup,
 	resendInvitation,
@@ -37,23 +37,24 @@ function currentEmailLocale(): "pl" | "en" {
 	return getLocale() === "en" ? "en" : "pl";
 }
 
-/** Emails go out through the worker; members without a token (already confirmed) are skipped. */
-async function sendInvitations(refs: GroupMemberRef[]) {
+/** Invitation emails are queued inside the group transaction (they commit or roll back with it). */
+function invitationHooks(): InvitationHooks {
 	const locale = currentEmailLocale();
-	await enqueueInvitationEmails(
-		refs
-			.filter((ref) => ref.token)
-			.map((ref) => ({ memberId: ref.memberId, locale })),
-	);
+	return {
+		onInvited: (tx, refs) =>
+			enqueueInvitationEmails(
+				refs.map((ref) => ({ memberId: ref.memberId, locale })),
+				{ tx },
+			),
+	};
 }
 
 export const createGroupServer = protectedActionFn
 	.inputValidator(createGroupSchema)
 	.handler(async ({ data, context }) => {
 		const result = await withDomainErrors(() =>
-			createGroup({ ...data, ownerUserId: context.user.id }),
+			createGroup({ ...data, ownerUserId: context.user.id }, invitationHooks()),
 		);
-		await sendInvitations(result.invited);
 		return { groupId: result.groupId };
 	});
 
@@ -61,23 +62,28 @@ export const inviteToGroupServer = protectedActionFn
 	.inputValidator(inviteToGroupSchema)
 	.handler(async ({ data, context }) => {
 		const refs = await withDomainErrors(() =>
-			inviteToGroup(data.groupId, context.user.id, data.emails, {
-				actorIsAdmin: context.user.isAdmin,
-			}),
+			inviteToGroup(
+				data.groupId,
+				context.user.id,
+				data.emails,
+				{ actorIsAdmin: context.user.isAdmin },
+				invitationHooks(),
+			),
 		);
-		await sendInvitations(refs);
 		return { invited: refs.length };
 	});
 
 export const resendInvitationServer = protectedActionFn
 	.inputValidator(memberIdSchema)
 	.handler(async ({ data, context }) => {
-		const ref = await withDomainErrors(() =>
-			resendInvitation(data.memberId, context.user.id, {
-				actorIsAdmin: context.user.isAdmin,
-			}),
+		await withDomainErrors(() =>
+			resendInvitation(
+				data.memberId,
+				context.user.id,
+				{ actorIsAdmin: context.user.isAdmin },
+				invitationHooks(),
+			),
 		);
-		await sendInvitations([ref]);
 		return { ok: true };
 	});
 
@@ -133,7 +139,8 @@ export const joinGroupServer = createServerFn({ method: "POST" })
 			data.turnstileToken,
 			ip === "unknown" ? undefined : ip,
 		);
-		const ref = await withDomainErrors(() => joinGroup(data.code, data.email));
-		await sendInvitations([ref]);
+		const ref = await withDomainErrors(() =>
+			joinGroup(data.code, data.email, invitationHooks()),
+		);
 		return { email: ref.email };
 	});
