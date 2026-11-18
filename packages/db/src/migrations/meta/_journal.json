@@ -43,6 +43,13 @@
       "when": 1795018226815,
       "tag": "0005_steady_wrecking_crew",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795018765367,
+      "tag": "0006_seat_count_fresh_snapshot",
+      "breakpoints": true
     }
   ]
 }
