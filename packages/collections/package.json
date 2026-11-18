@@ -14,7 +14,8 @@
   "scripts": {
     "lint": "biome check .",
     "format": "biome check --write .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@electric-sql/client": "1.5.20",

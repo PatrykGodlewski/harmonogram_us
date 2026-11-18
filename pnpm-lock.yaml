@@ -317,6 +317,9 @@ importers:
       '@types/react':
         specifier: ^19.2.14
         version: 19.2.14
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
 
   packages/collections:
     dependencies:
@@ -430,6 +433,9 @@ importers:
       '@repo/config':
         specifier: workspace:*
         version: link:../config
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
 
   packages/router-utils:
     dependencies:

@@ -33,11 +33,13 @@
   },
   "scripts": {
     "lint": "biome check .",
-    "format": "biome check --write ."
+    "format": "biome check --write .",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@repo/config": "workspace:*",
     "@types/nodemailer": "^8.0.0",
-    "@types/react": "^19.2.14"
+    "@types/react": "^19.2.14",
+    "typescript": "^6.0.3"
   }
 }

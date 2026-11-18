@@ -1,28 +1,30 @@
 {
-	"name": "@repo/i18n",
-	"version": "0.0.0",
-	"private": true,
-	"type": "module",
-	"imports": {
-		"#paraglide-runtime": "./src/paraglide/runtime.js"
-	},
-	"exports": {
-		"./paraglide/runtime": "./src/paraglide/runtime.js",
-		"./paraglide/messages": "./src/paraglide/messages.js",
-		"./paraglide/server": "./src/paraglide/server.js",
-		"./localization/*": "./src/localization/*.ts"
-	},
-	"scripts": {
-		"compile": "node ./scripts/compile-paraglide.mjs",
-		"build": "pnpm run compile",
-		"lint": "biome check .",
-		"format": "biome check --write ."
-	},
-	"devDependencies": {
-		"@biomejs/biome": "^2.4.13",
-		"@inlang/paraglide-js": "^2.16.1",
-		"@inlang/plugin-m-function-matcher": "^2.2.5",
-		"@inlang/plugin-message-format": "^4.4.0",
-		"@repo/config": "workspace:*"
-	}
+  "name": "@repo/i18n",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#paraglide-runtime": "./src/paraglide/runtime.js"
+  },
+  "exports": {
+    "./paraglide/runtime": "./src/paraglide/runtime.js",
+    "./paraglide/messages": "./src/paraglide/messages.js",
+    "./paraglide/server": "./src/paraglide/server.js",
+    "./localization/*": "./src/localization/*.ts"
+  },
+  "scripts": {
+    "compile": "node ./scripts/compile-paraglide.mjs",
+    "build": "pnpm run compile",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.13",
+    "@inlang/paraglide-js": "^2.16.1",
+    "@inlang/plugin-m-function-matcher": "^2.2.5",
+    "@inlang/plugin-message-format": "^4.4.0",
+    "@repo/config": "workspace:*",
+    "typescript": "^6.0.3"
+  }
 }

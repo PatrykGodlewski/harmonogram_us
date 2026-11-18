@@ -32,6 +32,7 @@ pnpm build
 pnpm lint                    # biome check, per package via turbo
 pnpm format                  # biome check --write
 pnpm test                    # vitest (needs `docker compose up -d db`)
+pnpm typecheck               # tsc --noEmit in every package (Vite builds don't type-check)
 pnpm --filter @repo/db test  # DB integration tests; uses database harmonogram_us_test (auto-created + migrated)
 pnpm --filter @repo/db exec vitest run test/registrations.test.ts   # a single test file
 pnpm --filter @repo/ui lint  # lint one package
@@ -40,7 +41,7 @@ pnpm messages:compile        # regenerate Paraglide output after editing package
 pnpm dlx shadcn@latest add <component>   # run inside packages/ui
 ```
 
-Automated checks: `pnpm test` (Vitest, in `@repo/db` and `@repo/ui`), `pnpm lint` (Biome) and `pnpm build` (`@repo/ui` build runs `tsc --noEmit`). DB tests run against real Postgres and truncate tables in `harmonogram_us_test`, never the dev DB.
+Automated checks: `pnpm test` (Vitest in `@repo/db`, `@repo/ui`, `@repo/collections`), `pnpm typecheck`, `pnpm lint` (Biome) and `pnpm build`. Run all four before committing. DB tests run against real Postgres and truncate tables in `harmonogram_us_test`, never the dev DB.
 
 Mailpit inbox for local email (magic links): http://localhost:8025.
 
