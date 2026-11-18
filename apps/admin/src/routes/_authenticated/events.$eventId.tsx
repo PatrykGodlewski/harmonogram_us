@@ -3,11 +3,13 @@ import {
 	adminEventFilterOptionsQueryOptions,
 	adminEventRegistrantsQueryOptions,
 } from "@repo/api/admin/queries";
+import { admin_error_generic } from "@repo/i18n/paraglide/messages";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { AgendaEditor } from "~/components/admin-event-detail/agenda-editor";
 import { EventSummaryCard } from "~/components/admin-event-detail/event-summary-card";
 import { RegistrantsList } from "~/components/admin-event-detail/registrants-list";
+import { formatMutationError } from "~/lib/format-mutation-error";
 
 export const Route = createFileRoute("/_authenticated/events/$eventId")({
 	component: AdminEventDetailPage,
@@ -31,7 +33,11 @@ function AdminEventDetailPage() {
 		]);
 
 	if (error) {
-		return <p className="p-4 text-muted-foreground">{error.message}</p>;
+		return (
+			<p className="p-4 text-muted-foreground">
+				{formatMutationError(error, admin_error_generic)}
+			</p>
+		);
 	}
 	if (!event) {
 		return null;

@@ -188,5 +188,6 @@
 	"admin_error_item_limit_above_event": "A session can't have more places than the event.",
 	"admin_error_forbidden": "Your account doesn't have admin rights.",
 	"admin_no_access_title": "No access",
-	"admin_no_access_body": "Your account doesn't have admin rights. Ask an administrator to grant them."
+	"admin_no_access_body": "Your account doesn't have admin rights. Ask an administrator to grant them.",
+	"admin_error_not_found": "This event no longer exists."
 }

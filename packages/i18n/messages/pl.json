@@ -188,5 +188,6 @@
 	"admin_error_item_limit_above_event": "Punkt programu nie może mieć więcej miejsc niż wydarzenie.",
 	"admin_error_forbidden": "Twoje konto nie ma uprawnień administratora.",
 	"admin_no_access_title": "Brak dostępu",
-	"admin_no_access_body": "Twoje konto nie ma uprawnień administratora. Poproś administratora o ich nadanie."
+	"admin_no_access_body": "Twoje konto nie ma uprawnień administratora. Poproś administratora o ich nadanie.",
+	"admin_error_not_found": "To wydarzenie już nie istnieje."
 }

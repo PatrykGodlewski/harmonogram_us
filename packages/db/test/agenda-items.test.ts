@@ -144,3 +144,49 @@ describe("events", () => {
 		});
 	});
 });
+
+describe("validation errors map to specific codes", () => {
+	it("end before start on a partial update → END_BEFORE_START", async () => {
+		const eventId = await createEvent();
+		const item = await createAgendaItem({
+			eventId,
+			title: "Lasers",
+			startsAt: hoursFromNow(24),
+			endsAt: hoursFromNow(25),
+		});
+		expect(
+			await rejectionCode(updateAgendaItem(item.id, { endsAt: hoursFromNow(23) })),
+		).toBe("END_BEFORE_START");
+	});
+
+	it("unknown event → EVENT_NOT_FOUND", async () => {
+		expect(
+			await rejectionCode(
+				createAgendaItem({
+					eventId: "missing",
+					title: "Lasers",
+					startsAt: hoursFromNow(24),
+					endsAt: hoursFromNow(25),
+				}),
+			),
+		).toBe("EVENT_NOT_FOUND");
+	});
+
+	it("event limit below an item limit → ITEM_LIMIT_ABOVE_EVENT", async () => {
+		const eventId = await createEvent({ maxSeats: 30 });
+		await createAgendaItem({
+			eventId,
+			title: "Lasers",
+			startsAt: hoursFromNow(24),
+			endsAt: hoursFromNow(25),
+			maxSeats: 20,
+		});
+		expect(await rejectionCode(updateEvent({ id: eventId, maxSeats: 19 }))).toBe(
+			"ITEM_LIMIT_ABOVE_EVENT",
+		);
+		await expect(updateEvent({ id: eventId, maxSeats: 20 })).resolves.toMatchObject({
+			maxSeats: 20,
+		});
+	});
+});
+

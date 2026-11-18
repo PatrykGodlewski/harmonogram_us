@@ -1,5 +1,6 @@
-import { and, asc, desc, eq, ilike } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, max } from "drizzle-orm";
 import { db } from "../client";
+import { agendaItems } from "../schema/agenda";
 import {
 	eventFaculties,
 	eventLocations,
@@ -9,6 +10,7 @@ import { eventSeatCounts } from "../schema/event-registrations";
 import { events } from "../schema/events";
 import { type AgendaItem, listAgendaItems } from "./agenda-items";
 import {
+	EventRegistrationError,
 	getEffectiveEventEnd,
 	mapConstraintError,
 } from "./event-registrations";
@@ -200,12 +202,23 @@ export type UpdateEventInput = {
 export async function updateEvent(input: UpdateEventInput) {
 	const { id, ...values } = input;
 	try {
-		const [event] = await db
-			.update(events)
-			.set({ ...values, updatedAt: new Date() })
-			.where(eq(events.id, id))
-			.returning();
-		return event ?? null;
+		return await db.transaction(async (tx) => {
+			if (values.maxSeats !== undefined) {
+				const [largest] = await tx
+					.select({ maxSeats: max(agendaItems.maxSeats) })
+					.from(agendaItems)
+					.where(eq(agendaItems.eventId, id));
+				if (largest?.maxSeats != null && largest.maxSeats > values.maxSeats) {
+					throw new EventRegistrationError("ITEM_LIMIT_ABOVE_EVENT");
+				}
+			}
+			const [event] = await tx
+				.update(events)
+				.set({ ...values, updatedAt: new Date() })
+				.where(eq(events.id, id))
+				.returning();
+			return event ?? null;
+		});
 	} catch (error) {
 		mapConstraintError(error, "capacity");
 	}

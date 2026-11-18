@@ -20,6 +20,7 @@ export type RegistrationErrorCode =
 	| "ITEM_NOT_REGISTRABLE"
 	| "ITEM_ENDED"
 	| "ITEM_LIMIT_ABOVE_EVENT"
+	| "END_BEFORE_START"
 	| "MAX_SEATS_BELOW_REGISTERED";
 
 export class EventRegistrationError extends Error {
@@ -38,6 +39,8 @@ type TransactionClient = Parameters<Parameters<DbClient["transaction"]>[0]>[0];
 const EVENT_SEATS_CONSTRAINT = "event_seat_counts_seats_remaining_nonnegative";
 const ITEM_SEATS_CONSTRAINT =
 	"agenda_item_seat_counts_seats_remaining_nonnegative";
+const ITEM_TIMES_CONSTRAINT = "agenda_items_ends_after_starts";
+const ITEM_EVENT_FK = "agenda_items_event_id_events_id_fk";
 
 type PgErrorFields = { code?: string; constraint_name?: string };
 
@@ -67,6 +70,12 @@ export function mapConstraintError(
 	}
 
 	const pg = findPgError(error);
+	if (pg?.code === "23514" && pg.constraint_name === ITEM_TIMES_CONSTRAINT) {
+		throw new EventRegistrationError("END_BEFORE_START");
+	}
+	if (pg?.code === "23503" && pg.constraint_name === ITEM_EVENT_FK) {
+		throw new EventRegistrationError("EVENT_NOT_FOUND");
+	}
 	if (pg?.code === "23514") {
 		if (context === "capacity") {
 			throw new EventRegistrationError("MAX_SEATS_BELOW_REGISTERED");
