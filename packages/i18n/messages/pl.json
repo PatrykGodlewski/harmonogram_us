@@ -280,5 +280,16 @@
 	"error_email_not_verified": "Potwierdź swój adres e-mail przed zapisaniem grupy.",
 	"error_item_not_in_group": "Ten punkt programu nie należy do grupy.",
 	"error_rate_limited": "Zbyt wiele prób. Spróbuj za kilka minut.",
-	"error_captcha": "Uzupełnij weryfikację captcha."
+	"error_captcha": "Uzupełnij weryfikację captcha.",
+	"admin_event_groups": "Grupy ({count})",
+	"admin_event_groups_empty": "Brak grup.",
+	"admin_group_owner": "Opiekun: {email}",
+	"admin_group_counts": "Potwierdzonych: {confirmed} · zaproszonych: {invited} · miejsc: {places}",
+	"admin_group_status_open": "Otwarta",
+	"admin_group_status_closed": "Zamknięta",
+	"admin_group_status_cancelled": "Anulowana",
+	"admin_group_badge": "Grupa: {name}",
+	"admin_group_unnamed": "grupa",
+	"admin_field_group_deadline_hours": "Termin potwierdzeń grupowych (godzin przed startem)",
+	"admin_field_group_deadline_hours_hint": "Niepotwierdzone miejsca grupowe są zwalniane tyle godzin przed wydarzeniem. 0 = do rozpoczęcia."
 }

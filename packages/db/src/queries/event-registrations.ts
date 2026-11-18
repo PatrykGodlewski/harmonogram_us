@@ -7,6 +7,7 @@ import {
 	eventSeatCounts,
 } from "../schema/event-registrations";
 import { events } from "../schema/events";
+import { registrationGroups } from "../schema/groups";
 import { getCurrentTxId } from "./txid";
 
 export type RegistrationErrorCode =
@@ -371,6 +372,8 @@ export type EventRegistrant = {
 	name: string | null;
 	registeredAt: Date;
 	agendaItemIds: string[];
+	groupId: string | null;
+	groupName: string | null;
 };
 
 export async function getEventRegistrants(
@@ -383,6 +386,8 @@ export async function getEventRegistrants(
 			email: authUsers.email,
 			name: authUsers.name,
 			registeredAt: eventRegistrations.createdAt,
+			groupId: eventRegistrations.groupId,
+			groupName: registrationGroups.name,
 			agendaItemIds: sql<string[]>`coalesce(
 				array_agg(${agendaItemRegistrations.agendaItemId})
 					filter (where ${agendaItemRegistrations.agendaItemId} is not null),
@@ -392,11 +397,15 @@ export async function getEventRegistrants(
 		.from(eventRegistrations)
 		.innerJoin(authUsers, eq(eventRegistrations.userId, authUsers.id))
 		.leftJoin(
+			registrationGroups,
+			eq(registrationGroups.id, eventRegistrations.groupId),
+		)
+		.leftJoin(
 			agendaItemRegistrations,
 			eq(agendaItemRegistrations.eventRegistrationId, eventRegistrations.id),
 		)
 		.where(eq(eventRegistrations.eventId, eventId))
-		.groupBy(eventRegistrations.id, authUsers.id)
+		.groupBy(eventRegistrations.id, authUsers.id, registrationGroups.id)
 		.orderBy(asc(eventRegistrations.createdAt));
 
 	return rows;

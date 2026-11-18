@@ -2,6 +2,7 @@ import { eq, sql } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "../src/client";
 import {
+	getEventRegistrants,
 	getMyRegistrations,
 	registerForEvent,
 	unregisterFromEvent,
@@ -173,4 +174,16 @@ describe("member changes", () => {
 		await expect(acceptInvitation(fresh ?? "", student)).resolves.toBeDefined();
 		expect(await reissueInvitationToken(memberId)).toBeNull();
 	});
+
+	it("getEventRegistrants includes groupName for group members", async () => {
+		const ctx = await confirmed();
+		await db.execute(sql`UPDATE registration_groups SET name = '3B' WHERE id = ${ctx.groupId}`);
+		const individual = await createUser();
+		await registerForEvent(ctx.eventId, individual);
+		const registrants = await getEventRegistrants(ctx.eventId);
+		const byUser = Object.fromEntries(registrants.map((r) => [r.userId, r]));
+		expect(byUser[ctx.student]).toMatchObject({ groupId: ctx.groupId, groupName: "3B" });
+		expect(byUser[individual]).toMatchObject({ groupId: null, groupName: null });
+	});
 });
+

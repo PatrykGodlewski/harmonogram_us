@@ -280,5 +280,16 @@
 	"error_email_not_verified": "Verify your email address before registering a group.",
 	"error_item_not_in_group": "That session isn't part of this group.",
 	"error_rate_limited": "Too many attempts. Try again in a few minutes.",
-	"error_captcha": "Please complete the captcha."
+	"error_captcha": "Please complete the captcha.",
+	"admin_event_groups": "Groups ({count})",
+	"admin_event_groups_empty": "No groups yet.",
+	"admin_group_owner": "Teacher: {email}",
+	"admin_group_counts": "{confirmed} confirmed · {invited} invited · {places} places",
+	"admin_group_status_open": "Open",
+	"admin_group_status_closed": "Closed",
+	"admin_group_status_cancelled": "Cancelled",
+	"admin_group_badge": "Group: {name}",
+	"admin_group_unnamed": "group",
+	"admin_field_group_deadline_hours": "Group confirmation deadline (hours before start)",
+	"admin_field_group_deadline_hours_hint": "Group places that aren't confirmed are released this many hours before the event. 0 = until it starts."
 }

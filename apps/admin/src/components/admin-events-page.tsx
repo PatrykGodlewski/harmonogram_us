@@ -23,6 +23,8 @@ import {
 	admin_field_description,
 	admin_field_ends_at,
 	admin_field_faculty,
+	admin_field_group_deadline_hours,
+	admin_field_group_deadline_hours_hint,
 	admin_field_id,
 	admin_field_id_optional,
 	admin_field_id_placeholder,
@@ -90,6 +92,7 @@ export function AdminEventsPage() {
 				date: z.string().min(1),
 				endsAt: z.string(),
 				maxSeats: z.number().int().min(0),
+				groupDeadlineHours: z.number().int().min(0).max(720),
 				typeId: z.string().min(1),
 				locationId: z.string(),
 				facultyId: z.string(),
@@ -125,6 +128,7 @@ export function AdminEventsPage() {
 				date: parseDateTimeLocal(values.date),
 				endsAt: values.endsAt ? parseDateTimeLocal(values.endsAt) : null,
 				maxSeats: values.maxSeats,
+				groupDeadlineHours: values.groupDeadlineHours,
 				typeId: values.typeId,
 				locationId: values.locationId === NONE_VALUE ? null : values.locationId,
 				facultyId: values.facultyId === NONE_VALUE ? null : values.facultyId,
@@ -167,6 +171,7 @@ export function AdminEventsPage() {
 			date: "",
 			endsAt: "",
 			maxSeats: 0,
+			groupDeadlineHours: 48,
 			typeId: "",
 			locationId: NONE_VALUE,
 			facultyId: NONE_VALUE,
@@ -196,6 +201,7 @@ export function AdminEventsPage() {
 			row.endsAt ? formatDateTimeLocal(new Date(row.endsAt)) : "",
 		);
 		form.setFieldValue("maxSeats", row.maxSeats);
+		form.setFieldValue("groupDeadlineHours", row.groupDeadlineHours);
 		form.setFieldValue("typeId", row.typeId);
 		form.setFieldValue("locationId", row.locationId ?? NONE_VALUE);
 		form.setFieldValue("facultyId", row.facultyId ?? NONE_VALUE);
@@ -399,6 +405,37 @@ export function AdminEventsPage() {
 									field.handleChange(Number(event.target.value))
 								}
 							/>
+							{field.state.meta.errors.length > 0 ? (
+								<FormMessage>
+									{formatFieldError(field.state.meta.errors[0])}
+								</FormMessage>
+							) : null}
+						</div>
+					)}
+				</form.Field>
+
+				<form.Field name="groupDeadlineHours">
+					{(field) => (
+						<div>
+							<Label htmlFor={field.name}>
+								{admin_field_group_deadline_hours()}
+							</Label>
+							<Input
+								id={field.name}
+								type="number"
+								min={0}
+								max={720}
+								className="mt-1"
+								disabled={saveMutation.isPending}
+								value={String(field.state.value ?? 48)}
+								onBlur={field.handleBlur}
+								onChange={(event) =>
+									field.handleChange(Number(event.target.value))
+								}
+							/>
+							<p className="mt-1 text-xs text-muted-foreground">
+								{admin_field_group_deadline_hours_hint()}
+							</p>
 							{field.state.meta.errors.length > 0 ? (
 								<FormMessage>
 									{formatFieldError(field.state.meta.errors[0])}

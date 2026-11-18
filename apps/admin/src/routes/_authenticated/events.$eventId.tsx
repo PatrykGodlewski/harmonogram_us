@@ -1,6 +1,7 @@
 import {
 	adminEventDetailsQueryOptions,
 	adminEventFilterOptionsQueryOptions,
+	adminEventGroupsQueryOptions,
 	adminEventRegistrantsQueryOptions,
 } from "@repo/api/admin/queries";
 import { admin_error_generic } from "@repo/i18n/paraglide/messages";
@@ -8,6 +9,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { AgendaEditor } from "~/components/admin-event-detail/agenda-editor";
 import { EventSummaryCard } from "~/components/admin-event-detail/event-summary-card";
+import { GroupsList } from "~/components/admin-event-detail/groups-list";
 import { RegistrantsList } from "~/components/admin-event-detail/registrants-list";
 import { formatMutationError } from "~/lib/format-mutation-error";
 
@@ -25,6 +27,7 @@ function AdminEventDetailPage() {
 		adminEventRegistrantsQueryOptions(eventId),
 	);
 	const { data: filterOptions } = useQuery(adminEventFilterOptionsQueryOptions);
+	const { data: groups = [] } = useQuery(adminEventGroupsQueryOptions(eventId));
 
 	const handleChanged = () =>
 		Promise.all([
@@ -55,7 +58,10 @@ function AdminEventDetailPage() {
 					onChanged={handleChanged}
 				/>
 			</div>
-			<RegistrantsList registrants={registrants} agenda={event.agenda} />
+			<div className="flex flex-col gap-8">
+				<GroupsList groups={groups} />
+				<RegistrantsList registrants={registrants} agenda={event.agenda} />
+			</div>
 		</div>
 	);
 }

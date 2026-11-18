@@ -2,6 +2,8 @@ import type { AgendaItem, EventRegistrant } from "@repo/api/admin/queries";
 import {
 	admin_event_registrants,
 	admin_event_registrants_empty,
+	admin_group_badge,
+	admin_group_unnamed,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { Badge } from "@repo/ui/components/badge";
@@ -32,7 +34,16 @@ export function RegistrantsList({ registrants, agenda }: RegistrantsListProps) {
 							key={registrant.registrationId}
 							className="flex flex-col gap-1 p-3"
 						>
-							<p className="font-medium break-all">{registrant.email}</p>
+							<div className="flex flex-wrap items-center gap-2">
+								<p className="font-medium break-all">{registrant.email}</p>
+								{registrant.groupId ? (
+									<Badge variant="outline">
+										{admin_group_badge({
+											name: registrant.groupName ?? admin_group_unnamed(),
+										})}
+									</Badge>
+								) : null}
+							</div>
 							<p className="text-sm text-muted-foreground">
 								{registrant.name ? `${registrant.name} · ` : ""}
 								{formatWarsawDate(registrant.registeredAt, locale)},{" "}
