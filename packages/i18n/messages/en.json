@@ -189,5 +189,18 @@
 	"admin_error_forbidden": "Your account doesn't have admin rights.",
 	"admin_no_access_title": "No access",
 	"admin_no_access_body": "Your account doesn't have admin rights. Ask an administrator to grant them.",
-	"admin_error_not_found": "This event no longer exists."
+	"admin_error_not_found": "This event no longer exists.",
+	"group_email_preview": "You're invited to {event}",
+	"group_email_badge": "Group invitation",
+	"group_email_title": "Confirm your place",
+	"group_email_intro": "{teacher} has reserved a place for you at {event} ({date}).",
+	"group_email_group": "Group: {group}",
+	"group_email_items": "Sessions: {items}",
+	"group_email_button": "Confirm my place",
+	"group_email_deadline": "Please confirm by {deadline}. After that your place is released.",
+	"group_email_fallback": "If the button doesn't work, open this link:",
+	"group_email_ignore": "If you didn't expect this invitation, you can ignore this email.",
+	"verify_email_subject": "Verify your email address",
+	"verify_email_intro": "Confirm that this is your email address to finish setting up your account:",
+	"verify_email_ignore": "If you didn't create an account, you can ignore this email."
 }

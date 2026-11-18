@@ -37,6 +37,11 @@ ENV VITE_TURNSTILE_SITE_KEY=${VITE_TURNSTILE_SITE_KEY}
 
 RUN pnpm turbo run build --filter="${APP}"
 
+# Web/admin build to .output (Nitro); the worker bundles to dist/. Collect whichever exists.
+RUN mkdir -p /app/out \
+	&& if [ -d "apps/${APP}/.output" ]; then cp -r "apps/${APP}/.output" /app/out/.output; fi \
+	&& if [ -d "apps/${APP}/dist" ]; then cp -r "apps/${APP}/dist" /app/out/dist; fi
+
 FROM base AS runner
 
 ARG APP=web
@@ -46,7 +51,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 
-COPY --from=builder /app/apps/${APP}/.output ./.output
+COPY --from=builder /app/out/ ./
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml

@@ -1,0 +1,33 @@
+{
+  "name": "worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "esbuild src/index.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/index.mjs --external:pg-native --banner:js=\"import { createRequire as __createRequire } from 'node:module'; const require = __createRequire(import.meta.url);\"",
+    "start": "node dist/index.mjs",
+    "test": "vitest run",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@repo/api": "workspace:*",
+    "@repo/db": "workspace:*",
+    "@repo/env": "workspace:*",
+    "@repo/i18n": "workspace:*",
+    "@repo/jobs": "workspace:*",
+    "@repo/ui": "workspace:*",
+    "pg-boss": "^12.38.2"
+  },
+  "devDependencies": {
+    "@repo/config": "workspace:*",
+    "@types/node": "^25.6.0",
+    "drizzle-orm": "^0.45.2",
+    "esbuild": "^0.27.0",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.3",
+    "vitest": "^5.1.1"
+  }
+}

@@ -189,5 +189,18 @@
 	"admin_error_forbidden": "Twoje konto nie ma uprawnień administratora.",
 	"admin_no_access_title": "Brak dostępu",
 	"admin_no_access_body": "Twoje konto nie ma uprawnień administratora. Poproś administratora o ich nadanie.",
-	"admin_error_not_found": "To wydarzenie już nie istnieje."
+	"admin_error_not_found": "To wydarzenie już nie istnieje.",
+	"group_email_preview": "Zaproszenie na: {event}",
+	"group_email_badge": "Zaproszenie grupowe",
+	"group_email_title": "Potwierdź swoje miejsce",
+	"group_email_intro": "{teacher} zarezerwował(a) dla Ciebie miejsce na wydarzeniu {event} ({date}).",
+	"group_email_group": "Grupa: {group}",
+	"group_email_items": "Punkty programu: {items}",
+	"group_email_button": "Potwierdzam udział",
+	"group_email_deadline": "Potwierdź do {deadline}. Po tym terminie miejsce zostanie zwolnione.",
+	"group_email_fallback": "Jeśli przycisk nie działa, otwórz ten link:",
+	"group_email_ignore": "Jeśli nie spodziewasz się tego zaproszenia, zignoruj tę wiadomość.",
+	"verify_email_subject": "Potwierdź swój adres e-mail",
+	"verify_email_intro": "Potwierdź, że to Twój adres e-mail, aby dokończyć zakładanie konta:",
+	"verify_email_ignore": "Jeśli nie zakładałeś(-aś) konta, zignoruj tę wiadomość."
 }

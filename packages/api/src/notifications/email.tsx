@@ -2,6 +2,10 @@ import { render } from "@react-email/render";
 import { env } from "@repo/env";
 import { baseLocale, type Locale } from "@repo/i18n/paraglide/runtime";
 import nodemailer from "nodemailer";
+import {
+	GroupInvitationEmail,
+	type GroupInvitationEmailProps,
+} from "./group-invitation-email";
 import { MagicLinkEmail } from "./magic-link-email";
 
 const transport = env.SMTP_HOST
@@ -38,4 +42,10 @@ export async function renderMagicLinkEmail(params: {
 }) {
 	const locale = params.locale ?? baseLocale;
 	return render(<MagicLinkEmail url={params.url} locale={locale} />);
+}
+
+export async function renderGroupInvitationEmail(
+	props: GroupInvitationEmailProps,
+) {
+	return render(<GroupInvitationEmail {...props} />);
 }

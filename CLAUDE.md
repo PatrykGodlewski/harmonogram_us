@@ -26,7 +26,7 @@ docker compose up -d         # Postgres (wal_level=logical), Mailpit, Redis, Ele
 pnpm db:migrate              # or `pnpm db:push` for a quick schema sync
 pnpm db:seed                 # seed sample data (packages/db/src/seed)
 
-pnpm dev                     # web (:3000) + admin (:3001)
+pnpm dev                     # web (:3000) + admin (:3001) + worker (pg-boss jobs)
 pnpm --filter web dev        # a single app
 pnpm build
 pnpm lint                    # biome check, per package via turbo
@@ -57,6 +57,7 @@ Mailpit inbox for local email (magic links): http://localhost:8025.
 - `i18n`: Paraglide project. `src/paraglide/` is generated and gitignored. Every locale is URL-prefixed (`/en/...`, `/pl/...`). The URL patterns and route strategies in `packages/i18n/*.js` are imported by both `vite.config.ts` files and by `scripts/compile-paraglide.mjs`, so keep them in sync.
 - `router-utils`: The Paraglide router `rewrite`, `requireAuthenticatedUser` for `beforeLoad`, and root document `head` builders.
 - `collections`: TanStack DB collections (for example, the Electric-backed `eventSeatCountsCollection`).
+- `jobs`: pg-boss queue names, payload schemas and `enqueue*` helpers (`@repo/jobs/client`), shared by the API (sends) and `apps/worker` (works).
 
 **Apps.** `apps/web` and `apps/admin` have near-identical setups (`vite.config.ts`, `router.tsx`, `server.ts`). `src/server.ts` wraps the TanStack Start handler in `paraglideMiddleware`. `envDir` points at the workspace root. `~` aliases to the app's `src`. `routeTree.gen.ts` is generated, so never edit it. Better Auth is mounted at `routes/api/auth/$.ts` in each app. Admin pages sit under the `_authenticated` layout route. That route only checks for a session; there is no ADMIN role check yet (see issue #12).
 
@@ -65,6 +66,8 @@ Mailpit inbox for local email (magic links): http://localhost:8025.
 2. Electric streams those tables. Shapes are declared once in `@repo/collections/shapes` (proxy path, table, columns). Each web route under `apps/web/src/routes/api/electric/` is a one-liner calling `proxyShape()` (`@repo/collections/electric-proxy`), which forwards only Electric protocol params (the server decides table, columns and filter) and adds `ELECTRIC_SECRET` server-side. To add a live table: add a `shapes` entry, a proxy route, and a collection.
 3. Collections in `@repo/collections/*` sync via `shapeUrl(shapes.x.path)`. The Electric client needs an absolute URL, and a relative one silently never syncs. The details page (`apps/web/src/lib/event-details/`) awaits the mutation's `txid` on the collection the action changes. The home list (`apps/web/src/lib/event-registration/*`) adds optimistic adjustments and cross-tab sync.
 4. Local dev over plain HTTP: Chrome allows 6 connections per origin across all tabs, and each open page holds one Electric long-poll per shape. Several app tabs in one browser can stall live updates. This is fine over HTTPS/HTTP2 (production). For multi-viewer manual tests use separate browser profiles.
+
+**Worker:** `apps/worker` is a pg-boss process on the same Postgres. It sends group invitation emails (`group-invitation-email`) and closes groups past their deadline every 5 minutes (`close-expired-groups`, which releases held places through the count triggers). Handlers live in `apps/worker/src/handlers` and are tested against the test DB (`pnpm --filter worker test`). It's bundled by esbuild into `dist/index.mjs`. The Dockerfile builds it with `APP=worker`, and Railway uses `apps/worker/railway.toml`. Invitation tokens are stored only as hashes, so the email job issues a fresh token when it sends.
 
 **Auth:** Better Auth (`packages/api/src/auth/better-auth.ts`) with a Drizzle adapter, magic link, Turnstile captcha, optional social providers, Redis-backed rate limiting, disposable-email and HIBP password checks, and Nodemailer + react-email for mail.
 
