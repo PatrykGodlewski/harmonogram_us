@@ -1,6 +1,5 @@
-import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { type DbExecutor, db, type TransactionClient } from "../client";
-import { agendaItems } from "../schema/agenda";
 import { authUsers } from "../schema/better-auth";
 import { events } from "../schema/events";
 import {
@@ -15,7 +14,22 @@ import {
 	mapConstraintError,
 } from "./domain-errors";
 import { assertEventOpen } from "./event-registrations";
+import {
+	type ActorOptions,
+	assertGroupAcceptsMembers,
+	assertGroupDeadlineOpen,
+	assertGroupOwner,
+	groupDeadlineColumn,
+} from "./group-guards";
 import { createInvitationToken, createJoinCode } from "./group-tokens";
+import {
+	type LockedGroup,
+	lockEvent,
+	lockGroup,
+	lockRegistrableItems,
+} from "./locks";
+
+export type { ActorOptions } from "./group-guards";
 
 /** `token` is null when the member is already confirmed (nothing to send). */
 export type GroupMemberRef = {
@@ -63,8 +77,6 @@ export type PublicGroupInfo = {
 	deadline: Date;
 };
 
-export type ActorOptions = { actorIsAdmin?: boolean };
-
 /**
  * Runs inside the group transaction, just before commit. Used to enqueue
  * invitation emails atomically (transactional outbox) without @repo/db
@@ -85,94 +97,12 @@ async function runInvitedHook(
 	}
 }
 
-type LockedGroup = typeof registrationGroups.$inferSelect;
-
 export function normalizeEmails(emails: string[]): string[] {
 	return [
 		...new Set(
 			emails.map((email) => email.trim().toLowerCase()).filter(Boolean),
 		),
 	];
-}
-
-async function deadlineOf(client: DbExecutor, eventId: string): Promise<Date> {
-	const [row] = await client.execute<{ deadline: string }>(
-		sql`SELECT group_deadline(${eventId})::text AS deadline`,
-	);
-	return new Date(row?.deadline ?? 0);
-}
-
-async function assertBeforeDeadline(tx: TransactionClient, eventId: string) {
-	if ((await deadlineOf(tx, eventId)).getTime() <= Date.now()) {
-		throw new DomainError("GROUP_DEADLINE_PASSED");
-	}
-}
-
-async function lockGroup(
-	tx: TransactionClient,
-	where: { id: string } | { joinCode: string },
-): Promise<LockedGroup> {
-	const [group] = await tx
-		.select()
-		.from(registrationGroups)
-		.where(
-			"id" in where
-				? eq(registrationGroups.id, where.id)
-				: eq(registrationGroups.joinCode, where.joinCode),
-		)
-		.for("update");
-	if (!group) {
-		throw new DomainError("GROUP_NOT_FOUND");
-	}
-	return group;
-}
-
-function assertOwner(
-	group: LockedGroup,
-	actorUserId: string,
-	opts: ActorOptions | undefined,
-) {
-	if (group.ownerUserId !== actorUserId && !opts?.actorIsAdmin) {
-		throw new DomainError("NOT_GROUP_OWNER");
-	}
-}
-
-async function assertGroupAcceptsMembers(
-	tx: TransactionClient,
-	group: LockedGroup,
-) {
-	if (group.status !== "open") {
-		throw new DomainError("GROUP_CLOSED");
-	}
-	await assertBeforeDeadline(tx, group.eventId);
-}
-
-/** Validates items belong to the event and need registration; locks them in id order. */
-async function lockEventItems(
-	tx: TransactionClient,
-	eventId: string,
-	itemIds: string[],
-): Promise<string[]> {
-	const unique = [...new Set(itemIds)].sort();
-	if (unique.length === 0) {
-		return [];
-	}
-	const rows = await tx
-		.select({ id: agendaItems.id })
-		.from(agendaItems)
-		.where(
-			and(
-				inArray(agendaItems.id, unique),
-				eq(agendaItems.eventId, eventId),
-				eq(agendaItems.requiresRegistration, true),
-			),
-		)
-		.orderBy(asc(agendaItems.id))
-		.for("update");
-	if (rows.length !== unique.length) {
-		throw new DomainError("ITEM_NOT_FOUND");
-	}
-	return unique;
 }
 
 async function groupItemIds(
@@ -277,17 +207,16 @@ export async function createGroup(
 				throw new DomainError("EMAIL_NOT_VERIFIED");
 			}
 
-			const [event] = await tx
-				.select({ id: events.id })
-				.from(events)
-				.where(eq(events.id, input.eventId))
-				.for("update");
-			if (!event) {
+			if (!(await lockEvent(tx, input.eventId))) {
 				throw new DomainError("EVENT_NOT_FOUND");
 			}
 			await assertEventOpen(tx, input.eventId);
-			await assertBeforeDeadline(tx, input.eventId);
-			const itemIds = await lockEventItems(tx, input.eventId, input.itemIds);
+			await assertGroupDeadlineOpen(tx, input.eventId);
+			const itemIds = await lockRegistrableItems(
+				tx,
+				input.eventId,
+				input.itemIds,
+			);
 
 			if (emails.length > input.places) {
 				throw new DomainError("GROUP_FULL");
@@ -333,7 +262,7 @@ export async function inviteToGroup(
 	try {
 		return await db.transaction(async (tx) => {
 			const group = await lockGroup(tx, { id: groupId });
-			assertOwner(group, actorUserId, opts);
+			assertGroupOwner(group, actorUserId, opts);
 			await assertGroupAcceptsMembers(tx, group);
 			const refs = await addMembers(
 				tx,
@@ -393,7 +322,7 @@ export async function resendInvitation(
 			throw new DomainError("GROUP_NOT_FOUND");
 		}
 		const group = await lockGroup(tx, { id: member.groupId });
-		assertOwner(group, actorUserId, opts);
+		assertGroupOwner(group, actorUserId, opts);
 		await assertGroupAcceptsMembers(tx, group);
 		const [ref] = await addMembers(tx, group, [member.email], "email");
 		if (!ref) {
@@ -418,7 +347,7 @@ export async function updateGroup(
 	try {
 		await db.transaction(async (tx) => {
 			const group = await lockGroup(tx, { id: groupId });
-			assertOwner(group, actorUserId, opts);
+			assertGroupOwner(group, actorUserId, opts);
 
 			const values: Partial<typeof registrationGroups.$inferInsert> = {
 				updatedAt: new Date(),
@@ -465,7 +394,7 @@ async function replaceGroupItems(
 	group: LockedGroup,
 	itemIds: string[],
 ) {
-	const next = await lockEventItems(tx, group.eventId, itemIds);
+	const next = await lockRegistrableItems(tx, group.eventId, itemIds);
 	const previous = (await groupItemIds(tx, group.id)).sort();
 	const sameAsPrevious = (ids: string[]) =>
 		ids.length === previous.length &&
@@ -531,7 +460,7 @@ export async function closeGroup(
 ): Promise<void> {
 	await db.transaction(async (tx) => {
 		const group = await lockGroup(tx, { id: groupId });
-		assertOwner(group, actorUserId, opts);
+		assertGroupOwner(group, actorUserId, opts);
 		await tx
 			.update(registrationGroups)
 			.set({ status: "closed", updatedAt: new Date() })
@@ -570,7 +499,7 @@ function summarySelect() {
 		joinCode: registrationGroups.joinCode,
 		confirmed: sql<number>`(SELECT count(*)::int FROM registration_group_members m WHERE m.group_id = ${registrationGroups.id} AND m.status = 'confirmed')`,
 		invited: sql<number>`(SELECT count(*)::int FROM registration_group_members m WHERE m.group_id = ${registrationGroups.id} AND m.status = 'invited')`,
-		deadline: sql<string>`group_deadline(${registrationGroups.eventId})::text`,
+		deadline: groupDeadlineColumn(registrationGroups.eventId),
 	};
 }
 

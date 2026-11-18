@@ -15,65 +15,16 @@ import {
 	mapConstraintError,
 	REGISTRATION_ERRORS,
 } from "./domain-errors";
+import {
+	type ActorOptions,
+	assertGroupOwner,
+	groupDeadlineColumn,
+	isGroupDeadlinePassed,
+} from "./group-guards";
 import { createInvitationToken, hashToken } from "./group-tokens";
-import type { ActorOptions, PublicGroupInfo } from "./groups";
+import type { PublicGroupInfo } from "./groups";
+import { lockEvent, lockMemberAndGroup } from "./locks";
 import { getCurrentTxId } from "./txid";
-
-type Member = typeof registrationGroupMembers.$inferSelect;
-type Group = typeof registrationGroups.$inferSelect;
-
-async function deadlineOf(tx: DbExecutor, eventId: string) {
-	const [row] = await tx.execute<{ deadline: string }>(
-		sql`SELECT group_deadline(${eventId})::text AS deadline`,
-	);
-	return new Date(row?.deadline ?? 0);
-}
-
-async function isPastDeadline(tx: DbExecutor, eventId: string) {
-	return (await deadlineOf(tx, eventId)).getTime() <= Date.now();
-}
-
-/** Lock order shared with groups.ts: group row first, then the member row. */
-async function lockMemberAndGroup(
-	tx: TransactionClient,
-	memberWhere: { id: string } | { tokenHash: string },
-): Promise<{ member: Member; group: Group } | null> {
-	const [peek] = await tx
-		.select({ groupId: registrationGroupMembers.groupId })
-		.from(registrationGroupMembers)
-		.where(
-			"id" in memberWhere
-				? eq(registrationGroupMembers.id, memberWhere.id)
-				: eq(registrationGroupMembers.tokenHash, memberWhere.tokenHash),
-		);
-	if (!peek) {
-		return null;
-	}
-	const [group] = await tx
-		.select()
-		.from(registrationGroups)
-		.where(eq(registrationGroups.id, peek.groupId))
-		.for("update");
-	const [member] = await tx
-		.select()
-		.from(registrationGroupMembers)
-		.where(
-			"id" in memberWhere
-				? eq(registrationGroupMembers.id, memberWhere.id)
-				: eq(registrationGroupMembers.tokenHash, memberWhere.tokenHash),
-		)
-		.for("update");
-	if (!group || !member) {
-		return null;
-	}
-	return { member, group };
-}
-
-function assertOwner(group: Group, actorUserId: string, opts?: ActorOptions) {
-	if (group.ownerUserId !== actorUserId && !opts?.actorIsAdmin) {
-		throw new DomainError("NOT_GROUP_OWNER");
-	}
-}
 
 async function memberItemIds(
 	tx: DbExecutor,
@@ -112,7 +63,7 @@ export async function getInvitation(
 			eventDate: events.date,
 			ownerName: authUsers.name,
 			members: sql<number>`(SELECT count(*)::int FROM registration_group_members m WHERE m.group_id = ${registrationGroups.id})`,
-			deadline: sql<string>`group_deadline(${registrationGroups.eventId})::text`,
+			deadline: groupDeadlineColumn(registrationGroups.eventId),
 		})
 		.from(registrationGroupMembers)
 		.innerJoin(
@@ -159,9 +110,21 @@ export async function acceptInvitation(
 ): Promise<{ eventId: string; txid: number }> {
 	try {
 		return await db.transaction(async (tx) => {
-			const locked = await lockMemberAndGroup(tx, {
-				tokenHash: hashToken(token),
-			});
+			const tokenHash = hashToken(token);
+			// Global lock order: event first, then group and member.
+			const [target] = await tx
+				.select({ eventId: registrationGroups.eventId })
+				.from(registrationGroupMembers)
+				.innerJoin(
+					registrationGroups,
+					eq(registrationGroups.id, registrationGroupMembers.groupId),
+				)
+				.where(eq(registrationGroupMembers.tokenHash, tokenHash));
+			if (!target) {
+				throw new DomainError("INVITATION_INVALID");
+			}
+			await lockEvent(tx, target.eventId);
+			const locked = await lockMemberAndGroup(tx, { tokenHash });
 			if (!locked || locked.member.status !== "invited") {
 				throw new DomainError("INVITATION_INVALID");
 			}
@@ -169,12 +132,7 @@ export async function acceptInvitation(
 			if (group.status !== "open") {
 				throw new DomainError("GROUP_CLOSED");
 			}
-			await tx
-				.select({ id: events.id })
-				.from(events)
-				.where(eq(events.id, group.eventId))
-				.for("update");
-			if (await isPastDeadline(tx, group.eventId)) {
+			if (await isGroupDeadlinePassed(tx, group.eventId)) {
 				throw new DomainError("GROUP_DEADLINE_PASSED");
 			}
 
@@ -287,7 +245,7 @@ export async function removeMember(
 		if (!locked) {
 			throw new DomainError("GROUP_NOT_FOUND");
 		}
-		assertOwner(locked.group, actorUserId, opts);
+		assertGroupOwner(locked.group, actorUserId, opts);
 		if (locked.member.eventRegistrationId) {
 			// Cascades to the member row and the student's item registrations.
 			await tx
@@ -316,7 +274,7 @@ export async function setMemberItems(
 				throw new DomainError("GROUP_NOT_FOUND");
 			}
 			const { member, group } = locked;
-			assertOwner(group, actorUserId, opts);
+			assertGroupOwner(group, actorUserId, opts);
 
 			const allowed = new Set(
 				(
@@ -395,7 +353,7 @@ export async function reissueInvitationToken(
 			!locked ||
 			locked.member.status !== "invited" ||
 			locked.group.status !== "open" ||
-			(await isPastDeadline(tx, locked.group.eventId))
+			(await isGroupDeadlinePassed(tx, locked.group.eventId))
 		) {
 			return null;
 		}

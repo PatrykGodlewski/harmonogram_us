@@ -13,6 +13,7 @@ import {
 	mapConstraintError,
 	REGISTRATION_ERRORS,
 } from "./domain-errors";
+import { lockEvent } from "./locks";
 import { getCurrentTxId } from "./txid";
 
 export async function getEffectiveEventEnd(
@@ -84,15 +85,6 @@ async function insertEventRegistration(
 	const id = crypto.randomUUID();
 	await tx.insert(eventRegistrations).values({ id, eventId, userId });
 	return id;
-}
-
-async function lockEvent(tx: TransactionClient, eventId: string) {
-	const [event] = await tx
-		.select({ id: events.id })
-		.from(events)
-		.where(eq(events.id, eventId))
-		.for("update");
-	return event ?? null;
 }
 
 export async function registerForEvent(eventId: string, userId: string) {
