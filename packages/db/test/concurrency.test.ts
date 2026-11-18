@@ -208,4 +208,44 @@ describe("seat counts stay exact under concurrent writes", () => {
 		expect((await readItemCount(itemId))?.registeredCount).toBe(1);
 		expect((await readEventCount(eventId))?.seatsRemaining).toBe(9);
 	});
+
+	it("item registration and a transaction holding the event never deadlock (global lock order: event first)", async () => {
+		const eventId = await createEvent({ maxSeats: 10 });
+		const itemId = await createItem(eventId, { maxSeats: 10 });
+		const [holder, registrant] = [await createUser(), await createUser()];
+		const holderRegistrationId = crypto.randomUUID();
+		await db.insert(eventRegistrations).values({ id: holderRegistrationId, eventId, userId: holder });
+
+		// Like acceptInvitation: lock the event, then insert an item registration (FK key-share on the item).
+		let release!: () => void;
+		const released = new Promise<void>((r) => {
+			release = r;
+		});
+		let ready!: () => void;
+		const isReady = new Promise<void>((r) => {
+			ready = r;
+		});
+		const holderTx = db.transaction(async (tx) => {
+			await tx.select().from(events).where(eq(events.id, eventId)).for("update");
+			ready();
+			await released;
+			await tx.insert(agendaItemRegistrations).values({
+				id: crypto.randomUUID(),
+				agendaItemId: itemId,
+				eventRegistrationId: holderRegistrationId,
+				userId: holder,
+			});
+		});
+		await isReady;
+		const registration = registerForAgendaItem(itemId, registrant);
+		await sleep(300);
+		release();
+
+		const results = await Promise.allSettled([holderTx, registration]);
+		const failures = results
+			.filter((r): r is PromiseRejectedResult => r.status === "rejected")
+			.map((r) => String(r.reason?.cause?.code ?? r.reason?.code ?? r.reason));
+		expect(failures).toEqual([]);
+	});
 });
+

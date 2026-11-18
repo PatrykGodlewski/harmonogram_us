@@ -220,7 +220,15 @@ export async function registerForAgendaItem(
 ): Promise<{ txid: number; eventRegistered: boolean }> {
 	try {
 		return await db.transaction(async (tx) => {
-			// Lock order: item, then event (avoids deadlocks with other item registrations).
+			// Global lock order: event row, then items (by id), then group/member rows, then count rows.
+			const [peek] = await tx
+				.select({ eventId: agendaItems.eventId })
+				.from(agendaItems)
+				.where(eq(agendaItems.id, itemId));
+			if (!peek) {
+				throw new EventRegistrationError("ITEM_NOT_FOUND");
+			}
+			await lockEvent(tx, peek.eventId);
 			const [item] = await tx
 				.select({
 					id: agendaItems.id,
@@ -240,7 +248,6 @@ export async function registerForAgendaItem(
 				throw new EventRegistrationError("ITEM_NOT_REGISTRABLE");
 			}
 
-			await lockEvent(tx, item.eventId);
 			await assertEventOpen(tx, item.eventId);
 
 			if (item.endsAt.getTime() <= Date.now()) {
