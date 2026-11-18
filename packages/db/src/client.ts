@@ -2,6 +2,13 @@
 import { env } from "@repo/env";
 import { drizzle } from "drizzle-orm/postgres-js";
 import {
+	agendaItemRegistrations,
+	agendaItemRegistrationsRelations,
+	agendaItemSeatCounts,
+	agendaItems,
+	agendaItemsRelations,
+} from "./schema/agenda";
+import {
 	authAccounts,
 	authSessions,
 	authUsers,
@@ -35,5 +42,10 @@ export const db = drizzle(env.DATABASE_URL, {
 		eventRegistrationsRelations,
 		eventSeatCounts,
 		eventSeatCountsRelations,
+		agendaItems,
+		agendaItemsRelations,
+		agendaItemRegistrations,
+		agendaItemRegistrationsRelations,
+		agendaItemSeatCounts,
 	},
 });

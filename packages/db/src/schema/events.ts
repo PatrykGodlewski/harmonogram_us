@@ -5,6 +5,7 @@ import { eventFaculties, eventLocations, eventTypes } from "./event-lookups";
 export const events = pgTable("events", {
 	id: text("id").primaryKey().default(sql`(gen_random_uuid())::text`),
 	title: text("title").notNull(),
+	description: text("description"),
 	date: timestamp("date", {
 		withTimezone: true,
 	}).notNull(),

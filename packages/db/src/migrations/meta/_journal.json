@@ -15,6 +15,20 @@
       "when": 1780703161904,
       "tag": "0001_sharp_maria_hill",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795015166913,
+      "tag": "0002_fluffy_corsair",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795015170957,
+      "tag": "0003_seat_count_triggers",
+      "breakpoints": true
     }
   ]
 }

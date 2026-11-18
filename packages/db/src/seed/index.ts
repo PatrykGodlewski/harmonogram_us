@@ -7,7 +7,6 @@ import {
 	eventLocations,
 	eventTypes,
 } from "../schema/event-lookups";
-import { eventSeatCounts } from "../schema/event-registrations";
 import { events } from "../schema/events";
 import {
 	adminUserSeed,
@@ -76,22 +75,6 @@ export async function seedSampleEvents() {
 					typeId: sql`excluded.type_id`,
 					locationId: sql`excluded.location_id`,
 					facultyId: sql`excluded.faculty_id`,
-					updatedAt: new Date(),
-				},
-			});
-
-		await db
-			.insert(eventSeatCounts)
-			.values({
-				eventId: event.id,
-				seatsRemaining: event.maxSeats,
-				maxSeats: event.maxSeats,
-			})
-			.onConflictDoUpdate({
-				target: eventSeatCounts.eventId,
-				set: {
-					maxSeats: sql`excluded.max_seats`,
-					seatsRemaining: sql`excluded.seats_remaining`,
 					updatedAt: new Date(),
 				},
 			});

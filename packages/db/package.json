@@ -13,7 +13,8 @@
     "format": "biome check --write .",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:seed": "tsx ./src/seed/run.ts"
+    "db:seed": "tsx ./src/seed/run.ts",
+    "test": "vitest run"
   },
   "dependencies": {
     "@repo/env": "workspace:*",
@@ -26,6 +27,7 @@
     "@types/node": "^25.6.0",
     "drizzle-kit": "^0.31.10",
     "tsx": "^4.21.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^5.1.1"
   }
 }
