@@ -1,11 +1,15 @@
 import {
 	EventRegistrationError,
+	registerForAgendaItem,
 	registerForEvent,
+	unregisterFromAgendaItem,
 	unregisterFromEvent,
 } from "@repo/db/queries/event-registrations";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getCurrentSession } from "../auth/user";
+import { withDomainErrors } from "../errors";
+import { agendaItemIdSchema } from "./schemas";
 
 export const registerForEventInputSchema = z.object({
 	eventId: z.string().min(1),
@@ -55,4 +59,30 @@ export const unregisterFromEventServer = createServerFn({ method: "POST" })
 			}
 			throw error;
 		}
+	});
+
+async function requireUserId(): Promise<string> {
+	const session = await getCurrentSession();
+	if (!session?.user) {
+		throw new Error("UNAUTHORIZED");
+	}
+	return session.user.id;
+}
+
+export const registerForAgendaItemServer = createServerFn({ method: "POST" })
+	.inputValidator(agendaItemIdSchema)
+	.handler(async ({ data }) => {
+		const userId = await requireUserId();
+		return withDomainErrors(() =>
+			registerForAgendaItem(data.agendaItemId, userId),
+		);
+	});
+
+export const unregisterFromAgendaItemServer = createServerFn({ method: "POST" })
+	.inputValidator(agendaItemIdSchema)
+	.handler(async ({ data }) => {
+		const userId = await requireUserId();
+		return withDomainErrors(() =>
+			unregisterFromAgendaItem(data.agendaItemId, userId),
+		);
 	});

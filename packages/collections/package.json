@@ -6,7 +6,8 @@
   "sideEffects": false,
   "exports": {
     "./local-notes": "./src/local-notes.ts",
-    "./event-seat-counts": "./src/event-seat-counts.ts"
+    "./event-seat-counts": "./src/event-seat-counts.ts",
+    "./agenda-item-seat-counts": "./src/agenda-item-seat-counts.ts"
   },
   "scripts": {
     "lint": "biome check .",

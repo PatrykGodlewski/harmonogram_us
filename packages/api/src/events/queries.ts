@@ -1,9 +1,13 @@
-import { getEventFilterOptions, getEvents } from "@repo/db/queries/events";
+import {
+	getEventById,
+	getEventFilterOptions,
+	getEvents,
+} from "@repo/db/queries/events";
 import type { QueryClient } from "@tanstack/react-query";
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import type { EventFiltersParams } from "./schemas";
-import { eventFiltersSchema } from "./schemas";
+import { eventFiltersSchema, eventIdSchema } from "./schemas";
 
 export const fetchFilterOptionsServer = createServerFn({
 	method: "GET",
@@ -36,3 +40,22 @@ export async function prefetchEventData(
 		queryClient.ensureQueryData(eventsQueryOptions(filters)),
 	]);
 }
+
+export type { EventDetails } from "@repo/db/queries/events";
+
+export const fetchEventDetailsServer = createServerFn({ method: "GET" })
+	.inputValidator((input: unknown) => eventIdSchema.parse(input))
+	.handler(async ({ data }) => {
+		const event = await getEventById(data.eventId);
+		if (!event) {
+			throw new Error("EVENT_NOT_FOUND");
+		}
+		return event;
+	});
+
+export const eventDetailsQueryOptions = (eventId: string) =>
+	queryOptions({
+		queryKey: ["event-details", eventId] as const,
+		queryFn: () => fetchEventDetailsServer({ data: { eventId } }),
+		staleTime: 30_000,
+	});

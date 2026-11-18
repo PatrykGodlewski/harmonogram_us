@@ -1,4 +1,7 @@
-import { getRegisteredEventIdsForUser } from "@repo/db/queries/event-registrations";
+import {
+	getMyRegistrations,
+	getRegisteredEventIdsForUser,
+} from "@repo/db/queries/event-registrations";
 import type { QueryClient } from "@tanstack/react-query";
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
@@ -25,3 +28,18 @@ export function ensureMyRegisteredEventIds(queryClient: QueryClient) {
 		revalidateIfStale: true,
 	});
 }
+
+export const fetchMyRegistrationsServer = createServerFn({
+	method: "GET",
+}).handler(async () => {
+	const user = await getCurrentUser();
+	if (!user) return { eventIds: [], agendaItemIds: [] };
+
+	return getMyRegistrations(user.id);
+});
+
+export const myRegistrationsQueryOptions = queryOptions({
+	queryKey: ["my-registrations"] as const,
+	queryFn: () => fetchMyRegistrationsServer(),
+	staleTime: 30_000,
+});

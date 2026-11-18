@@ -1,4 +1,9 @@
-import { getEventFilterOptions, getEvents } from "@repo/db/queries/events";
+import { getEventRegistrants } from "@repo/db/queries/event-registrations";
+import {
+	getEventById,
+	getEventFilterOptions,
+	getEvents,
+} from "@repo/db/queries/events";
 import {
 	getEventFaculties,
 	getEventLocations,
@@ -7,9 +12,14 @@ import {
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { authMiddleware } from "../auth/middleware";
-import { adminEventsQuerySchema } from "./schemas";
+import { adminEventIdSchema, adminEventsQuerySchema } from "./schemas";
 
-export type { EventWithRelations } from "@repo/db/queries/events";
+export type { AgendaItem } from "@repo/db/queries/agenda-items";
+export type { EventRegistrant } from "@repo/db/queries/event-registrations";
+export type {
+	EventDetails,
+	EventWithRelations,
+} from "@repo/db/queries/events";
 
 const protectedQueryFn = createServerFn({ method: "GET" }).middleware([
 	authMiddleware,
@@ -61,3 +71,29 @@ export const adminEventFilterOptionsQueryOptions = queryOptions({
 	queryFn: () => fetchAdminEventFilterOptionsServer(),
 	staleTime: 60_000,
 });
+
+export const fetchAdminEventDetailsServer = protectedQueryFn
+	.inputValidator((input: unknown) => adminEventIdSchema.parse(input))
+	.handler(async ({ data }) => {
+		const event = await getEventById(data.eventId);
+		if (!event) {
+			throw new Error("NOT_FOUND");
+		}
+		return event;
+	});
+
+export const adminEventDetailsQueryOptions = (eventId: string) =>
+	queryOptions({
+		queryKey: ["admin", "event", eventId] as const,
+		queryFn: () => fetchAdminEventDetailsServer({ data: { eventId } }),
+	});
+
+export const fetchAdminEventRegistrantsServer = protectedQueryFn
+	.inputValidator((input: unknown) => adminEventIdSchema.parse(input))
+	.handler(async ({ data }) => getEventRegistrants(data.eventId));
+
+export const adminEventRegistrantsQueryOptions = (eventId: string) =>
+	queryOptions({
+		queryKey: ["admin", "event", eventId, "registrants"] as const,
+		queryFn: () => fetchAdminEventRegistrantsServer({ data: { eventId } }),
+	});

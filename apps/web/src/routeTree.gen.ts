@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiElectricEventSeatCountsRouteImport } from './routes/api/electric/event-seat-counts'
+import { Route as ApiElectricAgendaItemSeatCountsRouteImport } from './routes/api/electric/agenda-item-seat-counts'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const SignupRoute = SignupRouteImport.update({
@@ -48,6 +49,12 @@ const ApiElectricEventSeatCountsRoute =
     path: '/api/electric/event-seat-counts',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiElectricAgendaItemSeatCountsRoute =
+  ApiElectricAgendaItemSeatCountsRouteImport.update({
+    id: '/api/electric/agenda-item-seat-counts',
+    path: '/api/electric/agenda-item-seat-counts',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -61,6 +68,7 @@ export interface FileRoutesByFullPath {
   '/logout': typeof LogoutRoute
   '/signup': typeof SignupRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/electric/agenda-item-seat-counts': typeof ApiElectricAgendaItemSeatCountsRoute
   '/api/electric/event-seat-counts': typeof ApiElectricEventSeatCountsRoute
 }
 export interface FileRoutesByTo {
@@ -70,6 +78,7 @@ export interface FileRoutesByTo {
   '/logout': typeof LogoutRoute
   '/signup': typeof SignupRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/electric/agenda-item-seat-counts': typeof ApiElectricAgendaItemSeatCountsRoute
   '/api/electric/event-seat-counts': typeof ApiElectricEventSeatCountsRoute
 }
 export interface FileRoutesById {
@@ -80,6 +89,7 @@ export interface FileRoutesById {
   '/logout': typeof LogoutRoute
   '/signup': typeof SignupRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/electric/agenda-item-seat-counts': typeof ApiElectricAgendaItemSeatCountsRoute
   '/api/electric/event-seat-counts': typeof ApiElectricEventSeatCountsRoute
 }
 export interface FileRouteTypes {
@@ -91,6 +101,7 @@ export interface FileRouteTypes {
     | '/logout'
     | '/signup'
     | '/api/auth/$'
+    | '/api/electric/agenda-item-seat-counts'
     | '/api/electric/event-seat-counts'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -100,6 +111,7 @@ export interface FileRouteTypes {
     | '/logout'
     | '/signup'
     | '/api/auth/$'
+    | '/api/electric/agenda-item-seat-counts'
     | '/api/electric/event-seat-counts'
   id:
     | '__root__'
@@ -109,6 +121,7 @@ export interface FileRouteTypes {
     | '/logout'
     | '/signup'
     | '/api/auth/$'
+    | '/api/electric/agenda-item-seat-counts'
     | '/api/electric/event-seat-counts'
   fileRoutesById: FileRoutesById
 }
@@ -119,6 +132,7 @@ export interface RootRouteChildren {
   LogoutRoute: typeof LogoutRoute
   SignupRoute: typeof SignupRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiElectricAgendaItemSeatCountsRoute: typeof ApiElectricAgendaItemSeatCountsRoute
   ApiElectricEventSeatCountsRoute: typeof ApiElectricEventSeatCountsRoute
 }
 
@@ -166,6 +180,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiElectricEventSeatCountsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/electric/agenda-item-seat-counts': {
+      id: '/api/electric/agenda-item-seat-counts'
+      path: '/api/electric/agenda-item-seat-counts'
+      fullPath: '/api/electric/agenda-item-seat-counts'
+      preLoaderRoute: typeof ApiElectricAgendaItemSeatCountsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -183,6 +204,7 @@ const rootRouteChildren: RootRouteChildren = {
   LogoutRoute: LogoutRoute,
   SignupRoute: SignupRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiElectricAgendaItemSeatCountsRoute: ApiElectricAgendaItemSeatCountsRoute,
   ApiElectricEventSeatCountsRoute: ApiElectricEventSeatCountsRoute,
 }
 export const routeTree = rootRouteImport

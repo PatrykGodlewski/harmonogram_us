@@ -1,3 +1,8 @@
+import {
+	createAgendaItem,
+	deleteAgendaItem,
+	updateAgendaItem,
+} from "@repo/db/queries/agenda-items";
 import { createEvent, deleteEvent, updateEvent } from "@repo/db/queries/events";
 import {
 	createEventFaculty,
@@ -12,10 +17,13 @@ import {
 } from "@repo/db/queries/lookups";
 import { createServerFn } from "@tanstack/react-start";
 import { authMiddleware } from "../auth/middleware";
+import { withDomainErrors } from "../errors";
 import {
+	createAgendaItemSchema,
 	createEventSchema,
 	createLookupSchema,
 	deleteByIdSchema,
+	updateAgendaItemSchema,
 	updateEventSchema,
 	updateLookupSchema,
 } from "./schemas";
@@ -31,7 +39,7 @@ export const createAdminEventServer = protectedActionFn
 export const updateAdminEventServer = protectedActionFn
 	.inputValidator((input: unknown) => updateEventSchema.parse(input))
 	.handler(async ({ data }) => {
-		const event = await updateEvent(data);
+		const event = await withDomainErrors(() => updateEvent(data));
 		if (!event) {
 			throw new Error("NOT_FOUND");
 		}
@@ -118,4 +126,29 @@ export const deleteAdminEventFacultyServer = protectedActionFn
 			throw new Error("NOT_FOUND");
 		}
 		return row;
+	});
+
+export const createAdminAgendaItemServer = protectedActionFn
+	.inputValidator((input: unknown) => createAgendaItemSchema.parse(input))
+	.handler(async ({ data }) => withDomainErrors(() => createAgendaItem(data)));
+
+export const updateAdminAgendaItemServer = protectedActionFn
+	.inputValidator((input: unknown) => updateAgendaItemSchema.parse(input))
+	.handler(async ({ data }) => {
+		const { id, ...values } = data;
+		const item = await withDomainErrors(() => updateAgendaItem(id, values));
+		if (!item) {
+			throw new Error("NOT_FOUND");
+		}
+		return item;
+	});
+
+export const deleteAdminAgendaItemServer = protectedActionFn
+	.inputValidator((input: unknown) => deleteByIdSchema.parse(input))
+	.handler(async ({ data }) => {
+		const item = await deleteAgendaItem(data.id);
+		if (!item) {
+			throw new Error("NOT_FOUND");
+		}
+		return item;
 	});

@@ -31,7 +31,11 @@ export const adminEventsQuerySchema = z.object({
 
 export type AdminEventsQuery = z.infer<typeof adminEventsQuerySchema>;
 
+export const adminEventIdSchema = z.object({ eventId: z.string().min(1) });
+
 export {
+	createAgendaItemSchema,
 	createEventSchema,
+	updateAgendaItemSchema,
 	updateEventSchema,
 } from "../events/schemas";
