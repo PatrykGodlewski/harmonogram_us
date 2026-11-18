@@ -1,3 +1,6 @@
+/** @jsxRuntime automatic */
+/** @jsxImportSource react */
+// Explicit so the templates compile the same under every runner (tsx in the worker applies its tsconfig only to its own files).
 import {
 	Body,
 	Button,

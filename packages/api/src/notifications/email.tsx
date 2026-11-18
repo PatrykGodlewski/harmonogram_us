@@ -1,3 +1,6 @@
+/** @jsxRuntime automatic */
+/** @jsxImportSource react */
+// Explicit so the templates compile the same under every runner (tsx in the worker applies its tsconfig only to its own files).
 import { render } from "@react-email/render";
 import { env } from "@repo/env";
 import { baseLocale, type Locale } from "@repo/i18n/paraglide/runtime";

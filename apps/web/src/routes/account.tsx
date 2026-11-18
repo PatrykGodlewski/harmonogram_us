@@ -1,4 +1,5 @@
 import { setPasswordForCurrentSession } from "@repo/api/auth/user";
+import { myGroupsQueryOptions } from "@repo/api/groups/queries";
 import {
 	account_field_email,
 	account_field_password,
@@ -22,6 +23,10 @@ import {
 	auth_validator_password_too_short,
 	auth_validator_passwords_no_match,
 	error_title,
+	groups_my_groups,
+	groups_my_groups_empty,
+	groups_open_group,
+	groups_summary,
 } from "@repo/i18n/paraglide/messages";
 import { requireAuthenticatedUser } from "@repo/router-utils/require-auth";
 import { Alert, AlertDescription, AlertTitle } from "@repo/ui/components/alert";
@@ -30,8 +35,8 @@ import { FormMessage } from "@repo/ui/components/form-message";
 import { Input } from "@repo/ui/components/input";
 import { Label } from "@repo/ui/components/label";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeaders } from "@tanstack/react-start/server";
 import * as React from "react";
@@ -158,6 +163,7 @@ function AccountPage() {
 						: account_password_status_missing()}
 				</p>
 			</div>
+			<MyGroups />
 			<div className="mt-6 rounded-lg border p-4">
 				<h2 className="mb-4 text-lg font-semibold">
 					{account_password_title()}
@@ -306,4 +312,50 @@ function usePasswordMutation(hasPassword: boolean) {
 			}
 		},
 	});
+}
+
+function MyGroups() {
+	const { data: groups = [] } = useQuery(myGroupsQueryOptions);
+	return (
+		<section className="mt-6 rounded-lg border p-4">
+			<h2 className="mb-4 text-lg font-semibold">{groups_my_groups()}</h2>
+			{groups.length === 0 ? (
+				<p className="text-sm text-muted-foreground">
+					{groups_my_groups_empty()}
+				</p>
+			) : (
+				<ul className="divide-y">
+					{groups.map((group) => (
+						<li
+							key={group.id}
+							className="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between"
+						>
+							<div>
+								<p className="font-medium">
+									{group.eventTitle}
+									{group.name ? ` · ${group.name}` : ""}
+								</p>
+								<p className="text-sm text-muted-foreground tabular-nums">
+									{groups_summary({
+										confirmed: group.confirmed,
+										invited: group.invited,
+										free: Math.max(
+											0,
+											group.places - group.confirmed - group.invited,
+										),
+										places: group.places,
+									})}
+								</p>
+							</div>
+							<Button size="sm" variant="outline" asChild>
+								<Link to="/groups/$groupId" params={{ groupId: group.id }}>
+									{groups_open_group()}
+								</Link>
+							</Button>
+						</li>
+					))}
+				</ul>
+			)}
+		</section>
+	);
 }

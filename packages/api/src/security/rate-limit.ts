@@ -3,6 +3,7 @@ import { Redis } from "ioredis";
 import { RateLimiterRedis } from "rate-limiter-flexible";
 
 let client: Redis | null | undefined;
+const limiters = new Map<string, RateLimiterRedis | null>();
 
 function redis(): Redis | null {
 	if (client === undefined) {
@@ -17,32 +18,38 @@ function redis(): Redis | null {
 	return client;
 }
 
-/** Redis-backed limiter; a no-op when Redis isn't configured (dev without Redis, tests). */
-export function createRateLimiter(
+/**
+ * Consumes one point for `key` under `keyPrefix`; throws `RATE_LIMITED` when exhausted.
+ * A no-op without Redis (dev without Redis, tests). Call it only inside server
+ * handlers, never at module level: server-function modules are also imported by
+ * the client, and module-level calls would pull Redis into the browser bundle.
+ */
+export async function consumeRateLimit(
 	keyPrefix: string,
-	points: number,
-	durationSeconds: number,
-) {
-	let limiter: RateLimiterRedis | null | undefined;
-	return async function consume(key: string): Promise<void> {
-		if (limiter === undefined) {
-			const store = redis();
-			limiter = store
+	limit: { points: number; durationSeconds: number },
+	key: string,
+): Promise<void> {
+	if (!limiters.has(keyPrefix)) {
+		const store = redis();
+		limiters.set(
+			keyPrefix,
+			store
 				? new RateLimiterRedis({
 						storeClient: store,
 						keyPrefix,
-						points,
-						duration: durationSeconds,
+						points: limit.points,
+						duration: limit.durationSeconds,
 					})
-				: null;
-		}
-		if (!limiter) {
-			return;
-		}
-		try {
-			await limiter.consume(key);
-		} catch {
-			throw new Error("RATE_LIMITED");
-		}
-	};
+				: null,
+		);
+	}
+	const limiter = limiters.get(keyPrefix);
+	if (!limiter) {
+		return;
+	}
+	try {
+		await limiter.consume(key);
+	} catch {
+		throw new Error("RATE_LIMITED");
+	}
 }

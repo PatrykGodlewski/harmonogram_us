@@ -3,10 +3,13 @@ import { eventDetailsQueryOptions } from "@repo/api/events/queries";
 import {
 	event_details_back,
 	event_details_not_found,
+	joined_toast,
 } from "@repo/i18n/paraglide/messages";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { lazy, type ReactNode, Suspense } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { lazy, type ReactNode, Suspense, useEffect } from "react";
+import { toast } from "sonner";
+import { z } from "zod";
 import { ClientOnly } from "~/components/client-only";
 import { EventDetailsView } from "~/components/event-details/event-details-view";
 import { useEventDetailsRegistrations } from "~/lib/event-details/use-event-details-registrations";
@@ -20,6 +23,9 @@ const staticItemCounts = {
 };
 
 export const Route = createFileRoute("/events/$eventId")({
+	validateSearch: z.object({
+		joined: z.coerce.number().optional().catch(undefined),
+	}),
 	loader: async ({ context: { queryClient, user }, params }) => {
 		await queryClient.ensureQueryData(eventDetailsQueryOptions(params.eventId));
 		if (user) {
@@ -45,6 +51,14 @@ function EventDetailsPage() {
 	const { eventId } = Route.useParams();
 	const { user } = Route.useRouteContext();
 	const { data: event } = useSuspenseQuery(eventDetailsQueryOptions(eventId));
+	const { joined } = Route.useSearch();
+	const navigate = useNavigate();
+	useEffect(() => {
+		if (joined) {
+			toast.success(joined_toast());
+			void navigate({ to: ".", search: {}, replace: true });
+		}
+	}, [joined, navigate]);
 	const registrations = useEventDetailsRegistrations(
 		eventId,
 		user?.id,

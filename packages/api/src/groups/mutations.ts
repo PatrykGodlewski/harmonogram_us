@@ -15,7 +15,7 @@ import { getRequestHeaders } from "@tanstack/react-start/server";
 import { authMiddleware } from "../auth/middleware";
 import { withDomainErrors } from "../errors";
 import { getClientIp } from "../security/client-ip";
-import { createRateLimiter } from "../security/rate-limit";
+import { consumeRateLimit } from "../security/rate-limit";
 import { assertTurnstile } from "../security/turnstile";
 import {
 	createGroupSchema,
@@ -30,8 +30,6 @@ import {
 const protectedActionFn = createServerFn({ method: "POST" }).middleware([
 	authMiddleware,
 ]);
-
-const consumeJoinLimit = createRateLimiter("groups:join", 10, 15 * 60);
 
 function currentEmailLocale(): "pl" | "en" {
 	return getLocale() === "en" ? "en" : "pl";
@@ -134,7 +132,11 @@ export const joinGroupServer = createServerFn({ method: "POST" })
 	.inputValidator(joinGroupSchema)
 	.handler(async ({ data }) => {
 		const ip = getClientIp(getRequestHeaders());
-		await consumeJoinLimit(`${ip}:${data.code}`);
+		await consumeRateLimit(
+			"groups:join",
+			{ points: 10, durationSeconds: 15 * 60 },
+			`${ip}:${data.code}`,
+		);
 		await assertTurnstile(
 			data.turnstileToken,
 			ip === "unknown" ? undefined : ip,

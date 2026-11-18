@@ -14,10 +14,14 @@ import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as JoinCodeRouteImport } from './routes/join/$code'
+import { Route as InviteTokenRouteImport } from './routes/invite/$token'
+import { Route as GroupsGroupIdRouteImport } from './routes/groups/$groupId'
 import { Route as EventsEventIdRouteImport } from './routes/events/$eventId'
 import { Route as ApiElectricEventSeatCountsRouteImport } from './routes/api/electric/event-seat-counts'
 import { Route as ApiElectricAgendaItemSeatCountsRouteImport } from './routes/api/electric/agenda-item-seat-counts'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as EventsEventIdGroupsNewRouteImport } from './routes/events/$eventId_.groups.new'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -44,6 +48,21 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JoinCodeRoute = JoinCodeRouteImport.update({
+  id: '/join/$code',
+  path: '/join/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InviteTokenRoute = InviteTokenRouteImport.update({
+  id: '/invite/$token',
+  path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GroupsGroupIdRoute = GroupsGroupIdRouteImport.update({
+  id: '/groups/$groupId',
+  path: '/groups/$groupId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EventsEventIdRoute = EventsEventIdRouteImport.update({
   id: '/events/$eventId',
   path: '/events/$eventId',
@@ -66,6 +85,11 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EventsEventIdGroupsNewRoute = EventsEventIdGroupsNewRouteImport.update({
+  id: '/events/$eventId_/groups/new',
+  path: '/events/$eventId/groups/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -74,9 +98,13 @@ export interface FileRoutesByFullPath {
   '/logout': typeof LogoutRoute
   '/signup': typeof SignupRoute
   '/events/$eventId': typeof EventsEventIdRoute
+  '/groups/$groupId': typeof GroupsGroupIdRoute
+  '/invite/$token': typeof InviteTokenRoute
+  '/join/$code': typeof JoinCodeRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/electric/agenda-item-seat-counts': typeof ApiElectricAgendaItemSeatCountsRoute
   '/api/electric/event-seat-counts': typeof ApiElectricEventSeatCountsRoute
+  '/events/$eventId/groups/new': typeof EventsEventIdGroupsNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -85,9 +113,13 @@ export interface FileRoutesByTo {
   '/logout': typeof LogoutRoute
   '/signup': typeof SignupRoute
   '/events/$eventId': typeof EventsEventIdRoute
+  '/groups/$groupId': typeof GroupsGroupIdRoute
+  '/invite/$token': typeof InviteTokenRoute
+  '/join/$code': typeof JoinCodeRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/electric/agenda-item-seat-counts': typeof ApiElectricAgendaItemSeatCountsRoute
   '/api/electric/event-seat-counts': typeof ApiElectricEventSeatCountsRoute
+  '/events/$eventId/groups/new': typeof EventsEventIdGroupsNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -97,9 +129,13 @@ export interface FileRoutesById {
   '/logout': typeof LogoutRoute
   '/signup': typeof SignupRoute
   '/events/$eventId': typeof EventsEventIdRoute
+  '/groups/$groupId': typeof GroupsGroupIdRoute
+  '/invite/$token': typeof InviteTokenRoute
+  '/join/$code': typeof JoinCodeRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/electric/agenda-item-seat-counts': typeof ApiElectricAgendaItemSeatCountsRoute
   '/api/electric/event-seat-counts': typeof ApiElectricEventSeatCountsRoute
+  '/events/$eventId_/groups/new': typeof EventsEventIdGroupsNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -110,9 +146,13 @@ export interface FileRouteTypes {
     | '/logout'
     | '/signup'
     | '/events/$eventId'
+    | '/groups/$groupId'
+    | '/invite/$token'
+    | '/join/$code'
     | '/api/auth/$'
     | '/api/electric/agenda-item-seat-counts'
     | '/api/electric/event-seat-counts'
+    | '/events/$eventId/groups/new'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -121,9 +161,13 @@ export interface FileRouteTypes {
     | '/logout'
     | '/signup'
     | '/events/$eventId'
+    | '/groups/$groupId'
+    | '/invite/$token'
+    | '/join/$code'
     | '/api/auth/$'
     | '/api/electric/agenda-item-seat-counts'
     | '/api/electric/event-seat-counts'
+    | '/events/$eventId/groups/new'
   id:
     | '__root__'
     | '/'
@@ -132,9 +176,13 @@ export interface FileRouteTypes {
     | '/logout'
     | '/signup'
     | '/events/$eventId'
+    | '/groups/$groupId'
+    | '/invite/$token'
+    | '/join/$code'
     | '/api/auth/$'
     | '/api/electric/agenda-item-seat-counts'
     | '/api/electric/event-seat-counts'
+    | '/events/$eventId_/groups/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -144,9 +192,13 @@ export interface RootRouteChildren {
   LogoutRoute: typeof LogoutRoute
   SignupRoute: typeof SignupRoute
   EventsEventIdRoute: typeof EventsEventIdRoute
+  GroupsGroupIdRoute: typeof GroupsGroupIdRoute
+  InviteTokenRoute: typeof InviteTokenRoute
+  JoinCodeRoute: typeof JoinCodeRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiElectricAgendaItemSeatCountsRoute: typeof ApiElectricAgendaItemSeatCountsRoute
   ApiElectricEventSeatCountsRoute: typeof ApiElectricEventSeatCountsRoute
+  EventsEventIdGroupsNewRoute: typeof EventsEventIdGroupsNewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -186,6 +238,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/join/$code': {
+      id: '/join/$code'
+      path: '/join/$code'
+      fullPath: '/join/$code'
+      preLoaderRoute: typeof JoinCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invite/$token': {
+      id: '/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/groups/$groupId': {
+      id: '/groups/$groupId'
+      path: '/groups/$groupId'
+      fullPath: '/groups/$groupId'
+      preLoaderRoute: typeof GroupsGroupIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/events/$eventId': {
       id: '/events/$eventId'
       path: '/events/$eventId'
@@ -214,6 +287,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/events/$eventId_/groups/new': {
+      id: '/events/$eventId_/groups/new'
+      path: '/events/$eventId/groups/new'
+      fullPath: '/events/$eventId/groups/new'
+      preLoaderRoute: typeof EventsEventIdGroupsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -224,9 +304,13 @@ const rootRouteChildren: RootRouteChildren = {
   LogoutRoute: LogoutRoute,
   SignupRoute: SignupRoute,
   EventsEventIdRoute: EventsEventIdRoute,
+  GroupsGroupIdRoute: GroupsGroupIdRoute,
+  InviteTokenRoute: InviteTokenRoute,
+  JoinCodeRoute: JoinCodeRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiElectricAgendaItemSeatCountsRoute: ApiElectricAgendaItemSeatCountsRoute,
   ApiElectricEventSeatCountsRoute: ApiElectricEventSeatCountsRoute,
+  EventsEventIdGroupsNewRoute: EventsEventIdGroupsNewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

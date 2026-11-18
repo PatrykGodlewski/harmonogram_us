@@ -5,11 +5,13 @@ import {
 	events_register_full,
 	events_registered,
 	events_unregister,
+	groups_register_group,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
 import { formatWarsawDate, formatWarsawTime } from "@repo/ui/time";
+import { Link } from "@tanstack/react-router";
 import type {
 	EventDetailsData,
 	EventDetailsRegistrations,
@@ -76,6 +78,13 @@ export function EventSummary({
 					registrations={registrations}
 				/>
 			</div>
+			{user && isBeforeGroupDeadline(event) ? (
+				<Button variant="outline" size="sm" className="self-start" asChild>
+					<Link to="/events/$eventId/groups/new" params={{ eventId: event.id }}>
+						{groups_register_group()}
+					</Link>
+				</Button>
+			) : null}
 		</section>
 	);
 }
@@ -153,4 +162,10 @@ function EventRegistrationAction({
 			{events_register()}
 		</Button>
 	);
+}
+
+function isBeforeGroupDeadline(event: EventDetailsData): boolean {
+	const deadline =
+		new Date(event.date).getTime() - event.groupDeadlineHours * 3_600_000;
+	return deadline > Date.now();
 }
