@@ -89,7 +89,7 @@ export function AdminEventsPage() {
 				description: z.string().max(5000),
 				date: z.string().min(1),
 				endsAt: z.string(),
-				maxSeats: z.coerce.number().int().min(0),
+				maxSeats: z.number().int().min(0),
 				typeId: z.string().min(1),
 				locationId: z.string(),
 				facultyId: z.string(),

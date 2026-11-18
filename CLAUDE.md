@@ -75,6 +75,8 @@ Mailpit inbox for local email (magic links): http://localhost:8025.
 - Read env vars through `import { env } from "@repo/env"`, never `process.env`. Browser values use `VITE_*`.
 - Use `z.email()`, not the deprecated `z.string().email()`.
 - Prefer existing shadcn components in `packages/ui` and existing `@repo/*` packages over adding new dependencies.
+- Keep exactly one `@tanstack/db` version: `@tanstack/react-db` and `@tanstack/electric-db-collection` must share it, or collection types break. It's pinned via `pnpm.overrides` in the root `package.json`, so bump the override and the packages together.
+- TanStack Form with a Zod schema: the schema's input type must match the form values. Don't use `z.coerce`/`.optional()` for fields the form always holds as `number`/`string`. Parse in `onSubmit` if you need transformed output.
 - Biome style: tabs, double quotes, organized imports.
 - Keep changes minimal and scoped. Mirror patterns in nearby files, and ask before large refactors.
 - Name event handlers `handle*`, and give explicit types to public APIs.

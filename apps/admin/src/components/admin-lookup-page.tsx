@@ -1,4 +1,4 @@
-import type { LookupRow } from "@repo/db/queries/lookups";
+import type { LookupRow } from "@repo/api/admin/queries";
 import {
 	admin_delete_confirm,
 	admin_delete_success,

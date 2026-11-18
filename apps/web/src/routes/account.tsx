@@ -86,7 +86,7 @@ function AccountPage() {
 				.object({
 					currentPassword: hasPassword
 						? z.string().min(1, account_password_error_required_current())
-						: z.string().optional(),
+						: z.string(),
 					newPassword: z
 						.string()
 						.min(1, auth_validator_password_required())

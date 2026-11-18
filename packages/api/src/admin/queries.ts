@@ -21,6 +21,7 @@ export type {
 	EventWithRelations,
 	FilterOption,
 } from "@repo/db/queries/events";
+export type { LookupRow } from "@repo/db/queries/lookups";
 
 const protectedQueryFn = createServerFn({ method: "GET" }).middleware([
 	adminMiddleware,
