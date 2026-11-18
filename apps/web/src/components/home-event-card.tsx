@@ -8,6 +8,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@repo/ui/components/card";
+import { Link } from "@tanstack/react-router";
 import { EventRegistrationButton } from "~/components/event-registration-button";
 import type { EventRegistrationActions } from "~/lib/event-registration/types";
 import { formatEventDate } from "~/lib/events/format-event-date";
@@ -43,7 +44,15 @@ export function HomeEventCard({
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>{event.title}</CardTitle>
+				<CardTitle>
+					<Link
+						to="/events/$eventId"
+						params={{ eventId: event.id }}
+						className="hover:underline"
+					>
+						{event.title}
+					</Link>
+				</CardTitle>
 				<CardDescription>
 					{formatEventDate(event.date)}
 					{" · "}

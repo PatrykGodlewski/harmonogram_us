@@ -14,6 +14,7 @@ import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EventsEventIdRouteImport } from './routes/events/$eventId'
 import { Route as ApiElectricEventSeatCountsRouteImport } from './routes/api/electric/event-seat-counts'
 import { Route as ApiElectricAgendaItemSeatCountsRouteImport } from './routes/api/electric/agenda-item-seat-counts'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -43,6 +44,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EventsEventIdRoute = EventsEventIdRouteImport.update({
+  id: '/events/$eventId',
+  path: '/events/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiElectricEventSeatCountsRoute =
   ApiElectricEventSeatCountsRouteImport.update({
     id: '/api/electric/event-seat-counts',
@@ -67,6 +73,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/signup': typeof SignupRoute
+  '/events/$eventId': typeof EventsEventIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/electric/agenda-item-seat-counts': typeof ApiElectricAgendaItemSeatCountsRoute
   '/api/electric/event-seat-counts': typeof ApiElectricEventSeatCountsRoute
@@ -77,6 +84,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/signup': typeof SignupRoute
+  '/events/$eventId': typeof EventsEventIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/electric/agenda-item-seat-counts': typeof ApiElectricAgendaItemSeatCountsRoute
   '/api/electric/event-seat-counts': typeof ApiElectricEventSeatCountsRoute
@@ -88,6 +96,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/signup': typeof SignupRoute
+  '/events/$eventId': typeof EventsEventIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/electric/agenda-item-seat-counts': typeof ApiElectricAgendaItemSeatCountsRoute
   '/api/electric/event-seat-counts': typeof ApiElectricEventSeatCountsRoute
@@ -100,6 +109,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/logout'
     | '/signup'
+    | '/events/$eventId'
     | '/api/auth/$'
     | '/api/electric/agenda-item-seat-counts'
     | '/api/electric/event-seat-counts'
@@ -110,6 +120,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/logout'
     | '/signup'
+    | '/events/$eventId'
     | '/api/auth/$'
     | '/api/electric/agenda-item-seat-counts'
     | '/api/electric/event-seat-counts'
@@ -120,6 +131,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/logout'
     | '/signup'
+    | '/events/$eventId'
     | '/api/auth/$'
     | '/api/electric/agenda-item-seat-counts'
     | '/api/electric/event-seat-counts'
@@ -131,6 +143,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   LogoutRoute: typeof LogoutRoute
   SignupRoute: typeof SignupRoute
+  EventsEventIdRoute: typeof EventsEventIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiElectricAgendaItemSeatCountsRoute: typeof ApiElectricAgendaItemSeatCountsRoute
   ApiElectricEventSeatCountsRoute: typeof ApiElectricEventSeatCountsRoute
@@ -173,6 +186,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/events/$eventId': {
+      id: '/events/$eventId'
+      path: '/events/$eventId'
+      fullPath: '/events/$eventId'
+      preLoaderRoute: typeof EventsEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/electric/event-seat-counts': {
       id: '/api/electric/event-seat-counts'
       path: '/api/electric/event-seat-counts'
@@ -203,6 +223,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   LogoutRoute: LogoutRoute,
   SignupRoute: SignupRoute,
+  EventsEventIdRoute: EventsEventIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiElectricAgendaItemSeatCountsRoute: ApiElectricAgendaItemSeatCountsRoute,
   ApiElectricEventSeatCountsRoute: ApiElectricEventSeatCountsRoute,

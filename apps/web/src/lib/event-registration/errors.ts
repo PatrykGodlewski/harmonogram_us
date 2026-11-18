@@ -1,4 +1,9 @@
 import {
+	events_event_ended,
+	events_item_ended,
+	events_item_full,
+	events_item_not_found,
+	events_item_not_registrable,
 	events_register_already,
 	events_register_full,
 	events_unregister_not_registered,
@@ -10,6 +15,11 @@ export const EVENT_REGISTRATION_ERROR_CODES = [
 	"EVENT_FULL",
 	"NOT_REGISTERED",
 	"EVENT_NOT_FOUND",
+	"EVENT_ENDED",
+	"ITEM_FULL",
+	"ITEM_ENDED",
+	"ITEM_NOT_FOUND",
+	"ITEM_NOT_REGISTRABLE",
 	"UNAUTHORIZED",
 ] as const;
 
@@ -22,6 +32,11 @@ const REGISTRATION_ERROR_MESSAGES: Partial<
 	ALREADY_REGISTERED: events_register_already,
 	EVENT_FULL: events_register_full,
 	NOT_REGISTERED: events_unregister_not_registered,
+	EVENT_ENDED: events_event_ended,
+	ITEM_FULL: events_item_full,
+	ITEM_ENDED: events_item_ended,
+	ITEM_NOT_FOUND: events_item_not_found,
+	ITEM_NOT_REGISTRABLE: events_item_not_registrable,
 };
 
 function isEventRegistrationErrorCode(

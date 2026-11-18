@@ -61,8 +61,9 @@ Mailpit inbox for local email (magic links): http://localhost:8025.
 
 **Live seat counts (the most cross-cutting flow):**
 1. `event_seat_counts` and `agenda_item_seat_counts` are Postgres tables maintained by triggers (migration `0003_seat_count_triggers.sql`) from the registration rows and capacity columns. `CHECK (seats_remaining >= 0)` enforces capacity, so never write these tables directly. The mutation returns the Postgres `txid` (`queries/txid.ts`).
-2. Electric streams that table. The web app proxies shape requests through `apps/web/src/routes/api/electric/event-seat-counts.ts`, which adds `ELECTRIC_SECRET` server-side.
-3. `@repo/collections/event-seat-counts` consumes the proxy on the client. `apps/web/src/lib/event-registration/*` coordinates mutations, in-flight state, a registered-events cache, and cross-tab sync (BroadcastChannel carrying the `txid`) so the UI waits for the matching Electric update.
+2. Electric streams those tables. Shapes are declared once in `@repo/collections/shapes` (proxy path, table, columns). Each web route under `apps/web/src/routes/api/electric/` is a one-liner calling `proxyShape()` (`@repo/collections/electric-proxy`), which forwards only Electric protocol params (the server decides table, columns and filter) and adds `ELECTRIC_SECRET` server-side. To add a live table: add a `shapes` entry, a proxy route, and a collection.
+3. Collections in `@repo/collections/*` sync via `shapeUrl(shapes.x.path)`. The Electric client needs an absolute URL, and a relative one silently never syncs. The details page (`apps/web/src/lib/event-details/`) awaits the mutation's `txid` on the collection the action changes. The home list (`apps/web/src/lib/event-registration/*`) adds optimistic adjustments and cross-tab sync.
+4. Local dev over plain HTTP: Chrome allows 6 connections per origin across all tabs, and each open page holds one Electric long-poll per shape. Several app tabs in one browser can stall live updates. This is fine over HTTPS/HTTP2 (production). For multi-viewer manual tests use separate browser profiles.
 
 **Auth:** Better Auth (`packages/api/src/auth/better-auth.ts`) with a Drizzle adapter, magic link, Turnstile captcha, optional social providers, Redis-backed rate limiting, disposable-email and HIBP password checks, and Nodemailer + react-email for mail.
 

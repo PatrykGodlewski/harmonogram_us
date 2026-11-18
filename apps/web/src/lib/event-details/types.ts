@@ -1,0 +1,25 @@
+import type { EventDetails } from "@repo/api/events/queries";
+
+export type EventDetailsData = EventDetails;
+export type AgendaItemData = EventDetails["agenda"][number];
+export type AgendaItemRef = Pick<AgendaItemData, "id" | "title">;
+
+export type ItemSeatCount = {
+	seatsRemaining: number | null;
+	maxSeats: number | null;
+	registeredCount: number;
+};
+
+export type ItemSeatCountSource = {
+	getItemCount: (itemId: string, fallback: ItemSeatCount) => ItemSeatCount;
+};
+
+export type EventDetailsRegistrations = {
+	isEventRegistered: boolean;
+	registeredItemIds: ReadonlySet<string>;
+	pendingKey: string | null;
+	registerEvent: () => void;
+	unregisterEvent: () => void;
+	registerItem: (item: AgendaItemRef) => void;
+	unregisterItem: (item: AgendaItemRef) => void;
+};
