@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Admins build an agenda per event, and users register for the event and for individual agenda items, with live per-item seat counts and database-enforced capacity.
+**Goal:** Admins (role-restricted) build an agenda per event, and users register for the event and for individual agenda items, with live per-item seat counts and database-enforced capacity.
 
 **Architecture:** New `agenda_items`, `agenda_item_registrations` and `agenda_item_seat_counts` tables. Postgres triggers derive every count table from the source rows, and `CHECK (seats_remaining >= 0)` enforces capacity. Electric streams both count tables to the web app. Query functions in `@repo/db` are integration-tested with Vitest against the Docker Postgres. Server functions in `@repo/api` are consumed by a new public `/events/$eventId` page and a new admin event page.
 
@@ -17,7 +17,7 @@
 - Use `z.email()` if emails are validated.
 - Every user-facing string goes in `packages/i18n/messages/en.json` **and** `pl.json`. Run `pnpm messages:compile` after editing.
 - All event and agenda times are **Europe/Warsaw**. Display uses `Intl` with `timeZone: "Europe/Warsaw"`, and admin inputs are read as Warsaw wall-clock time.
-- Error codes (exact strings): `EVENT_NOT_FOUND`, `EVENT_FULL`, `ALREADY_REGISTERED`, `NOT_REGISTERED`, `ITEM_NOT_FOUND`, `ITEM_FULL`, `ITEM_NOT_REGISTRABLE`, `ITEM_ENDED`, `MAX_SEATS_BELOW_REGISTERED`.
+- Error codes (exact strings): `EVENT_NOT_FOUND`, `EVENT_FULL`, `ALREADY_REGISTERED`, `NOT_REGISTERED`, `ITEM_NOT_FOUND`, `ITEM_FULL`, `ITEM_NOT_REGISTRABLE`, `ITEM_ENDED`, `MAX_SEATS_BELOW_REGISTERED`, `EVENT_ENDED`, `ITEM_LIMIT_ABOVE_EVENT`, `FORBIDDEN`.
 - Constraint names (exact, used for error mapping): `event_seat_counts_seats_remaining_nonnegative`, `agenda_item_seat_counts_seats_remaining_nonnegative`, `agenda_items_ends_after_starts`.
 - Overlapping items **warn, never block**.
 - Biome: tabs, double quotes. `pnpm lint` must pass at the end of every task that touches TS.
@@ -141,8 +141,13 @@ git commit -m "feat(db): add agenda tables and trigger-maintained seat counts"
   - `getMyRegistrations(userId: string): Promise<{ eventIds: string[]; agendaItemIds: string[] }>`
   - `unregisterFromEvent` and `getRegisteredEventIdsForUser`: unchanged.
 
+- Also in this task: add `endsAt: timestamp("ends_at", { withTimezone: true })` (nullable) to `events`, then `pnpm db:generate` (→ `0004_*`) and `pnpm db:migrate`. Export `getEffectiveEventEnd(tx, eventId): Promise<Date>` = `coalesce(events.ends_at, max(agenda_items.ends_at), events.date + interval '1 day')`.
+
 - [ ] **Step 1: Write the failing tests** (`beforeEach(resetDb)`)
 
+- `EVENT_ENDED for event registration after effective end`: event `date` 2 days ago with no `ends_at` and no items → `registerForEvent` rejects `EVENT_ENDED`. Same event with `ends_at` 1 hour ahead → succeeds.
+- `EVENT_ENDED for item registration after event end`: event `ends_at` 1 hour ago, item ending 1 hour ahead → `registerForAgendaItem` rejects `EVENT_ENDED`.
+- `effective end falls back to last agenda item`: event `date` 2 days ago, no `ends_at`, item ending 3 hours ahead → event registration succeeds.
 - `registers item and creates event registration`: → `{eventRegistered: true}`. `getMyRegistrations` → `eventIds [e]`, `agendaItemIds [i]`. Item `seatsRemaining` decreases by 1, and the event's too.
 - `second item reuses event registration`: → `{eventRegistered: false}`. Event `seatsRemaining` decreases only once.
 - `ITEM_FULL when item has no seats`: item `maxSeats 1`, user A registers, user B → rejects `EventRegistrationError` with code `ITEM_FULL`.
@@ -161,8 +166,8 @@ Expected: FAIL (`registerForAgendaItem is not a function`).
 
 - [ ] **Step 3: Implement**
 
-Lock order is **item row, then event row** (`.for("update")`). Steps:
-1. If not found → `ITEM_NOT_FOUND`. If `!requiresRegistration` → `ITEM_NOT_REGISTRABLE`. If `endsAt <= now()` → `ITEM_ENDED`. If already registered → `ALREADY_REGISTERED`.
+`registerForEvent` gains the same `EVENT_ENDED` check after locking the event. Lock order is **item row, then event row** (`.for("update")`). Steps:
+1. If not found → `ITEM_NOT_FOUND`. If `!requiresRegistration` → `ITEM_NOT_REGISTRABLE`. If the effective event end has passed → `EVENT_ENDED`. If `endsAt <= now()` → `ITEM_ENDED`. If already registered → `ALREADY_REGISTERED`.
 2. Find or create the event registration. On create, check the event count (`EVENT_FULL`).
 3. Check the item count when `maxSeats` isn't null (`ITEM_FULL`), then insert. `eventRegistrationId` is the found or created row's id.
 
@@ -184,7 +189,7 @@ Run: `pnpm --filter @repo/db lint` → clean.
 
 **Files:**
 - Create: `packages/db/src/queries/agenda-items.ts`
-- Modify: `packages/db/src/queries/events.ts` (`description` in create/update/types, `getEventById`, map `MAX_SEATS_BELOW_REGISTERED`)
+- Modify: `packages/db/src/queries/events.ts` (`description` and `endsAt` in create/update/types, `getEventById`, map `MAX_SEATS_BELOW_REGISTERED`)
 - Modify: `packages/db/src/queries/event-registrations.ts` (`getEventRegistrants`)
 - Modify: `packages/db/src/seed/data.ts`, `packages/db/src/seed/index.ts` (a sample agenda for the first seeded event: 4 items, including two that overlap and one with `requiresRegistration: false`)
 - Test: `packages/db/test/agenda-items.test.ts`
@@ -198,7 +203,8 @@ Run: `pnpm --filter @repo/db lint` → clean.
   - `updateAgendaItem(id: string, input: Partial<Omit<AgendaItemInput,"eventId">>): Promise<AgendaItem|null>`
   - `deleteAgendaItem(id: string): Promise<{ id: string }|null>`
   - Both create and update throw `EventRegistrationError("MAX_SEATS_BELOW_REGISTERED")` on the item CHECK violation. `updateEvent` throws the same on the event CHECK. Re-use `mapConstraintError` from Task 2, extended with this mapping, which applies when the constraint fires during an UPDATE of `max_seats`.
-  - `type EventDetails = EventWithRelations & { description: string|null; agenda: AgendaItem[] }`
+  - Create and update throw `EventRegistrationError("ITEM_LIMIT_ABOVE_EVENT")` when `maxSeats` exceeds the event's `max_seats` (read in the same transaction).
+  - `type EventDetails = EventWithRelations & { description: string|null; endsAt: Date|null; effectiveEndsAt: Date; agenda: AgendaItem[] }`
   - `getEventById(id: string): Promise<EventDetails|null>`
   - `type EventRegistrant = { registrationId: string; userId: string; email: string; name: string|null; registeredAt: Date; agendaItemIds: string[] }`
   - `getEventRegistrants(eventId: string): Promise<EventRegistrant[]>`, ordered by `registeredAt`
@@ -207,6 +213,7 @@ Run: `pnpm --filter @repo/db lint` → clean.
 
 - `create/list orders by start then title`. List includes `locationLabel` and `seatsRemaining`.
 - `update item max_seats below registered → MAX_SEATS_BELOW_REGISTERED`
+- `item limit above event limit → ITEM_LIMIT_ABOVE_EVENT`: event `maxSeats 10`, so `createAgendaItem({maxSeats: 11})` rejects, and `updateAgendaItem(id, {maxSeats: 11})` rejects. `maxSeats: 10` and `null` succeed.
 - `update event max_seats below registered → MAX_SEATS_BELOW_REGISTERED`
 - `getEventById returns description and agenda`. Unknown id → `null`.
 - `getEventRegistrants lists users with their item ids`
@@ -320,7 +327,7 @@ Expected: a JSON array containing seeded `agenda_item_id` rows. If Electric can'
 - Create: `apps/web/src/routes/events/$eventId.tsx`
 - Create: `apps/web/src/components/event-details/event-summary.tsx`, `agenda-timeline.tsx`, `agenda-item-row.tsx`, `unregister-event-dialog.tsx`
 - Create: `apps/web/src/lib/event-details/use-event-details-registrations.ts`, `use-live-agenda-counts.ts`
-- Modify: `apps/web/src/lib/event-registration/errors.ts` (add the four `ITEM_*` codes and messages)
+- Modify: `apps/web/src/lib/event-registration/errors.ts` (add the `ITEM_*` codes and `EVENT_ENDED` with messages)
 - Modify: `apps/web/src/components/home-event-card.tsx` (the title links to `/events/$eventId`)
 - Modify: `packages/i18n/messages/en.json`, `pl.json`
 - Add the shadcn `alert-dialog` to `packages/ui` if it's missing (`pnpm dlx shadcn@latest add alert-dialog`, run in `packages/ui`)
@@ -358,6 +365,7 @@ Keys (en text, write natural Polish for pl):
 - `events_item_ended` "This session has already ended."
 - `events_item_not_registrable` "This session doesn't need registration."
 - `events_item_not_found` "This session no longer exists."
+- `events_event_ended` "Registration for this event has closed."
 - `events_item_register_success` "Registered for {title}."
 - `events_item_unregister_success` "Unregistered from {title}."
 
@@ -394,8 +402,8 @@ Expected: all of the above observed. Record anything that differs as a fix or a 
 - Rename: `apps/admin/src/routes/_authenticated/events.tsx` → `events.index.tsx` (route id `/_authenticated/events/`)
 - Create: `apps/admin/src/routes/_authenticated/events.$eventId.tsx`
 - Create: `apps/admin/src/components/admin-event-detail/event-summary-card.tsx`, `agenda-editor.tsx`, `agenda-item-dialog.tsx`, `registrants-list.tsx`
-- Modify: `apps/admin/src/components/admin-events-page.tsx` (each title cell is a `Link` to `/events/$eventId`, the form gets a `description` textarea, and its date input is read as Warsaw time via `fromWarsawWallTime`/`toWarsawDateInput`/`toWarsawTimeInput`, replacing `parseDateTimeLocal`/`formatDateTimeLocal`)
-- Modify: `apps/admin/src/lib/format-mutation-error.ts` (map `MAX_SEATS_BELOW_REGISTERED`)
+- Modify: `apps/admin/src/components/admin-events-page.tsx` (each title cell is a `Link` to `/events/$eventId`, the form gets a `description` textarea and optional end date and time (`endsAt`), and its date input is read as Warsaw time via `fromWarsawWallTime`/`toWarsawDateInput`/`toWarsawTimeInput`, replacing `parseDateTimeLocal`/`formatDateTimeLocal`)
+- Modify: `apps/admin/src/lib/format-mutation-error.ts` (map `MAX_SEATS_BELOW_REGISTERED`, `ITEM_LIMIT_ABOVE_EVENT`, `FORBIDDEN`)
 - Modify: `packages/i18n/messages/en.json`, `pl.json`
 
 **Interfaces:**
@@ -425,6 +433,10 @@ Keys:
 - `admin_field_requires_registration` "Needs registration"
 - `admin_error_end_before_start` "End time must be after start time."
 - `admin_error_max_seats_below_registered` "More people are registered than this limit allows."
+- `admin_error_item_limit_above_event` "A session can't have more places than the event."
+- `admin_field_ends_at` "Ends (optional)"
+- `admin_no_access_title` "No access"
+- `admin_no_access_body` "Your account doesn't have admin rights. Ask an administrator to grant them."
 
 Run: `pnpm messages:compile`.
 
@@ -450,3 +462,31 @@ Expected: all observed.
 
 Run: `pnpm test` → PASS (db and ui).
 `git commit -m "feat(admin): event page with agenda editor and registrants"`
+
+---
+
+### Task 8: Admin role (#12)
+
+**Files:**
+- Modify: `packages/db/src/schema/better-auth.ts` (`role: text("role").notNull().default("user")` on `authUsers`), then `pnpm db:generate` (→ `0005_*`) and migrate
+- Create: `packages/db/src/queries/roles.ts`
+- Modify: `packages/db/src/seed/index.ts` (the seed admin gets `role: "admin"`, on insert and on re-run)
+- Create: `packages/api/src/auth/admin-middleware.ts`
+- Modify: `packages/api/src/admin/queries.ts`, `packages/api/src/admin/mutations.ts` (every server function switches from `authMiddleware` to `adminMiddleware`)
+- Modify: `apps/admin/src/routes/_authenticated.tsx` and the admin root context (non-admins see a no-access page with a logout link)
+- Test: `packages/db/test/roles.test.ts`
+
+**Interfaces:**
+- Produces:
+  - `type UserRole = "user" | "admin"`
+  - `getUserRole(userId: string): Promise<UserRole | null>`
+  - `isAdmin(userId: string): Promise<boolean>`
+  - `adminMiddleware`: like `authMiddleware`, plus `if (!(await isAdmin(user.id))) throw new Error("FORBIDDEN")`. The context adds `isAdmin: true`.
+  - The admin root `beforeLoad` context gains `isAdmin: boolean` (from a new `fetchIsAdminServer` in `packages/api/src/auth/`).
+
+- [ ] **Step 1: Write the failing tests**: `new users default to role user` (`getUserRole` → `"user"`, `isAdmin` → false). `admin role detected` (after `UPDATE` → `isAdmin` true). Unknown id → `getUserRole` → `null`.
+- [ ] **Step 2: Run them**: `pnpm --filter @repo/db test roles` → FAIL (module not found).
+- [ ] **Step 3: Implement the column, migration, queries, seed, middleware and route gate.**
+- [ ] **Step 4: Run** `pnpm test && pnpm lint && pnpm build` → PASS and clean.
+- [ ] **Step 5: Browser check**: sign up a fresh user on web through Mailpit's magic link, then open admin → the no-access page. The seed admin still has full access.
+- [ ] **Step 6: Commit**: `git commit -m "feat(admin): restrict admin panel to admin role"`

@@ -174,6 +174,15 @@ Groups will add held seats. Because counts are recomputed in triggers from sourc
 - **Electric shape.** Item counts are synced unfiltered, as one small table, like the event shape.
 - **Late registration.** Registering for an item that has already ended is rejected with `ITEM_ENDED`. Items in progress can still be registered for.
 
+### Settled in grilling (2026-11-18, all recommendations accepted)
+
+- **Admin role (moves #12 into this project).** `user.role text NOT NULL DEFAULT 'user'`, with values `user` and `admin`. A new `adminMiddleware` checks for `admin` server-side and throws `FORBIDDEN`. Every admin server function and the admin `_authenticated` route use it; a non-admin who signs in sees a "no access" page. The seed admin gets `admin`. For now other admins are granted with SQL (`UPDATE "user" SET role='admin' WHERE email=…`); a role management UI comes later.
+- **Event-only registration stays.** Both the event-level button and the item buttons remain.
+- **Overlap** warns, never blocks (unchanged).
+- **Registration closes.** Add `events.ends_at timestamptz NULL`. The effective end is `ends_at`, otherwise the latest agenda item `ends_at`, otherwise `date + 1 day`. After the effective end, event and item registration are rejected with `EVENT_ENDED`. Items also close at their own end (`ITEM_ENDED`). The admin event form gets an optional end date and time.
+- **Item limit ≤ event limit.** Creating or updating an item with `max_seats > events.max_seats` is rejected with `ITEM_LIMIT_ABOVE_EVENT`.
+- **Time zone:** Warsaw only. **Oversold migration:** raise and log. **Flat agenda.** **Visual theme deferred.** (All unchanged.)
+
 ## Left to the builder
 
 - Component breakdown, hook structure, and how far to reuse the existing optimistic and cross-tab registration machinery for items. At minimum, item mutations must await the `txid` and invalidate queries. Optimistic count adjustments for items are optional.
