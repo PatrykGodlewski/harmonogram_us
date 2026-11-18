@@ -1,5 +1,6 @@
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, type SQL, sql } from "drizzle-orm";
 import { type DbExecutor, db, type TransactionClient } from "../client";
+import { agendaItems } from "../schema/agenda";
 import { authUsers } from "../schema/better-auth";
 import { events } from "../schema/events";
 import {
@@ -54,6 +55,8 @@ export type GroupSummary = {
 
 export type GroupDetails = GroupSummary & {
 	joinCode: string | null;
+	/** The group's default sessions, in agenda order. */
+	items: Array<{ id: string; title: string }>;
 	itemIds: string[];
 	members: Array<{
 		id: string;
@@ -411,8 +414,8 @@ async function replaceGroupItems(
 			);
 	}
 
-	const members = await memberItemMap(tx, group.id);
-	for (const [memberId, ids] of members) {
+	const members = await listMembersWithItems(tx, group.id);
+	for (const { id: memberId, itemIds: ids } of members) {
 		if (!sameAsPrevious(ids)) {
 			continue;
 		}
@@ -427,13 +430,18 @@ async function replaceGroupItems(
 	}
 }
 
-async function memberItemMap(
+type MemberWithItems = typeof registrationGroupMembers.$inferSelect & {
+	itemIds: string[];
+};
+
+/** A group's members with their item ids, in invitation order (one query). */
+async function listMembersWithItems(
 	client: DbExecutor,
 	groupId: string,
-): Promise<Map<string, string[]>> {
+): Promise<MemberWithItems[]> {
 	const rows = await client
 		.select({
-			memberId: registrationGroupMembers.id,
+			member: registrationGroupMembers,
 			itemId: registrationGroupMemberItems.agendaItemId,
 		})
 		.from(registrationGroupMembers)
@@ -441,16 +449,17 @@ async function memberItemMap(
 			registrationGroupMemberItems,
 			eq(registrationGroupMemberItems.memberId, registrationGroupMembers.id),
 		)
-		.where(eq(registrationGroupMembers.groupId, groupId));
-	const map = new Map<string, string[]>();
-	for (const row of rows) {
-		const list = map.get(row.memberId) ?? [];
-		if (row.itemId) {
-			list.push(row.itemId);
+		.where(eq(registrationGroupMembers.groupId, groupId))
+		.orderBy(asc(registrationGroupMembers.invitedAt));
+	const byId = new Map<string, MemberWithItems>();
+	for (const { member, itemId } of rows) {
+		const entry = byId.get(member.id) ?? { ...member, itemIds: [] };
+		if (itemId) {
+			entry.itemIds.push(itemId);
 		}
-		map.set(row.memberId, list);
+		byId.set(member.id, entry);
 	}
-	return map;
+	return [...byId.values()];
 }
 
 export async function closeGroup(
@@ -550,41 +559,42 @@ export async function getGroupDetails(
 	actorUserId: string,
 	opts?: ActorOptions,
 ): Promise<GroupDetails> {
-	const [row] = await querySummaries().where(
-		eq(registrationGroups.id, groupId),
-	);
+	const [[row], items, members] = await Promise.all([
+		querySummaries().where(eq(registrationGroups.id, groupId)),
+		db
+			.select({ id: agendaItems.id, title: agendaItems.title })
+			.from(registrationGroupItems)
+			.innerJoin(
+				agendaItems,
+				eq(agendaItems.id, registrationGroupItems.agendaItemId),
+			)
+			.where(eq(registrationGroupItems.groupId, groupId))
+			.orderBy(asc(agendaItems.startsAt)),
+		listMembersWithItems(db, groupId),
+	]);
 	if (!row) {
 		throw new DomainError("GROUP_NOT_FOUND");
 	}
-	if (row.ownerUserId !== actorUserId && !opts?.actorIsAdmin) {
-		throw new DomainError("NOT_GROUP_OWNER");
-	}
-	const [itemIds, items, members] = await Promise.all([
-		groupItemIds(db, groupId),
-		memberItemMap(db, groupId),
-		db
-			.select()
-			.from(registrationGroupMembers)
-			.where(eq(registrationGroupMembers.groupId, groupId))
-			.orderBy(asc(registrationGroupMembers.invitedAt)),
-	]);
+	assertGroupOwner(row, actorUserId, opts);
 	return {
 		...toSummary(row),
 		joinCode: row.joinCode,
-		itemIds,
+		items,
+		itemIds: items.map((item) => item.id),
 		members: members.map((member) => ({
 			id: member.id,
 			email: member.email,
 			status: member.status,
 			invitedVia: member.invitedVia,
-			itemIds: items.get(member.id) ?? [],
+			itemIds: member.itemIds,
 			confirmedAt: member.confirmedAt,
 		})),
 	};
 }
 
-export async function getGroupByJoinCode(
-	joinCode: string,
+/** What anyone with a join link or invitation may see about a group. */
+export async function findPublicGroupInfo(
+	where: SQL,
 ): Promise<PublicGroupInfo | null> {
 	const [row] = await db
 		.select({
@@ -595,7 +605,7 @@ export async function getGroupByJoinCode(
 		.from(registrationGroups)
 		.innerJoin(events, eq(events.id, registrationGroups.eventId))
 		.innerJoin(authUsers, eq(authUsers.id, registrationGroups.ownerUserId))
-		.where(eq(registrationGroups.joinCode, joinCode));
+		.where(where);
 	if (!row) {
 		return null;
 	}
@@ -610,4 +620,10 @@ export async function getGroupByJoinCode(
 		status: row.status,
 		deadline: new Date(row.deadline),
 	};
+}
+
+export function getGroupByJoinCode(
+	joinCode: string,
+): Promise<PublicGroupInfo | null> {
+	return findPublicGroupInfo(eq(registrationGroups.joinCode, joinCode));
 }

@@ -246,14 +246,14 @@ export type EventDetails = EventWithRelations & {
 };
 
 export async function getEventById(id: string): Promise<EventDetails | null> {
-	const [event] = await queryEvents(undefined, id);
-	if (!event) {
-		return null;
-	}
-	const [agenda, effectiveEndsAt] = await Promise.all([
+	const [[event], agenda, effectiveEndsAt] = await Promise.all([
+		queryEvents(undefined, id),
 		listAgendaItems(id),
 		getEffectiveEventEnd(db, id),
 	]);
+	if (!event) {
+		return null;
+	}
 	return {
 		...event,
 		agenda,

@@ -53,7 +53,7 @@ describe("acceptInvitation", () => {
 	it("getInvitation shows details without side effects", async () => {
 		const { token, eventId } = await groupWithInvite();
 		const invitation = await getInvitation(token);
-		expect(invitation).toMatchObject({ email: "kid@x.test", status: "invited", itemTitles: ["web"] });
+		expect(invitation).toMatchObject({ email: "kid@x.test", itemTitles: ["web"] });
 		expect(invitation?.group.eventId).toBe(eventId);
 		expect(await getInvitation("nope")).toBeNull();
 	});

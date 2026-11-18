@@ -32,7 +32,7 @@ export const groupInvitation = () =>
 				async (ctx) => {
 					const { token } = ctx.body;
 					const invitation = await getInvitation(token);
-					if (!invitation || invitation.status !== "invited") {
+					if (!invitation) {
 						throw invitationError("INVITATION_INVALID");
 					}
 

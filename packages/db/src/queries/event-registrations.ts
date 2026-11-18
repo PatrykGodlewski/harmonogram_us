@@ -2,10 +2,7 @@ import { and, asc, eq, max, sql } from "drizzle-orm";
 import { type DbExecutor, db, type TransactionClient } from "../client";
 import { agendaItemRegistrations, agendaItems } from "../schema/agenda";
 import { authUsers } from "../schema/better-auth";
-import {
-	eventRegistrations,
-	eventSeatCounts,
-} from "../schema/event-registrations";
+import { eventRegistrations } from "../schema/event-registrations";
 import { events } from "../schema/events";
 import { registrationGroups } from "../schema/groups";
 import {
@@ -67,21 +64,12 @@ async function findEventRegistrationId(
 	return row?.id ?? null;
 }
 
-/** Inserts an event registration after checking capacity. Caller holds the event row lock. */
+/** Inserts an event registration; capacity is enforced by the seat-count CHECK (→ EVENT_FULL). */
 async function insertEventRegistration(
 	tx: TransactionClient,
 	eventId: string,
 	userId: string,
 ): Promise<string> {
-	const [count] = await tx
-		.select({ seatsRemaining: eventSeatCounts.seatsRemaining })
-		.from(eventSeatCounts)
-		.where(eq(eventSeatCounts.eventId, eventId));
-
-	if (count && count.seatsRemaining <= 0) {
-		throw new DomainError("EVENT_FULL");
-	}
-
 	const id = crypto.randomUUID();
 	await tx.insert(eventRegistrations).values({ id, eventId, userId });
 	return id;
@@ -174,16 +162,7 @@ export async function registerForAgendaItem(
 				);
 			}
 
-			if (item.maxSeats !== null) {
-				const [registered] = await tx
-					.select({ n: sql<number>`count(*)::int` })
-					.from(agendaItemRegistrations)
-					.where(eq(agendaItemRegistrations.agendaItemId, itemId));
-				if ((registered?.n ?? 0) >= item.maxSeats) {
-					throw new DomainError("ITEM_FULL");
-				}
-			}
-
+			// Item capacity (including group holds) is enforced by the seat-count CHECK (→ ITEM_FULL).
 			await tx.insert(agendaItemRegistrations).values({
 				id: crypto.randomUUID(),
 				agendaItemId: itemId,

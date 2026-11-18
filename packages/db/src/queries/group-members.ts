@@ -1,9 +1,7 @@
-import { and, eq, gt, inArray, sql } from "drizzle-orm";
+import { and, eq, gt, inArray } from "drizzle-orm";
 import { type DbExecutor, db, type TransactionClient } from "../client";
 import { agendaItemRegistrations, agendaItems } from "../schema/agenda";
-import { authUsers } from "../schema/better-auth";
 import { eventRegistrations } from "../schema/event-registrations";
-import { events } from "../schema/events";
 import {
 	registrationGroupItems,
 	registrationGroupMemberItems,
@@ -18,11 +16,10 @@ import {
 import {
 	type ActorOptions,
 	assertGroupOwner,
-	groupDeadlineColumn,
 	isGroupDeadlinePassed,
 } from "./group-guards";
 import { createInvitationToken, hashToken } from "./group-tokens";
-import type { PublicGroupInfo } from "./groups";
+import { findPublicGroupInfo, type PublicGroupInfo } from "./groups";
 import { lockEvent, lockMemberAndGroup } from "./locks";
 import { getCurrentTxId } from "./txid";
 
@@ -37,10 +34,10 @@ async function memberItemIds(
 	return rows.map((row) => row.id);
 }
 
+/** An emailed invitation (always pending: tokens are cleared once used). */
 export type InvitationView = {
 	memberId: string;
 	email: string;
-	status: string;
 	group: PublicGroupInfo;
 	itemTitles: string[];
 };
@@ -49,58 +46,37 @@ export type InvitationView = {
 export async function getInvitation(
 	token: string,
 ): Promise<InvitationView | null> {
-	const [row] = await db
+	const [member] = await db
 		.select({
-			memberId: registrationGroupMembers.id,
+			id: registrationGroupMembers.id,
 			email: registrationGroupMembers.email,
-			status: registrationGroupMembers.status,
-			groupId: registrationGroups.id,
-			eventId: registrationGroups.eventId,
-			name: registrationGroups.name,
-			places: registrationGroups.places,
-			groupStatus: registrationGroups.status,
-			eventTitle: events.title,
-			eventDate: events.date,
-			ownerName: authUsers.name,
-			members: sql<number>`(SELECT count(*)::int FROM registration_group_members m WHERE m.group_id = ${registrationGroups.id})`,
-			deadline: groupDeadlineColumn(registrationGroups.eventId),
+			groupId: registrationGroupMembers.groupId,
 		})
 		.from(registrationGroupMembers)
-		.innerJoin(
-			registrationGroups,
-			eq(registrationGroups.id, registrationGroupMembers.groupId),
-		)
-		.innerJoin(events, eq(events.id, registrationGroups.eventId))
-		.innerJoin(authUsers, eq(authUsers.id, registrationGroups.ownerUserId))
 		.where(eq(registrationGroupMembers.tokenHash, hashToken(token)));
-	if (!row) {
+	if (!member) {
 		return null;
 	}
-	const items = await db
-		.select({ title: agendaItems.title })
-		.from(registrationGroupMemberItems)
-		.innerJoin(
-			agendaItems,
-			eq(agendaItems.id, registrationGroupMemberItems.agendaItemId),
-		)
-		.where(eq(registrationGroupMemberItems.memberId, row.memberId))
-		.orderBy(agendaItems.startsAt);
+	const [group, items] = await Promise.all([
+		findPublicGroupInfo(eq(registrationGroups.id, member.groupId)),
+		db
+			.select({ title: agendaItems.title })
+			.from(registrationGroupMemberItems)
+			.innerJoin(
+				agendaItems,
+				eq(agendaItems.id, registrationGroupMemberItems.agendaItemId),
+			)
+			.where(eq(registrationGroupMemberItems.memberId, member.id))
+			.orderBy(agendaItems.startsAt),
+	]);
+	if (!group) {
+		return null;
+	}
 	return {
-		memberId: row.memberId,
-		email: row.email,
-		status: row.status,
+		memberId: member.id,
+		email: member.email,
+		group,
 		itemTitles: items.map((item) => item.title),
-		group: {
-			groupId: row.groupId,
-			eventId: row.eventId,
-			eventTitle: row.eventTitle,
-			eventDate: row.eventDate,
-			name: row.name,
-			ownerName: row.ownerName,
-			placesLeft: Math.max(0, row.places - row.members),
-			status: row.groupStatus,
-			deadline: new Date(row.deadline),
-		},
 	};
 }
 

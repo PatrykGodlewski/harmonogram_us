@@ -2,7 +2,6 @@ import { invitationQueryOptions } from "@repo/api/groups/queries";
 import {
 	error_invitation_invalid,
 	events_register_full,
-	invite_already,
 	invite_confirm,
 	invite_deadline,
 	invite_description,
@@ -97,32 +96,28 @@ function InvitePage() {
 			{view.itemTitles.length > 0 ? (
 				<p>{invite_items({ items: view.itemTitles.join(", ") })}</p>
 			) : null}
-			{view.status === "confirmed" ? (
-				<p className="text-muted-foreground">{invite_already()}</p>
-			) : (
-				<>
-					<p className="text-sm text-muted-foreground">
-						{user && user.email !== view.email
-							? invite_switch_user({ current: user.email, email: view.email })
-							: invite_email({ email: view.email })}
+			<>
+				<p className="text-sm text-muted-foreground">
+					{user && user.email !== view.email
+						? invite_switch_user({ current: user.email, email: view.email })
+						: invite_email({ email: view.email })}
+				</p>
+				<p className="text-sm text-muted-foreground">
+					{invite_deadline({ deadline: when(view.group.deadline) })}
+				</p>
+				{accept.isError ? (
+					<p className="text-sm text-destructive" role="alert">
+						{groupErrorMessage(accept.error, events_register_full)}
 					</p>
-					<p className="text-sm text-muted-foreground">
-						{invite_deadline({ deadline: when(view.group.deadline) })}
-					</p>
-					{accept.isError ? (
-						<p className="text-sm text-destructive" role="alert">
-							{groupErrorMessage(accept.error, events_register_full)}
-						</p>
-					) : null}
-					<Button
-						size="lg"
-						disabled={accept.isPending}
-						onClick={() => accept.mutate()}
-					>
-						{invite_confirm()}
-					</Button>
-				</>
-			)}
+				) : null}
+				<Button
+					size="lg"
+					disabled={accept.isPending}
+					onClick={() => accept.mutate()}
+				>
+					{invite_confirm()}
+				</Button>
+			</>
 		</>,
 	);
 }
