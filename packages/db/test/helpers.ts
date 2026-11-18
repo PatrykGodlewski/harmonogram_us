@@ -34,6 +34,7 @@ export async function createUser(email?: string): Promise<string> {
 export async function createEvent(opts?: {
 	maxSeats?: number;
 	date?: Date;
+	endsAt?: Date | null;
 }): Promise<string> {
 	await db
 		.insert(eventTypes)
@@ -44,6 +45,7 @@ export async function createEvent(opts?: {
 		.values({
 			title: "Test event",
 			date: opts?.date ?? new Date(Date.now() + 86_400_000),
+			endsAt: opts?.endsAt ?? null,
 			maxSeats: opts?.maxSeats ?? 10,
 			typeId: TEST_TYPE_ID,
 		})
@@ -123,4 +125,20 @@ export async function expectConstraintViolation(
 	);
 	expect(error, "expected a constraint violation").toBeDefined();
 	expect(constraintNameOf(error)).toBe(constraint);
+}
+
+export const HOUR = 3_600_000;
+
+export function hoursFromNow(hours: number): Date {
+	return new Date(Date.now() + hours * HOUR);
+}
+
+export async function rejectionCode(promise: Promise<unknown>) {
+	return promise.then(
+		() => "RESOLVED",
+		(error: unknown) =>
+			error && typeof error === "object" && "code" in error
+				? String((error as { code: unknown }).code)
+				: String(error),
+	);
 }

@@ -9,6 +9,7 @@ export const events = pgTable("events", {
 	date: timestamp("date", {
 		withTimezone: true,
 	}).notNull(),
+	endsAt: timestamp("ends_at", { withTimezone: true }),
 	maxSeats: integer("max_seats").notNull(),
 	typeId: text("type_id")
 		.notNull()
