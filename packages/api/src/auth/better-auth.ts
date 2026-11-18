@@ -1,6 +1,10 @@
 import { createHash } from "node:crypto";
 import { db } from "@repo/db/client";
 import {
+	findMagicLinkEmail,
+	resetUnverifiedAccount,
+} from "@repo/db/queries/account-safety";
+import {
 	authAccounts,
 	authSessions,
 	authUsers,
@@ -13,6 +17,9 @@ import {
 	auth_email_magic_link_preview,
 	auth_error_password_breached,
 	auth_error_password_safety_check_failed,
+	verify_email_ignore,
+	verify_email_intro,
+	verify_email_subject,
 } from "@repo/i18n/paraglide/messages";
 import {
 	baseLocale,
@@ -33,6 +40,7 @@ import {
 	renderMagicLinkEmail,
 	sendTransactionalEmail,
 } from "../notifications/email";
+import { groupInvitation } from "./group-invitation-plugin";
 import { enabledSocialProviders } from "./social-providers";
 
 const MAGIC_LINK_EXPIRATION_SECONDS = 15 * 60;
@@ -109,6 +117,15 @@ const magicLinkLimiter = redisClient
 			points: magicLinkMaxAttempts,
 			duration: rateLimitWindowSeconds,
 			blockDuration: rateLimitBlockSeconds,
+		})
+	: null;
+
+const invitationAcceptLimiter = redisClient
+	? new RateLimiterRedis({
+			storeClient: redisClient,
+			keyPrefix: "auth:group-invitation",
+			points: 10,
+			duration: rateLimitWindowSeconds,
 		})
 	: null;
 
@@ -340,6 +357,20 @@ export const auth = betterAuth({
 	emailAndPassword: {
 		enabled: true,
 	},
+	emailVerification: {
+		sendOnSignUp: true,
+		sendVerificationEmail: async ({ user, url }, request) => {
+			const locale = resolveAuthLocaleFromHeaders(request?.headers);
+			// Not awaited, per Better Auth docs (avoids timing attacks).
+			void sendTransactionalEmail({
+				to: user.email,
+				subject: verify_email_subject({}, { locale }),
+				text: `${verify_email_intro({}, { locale })}\n\n${url}\n\n${verify_email_ignore({}, { locale })}`,
+			}).catch((error: unknown) => {
+				console.error("[auth] verification email failed", error);
+			});
+		},
+	},
 	hooks: {
 		before: createAuthMiddleware(async (ctx) => {
 			const ip = getClientIp(ctx.headers);
@@ -377,6 +408,32 @@ export const auth = betterAuth({
 				);
 				if (email) {
 					await assertEmailIsAllowed(email);
+				}
+				return;
+			}
+
+			if (ctx.path === "/group-invitation/accept") {
+				await consumeRateLimit(
+					invitationAcceptLimiter,
+					ip,
+					"Too many invitation attempts. Please try again later.",
+				);
+				return;
+			}
+
+			if (ctx.path === "/magic-link/verify") {
+				// The link proves the inbox; a stranger may have created this account with a password.
+				const queryToken: unknown = ctx.query?.token;
+				const token = typeof queryToken === "string" ? queryToken : null;
+				const magicEmail = token ? await findMagicLinkEmail(token) : null;
+				if (magicEmail) {
+					const user = await db.query.authUsers.findFirst({
+						where: (users, { eq }) => eq(users.email, magicEmail),
+						columns: { id: true },
+					});
+					if (user) {
+						await resetUnverifiedAccount(user.id);
+					}
 				}
 				return;
 			}
@@ -426,6 +483,7 @@ export const auth = betterAuth({
 				});
 			},
 		}),
+		groupInvitation(),
 		tanstackStartCookies(),
 	],
 });
