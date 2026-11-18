@@ -20,6 +20,8 @@ import {
 	admin_events_description,
 	admin_events_title,
 	admin_field_date,
+	admin_field_description,
+	admin_field_ends_at,
 	admin_field_faculty,
 	admin_field_id,
 	admin_field_id_optional,
@@ -32,6 +34,7 @@ import {
 	admin_nav_events,
 	admin_save_success,
 } from "@repo/i18n/paraglide/messages";
+import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { FormMessage } from "@repo/ui/components/form-message";
 import { Input } from "@repo/ui/components/input";
 import { Label } from "@repo/ui/components/label";
@@ -42,10 +45,19 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@repo/ui/components/select";
+import { Textarea } from "@repo/ui/components/textarea";
 import { AdminEntityTable } from "@repo/ui/composed/admin/admin-entity-table";
 import { AdminFormDialog } from "@repo/ui/composed/admin/admin-form-dialog";
+import {
+	formatWarsawDate,
+	formatWarsawTime,
+	fromWarsawWallTime,
+	toWarsawDateInput,
+	toWarsawTimeInput,
+} from "@repo/ui/time";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -54,13 +66,14 @@ import { formatMutationError } from "../lib/format-mutation-error";
 
 const NONE_VALUE = "__none__";
 
+/** `datetime-local` value in Warsaw time (event times are always Polish time). */
 function formatDateTimeLocal(value: Date) {
-	const pad = (part: number) => String(part).padStart(2, "0");
-	return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}`;
+	return `${toWarsawDateInput(value)}T${toWarsawTimeInput(value)}`;
 }
 
 function parseDateTimeLocal(value: string) {
-	return new Date(value);
+	const [date = "", time = "00:00"] = value.split("T");
+	return fromWarsawWallTime(date, time);
 }
 
 export function AdminEventsPage() {
@@ -73,7 +86,9 @@ export function AdminEventsPage() {
 			z.object({
 				id: formOptionalIdSchema,
 				title: z.string().min(1).max(500),
+				description: z.string().max(5000),
 				date: z.string().min(1),
+				endsAt: z.string(),
 				maxSeats: z.coerce.number().int().min(0),
 				typeId: z.string().min(1),
 				locationId: z.string(),
@@ -106,7 +121,9 @@ export function AdminEventsPage() {
 			const payload = {
 				...(values.id.trim() ? { id: values.id.trim() } : {}),
 				title: values.title,
+				description: values.description.trim() || null,
 				date: parseDateTimeLocal(values.date),
+				endsAt: values.endsAt ? parseDateTimeLocal(values.endsAt) : null,
 				maxSeats: values.maxSeats,
 				typeId: values.typeId,
 				locationId: values.locationId === NONE_VALUE ? null : values.locationId,
@@ -146,7 +163,9 @@ export function AdminEventsPage() {
 		defaultValues: {
 			id: "",
 			title: "",
+			description: "",
 			date: "",
+			endsAt: "",
 			maxSeats: 0,
 			typeId: "",
 			locationId: NONE_VALUE,
@@ -170,7 +189,12 @@ export function AdminEventsPage() {
 		setEditingRow(row);
 		form.setFieldValue("id", row.id);
 		form.setFieldValue("title", row.title);
+		form.setFieldValue("description", row.description ?? "");
 		form.setFieldValue("date", formatDateTimeLocal(new Date(row.date)));
+		form.setFieldValue(
+			"endsAt",
+			row.endsAt ? formatDateTimeLocal(new Date(row.endsAt)) : "",
+		);
 		form.setFieldValue("maxSeats", row.maxSeats);
 		form.setFieldValue("typeId", row.typeId);
 		form.setFieldValue("locationId", row.locationId ?? NONE_VALUE);
@@ -199,16 +223,21 @@ export function AdminEventsPage() {
 					{
 						key: "title",
 						header: admin_field_title(),
-						cell: (row) => row.title,
+						cell: (row) => (
+							<Link
+								to="/events/$eventId"
+								params={{ eventId: row.id }}
+								className="font-medium hover:underline"
+							>
+								{row.title}
+							</Link>
+						),
 					},
 					{
 						key: "date",
 						header: admin_field_date(),
 						cell: (row) =>
-							new Date(row.date).toLocaleString(undefined, {
-								dateStyle: "medium",
-								timeStyle: "short",
-							}),
+							`${formatWarsawDate(row.date, getLocale())}, ${formatWarsawTime(row.date, getLocale())}`,
 					},
 					{
 						key: "type",
@@ -316,6 +345,40 @@ export function AdminEventsPage() {
 									{formatFieldError(field.state.meta.errors[0])}
 								</FormMessage>
 							) : null}
+						</div>
+					)}
+				</form.Field>
+
+				<form.Field name="endsAt">
+					{(field) => (
+						<div>
+							<Label htmlFor={field.name}>{admin_field_ends_at()}</Label>
+							<Input
+								id={field.name}
+								type="datetime-local"
+								className="mt-1"
+								disabled={saveMutation.isPending}
+								value={String(field.state.value ?? "")}
+								onBlur={field.handleBlur}
+								onChange={(event) => field.handleChange(event.target.value)}
+							/>
+						</div>
+					)}
+				</form.Field>
+
+				<form.Field name="description">
+					{(field) => (
+						<div>
+							<Label htmlFor={field.name}>{admin_field_description()}</Label>
+							<Textarea
+								id={field.name}
+								className="mt-1"
+								rows={4}
+								disabled={saveMutation.isPending}
+								value={String(field.state.value ?? "")}
+								onBlur={field.handleBlur}
+								onChange={(event) => field.handleChange(event.target.value)}
+							/>
 						</div>
 					)}
 				</form.Field>

@@ -19,6 +19,7 @@ export type { EventRegistrant } from "@repo/db/queries/event-registrations";
 export type {
 	EventDetails,
 	EventWithRelations,
+	FilterOption,
 } from "@repo/db/queries/events";
 
 const protectedQueryFn = createServerFn({ method: "GET" }).middleware([
