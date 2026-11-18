@@ -1,0 +1,412 @@
+import { and, eq, gt, inArray, sql } from "drizzle-orm";
+import { db } from "../client";
+import { agendaItemRegistrations, agendaItems } from "../schema/agenda";
+import { authUsers } from "../schema/better-auth";
+import { eventRegistrations } from "../schema/event-registrations";
+import { events } from "../schema/events";
+import {
+	registrationGroupItems,
+	registrationGroupMemberItems,
+	registrationGroupMembers,
+	registrationGroups,
+} from "../schema/groups";
+import {
+	EventRegistrationError,
+	mapConstraintError,
+	type TransactionClient,
+} from "./event-registrations";
+import { createInvitationToken, hashToken } from "./group-tokens";
+import type { ActorOptions, PublicGroupInfo } from "./groups";
+import { getCurrentTxId } from "./txid";
+
+type Member = typeof registrationGroupMembers.$inferSelect;
+type Group = typeof registrationGroups.$inferSelect;
+
+async function deadlineOf(tx: TransactionClient | typeof db, eventId: string) {
+	const [row] = await tx.execute<{ deadline: string }>(
+		sql`SELECT group_deadline(${eventId})::text AS deadline`,
+	);
+	return new Date(row?.deadline ?? 0);
+}
+
+async function isPastDeadline(
+	tx: TransactionClient | typeof db,
+	eventId: string,
+) {
+	return (await deadlineOf(tx, eventId)).getTime() <= Date.now();
+}
+
+/** Lock order shared with groups.ts: group row first, then the member row. */
+async function lockMemberAndGroup(
+	tx: TransactionClient,
+	memberWhere: { id: string } | { tokenHash: string },
+): Promise<{ member: Member; group: Group } | null> {
+	const [peek] = await tx
+		.select({ groupId: registrationGroupMembers.groupId })
+		.from(registrationGroupMembers)
+		.where(
+			"id" in memberWhere
+				? eq(registrationGroupMembers.id, memberWhere.id)
+				: eq(registrationGroupMembers.tokenHash, memberWhere.tokenHash),
+		);
+	if (!peek) {
+		return null;
+	}
+	const [group] = await tx
+		.select()
+		.from(registrationGroups)
+		.where(eq(registrationGroups.id, peek.groupId))
+		.for("update");
+	const [member] = await tx
+		.select()
+		.from(registrationGroupMembers)
+		.where(
+			"id" in memberWhere
+				? eq(registrationGroupMembers.id, memberWhere.id)
+				: eq(registrationGroupMembers.tokenHash, memberWhere.tokenHash),
+		)
+		.for("update");
+	if (!group || !member) {
+		return null;
+	}
+	return { member, group };
+}
+
+function assertOwner(group: Group, actorUserId: string, opts?: ActorOptions) {
+	if (group.ownerUserId !== actorUserId && !opts?.actorIsAdmin) {
+		throw new EventRegistrationError("NOT_GROUP_OWNER");
+	}
+}
+
+async function memberItemIds(
+	tx: TransactionClient | typeof db,
+	memberId: string,
+): Promise<string[]> {
+	const rows = await tx
+		.select({ id: registrationGroupMemberItems.agendaItemId })
+		.from(registrationGroupMemberItems)
+		.where(eq(registrationGroupMemberItems.memberId, memberId));
+	return rows.map((row) => row.id);
+}
+
+export type InvitationView = {
+	memberId: string;
+	email: string;
+	status: string;
+	group: PublicGroupInfo;
+	itemTitles: string[];
+};
+
+/** Read-only view for the confirm page (safe for link scanners). */
+export async function getInvitation(
+	token: string,
+): Promise<InvitationView | null> {
+	const [row] = await db
+		.select({
+			memberId: registrationGroupMembers.id,
+			email: registrationGroupMembers.email,
+			status: registrationGroupMembers.status,
+			groupId: registrationGroups.id,
+			eventId: registrationGroups.eventId,
+			name: registrationGroups.name,
+			places: registrationGroups.places,
+			groupStatus: registrationGroups.status,
+			eventTitle: events.title,
+			eventDate: events.date,
+			ownerName: authUsers.name,
+			members: sql<number>`(SELECT count(*)::int FROM registration_group_members m WHERE m.group_id = ${registrationGroups.id})`,
+			deadline: sql<string>`group_deadline(${registrationGroups.eventId})::text`,
+		})
+		.from(registrationGroupMembers)
+		.innerJoin(
+			registrationGroups,
+			eq(registrationGroups.id, registrationGroupMembers.groupId),
+		)
+		.innerJoin(events, eq(events.id, registrationGroups.eventId))
+		.innerJoin(authUsers, eq(authUsers.id, registrationGroups.ownerUserId))
+		.where(eq(registrationGroupMembers.tokenHash, hashToken(token)));
+	if (!row) {
+		return null;
+	}
+	const items = await db
+		.select({ title: agendaItems.title })
+		.from(registrationGroupMemberItems)
+		.innerJoin(
+			agendaItems,
+			eq(agendaItems.id, registrationGroupMemberItems.agendaItemId),
+		)
+		.where(eq(registrationGroupMemberItems.memberId, row.memberId))
+		.orderBy(agendaItems.startsAt);
+	return {
+		memberId: row.memberId,
+		email: row.email,
+		status: row.status,
+		itemTitles: items.map((item) => item.title),
+		group: {
+			groupId: row.groupId,
+			eventId: row.eventId,
+			eventTitle: row.eventTitle,
+			eventDate: row.eventDate,
+			name: row.name,
+			ownerName: row.ownerName,
+			placesLeft: Math.max(0, row.places - row.members),
+			status: row.groupStatus,
+			deadline: new Date(row.deadline),
+		},
+	};
+}
+
+export async function acceptInvitation(
+	token: string,
+	userId: string,
+): Promise<{ eventId: string; txid: number }> {
+	try {
+		return await db.transaction(async (tx) => {
+			const locked = await lockMemberAndGroup(tx, {
+				tokenHash: hashToken(token),
+			});
+			if (!locked || locked.member.status !== "invited") {
+				throw new EventRegistrationError("INVITATION_INVALID");
+			}
+			const { member, group } = locked;
+			if (group.status !== "open") {
+				throw new EventRegistrationError("GROUP_CLOSED");
+			}
+			await tx
+				.select({ id: events.id })
+				.from(events)
+				.where(eq(events.id, group.eventId))
+				.for("update");
+			if (await isPastDeadline(tx, group.eventId)) {
+				throw new EventRegistrationError("GROUP_DEADLINE_PASSED");
+			}
+
+			// Confirm first so the held place is released before the registration takes it.
+			await tx
+				.update(registrationGroupMembers)
+				.set({
+					status: "confirmed",
+					userId,
+					confirmedAt: new Date(),
+					tokenHash: null,
+				})
+				.where(eq(registrationGroupMembers.id, member.id));
+
+			const [existing] = await tx
+				.select({
+					id: eventRegistrations.id,
+					groupId: eventRegistrations.groupId,
+				})
+				.from(eventRegistrations)
+				.where(
+					and(
+						eq(eventRegistrations.eventId, group.eventId),
+						eq(eventRegistrations.userId, userId),
+					),
+				);
+			let eventRegistrationId = existing?.id;
+			if (existing && !existing.groupId) {
+				await tx
+					.update(eventRegistrations)
+					.set({ groupId: group.id })
+					.where(eq(eventRegistrations.id, existing.id));
+			}
+			if (!eventRegistrationId) {
+				eventRegistrationId = crypto.randomUUID();
+				await tx.insert(eventRegistrations).values({
+					id: eventRegistrationId,
+					eventId: group.eventId,
+					userId,
+					groupId: group.id,
+				});
+			}
+			await tx
+				.update(registrationGroupMembers)
+				.set({ eventRegistrationId })
+				.where(eq(registrationGroupMembers.id, member.id));
+
+			await addItemRegistrations(
+				tx,
+				userId,
+				eventRegistrationId,
+				await memberItemIds(tx, member.id),
+			);
+
+			return { eventId: group.eventId, txid: await getCurrentTxId(tx) };
+		});
+	} catch (error) {
+		mapConstraintError(error, "register");
+	}
+}
+
+/** Registers the user for the items that still need registration and haven't ended; skips existing ones. */
+async function addItemRegistrations(
+	tx: TransactionClient,
+	userId: string,
+	eventRegistrationId: string,
+	itemIds: string[],
+) {
+	if (itemIds.length === 0) {
+		return;
+	}
+	const open = await tx
+		.select({ id: agendaItems.id })
+		.from(agendaItems)
+		.where(
+			and(
+				inArray(agendaItems.id, itemIds),
+				eq(agendaItems.requiresRegistration, true),
+				gt(agendaItems.endsAt, new Date()),
+			),
+		);
+	if (open.length === 0) {
+		return;
+	}
+	await tx
+		.insert(agendaItemRegistrations)
+		.values(
+			open.map((item) => ({
+				id: crypto.randomUUID(),
+				agendaItemId: item.id,
+				eventRegistrationId,
+				userId,
+			})),
+		)
+		.onConflictDoNothing({
+			target: [
+				agendaItemRegistrations.agendaItemId,
+				agendaItemRegistrations.userId,
+			],
+		});
+}
+
+export async function removeMember(
+	memberId: string,
+	actorUserId: string,
+	opts?: ActorOptions,
+): Promise<{ txid: number }> {
+	return db.transaction(async (tx) => {
+		const locked = await lockMemberAndGroup(tx, { id: memberId });
+		if (!locked) {
+			throw new EventRegistrationError("GROUP_NOT_FOUND");
+		}
+		assertOwner(locked.group, actorUserId, opts);
+		if (locked.member.eventRegistrationId) {
+			// Cascades to the member row and the student's item registrations.
+			await tx
+				.delete(eventRegistrations)
+				.where(eq(eventRegistrations.id, locked.member.eventRegistrationId));
+		} else {
+			await tx
+				.delete(registrationGroupMembers)
+				.where(eq(registrationGroupMembers.id, memberId));
+		}
+		return { txid: await getCurrentTxId(tx) };
+	});
+}
+
+export async function setMemberItems(
+	memberId: string,
+	actorUserId: string,
+	itemIds: string[],
+	opts?: ActorOptions,
+): Promise<{ txid: number }> {
+	const next = [...new Set(itemIds)];
+	try {
+		return await db.transaction(async (tx) => {
+			const locked = await lockMemberAndGroup(tx, { id: memberId });
+			if (!locked) {
+				throw new EventRegistrationError("GROUP_NOT_FOUND");
+			}
+			const { member, group } = locked;
+			assertOwner(group, actorUserId, opts);
+
+			const allowed = new Set(
+				(
+					await tx
+						.select({ id: registrationGroupItems.agendaItemId })
+						.from(registrationGroupItems)
+						.where(eq(registrationGroupItems.groupId, group.id))
+				).map((row) => row.id),
+			);
+			if (next.some((id) => !allowed.has(id))) {
+				throw new EventRegistrationError("ITEM_NOT_IN_GROUP");
+			}
+
+			const previous = await memberItemIds(tx, member.id);
+			const removed = previous.filter((id) => !next.includes(id));
+			const added = next.filter((id) => !previous.includes(id));
+
+			if (removed.length > 0) {
+				await tx
+					.delete(registrationGroupMemberItems)
+					.where(
+						and(
+							eq(registrationGroupMemberItems.memberId, member.id),
+							inArray(registrationGroupMemberItems.agendaItemId, removed),
+						),
+					);
+			}
+			if (added.length > 0) {
+				await tx.insert(registrationGroupMemberItems).values(
+					added.map((agendaItemId) => ({
+						memberId: member.id,
+						agendaItemId,
+					})),
+				);
+			}
+
+			if (
+				member.status === "confirmed" &&
+				member.userId &&
+				member.eventRegistrationId
+			) {
+				if (removed.length > 0) {
+					await tx
+						.delete(agendaItemRegistrations)
+						.where(
+							and(
+								eq(agendaItemRegistrations.userId, member.userId),
+								inArray(agendaItemRegistrations.agendaItemId, removed),
+							),
+						);
+				}
+				await addItemRegistrations(
+					tx,
+					member.userId,
+					member.eventRegistrationId,
+					added,
+				);
+			}
+			return { txid: await getCurrentTxId(tx) };
+		});
+	} catch (error) {
+		mapConstraintError(error, "register");
+	}
+}
+
+/**
+ * New token for an invited member of an open group before its deadline; null otherwise.
+ * The previous token stops working. Used by the email job (only hashes are stored).
+ */
+export async function reissueInvitationToken(
+	memberId: string,
+): Promise<string | null> {
+	return db.transaction(async (tx) => {
+		const locked = await lockMemberAndGroup(tx, { id: memberId });
+		if (
+			!locked ||
+			locked.member.status !== "invited" ||
+			locked.group.status !== "open" ||
+			(await isPastDeadline(tx, locked.group.eventId))
+		) {
+			return null;
+		}
+		const { token, tokenHash } = createInvitationToken();
+		await tx
+			.update(registrationGroupMembers)
+			.set({ tokenHash })
+			.where(eq(registrationGroupMembers.id, memberId));
+		return token;
+	});
+}
