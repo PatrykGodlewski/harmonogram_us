@@ -21,6 +21,15 @@ export type RegistrationErrorCode =
 	| "ITEM_ENDED"
 	| "ITEM_LIMIT_ABOVE_EVENT"
 	| "END_BEFORE_START"
+	| "GROUP_PLACES_UNAVAILABLE"
+	| "GROUP_FULL"
+	| "GROUP_CLOSED"
+	| "GROUP_DEADLINE_PASSED"
+	| "GROUP_NOT_FOUND"
+	| "NOT_GROUP_OWNER"
+	| "INVITATION_INVALID"
+	| "EMAIL_NOT_VERIFIED"
+	| "ITEM_NOT_IN_GROUP"
 	| "MAX_SEATS_BELOW_REGISTERED";
 
 export class EventRegistrationError extends Error {
@@ -34,7 +43,9 @@ export class EventRegistrationError extends Error {
 }
 
 type DbClient = typeof db;
-type TransactionClient = Parameters<Parameters<DbClient["transaction"]>[0]>[0];
+export type TransactionClient = Parameters<
+	Parameters<DbClient["transaction"]>[0]
+>[0];
 
 const EVENT_SEATS_CONSTRAINT = "event_seat_counts_seats_remaining_nonnegative";
 const ITEM_SEATS_CONSTRAINT =
@@ -63,7 +74,7 @@ function findPgError(error: unknown): PgErrorFields | null {
  */
 export function mapConstraintError(
 	error: unknown,
-	context: "register" | "capacity",
+	context: "register" | "capacity" | "group",
 ): never {
 	if (error instanceof EventRegistrationError) {
 		throw error;
@@ -75,6 +86,14 @@ export function mapConstraintError(
 	}
 	if (pg?.code === "23503" && pg.constraint_name === ITEM_EVENT_FK) {
 		throw new EventRegistrationError("EVENT_NOT_FOUND");
+	}
+	if (
+		pg?.code === "23514" &&
+		context === "group" &&
+		(pg.constraint_name === EVENT_SEATS_CONSTRAINT ||
+			pg.constraint_name === ITEM_SEATS_CONSTRAINT)
+	) {
+		throw new EventRegistrationError("GROUP_PLACES_UNAVAILABLE");
 	}
 	if (pg?.code === "23514") {
 		if (context === "capacity") {
@@ -121,7 +140,7 @@ export async function getEffectiveEventEnd(
 	return new Date(row.date.getTime() + 24 * 60 * 60 * 1000);
 }
 
-async function assertEventOpen(tx: TransactionClient, eventId: string) {
+export async function assertEventOpen(tx: TransactionClient, eventId: string) {
 	const end = await getEffectiveEventEnd(tx, eventId);
 	if (end && end.getTime() <= Date.now()) {
 		throw new EventRegistrationError("EVENT_ENDED");
