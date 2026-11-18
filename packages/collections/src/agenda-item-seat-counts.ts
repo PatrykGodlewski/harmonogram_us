@@ -1,6 +1,8 @@
 import { createCollection } from "@tanstack/db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { z } from "zod";
+import { shapeUrl } from "./shape-url";
+import { shapes } from "./shapes";
 
 const AgendaItemSeatCountSchema = z.object({
 	agenda_item_id: z.string(),
@@ -21,7 +23,7 @@ export const agendaItemSeatCountsCollection = createCollection(
 		gcTime: Number.POSITIVE_INFINITY,
 		startSync: false,
 		shapeOptions: {
-			url: "/api/electric/agenda-item-seat-counts",
+			url: shapeUrl(shapes.agendaItemSeatCounts.path),
 			onError: () => ({}),
 		},
 	}),

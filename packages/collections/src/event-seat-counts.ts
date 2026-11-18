@@ -1,6 +1,8 @@
 import { createCollection } from "@tanstack/db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { z } from "zod";
+import { shapeUrl } from "./shape-url";
+import { shapes } from "./shapes";
 
 const EventSeatCountSchema = z.object({
 	event_id: z.string(),
@@ -19,7 +21,7 @@ export const eventSeatCountsCollection = createCollection(
 		gcTime: Number.POSITIVE_INFINITY,
 		startSync: false,
 		shapeOptions: {
-			url: "/api/electric/event-seat-counts",
+			url: shapeUrl(shapes.eventSeatCounts.path),
 			onError: () => ({}),
 		},
 	}),

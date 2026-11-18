@@ -7,13 +7,17 @@
   "exports": {
     "./local-notes": "./src/local-notes.ts",
     "./event-seat-counts": "./src/event-seat-counts.ts",
-    "./agenda-item-seat-counts": "./src/agenda-item-seat-counts.ts"
+    "./agenda-item-seat-counts": "./src/agenda-item-seat-counts.ts",
+    "./shapes": "./src/shapes.ts",
+    "./electric-proxy": "./src/electric-proxy.ts"
   },
   "scripts": {
     "lint": "biome check .",
-    "format": "biome check --write ."
+    "format": "biome check --write .",
+    "test": "vitest run"
   },
   "dependencies": {
+    "@electric-sql/client": "1.5.20",
     "@tanstack/db": "^0.6.5",
     "@tanstack/electric-db-collection": "^0.3.6",
     "@tanstack/react-db": "^0.1.83",
@@ -23,7 +27,8 @@
     "@repo/config": "workspace:*",
     "@types/react": "^19.2.14",
     "react": "^19.2.5",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^5.1.1"
   },
   "peerDependencies": {
     "react": "^18 || ^19"
