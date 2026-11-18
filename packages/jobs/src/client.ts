@@ -18,11 +18,21 @@ export async function ensureQueues(boss: PgBoss): Promise<void> {
 
 let bossPromise: Promise<PgBoss> | null = null;
 
-/** One long-lived pg-boss instance per process (pg-boss docs). Creates queues on first use. */
-export function getBoss(): Promise<PgBoss> {
+/**
+ * One long-lived pg-boss instance per process (pg-boss docs). Creates queues on first use.
+ * - "producer" (web/admin): only sends jobs; no maintenance supervisor or cron scheduler.
+ * - "worker": runs handlers, maintenance and cron schedules.
+ */
+export function getBoss(
+	role: "producer" | "worker" = "producer",
+): Promise<PgBoss> {
 	if (!bossPromise) {
 		bossPromise = (async () => {
-			const boss = new PgBoss(env.DATABASE_URL);
+			const boss = new PgBoss({
+				connectionString: env.DATABASE_URL,
+				supervise: role === "worker",
+				schedule: role === "worker",
+			});
 			boss.on("error", (error) => console.error("[jobs]", error));
 			await boss.start();
 			await ensureQueues(boss);
@@ -56,4 +66,12 @@ export async function enqueueInvitationEmails(
 			...(db ? { db } : {}),
 		});
 	}
+}
+
+/**
+ * Starts pg-boss before a request opens its transaction, so the first send
+ * after a deploy doesn't run pg-boss start-up while holding row locks.
+ */
+export async function warmUpJobQueue(): Promise<void> {
+	await getBoss();
 }

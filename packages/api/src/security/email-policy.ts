@@ -25,6 +25,9 @@ export const defaultDomainValidator: DomainValidator = async (email) => {
 		validateMx: true,
 		validateTypo: true,
 		validateDisposable: false,
+		// SMTP probing defaults to on: it is slow and port 25 is blocked on most
+		// hosts, so it rejects real addresses. MX records are enough.
+		validateSMTP: false,
 	});
 	return result.valid;
 };

@@ -43,11 +43,19 @@ export const groupInvitation = () =>
 						user = await adapter.updateUser(user.id, { emailVerified: true });
 					}
 					if (!user) {
-						user = await adapter.createUser({
-							email: invitation.email,
-							name: invitation.email.split("@")[0] ?? invitation.email,
-							emailVerified: true,
-						});
+						try {
+							user = await adapter.createUser({
+								email: invitation.email,
+								name: invitation.email.split("@")[0] ?? invitation.email,
+								emailVerified: true,
+							});
+						} catch (error) {
+							// A concurrent confirm (double tap, two tabs) created the user first.
+							user = (await adapter.findUserByEmail(invitation.email))?.user;
+							if (!user) {
+								throw error;
+							}
+						}
 					}
 
 					let eventId: string;

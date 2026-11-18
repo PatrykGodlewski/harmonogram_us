@@ -83,6 +83,16 @@ describe("POST /group-invitation/accept", () => {
 	});
 });
 
+describe("POST /group-invitation/accept concurrency", () => {
+	it("double confirm for a brand-new email → one 200, one 400 (never 500)", async () => {
+		const { token } = await invite("fresh@x.test");
+		const [first, second] = await Promise.all([accept(token), accept(token)]);
+		expect([first.status, second.status].sort()).toEqual([200, 400]);
+		const users = await db.select().from(authUsers).where(eq(authUsers.email, "fresh@x.test"));
+		expect(users).toHaveLength(1);
+	});
+});
+
 describe("magic-link verify", () => {
 	it("resets an unverified account's password and sessions before signing in", async () => {
 		const squatter = await createUser("owner@x.test");
