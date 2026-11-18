@@ -1,4 +1,3 @@
-import { eventDetailsQueryOptions } from "@repo/api/events/queries";
 import {
 	closeGroupServer,
 	inviteToGroupServer,
@@ -8,12 +7,13 @@ import {
 	updateGroupServer,
 } from "@repo/api/groups/mutations";
 import { parseEmailList } from "@repo/api/groups/parse-email-list";
-import { groupDetailsQueryOptions } from "@repo/api/groups/queries";
 import {
-	events_register_full,
+	groupDetailsQueryOptions,
+	myGroupsQueryOptions,
+} from "@repo/api/groups/queries";
+import {
 	groups_add_emails,
 	groups_add_emails_submit,
-	groups_cancel,
 	groups_close,
 	groups_close_confirm,
 	groups_closed_success,
@@ -38,30 +38,19 @@ import {
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { requireAuthenticatedUser } from "@repo/router-utils/require-auth";
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-	AlertDialogTrigger,
-} from "@repo/ui/components/alert-dialog";
 import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
 import { Label } from "@repo/ui/components/label";
-import { formatWarsawDate, formatWarsawTime } from "@repo/ui/time";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { formatWarsawDateTime } from "@repo/ui/time";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { type ReactNode, useState } from "react";
-import { toast } from "sonner";
+import { useState } from "react";
+import { ConfirmButton } from "~/components/groups/confirm-button";
 import { EmailListField } from "~/components/groups/email-list-field";
 import { JoinLinkCard } from "~/components/groups/join-link-card";
 import { MemberItemsSheet } from "~/components/groups/member-items-sheet";
-import { groupErrorMessage } from "~/lib/groups/errors";
+import { useGroupAction } from "~/lib/groups/use-group-action";
 
 export const Route = createFileRoute("/groups/$groupId")({
 	beforeLoad: ({ context, location }) => {
@@ -70,73 +59,24 @@ export const Route = createFileRoute("/groups/$groupId")({
 	component: GroupPage,
 });
 
-function ConfirmButton({
-	label,
-	description,
-	onConfirm,
-	disabled,
-	children,
-}: {
-	label: string;
-	description: string;
-	onConfirm: () => void;
-	disabled?: boolean;
-	children: ReactNode;
-}) {
-	return (
-		<AlertDialog>
-			<AlertDialogTrigger asChild disabled={disabled}>
-				{children}
-			</AlertDialogTrigger>
-			<AlertDialogContent>
-				<AlertDialogHeader>
-					<AlertDialogTitle>{label}</AlertDialogTitle>
-					<AlertDialogDescription>{description}</AlertDialogDescription>
-				</AlertDialogHeader>
-				<AlertDialogFooter>
-					<AlertDialogCancel>{groups_cancel()}</AlertDialogCancel>
-					<AlertDialogAction onClick={onConfirm}>{label}</AlertDialogAction>
-				</AlertDialogFooter>
-			</AlertDialogContent>
-		</AlertDialog>
-	);
-}
-
-/** Mutation that refreshes the group afterwards and reports domain errors as toasts. */
-function useGroupAction<T>(
-	refresh: () => Promise<unknown>,
-	fn: (input: T) => Promise<unknown>,
-	success?: () => string,
-) {
-	return useMutation({
-		mutationFn: fn,
-		onSuccess: async () => {
-			await refresh();
-			if (success) toast.success(success());
-		},
-		onError: (error) =>
-			toast.error(groupErrorMessage(error, events_register_full)),
-	});
-}
-
 function GroupPage() {
 	const { groupId } = Route.useParams();
 	const queryClient = useQueryClient();
 	const locale = getLocale();
 	const groupQuery = useQuery(groupDetailsQueryOptions(groupId));
 	const group = groupQuery.data;
-	const eventQuery = useQuery({
-		...eventDetailsQueryOptions(group?.eventId ?? ""),
-		enabled: Boolean(group?.eventId),
-	});
 	const [emails, setEmails] = useState("");
 	const [places, setPlaces] = useState<number | null>(null);
 	const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
 
 	const refresh = () =>
 		Promise.all([
-			queryClient.invalidateQueries({ queryKey: ["group", groupId] }),
-			queryClient.invalidateQueries({ queryKey: ["my-groups"] }),
+			queryClient.invalidateQueries({
+				queryKey: groupDetailsQueryOptions(groupId).queryKey,
+			}),
+			queryClient.invalidateQueries({
+				queryKey: myGroupsQueryOptions.queryKey,
+			}),
 		]);
 
 	const invite = useGroupAction(
@@ -191,13 +131,8 @@ function GroupPage() {
 		remove.isPending ||
 		update.isPending ||
 		close.isPending;
-	const titles = new Map(
-		(eventQuery.data?.agenda ?? []).map((item) => [item.id, item.title]),
-	);
-	const groupItems = group.itemIds.map((id) => ({
-		id,
-		title: titles.get(id) ?? id,
-	}));
+	const titles = new Map(group.items.map((item) => [item.id, item.title]));
+	const groupItems = group.items;
 	const parsed = parseEmailList(emails);
 	const free = group.places - group.confirmed - group.invited;
 	const editingMember =
@@ -227,7 +162,7 @@ function GroupPage() {
 				<p className="text-sm text-muted-foreground">
 					{open
 						? groups_deadline({
-								deadline: `${formatWarsawDate(group.deadline, locale)}, ${formatWarsawTime(group.deadline, locale)}`,
+								deadline: formatWarsawDateTime(group.deadline, locale),
 							})
 						: groups_status_closed()}
 				</p>

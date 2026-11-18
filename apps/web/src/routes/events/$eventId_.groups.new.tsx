@@ -19,6 +19,7 @@ import {
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { requireAuthenticatedUser } from "@repo/router-utils/require-auth";
+import { appErrorMessage } from "@repo/ui/app-errors";
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
 import { Label } from "@repo/ui/components/label";
@@ -28,7 +29,6 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { EmailListField } from "~/components/groups/email-list-field";
-import { groupErrorMessage } from "~/lib/groups/errors";
 
 export const Route = createFileRoute("/events/$eventId_/groups/new")({
 	beforeLoad: ({ context, location }) => {
@@ -72,7 +72,7 @@ function NewGroupPage() {
 			void navigate({ to: "/groups/$groupId", params: { groupId } });
 		},
 		onError: (error) =>
-			toast.error(groupErrorMessage(error, events_register_full)),
+			toast.error(appErrorMessage(error, events_register_full)),
 	});
 
 	const handleToggleItem = (id: string, checked: boolean) =>

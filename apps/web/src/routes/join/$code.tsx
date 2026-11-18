@@ -14,15 +14,16 @@ import {
 	join_title,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
+import { appErrorMessage } from "@repo/ui/app-errors";
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
 import { Label } from "@repo/ui/components/label";
-import { formatWarsawDate, formatWarsawTime } from "@repo/ui/time";
+import { formatWarsawDateTime } from "@repo/ui/time";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { z } from "zod";
-import { groupErrorMessage } from "~/lib/groups/errors";
+import { LandingShell } from "~/components/groups/landing-shell";
 
 export const Route = createFileRoute("/join/$code")({
 	loader: ({ context: { queryClient }, params }) =>
@@ -48,10 +49,8 @@ function JoinGroupPage() {
 			}),
 	});
 
-	const shell = (children: React.ReactNode) => (
-		<div className="mx-auto flex w-full max-w-md flex-col gap-4 p-4 sm:p-8">
-			{children}
-		</div>
+	const shell = (children: ReactNode) => (
+		<LandingShell>{children}</LandingShell>
 	);
 
 	if (info.isError) {
@@ -83,7 +82,7 @@ function JoinGroupPage() {
 				{join_description({
 					teacher: group.ownerName ?? "",
 					event: group.eventTitle,
-					date: `${formatWarsawDate(group.eventDate, locale)}, ${formatWarsawTime(group.eventDate, locale)}`,
+					date: formatWarsawDateTime(group.eventDate, locale),
 				})}
 			</p>
 			{accepting ? (
@@ -112,7 +111,7 @@ function JoinGroupPage() {
 					) : null}
 					{join.isError ? (
 						<p className="text-sm text-destructive" role="alert">
-							{groupErrorMessage(join.error, events_register_full)}
+							{appErrorMessage(join.error, events_register_full)}
 						</p>
 					) : null}
 					<Button

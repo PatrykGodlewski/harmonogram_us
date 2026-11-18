@@ -23,6 +23,14 @@ export function formatWarsawTime(date: Date | string, locale: string): string {
 	});
 }
 
+/** "Nov 25, 2026, 10:00": date and time in Warsaw time, the app's standard format. */
+export function formatWarsawDateTime(
+	date: Date | string,
+	locale: string,
+): string {
+	return `${formatWarsawDate(date, locale)}, ${formatWarsawTime(date, locale)}`;
+}
+
 function warsawParts(date: Date): Record<string, string> {
 	const parts = new Intl.DateTimeFormat("en-CA", {
 		timeZone: EVENT_TIME_ZONE,

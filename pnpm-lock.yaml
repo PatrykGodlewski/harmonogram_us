@@ -147,6 +147,9 @@ importers:
       '@repo/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
+      '@repo/jobs':
+        specifier: workspace:*
+        version: link:../../packages/jobs
       '@repo/router-utils':
         specifier: workspace:*
         version: link:../../packages/router-utils
@@ -556,6 +559,9 @@ importers:
       '@repo/api':
         specifier: workspace:*
         version: link:../api
+      '@repo/db':
+        specifier: workspace:*
+        version: link:../db
       '@repo/env':
         specifier: workspace:*
         version: link:../env

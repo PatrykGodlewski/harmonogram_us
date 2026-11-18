@@ -51,8 +51,7 @@ import { Textarea } from "@repo/ui/components/textarea";
 import { AdminEntityTable } from "@repo/ui/composed/admin/admin-entity-table";
 import { AdminFormDialog } from "@repo/ui/composed/admin/admin-form-dialog";
 import {
-	formatWarsawDate,
-	formatWarsawTime,
+	formatWarsawDateTime,
 	fromWarsawWallTime,
 	toWarsawDateInput,
 	toWarsawTimeInput,
@@ -242,8 +241,7 @@ export function AdminEventsPage() {
 					{
 						key: "date",
 						header: admin_field_date(),
-						cell: (row) =>
-							`${formatWarsawDate(row.date, getLocale())}, ${formatWarsawTime(row.date, getLocale())}`,
+						cell: (row) => formatWarsawDateTime(row.date, getLocale()),
 					},
 					{
 						key: "type",

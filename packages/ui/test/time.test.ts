@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+	formatWarsawDateTime,
 	formatWarsawTime,
 	fromWarsawWallTime,
 	toWarsawDateInput,
@@ -29,4 +30,9 @@ describe("Warsaw time", () => {
 		expect(formatWarsawTime("2026-01-15T09:00:00Z", "pl")).toBe("10:00");
 		expect(formatWarsawTime("2026-07-15T09:00:00Z", "en")).toBe("11:00");
 	});
+
+	it("formatWarsawDateTime joins date and time in Warsaw", () => {
+		expect(formatWarsawDateTime("2026-01-15T09:00:00Z", "en")).toBe("Jan 15, 2026, 10:00");
+	});
 });
+

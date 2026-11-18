@@ -12,12 +12,14 @@ import {
 	invite_title,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale, localizeHref } from "@repo/i18n/paraglide/runtime";
+import { appErrorMessage } from "@repo/ui/app-errors";
 import { Button } from "@repo/ui/components/button";
-import { formatWarsawDate, formatWarsawTime } from "@repo/ui/time";
+import { formatWarsawDateTime } from "@repo/ui/time";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import type { ReactNode } from "react";
+import { LandingShell } from "~/components/groups/landing-shell";
 import { authClient } from "~/lib/auth-client";
-import { groupErrorMessage } from "~/lib/groups/errors";
 
 /**
  * Confirm page for an emailed invitation. Opening it changes nothing (email
@@ -62,10 +64,8 @@ function InvitePage() {
 		},
 	});
 
-	const shell = (children: React.ReactNode) => (
-		<div className="mx-auto flex w-full max-w-md flex-col gap-4 p-4 sm:p-8">
-			{children}
-		</div>
+	const shell = (children: ReactNode) => (
+		<LandingShell>{children}</LandingShell>
 	);
 
 	if (invitation.isError) {
@@ -77,9 +77,6 @@ function InvitePage() {
 	if (!view) {
 		return null;
 	}
-	const when = (date: Date | string) =>
-		`${formatWarsawDate(date, locale)}, ${formatWarsawTime(date, locale)}`;
-
 	return shell(
 		<>
 			<h1 className="text-2xl font-semibold">{invite_title()}</h1>
@@ -87,7 +84,7 @@ function InvitePage() {
 				{invite_description({
 					teacher: view.group.ownerName ?? "",
 					event: view.group.eventTitle,
-					date: when(view.group.eventDate),
+					date: formatWarsawDateTime(view.group.eventDate, locale),
 				})}
 			</p>
 			{view.group.name ? (
@@ -103,11 +100,13 @@ function InvitePage() {
 						: invite_email({ email: view.email })}
 				</p>
 				<p className="text-sm text-muted-foreground">
-					{invite_deadline({ deadline: when(view.group.deadline) })}
+					{invite_deadline({
+						deadline: formatWarsawDateTime(view.group.deadline, locale),
+					})}
 				</p>
 				{accept.isError ? (
 					<p className="text-sm text-destructive" role="alert">
-						{groupErrorMessage(accept.error, events_register_full)}
+						{appErrorMessage(accept.error, events_register_full)}
 					</p>
 				) : null}
 				<Button

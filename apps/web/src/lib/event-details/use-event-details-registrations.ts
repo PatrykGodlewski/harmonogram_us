@@ -4,7 +4,11 @@ import {
 	unregisterFromAgendaItemServer,
 	unregisterFromEventServer,
 } from "@repo/api/events/mutations";
-import { myRegistrationsQueryOptions } from "@repo/api/events/my-registrations";
+import {
+	myRegisteredEventIdsQueryOptions,
+	myRegistrationsQueryOptions,
+} from "@repo/api/events/my-registrations";
+import { eventDetailsQueryOptions } from "@repo/api/events/queries";
 import { agendaItemSeatCountsCollection } from "@repo/collections/agenda-item-seat-counts";
 import { eventSeatCountsCollection } from "@repo/collections/event-seat-counts";
 import {
@@ -26,7 +30,7 @@ type RegistrationAction =
 	| { type: "registerItem"; item: AgendaItemRef }
 	| { type: "unregisterItem"; item: AgendaItemRef };
 
-export function actionKey(action: RegistrationAction): string {
+function actionKey(action: RegistrationAction): string {
 	return "item" in action ? `${action.type}:${action.item.id}` : action.type;
 }
 
@@ -151,10 +155,10 @@ export function useEventDetailsRegistrations(
 					queryKey: myRegistrationsQueryOptions.queryKey,
 				}),
 				queryClient.invalidateQueries({
-					queryKey: ["my-registered-event-ids"],
+					queryKey: myRegisteredEventIdsQueryOptions.queryKey,
 				}),
 				queryClient.invalidateQueries({
-					queryKey: ["event-details", eventId],
+					queryKey: eventDetailsQueryOptions(eventId).queryKey,
 				}),
 			]),
 	});

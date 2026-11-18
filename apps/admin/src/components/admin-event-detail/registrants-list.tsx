@@ -7,7 +7,7 @@ import {
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { Badge } from "@repo/ui/components/badge";
-import { formatWarsawDate, formatWarsawTime } from "@repo/ui/time";
+import { formatWarsawDateTime } from "@repo/ui/time";
 
 type RegistrantsListProps = {
 	registrants: EventRegistrant[];
@@ -46,8 +46,7 @@ export function RegistrantsList({ registrants, agenda }: RegistrantsListProps) {
 							</div>
 							<p className="text-sm text-muted-foreground">
 								{registrant.name ? `${registrant.name} · ` : ""}
-								{formatWarsawDate(registrant.registeredAt, locale)},{" "}
-								{formatWarsawTime(registrant.registeredAt, locale)}
+								{formatWarsawDateTime(registrant.registeredAt, locale)}
 							</p>
 							{registrant.agendaItemIds.length > 0 ? (
 								<div className="flex flex-wrap gap-1">

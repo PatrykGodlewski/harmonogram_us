@@ -5,7 +5,7 @@ import {
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { Badge } from "@repo/ui/components/badge";
-import { formatWarsawDate, formatWarsawTime } from "@repo/ui/time";
+import { formatWarsawDateTime } from "@repo/ui/time";
 import { Link } from "@tanstack/react-router";
 
 export function EventSummaryCard({ event }: { event: EventDetails }) {
@@ -22,11 +22,8 @@ export function EventSummaryCard({ event }: { event: EventDetails }) {
 			</Link>
 			<h1 className="text-2xl font-semibold tracking-tight">{event.title}</h1>
 			<p className="text-muted-foreground">
-				{formatWarsawDate(event.date, locale)},{" "}
-				{formatWarsawTime(event.date, locale)}
-				{event.endsAt
-					? ` – ${formatWarsawDate(event.endsAt, locale)}, ${formatWarsawTime(event.endsAt, locale)}`
-					: ""}
+				{formatWarsawDateTime(event.date, locale)}
+				{event.endsAt ? ` – ${formatWarsawDateTime(event.endsAt, locale)}` : ""}
 			</p>
 			<div className="flex flex-wrap gap-2">
 				<Badge variant="secondary">{event.typeLabel}</Badge>
