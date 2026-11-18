@@ -1,5 +1,6 @@
 import {
 	error_captcha,
+	error_email_not_allowed,
 	error_email_not_verified,
 	error_group_closed,
 	error_group_deadline_passed,
@@ -23,6 +24,7 @@ const GROUP_ERROR_MESSAGES: Record<string, () => string> = {
 	NOT_GROUP_OWNER: error_not_group_owner,
 	INVITATION_INVALID: error_invitation_invalid,
 	EMAIL_NOT_VERIFIED: error_email_not_verified,
+	EMAIL_NOT_ALLOWED: error_email_not_allowed,
 	ITEM_NOT_IN_GROUP: error_item_not_in_group,
 	ITEM_FULL: events_item_full,
 	EVENT_ENDED: events_event_ended,

@@ -291,5 +291,6 @@
 	"admin_group_badge": "Grupa: {name}",
 	"admin_group_unnamed": "grupa",
 	"admin_field_group_deadline_hours": "Termin potwierdzeń grupowych (godzin przed startem)",
-	"admin_field_group_deadline_hours_hint": "Niepotwierdzone miejsca grupowe są zwalniane tyle godzin przed wydarzeniem. 0 = do rozpoczęcia."
+	"admin_field_group_deadline_hours_hint": "Niepotwierdzone miejsca grupowe są zwalniane tyle godzin przed wydarzeniem. 0 = do rozpoczęcia.",
+	"error_email_not_allowed": "Co najmniej jeden adres nie może otrzymać zaproszenia (adres tymczasowy lub brak serwera poczty)."
 }

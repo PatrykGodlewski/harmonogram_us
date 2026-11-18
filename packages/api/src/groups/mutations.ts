@@ -15,7 +15,12 @@ import { getRequestHeaders } from "@tanstack/react-start/server";
 import { authMiddleware } from "../auth/middleware";
 import { withDomainErrors } from "../errors";
 import { getClientIp } from "../security/client-ip";
+import { assertEmailsAllowed } from "../security/email-policy";
 import { consumeRateLimit } from "../security/rate-limit";
+import {
+	JOIN_GROUP_LIMIT,
+	joinGroupRateKey,
+} from "../security/rate-limit-keys";
 import { assertTurnstile } from "../security/turnstile";
 import {
 	createGroupSchema,
@@ -50,6 +55,7 @@ function invitationHooks(): InvitationHooks {
 export const createGroupServer = protectedActionFn
 	.inputValidator(createGroupSchema)
 	.handler(async ({ data, context }) => {
+		await assertEmailsAllowed(data.emails);
 		const result = await withDomainErrors(() =>
 			createGroup({ ...data, ownerUserId: context.user.id }, invitationHooks()),
 		);
@@ -59,6 +65,7 @@ export const createGroupServer = protectedActionFn
 export const inviteToGroupServer = protectedActionFn
 	.inputValidator(inviteToGroupSchema)
 	.handler(async ({ data, context }) => {
+		await assertEmailsAllowed(data.emails);
 		const refs = await withDomainErrors(() =>
 			inviteToGroup(
 				data.groupId,
@@ -134,8 +141,8 @@ export const joinGroupServer = createServerFn({ method: "POST" })
 		const ip = getClientIp(getRequestHeaders());
 		await consumeRateLimit(
 			"groups:join",
-			{ points: 10, durationSeconds: 15 * 60 },
-			`${ip}:${data.code}`,
+			JOIN_GROUP_LIMIT,
+			joinGroupRateKey(ip, data.code),
 		);
 		await assertTurnstile(
 			data.turnstileToken,

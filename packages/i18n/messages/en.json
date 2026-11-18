@@ -291,5 +291,6 @@
 	"admin_group_badge": "Group: {name}",
 	"admin_group_unnamed": "group",
 	"admin_field_group_deadline_hours": "Group confirmation deadline (hours before start)",
-	"admin_field_group_deadline_hours_hint": "Group places that aren't confirmed are released this many hours before the event. 0 = until it starts."
+	"admin_field_group_deadline_hours_hint": "Group places that aren't confirmed are released this many hours before the event. 0 = until it starts.",
+	"error_email_not_allowed": "One or more email addresses can't receive invitations (disposable address or no mail server)."
 }

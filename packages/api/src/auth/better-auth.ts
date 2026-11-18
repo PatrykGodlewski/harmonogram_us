@@ -31,8 +31,6 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { captcha, magicLink } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
-import validateEmail from "deep-email-validator";
-import disposableDomainList from "disposable-email-domains";
 import { Redis } from "ioredis";
 import { RateLimiterRedis } from "rate-limiter-flexible";
 import { z } from "zod";
@@ -41,6 +39,11 @@ import {
 	sendTransactionalEmail,
 } from "../notifications/email";
 import { getClientIp } from "../security/client-ip";
+import { checkEmails } from "../security/email-policy";
+import {
+	INVITATION_ACCEPT_LIMIT,
+	invitationAcceptRateKey,
+} from "../security/rate-limit-keys";
 import { groupInvitation } from "./group-invitation-plugin";
 import { enabledSocialProviders } from "./social-providers";
 
@@ -125,12 +128,10 @@ const invitationAcceptLimiter = redisClient
 	? new RateLimiterRedis({
 			storeClient: redisClient,
 			keyPrefix: "auth:group-invitation",
-			points: 10,
-			duration: rateLimitWindowSeconds,
+			points: INVITATION_ACCEPT_LIMIT.points,
+			duration: INVITATION_ACCEPT_LIMIT.durationSeconds,
 		})
 	: null;
-
-let disposableDomainSet: Set<string> | null = null;
 
 function normalizeEmail(value: unknown): string | null {
 	if (typeof value !== "string") return null;
@@ -179,40 +180,20 @@ async function consumeRateLimit(
 	}
 }
 
-function getDisposableDomains(): Set<string> {
-	if (disposableDomainSet) return disposableDomainSet;
-	disposableDomainSet = new Set(
-		disposableDomainList.map((domain) => domain.toLowerCase()),
-	);
-	return disposableDomainSet;
-}
-
 async function assertEmailIsAllowed(email: string): Promise<void> {
-	const domain = email.split("@")[1]?.toLowerCase();
-	if (!domain) {
-		throw new APIError("BAD_REQUEST", { message: "Invalid email address." });
+	const { rejected } = await checkEmails([email]);
+	const reason = rejected[0]?.reason;
+	if (!reason) {
+		return;
 	}
-
-	const disposableDomains = getDisposableDomains();
-	if (disposableDomains.has(domain)) {
-		throw new APIError("BAD_REQUEST", {
-			message: "Disposable email addresses are not allowed.",
-		});
-	}
-
-	const result = await validateEmail({
-		email,
-		validateRegex: true,
-		validateMx: true,
-		validateTypo: true,
-		validateDisposable: false,
+	throw new APIError("BAD_REQUEST", {
+		message:
+			reason === "disposable"
+				? "Disposable email addresses are not allowed."
+				: reason === "invalid"
+					? "Invalid email address."
+					: "Please provide a valid email address.",
 	});
-
-	if (!result.valid) {
-		throw new APIError("BAD_REQUEST", {
-			message: "Please provide a valid email address.",
-		});
-	}
 }
 
 async function isCompromisedPassword(
@@ -402,9 +383,11 @@ export const auth = betterAuth({
 			}
 
 			if (ctx.path === "/group-invitation/accept") {
+				const token: unknown = (ctx.body as { token?: unknown } | undefined)
+					?.token;
 				await consumeRateLimit(
 					invitationAcceptLimiter,
-					ip,
+					typeof token === "string" ? invitationAcceptRateKey(token) : ip,
 					"Too many invitation attempts. Please try again later.",
 				);
 				return;
