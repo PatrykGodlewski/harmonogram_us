@@ -30,6 +30,7 @@ export type EventWithRelations = {
 	date: Date;
 	endsAt: Date | null;
 	maxSeats: number;
+	groupDeadlineHours: number;
 	seatsRemaining: number;
 	typeId: string;
 	locationId: string | null;
@@ -129,6 +130,7 @@ async function queryEvents(
 			description: events.description,
 			date: events.date,
 			endsAt: events.endsAt,
+			groupDeadlineHours: events.groupDeadlineHours,
 			maxSeats: events.maxSeats,
 			seatsRemainingFromCounts: eventSeatCounts.seatsRemaining,
 			typeId: events.typeId,
@@ -159,6 +161,7 @@ async function queryEvents(
 
 export type CreateEventInput = {
 	id?: string;
+	groupDeadlineHours?: number;
 	title: string;
 	description?: string | null;
 	date: Date;
@@ -178,6 +181,9 @@ export async function createEvent(input: CreateEventInput) {
 			description: input.description ?? null,
 			date: input.date,
 			endsAt: input.endsAt ?? null,
+			...(input.groupDeadlineHours !== undefined
+				? { groupDeadlineHours: input.groupDeadlineHours }
+				: {}),
 			maxSeats: input.maxSeats,
 			typeId: input.typeId,
 			locationId: input.locationId ?? null,
@@ -189,6 +195,7 @@ export async function createEvent(input: CreateEventInput) {
 
 export type UpdateEventInput = {
 	id: string;
+	groupDeadlineHours?: number;
 	title?: string;
 	description?: string | null;
 	date?: Date;

@@ -4,6 +4,7 @@ import {
 	getEventFilterOptions,
 	getEvents,
 } from "@repo/db/queries/events";
+import { listGroupsForEvent } from "@repo/db/queries/groups";
 import {
 	getEventFaculties,
 	getEventLocations,
@@ -21,6 +22,7 @@ export type {
 	EventWithRelations,
 	FilterOption,
 } from "@repo/db/queries/events";
+export type { GroupSummary } from "@repo/db/queries/groups";
 export type { LookupRow } from "@repo/db/queries/lookups";
 
 const protectedQueryFn = createServerFn({ method: "GET" }).middleware([
@@ -98,4 +100,14 @@ export const adminEventRegistrantsQueryOptions = (eventId: string) =>
 	queryOptions({
 		queryKey: ["admin", "event", eventId, "registrants"] as const,
 		queryFn: () => fetchAdminEventRegistrantsServer({ data: { eventId } }),
+	});
+
+export const fetchAdminEventGroupsServer = protectedQueryFn
+	.inputValidator((input: unknown) => adminEventIdSchema.parse(input))
+	.handler(async ({ data }) => listGroupsForEvent(data.eventId));
+
+export const adminEventGroupsQueryOptions = (eventId: string) =>
+	queryOptions({
+		queryKey: ["admin", "event", eventId, "groups"] as const,
+		queryFn: () => fetchAdminEventGroupsServer({ data: { eventId } }),
 	});
