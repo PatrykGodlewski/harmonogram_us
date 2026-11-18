@@ -1,4 +1,4 @@
-import { and, asc, eq, type SQL, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, type SQL, sql } from "drizzle-orm";
 import { type DbExecutor, db, type TransactionClient } from "../client";
 import { agendaItems } from "../schema/agenda";
 import { authUsers } from "../schema/better-auth";
@@ -22,21 +22,25 @@ import {
 	assertGroupOwner,
 	groupDeadlineColumn,
 } from "./group-guards";
-import { createInvitationToken, createJoinCode } from "./group-tokens";
+import { createJoinCode } from "./group-tokens";
 import {
 	type LockedGroup,
 	lockEvent,
 	lockGroup,
+	lockMemberAndGroup,
 	lockRegistrableItems,
 } from "./locks";
 
 export type { ActorOptions } from "./group-guards";
 
-/** `token` is null when the member is already confirmed (nothing to send). */
+/**
+ * A member touched by an invite. `needsEmail` is false for members who already
+ * confirmed. Tokens are issued only by the email job (only hashes are stored).
+ */
 export type GroupMemberRef = {
 	memberId: string;
 	email: string;
-	token: string | null;
+	needsEmail: boolean;
 };
 
 export type GroupSummary = {
@@ -94,7 +98,7 @@ async function runInvitedHook(
 	hooks: InvitationHooks | undefined,
 	refs: GroupMemberRef[],
 ) {
-	const toSend = refs.filter((ref) => ref.token);
+	const toSend = refs.filter((ref) => ref.needsEmail);
 	if (hooks?.onInvited && toSend.length > 0) {
 		await hooks.onInvited(tx, toSend);
 	}
@@ -119,9 +123,7 @@ async function groupItemIds(
 	return rows.map((row) => row.id);
 }
 
-/**
- * Adds members (or re-issues tokens for existing invited ones). Caller holds the group lock.
- */
+/** Adds members (or marks existing invited ones as re-invited). Caller holds the group lock. */
 async function addMembers(
 	tx: TransactionClient,
 	group: LockedGroup,
@@ -138,49 +140,62 @@ async function addMembers(
 		.where(eq(registrationGroupMembers.groupId, group.id));
 	const byEmail = new Map(existing.map((member) => [member.email, member]));
 	const newEmails = emails.filter((email) => !byEmail.has(email));
-
 	if (existing.length + newEmails.length > group.places) {
 		throw new DomainError("GROUP_FULL");
 	}
 
+	const reinvitedIds = emails
+		.map((email) => byEmail.get(email))
+		.filter((member) => member?.status === "invited")
+		.map((member) => member?.id ?? "");
+	if (reinvitedIds.length > 0) {
+		await tx
+			.update(registrationGroupMembers)
+			.set({ invitedAt: new Date() })
+			.where(inArray(registrationGroupMembers.id, reinvitedIds));
+	}
+
+	const inserted =
+		newEmails.length > 0
+			? await tx
+					.insert(registrationGroupMembers)
+					.values(
+						newEmails.map((email) => ({
+							groupId: group.id,
+							email,
+							invitedVia,
+						})),
+					)
+					.returning({
+						id: registrationGroupMembers.id,
+						email: registrationGroupMembers.email,
+					})
+			: [];
 	const defaults = await groupItemIds(tx, group.id);
-	const refs: GroupMemberRef[] = [];
-
-	for (const email of emails) {
-		const current = byEmail.get(email);
-		if (current) {
-			if (current.status === "confirmed") {
-				refs.push({ memberId: current.id, email, token: null });
-				continue;
-			}
-			const { token, tokenHash } = createInvitationToken();
-			await tx
-				.update(registrationGroupMembers)
-				.set({ tokenHash, invitedAt: new Date() })
-				.where(eq(registrationGroupMembers.id, current.id));
-			refs.push({ memberId: current.id, email, token });
-			continue;
-		}
-
-		const { token, tokenHash } = createInvitationToken();
-		const [inserted] = await tx
-			.insert(registrationGroupMembers)
-			.values({ groupId: group.id, email, invitedVia, tokenHash })
-			.returning({ id: registrationGroupMembers.id });
-		if (!inserted) {
-			throw new Error("Member insert failed");
-		}
-		if (defaults.length > 0) {
-			await tx.insert(registrationGroupMemberItems).values(
+	if (inserted.length > 0 && defaults.length > 0) {
+		await tx.insert(registrationGroupMemberItems).values(
+			inserted.flatMap((member) =>
 				defaults.map((agendaItemId) => ({
-					memberId: inserted.id,
+					memberId: member.id,
 					agendaItemId,
 				})),
-			);
-		}
-		refs.push({ memberId: inserted.id, email, token });
+			),
+		);
 	}
-	return refs;
+
+	const insertedByEmail = new Map(
+		inserted.map((member) => [member.email, member.id]),
+	);
+	return emails.map((email) => {
+		const current = byEmail.get(email);
+		return current
+			? {
+					memberId: current.id,
+					email,
+					needsEmail: current.status === "invited",
+				}
+			: { memberId: insertedByEmail.get(email) ?? "", email, needsEmail: true };
+	});
 }
 
 export async function createGroup(
@@ -314,22 +329,23 @@ export async function resendInvitation(
 	hooks?: InvitationHooks,
 ): Promise<GroupMemberRef> {
 	return db.transaction(async (tx) => {
-		const [member] = await tx
-			.select({
-				groupId: registrationGroupMembers.groupId,
-				email: registrationGroupMembers.email,
-			})
-			.from(registrationGroupMembers)
-			.where(eq(registrationGroupMembers.id, memberId));
-		if (!member) {
+		const locked = await lockMemberAndGroup(tx, { id: memberId });
+		if (!locked) {
 			throw new DomainError("GROUP_NOT_FOUND");
 		}
-		const group = await lockGroup(tx, { id: member.groupId });
+		const { member, group } = locked;
 		assertGroupOwner(group, actorUserId, opts);
 		await assertGroupAcceptsMembers(tx, group);
-		const [ref] = await addMembers(tx, group, [member.email], "email");
-		if (!ref) {
-			throw new DomainError("INVITATION_INVALID");
+		const ref: GroupMemberRef = {
+			memberId: member.id,
+			email: member.email,
+			needsEmail: member.status === "invited",
+		};
+		if (ref.needsEmail) {
+			await tx
+				.update(registrationGroupMembers)
+				.set({ invitedAt: new Date() })
+				.where(eq(registrationGroupMembers.id, member.id));
 		}
 		await runInvitedHook(tx, hooks, [ref]);
 		return ref;
@@ -414,19 +430,23 @@ async function replaceGroupItems(
 			);
 	}
 
-	const members = await listMembersWithItems(tx, group.id);
-	for (const { id: memberId, itemIds: ids } of members) {
-		if (!sameAsPrevious(ids)) {
-			continue;
-		}
+	const followers = (await listMembersWithItems(tx, group.id))
+		.filter((member) => sameAsPrevious(member.itemIds))
+		.map((member) => member.id);
+	if (followers.length === 0) {
+		return;
+	}
+	await tx
+		.delete(registrationGroupMemberItems)
+		.where(inArray(registrationGroupMemberItems.memberId, followers));
+	if (next.length > 0) {
 		await tx
-			.delete(registrationGroupMemberItems)
-			.where(eq(registrationGroupMemberItems.memberId, memberId));
-		if (next.length > 0) {
-			await tx
-				.insert(registrationGroupMemberItems)
-				.values(next.map((agendaItemId) => ({ memberId, agendaItemId })));
-		}
+			.insert(registrationGroupMemberItems)
+			.values(
+				followers.flatMap((memberId) =>
+					next.map((agendaItemId) => ({ memberId, agendaItemId })),
+				),
+			);
 	}
 }
 

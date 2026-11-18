@@ -1,4 +1,4 @@
-import { ensureQueues, getBoss } from "@repo/jobs/client";
+import { getBoss } from "@repo/jobs/client";
 import {
 	CLOSE_EXPIRED_GROUPS_CRON,
 	groupInvitationEmailPayload,
@@ -10,7 +10,6 @@ import { closeExpired } from "./handlers/close-expired";
 import { sendInvitationEmail } from "./handlers/send-invitation";
 
 const boss = await getBoss("worker");
-await ensureQueues(boss);
 
 await boss.work(QUEUE_GROUP_INVITATION_EMAIL, async (jobs) => {
 	for (const job of jobs) {

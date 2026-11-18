@@ -1,6 +1,7 @@
 import { eq, sql } from "drizzle-orm";
 import { expect } from "vitest";
 import { db } from "../src/client";
+import { reissueInvitationToken } from "../src/queries/group-members";
 import {
 	agendaItemSeatCounts,
 	agendaItems,
@@ -196,4 +197,11 @@ export async function addMemberRow(
 			.values(opts.itemIds.map((agendaItemId) => ({ memberId: member.id, agendaItemId })));
 	}
 	return member.id;
+}
+
+/** The token an invitation email would carry (the email job issues it the same way). */
+export async function invitationToken(memberId: string): Promise<string> {
+	const token = await reissueInvitationToken(memberId);
+	if (!token) throw new Error(`no invitation token for member ${memberId}`);
+	return token;
 }

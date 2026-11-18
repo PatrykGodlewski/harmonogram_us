@@ -57,15 +57,17 @@ export async function enqueueInvitationEmails(
 		return;
 	}
 	const boss = await getBoss();
-	const db = opts.tx ? fromDrizzle(opts.tx, sql) : undefined;
-	for (const job of jobs) {
-		await boss.send(QUEUE_GROUP_INVITATION_EMAIL, job, {
+	// One INSERT for the whole batch (inside the caller's transaction when given).
+	await boss.insert(
+		QUEUE_GROUP_INVITATION_EMAIL,
+		jobs.map((job) => ({
+			data: job,
+			singletonKey: job.memberId,
 			retryLimit: 3,
 			retryBackoff: true,
-			singletonKey: job.memberId,
-			...(db ? { db } : {}),
-		});
-	}
+		})),
+		opts.tx ? { db: fromDrizzle(opts.tx, sql) } : undefined,
+	);
 }
 
 /**

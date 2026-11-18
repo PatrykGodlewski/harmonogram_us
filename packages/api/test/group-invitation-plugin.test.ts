@@ -15,6 +15,7 @@ import {
 	createEvent,
 	createUser,
 	hoursFromNow,
+	invitationToken,
 	resetDb,
 } from "../../db/test/helpers";
 import { auth } from "../src/auth/better-auth";
@@ -32,7 +33,8 @@ async function invite(email = "kid@x.test") {
 		emails: [email],
 		joinLinkEnabled: false,
 	});
-	return { eventId, token: created.invited[0]?.token ?? "", memberId: created.invited[0]?.memberId ?? "" };
+	const memberId = created.invited[0]?.memberId ?? "";
+	return { eventId, token: await invitationToken(memberId), memberId };
 }
 
 function accept(token: string) {

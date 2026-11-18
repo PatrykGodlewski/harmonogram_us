@@ -13,7 +13,6 @@ import {
 	listMyGroups,
 	updateGroup,
 } from "../src/queries/groups";
-import { hashToken } from "../src/queries/group-tokens";
 import { authUsers } from "../src/schema/better-auth";
 import { events } from "../src/schema/events";
 import {
@@ -43,7 +42,7 @@ async function setup(maxSeats = 30) {
 }
 
 describe("createGroup", () => {
-	it("create holds places and returns tokens for each email", async () => {
+	it("create holds places and returns a member per email", async () => {
 		const { eventId, web, owner } = await setup();
 		const result = await createGroup({
 			eventId,
@@ -60,7 +59,8 @@ describe("createGroup", () => {
 			.select()
 			.from(registrationGroupMembers)
 			.where(eq(registrationGroupMembers.id, result.invited[0]?.memberId ?? ""));
-		expect(member?.tokenHash).toBe(hashToken(result.invited[0]?.token ?? ""));
+		expect(result.invited.every((ref) => ref.needsEmail)).toBe(true);
+		expect(member?.tokenHash).toBeNull();
 		expect((await readEventCount(eventId))?.seatsRemaining).toBe(25);
 		expect((await readItemCount(web))?.seatsRemaining).toBe(15);
 	});
@@ -153,12 +153,12 @@ describe("joining and inviting", () => {
 		expect(items.map((i) => i.agendaItemId)).toEqual([web]);
 	});
 
-	it("join with existing email reissues token, no new member", async () => {
+	it("join with existing email re-invites the same member, no new member", async () => {
 		const { joinCode, groupId } = await groupWithLink();
 		const first = await joinGroup(joinCode, "kid@x.test");
 		const second = await joinGroup(joinCode, "kid@x.test");
 		expect(second.memberId).toBe(first.memberId);
-		expect(second.token).not.toBe(first.token);
+		expect(second.needsEmail).toBe(true);
 		const members = await db
 			.select()
 			.from(registrationGroupMembers)

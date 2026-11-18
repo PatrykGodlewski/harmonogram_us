@@ -23,6 +23,7 @@ import {
 	createItem,
 	createUser,
 	hoursFromNow,
+	invitationToken,
 	readEventCount,
 	readItemCount,
 	rejectionCode,
@@ -45,8 +46,9 @@ async function groupWithInvite(places = 3) {
 		joinLinkEnabled: false,
 	});
 	const invite = created.invited[0];
-	if (!invite?.token) throw new Error("no token");
-	return { eventId, web, robotics, owner, groupId: created.groupId, memberId: invite.memberId, token: invite.token };
+	if (!invite) throw new Error("no invite");
+	const token = await invitationToken(invite.memberId);
+	return { eventId, web, robotics, owner, groupId: created.groupId, memberId: invite.memberId, token };
 }
 
 describe("acceptInvitation", () => {
@@ -113,7 +115,7 @@ describe("acceptInvitation", () => {
 			sql`UPDATE agenda_items SET starts_at = now() - interval '2 hours', ends_at = now() - interval '1 hour' WHERE id = ${past}`,
 		);
 		const student = await createUser("kid@x.test");
-		await acceptInvitation(created.invited[0]?.token ?? "", student);
+		await acceptInvitation(await invitationToken(created.invited[0]?.memberId ?? ""), student);
 		expect(await getMyRegistrations(student)).toEqual({ eventIds: [eventId], agendaItemIds: [] });
 	});
 });
