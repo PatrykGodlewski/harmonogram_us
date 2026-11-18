@@ -1,5 +1,6 @@
 import validateEmail from "deep-email-validator";
 import disposableDomainList from "disposable-email-domains";
+import { appError } from "../errors";
 
 export type EmailRejection = {
 	email: string;
@@ -75,6 +76,6 @@ export async function checkEmails(
 export async function assertEmailsAllowed(emails: string[]): Promise<void> {
 	const { rejected } = await checkEmails(emails);
 	if (rejected.length > 0) {
-		throw new Error("EMAIL_NOT_ALLOWED");
+		throw appError("EMAIL_NOT_ALLOWED");
 	}
 }

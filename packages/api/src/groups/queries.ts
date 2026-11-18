@@ -7,7 +7,7 @@ import {
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { authMiddleware } from "../auth/middleware";
-import { withDomainErrors } from "../errors";
+import { appError, withDomainErrors } from "../errors";
 import {
 	groupIdSchema,
 	invitationTokenSchema,
@@ -56,7 +56,7 @@ export const fetchJoinGroupInfoServer = createServerFn({ method: "GET" })
 	.handler(async ({ data }) => {
 		const info = await getGroupByJoinCode(data.code);
 		if (!info) {
-			throw new Error("GROUP_NOT_FOUND");
+			throw appError("GROUP_NOT_FOUND");
 		}
 		return info;
 	});
@@ -73,7 +73,7 @@ export const fetchInvitationServer = createServerFn({ method: "GET" })
 	.handler(async ({ data }) => {
 		const invitation = await getInvitation(data.token);
 		if (!invitation) {
-			throw new Error("INVITATION_INVALID");
+			throw appError("INVITATION_INVALID");
 		}
 		return invitation;
 	});

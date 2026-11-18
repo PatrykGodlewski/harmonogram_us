@@ -1,6 +1,14 @@
 import { env } from "@repo/env";
 import { Redis } from "ioredis";
 import { RateLimiterRedis } from "rate-limiter-flexible";
+import { appError } from "../errors";
+
+/** Points per window; optionally block the key for a while once exhausted. */
+export type RateLimit = {
+	points: number;
+	durationSeconds: number;
+	blockDurationSeconds?: number;
+};
 
 let client: Redis | null | undefined;
 const limiters = new Map<string, RateLimiterRedis | null>();
@@ -11,7 +19,7 @@ function redis(): Redis | null {
 			? new Redis(env.REDIS_URL, {
 					password: env.REDIS_PASSWORD || undefined,
 					lazyConnect: true,
-					maxRetriesPerRequest: 1,
+					maxRetriesPerRequest: 3,
 				})
 			: null;
 	}
@@ -26,7 +34,7 @@ function redis(): Redis | null {
  */
 export async function consumeRateLimit(
 	keyPrefix: string,
-	limit: { points: number; durationSeconds: number },
+	limit: RateLimit,
 	key: string,
 ): Promise<void> {
 	if (!limiters.has(keyPrefix)) {
@@ -39,6 +47,7 @@ export async function consumeRateLimit(
 						keyPrefix,
 						points: limit.points,
 						duration: limit.durationSeconds,
+						blockDuration: limit.blockDurationSeconds,
 					})
 				: null,
 		);
@@ -50,6 +59,6 @@ export async function consumeRateLimit(
 	try {
 		await limiter.consume(key);
 	} catch {
-		throw new Error("RATE_LIMITED");
+		throw appError("RATE_LIMITED");
 	}
 }

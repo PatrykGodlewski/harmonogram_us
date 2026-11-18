@@ -31,8 +31,6 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { captcha, magicLink } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
-import { Redis } from "ioredis";
-import { RateLimiterRedis } from "rate-limiter-flexible";
 import { z } from "zod";
 import {
 	renderMagicLinkEmail,
@@ -40,10 +38,14 @@ import {
 } from "../notifications/email";
 import { getClientIp } from "../security/client-ip";
 import { checkEmails } from "../security/email-policy";
+import { consumeRateLimit, type RateLimit } from "../security/rate-limit";
 import {
 	INVITATION_ACCEPT_LIMIT,
 	invitationAcceptRateKey,
-} from "../security/rate-limit-keys";
+	MAGIC_LINK_LIMIT,
+	SIGN_IN_LIMIT,
+	SIGN_UP_LIMIT,
+} from "../security/rate-limits";
 import { groupInvitation } from "./group-invitation-plugin";
 import { enabledSocialProviders } from "./social-providers";
 
@@ -80,58 +82,7 @@ const socialProviders = Object.fromEntries(
 		),
 );
 
-const rateLimitWindowSeconds = 15 * 60;
-const rateLimitBlockSeconds = 15 * 60;
-const signInMaxAttempts = 10;
-const signUpMaxAttempts = 6;
-const magicLinkMaxAttempts = 6;
 const PASSWORD_MIN_LENGTH = 8;
-
-const redisClient = env.REDIS_URL
-	? new Redis(env.REDIS_URL, {
-			password: env.REDIS_PASSWORD || undefined,
-			maxRetriesPerRequest: 3,
-		})
-	: null;
-
-const signInLimiter = redisClient
-	? new RateLimiterRedis({
-			storeClient: redisClient,
-			keyPrefix: "auth:signin",
-			points: signInMaxAttempts,
-			duration: rateLimitWindowSeconds,
-			blockDuration: rateLimitBlockSeconds,
-		})
-	: null;
-
-const signUpLimiter = redisClient
-	? new RateLimiterRedis({
-			storeClient: redisClient,
-			keyPrefix: "auth:signup",
-			points: signUpMaxAttempts,
-			duration: rateLimitWindowSeconds,
-			blockDuration: rateLimitBlockSeconds,
-		})
-	: null;
-
-const magicLinkLimiter = redisClient
-	? new RateLimiterRedis({
-			storeClient: redisClient,
-			keyPrefix: "auth:magic-link",
-			points: magicLinkMaxAttempts,
-			duration: rateLimitWindowSeconds,
-			blockDuration: rateLimitBlockSeconds,
-		})
-	: null;
-
-const invitationAcceptLimiter = redisClient
-	? new RateLimiterRedis({
-			storeClient: redisClient,
-			keyPrefix: "auth:group-invitation",
-			points: INVITATION_ACCEPT_LIMIT.points,
-			duration: INVITATION_ACCEPT_LIMIT.durationSeconds,
-		})
-	: null;
 
 function normalizeEmail(value: unknown): string | null {
 	if (typeof value !== "string") return null;
@@ -167,14 +118,15 @@ function getBodyValueAsString(
 	return normalizeText(value);
 }
 
-async function consumeRateLimit(
-	limiter: RateLimiterRedis | null,
+/** Shared Redis limiter, reported as Better Auth's 429. */
+async function limitAuth(
+	prefix: string,
+	limit: RateLimit,
 	key: string,
 	message: string,
 ): Promise<void> {
-	if (!limiter) return;
 	try {
-		await limiter.consume(key);
+		await consumeRateLimit(prefix, limit, key);
 	} catch {
 		throw new APIError("TOO_MANY_REQUESTS", { message });
 	}
@@ -349,8 +301,9 @@ export const auth = betterAuth({
 			const locale = resolveAuthLocaleFromHeaders(ctx.headers);
 
 			if (ctx.path === "/sign-up/email") {
-				await consumeRateLimit(
-					signUpLimiter,
+				await limitAuth(
+					"auth:signup",
+					SIGN_UP_LIMIT,
 					`${ip}:${email ?? "unknown-email"}`,
 					"Too many sign-up attempts. Please try again later.",
 				);
@@ -362,8 +315,9 @@ export const auth = betterAuth({
 			}
 
 			if (ctx.path === "/sign-in/email") {
-				await consumeRateLimit(
-					signInLimiter,
+				await limitAuth(
+					"auth:signin",
+					SIGN_IN_LIMIT,
 					`${ip}:${email ?? "unknown-email"}`,
 					"Too many sign-in attempts. Please try again later.",
 				);
@@ -371,8 +325,9 @@ export const auth = betterAuth({
 			}
 
 			if (ctx.path === "/sign-in/magic-link") {
-				await consumeRateLimit(
-					magicLinkLimiter,
+				await limitAuth(
+					"auth:magic-link",
+					MAGIC_LINK_LIMIT,
 					`${ip}:${email ?? "unknown-email"}`,
 					"Too many magic link requests. Please try again later.",
 				);
@@ -385,8 +340,9 @@ export const auth = betterAuth({
 			if (ctx.path === "/group-invitation/accept") {
 				const token: unknown = (ctx.body as { token?: unknown } | undefined)
 					?.token;
-				await consumeRateLimit(
-					invitationAcceptLimiter,
+				await limitAuth(
+					"auth:group-invitation",
+					INVITATION_ACCEPT_LIMIT,
 					typeof token === "string" ? invitationAcceptRateKey(token) : ip,
 					"Too many invitation attempts. Please try again later.",
 				);

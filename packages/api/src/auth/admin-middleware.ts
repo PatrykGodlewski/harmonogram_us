@@ -1,4 +1,5 @@
 import { createMiddleware } from "@tanstack/react-start";
+import { appError } from "../errors";
 import { getCurrentUser } from "./user";
 
 /** Like `authMiddleware`, but only lets users with the admin role through. */
@@ -7,10 +8,10 @@ export const adminMiddleware = createMiddleware({
 }).server(async ({ next }) => {
 	const user = await getCurrentUser();
 	if (!user) {
-		throw new Error("UNAUTHORIZED");
+		throw appError("UNAUTHORIZED");
 	}
 	if (!user.isAdmin) {
-		throw new Error("FORBIDDEN");
+		throw appError("FORBIDDEN");
 	}
 
 	return next({

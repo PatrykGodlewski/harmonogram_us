@@ -13,6 +13,7 @@ import {
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { adminMiddleware } from "../auth/admin-middleware";
+import { appError } from "../errors";
 import { adminEventIdSchema, adminEventsQuerySchema } from "./schemas";
 
 export type { AgendaItem } from "@repo/db/queries/agenda-items";
@@ -25,11 +26,11 @@ export type {
 export type { GroupSummary } from "@repo/db/queries/groups";
 export type { LookupRow } from "@repo/db/queries/lookups";
 
-const protectedQueryFn = createServerFn({ method: "GET" }).middleware([
+const adminQueryFn = createServerFn({ method: "GET" }).middleware([
 	adminMiddleware,
 ]);
 
-export const fetchAdminEventsServer = protectedQueryFn
+export const fetchAdminEventsServer = adminQueryFn
 	.inputValidator((input: unknown) => adminEventsQuerySchema.parse(input))
 	.handler(async ({ data }) => getEvents({ sortOrder: data.sortOrder }));
 
@@ -39,7 +40,7 @@ export const adminEventsQueryOptions = (sortOrder: "asc" | "desc" = "desc") =>
 		queryFn: () => fetchAdminEventsServer({ data: { sortOrder } }),
 	});
 
-export const fetchAdminEventTypesServer = protectedQueryFn.handler(async () =>
+export const fetchAdminEventTypesServer = adminQueryFn.handler(async () =>
 	getEventTypes(),
 );
 
@@ -48,8 +49,8 @@ export const adminEventTypesQueryOptions = queryOptions({
 	queryFn: () => fetchAdminEventTypesServer(),
 });
 
-export const fetchAdminEventLocationsServer = protectedQueryFn.handler(
-	async () => getEventLocations(),
+export const fetchAdminEventLocationsServer = adminQueryFn.handler(async () =>
+	getEventLocations(),
 );
 
 export const adminEventLocationsQueryOptions = queryOptions({
@@ -57,8 +58,8 @@ export const adminEventLocationsQueryOptions = queryOptions({
 	queryFn: () => fetchAdminEventLocationsServer(),
 });
 
-export const fetchAdminEventFacultiesServer = protectedQueryFn.handler(
-	async () => getEventFaculties(),
+export const fetchAdminEventFacultiesServer = adminQueryFn.handler(async () =>
+	getEventFaculties(),
 );
 
 export const adminEventFacultiesQueryOptions = queryOptions({
@@ -66,7 +67,7 @@ export const adminEventFacultiesQueryOptions = queryOptions({
 	queryFn: () => fetchAdminEventFacultiesServer(),
 });
 
-export const fetchAdminEventFilterOptionsServer = protectedQueryFn.handler(
+export const fetchAdminEventFilterOptionsServer = adminQueryFn.handler(
 	async () => getEventFilterOptions(),
 );
 
@@ -76,12 +77,12 @@ export const adminEventFilterOptionsQueryOptions = queryOptions({
 	staleTime: 60_000,
 });
 
-export const fetchAdminEventDetailsServer = protectedQueryFn
+export const fetchAdminEventDetailsServer = adminQueryFn
 	.inputValidator((input: unknown) => adminEventIdSchema.parse(input))
 	.handler(async ({ data }) => {
 		const event = await getEventById(data.eventId);
 		if (!event) {
-			throw new Error("NOT_FOUND");
+			throw appError("NOT_FOUND");
 		}
 		return event;
 	});
@@ -92,7 +93,7 @@ export const adminEventDetailsQueryOptions = (eventId: string) =>
 		queryFn: () => fetchAdminEventDetailsServer({ data: { eventId } }),
 	});
 
-export const fetchAdminEventRegistrantsServer = protectedQueryFn
+export const fetchAdminEventRegistrantsServer = adminQueryFn
 	.inputValidator((input: unknown) => adminEventIdSchema.parse(input))
 	.handler(async ({ data }) => getEventRegistrants(data.eventId));
 
@@ -102,7 +103,7 @@ export const adminEventRegistrantsQueryOptions = (eventId: string) =>
 		queryFn: () => fetchAdminEventRegistrantsServer({ data: { eventId } }),
 	});
 
-export const fetchAdminEventGroupsServer = protectedQueryFn
+export const fetchAdminEventGroupsServer = adminQueryFn
 	.inputValidator((input: unknown) => adminEventIdSchema.parse(input))
 	.handler(async ({ data }) => listGroupsForEvent(data.eventId));
 

@@ -71,8 +71,8 @@ export async function enqueueInvitationEmails(
 }
 
 /**
- * Starts pg-boss before a request opens its transaction, so the first send
- * after a deploy doesn't run pg-boss start-up while holding row locks.
+ * Starts the pg-boss producer ahead of time (called from the web server entry),
+ * so the first send doesn't run pg-boss start-up inside a request transaction.
  */
 export async function warmUpJobQueue(): Promise<void> {
 	await getBoss();

@@ -17,7 +17,7 @@ import {
 } from "@repo/db/queries/lookups";
 import { createServerFn } from "@tanstack/react-start";
 import { adminMiddleware } from "../auth/admin-middleware";
-import { withDomainErrors } from "../errors";
+import { appError, withDomainErrors } from "../errors";
 import {
 	createAgendaItemSchema,
 	createEventSchema,
@@ -28,127 +28,127 @@ import {
 	updateLookupSchema,
 } from "./schemas";
 
-const protectedActionFn = createServerFn({ method: "POST" }).middleware([
+const adminActionFn = createServerFn({ method: "POST" }).middleware([
 	adminMiddleware,
 ]);
 
-export const createAdminEventServer = protectedActionFn
+export const createAdminEventServer = adminActionFn
 	.inputValidator((input: unknown) => createEventSchema.parse(input))
 	.handler(async ({ data }) => createEvent(data));
 
-export const updateAdminEventServer = protectedActionFn
+export const updateAdminEventServer = adminActionFn
 	.inputValidator((input: unknown) => updateEventSchema.parse(input))
 	.handler(async ({ data }) => {
 		const event = await withDomainErrors(() => updateEvent(data));
 		if (!event) {
-			throw new Error("NOT_FOUND");
+			throw appError("NOT_FOUND");
 		}
 		return event;
 	});
 
-export const deleteAdminEventServer = protectedActionFn
+export const deleteAdminEventServer = adminActionFn
 	.inputValidator((input: unknown) => deleteByIdSchema.parse(input))
 	.handler(async ({ data }) => {
 		const event = await deleteEvent(data.id);
 		if (!event) {
-			throw new Error("NOT_FOUND");
+			throw appError("NOT_FOUND");
 		}
 		return event;
 	});
 
-export const createAdminEventTypeServer = protectedActionFn
+export const createAdminEventTypeServer = adminActionFn
 	.inputValidator((input: unknown) => createLookupSchema.parse(input))
 	.handler(async ({ data }) => createEventType(data));
 
-export const updateAdminEventTypeServer = protectedActionFn
+export const updateAdminEventTypeServer = adminActionFn
 	.inputValidator((input: unknown) => updateLookupSchema.parse(input))
 	.handler(async ({ data }) => {
 		const row = await updateEventType(data);
 		if (!row) {
-			throw new Error("NOT_FOUND");
+			throw appError("NOT_FOUND");
 		}
 		return row;
 	});
 
-export const deleteAdminEventTypeServer = protectedActionFn
+export const deleteAdminEventTypeServer = adminActionFn
 	.inputValidator((input: unknown) => deleteByIdSchema.parse(input))
 	.handler(async ({ data }) => {
 		const row = await deleteEventType(data.id);
 		if (!row) {
-			throw new Error("NOT_FOUND");
+			throw appError("NOT_FOUND");
 		}
 		return row;
 	});
 
-export const createAdminEventLocationServer = protectedActionFn
+export const createAdminEventLocationServer = adminActionFn
 	.inputValidator((input: unknown) => createLookupSchema.parse(input))
 	.handler(async ({ data }) => createEventLocation(data));
 
-export const updateAdminEventLocationServer = protectedActionFn
+export const updateAdminEventLocationServer = adminActionFn
 	.inputValidator((input: unknown) => updateLookupSchema.parse(input))
 	.handler(async ({ data }) => {
 		const row = await updateEventLocation(data);
 		if (!row) {
-			throw new Error("NOT_FOUND");
+			throw appError("NOT_FOUND");
 		}
 		return row;
 	});
 
-export const deleteAdminEventLocationServer = protectedActionFn
+export const deleteAdminEventLocationServer = adminActionFn
 	.inputValidator((input: unknown) => deleteByIdSchema.parse(input))
 	.handler(async ({ data }) => {
 		const row = await deleteEventLocation(data.id);
 		if (!row) {
-			throw new Error("NOT_FOUND");
+			throw appError("NOT_FOUND");
 		}
 		return row;
 	});
 
-export const createAdminEventFacultyServer = protectedActionFn
+export const createAdminEventFacultyServer = adminActionFn
 	.inputValidator((input: unknown) => createLookupSchema.parse(input))
 	.handler(async ({ data }) => createEventFaculty(data));
 
-export const updateAdminEventFacultyServer = protectedActionFn
+export const updateAdminEventFacultyServer = adminActionFn
 	.inputValidator((input: unknown) => updateLookupSchema.parse(input))
 	.handler(async ({ data }) => {
 		const row = await updateEventFaculty(data);
 		if (!row) {
-			throw new Error("NOT_FOUND");
+			throw appError("NOT_FOUND");
 		}
 		return row;
 	});
 
-export const deleteAdminEventFacultyServer = protectedActionFn
+export const deleteAdminEventFacultyServer = adminActionFn
 	.inputValidator((input: unknown) => deleteByIdSchema.parse(input))
 	.handler(async ({ data }) => {
 		const row = await deleteEventFaculty(data.id);
 		if (!row) {
-			throw new Error("NOT_FOUND");
+			throw appError("NOT_FOUND");
 		}
 		return row;
 	});
 
-export const createAdminAgendaItemServer = protectedActionFn
+export const createAdminAgendaItemServer = adminActionFn
 	.inputValidator((input: unknown) => createAgendaItemSchema.parse(input))
 	.handler(async ({ data }) => withDomainErrors(() => createAgendaItem(data)));
 
-export const updateAdminAgendaItemServer = protectedActionFn
+export const updateAdminAgendaItemServer = adminActionFn
 	.inputValidator((input: unknown) => updateAgendaItemSchema.parse(input))
 	.handler(async ({ data }) => {
 		const { id, ...values } = data;
 		const item = await withDomainErrors(() => updateAgendaItem(id, values));
 		if (!item) {
-			throw new Error("NOT_FOUND");
+			throw appError("NOT_FOUND");
 		}
 		return item;
 	});
 
-export const deleteAdminAgendaItemServer = protectedActionFn
+export const deleteAdminAgendaItemServer = adminActionFn
 	.inputValidator((input: unknown) => deleteByIdSchema.parse(input))
 	.handler(async ({ data }) => {
 		const item = await deleteAgendaItem(data.id);
 		if (!item) {
-			throw new Error("NOT_FOUND");
+			throw appError("NOT_FOUND");
 		}
 		return item;
 	});

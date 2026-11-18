@@ -9,7 +9,7 @@ import {
 	updateGroup,
 } from "@repo/db/queries/groups";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
-import { enqueueInvitationEmails, warmUpJobQueue } from "@repo/jobs/client";
+import { enqueueInvitationEmails } from "@repo/jobs/client";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeaders } from "@tanstack/react-start/server";
 import { authMiddleware } from "../auth/middleware";
@@ -17,10 +17,7 @@ import { withDomainErrors } from "../errors";
 import { getClientIp } from "../security/client-ip";
 import { assertEmailsAllowed } from "../security/email-policy";
 import { consumeRateLimit } from "../security/rate-limit";
-import {
-	JOIN_GROUP_LIMIT,
-	joinGroupRateKey,
-} from "../security/rate-limit-keys";
+import { JOIN_GROUP_LIMIT, joinGroupRateKey } from "../security/rate-limits";
 import { assertTurnstile } from "../security/turnstile";
 import {
 	createGroupSchema,
@@ -56,7 +53,6 @@ export const createGroupServer = protectedActionFn
 	.inputValidator(createGroupSchema)
 	.handler(async ({ data, context }) => {
 		await assertEmailsAllowed(data.emails);
-		await warmUpJobQueue();
 		const result = await withDomainErrors(() =>
 			createGroup({ ...data, ownerUserId: context.user.id }, invitationHooks()),
 		);
@@ -67,7 +63,6 @@ export const inviteToGroupServer = protectedActionFn
 	.inputValidator(inviteToGroupSchema)
 	.handler(async ({ data, context }) => {
 		await assertEmailsAllowed(data.emails);
-		await warmUpJobQueue();
 		const refs = await withDomainErrors(() =>
 			inviteToGroup(
 				data.groupId,
@@ -83,7 +78,6 @@ export const inviteToGroupServer = protectedActionFn
 export const resendInvitationServer = protectedActionFn
 	.inputValidator(memberIdSchema)
 	.handler(async ({ data, context }) => {
-		await warmUpJobQueue();
 		await withDomainErrors(() =>
 			resendInvitation(
 				data.memberId,
@@ -152,7 +146,6 @@ export const joinGroupServer = createServerFn({ method: "POST" })
 			ip === "unknown" ? undefined : ip,
 		);
 		await assertEmailsAllowed([data.email]);
-		await warmUpJobQueue();
 		const ref = await withDomainErrors(() =>
 			joinGroup(data.code, data.email, invitationHooks()),
 		);

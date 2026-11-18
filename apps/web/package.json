@@ -34,7 +34,8 @@
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "sonner": "^2.0.7",
-    "zod": "^4.3.6"
+    "zod": "^4.3.6",
+    "@repo/jobs": "workspace:*"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.13",

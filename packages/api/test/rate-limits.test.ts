@@ -4,7 +4,7 @@ import {
 	invitationAcceptRateKey,
 	JOIN_GROUP_LIMIT,
 	joinGroupRateKey,
-} from "../src/security/rate-limit-keys";
+} from "../src/security/rate-limits";
 
 describe("rate limit keys", () => {
 	it("invitation accept is limited per token, not per IP (a class shares one IP)", () => {

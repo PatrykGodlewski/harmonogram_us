@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import type { RateLimit } from "./rate-limit";
 
 const FIFTEEN_MINUTES = 15 * 60;
 
@@ -7,7 +8,7 @@ const FIFTEEN_MINUTES = 15 * 60;
  * one school IP, and tokens are 256-bit random values, so per-IP limits would
  * block real students without adding protection.
  */
-export const INVITATION_ACCEPT_LIMIT = {
+export const INVITATION_ACCEPT_LIMIT: RateLimit = {
 	points: 10,
 	durationSeconds: FIFTEEN_MINUTES,
 };
@@ -17,7 +18,7 @@ export function invitationAcceptRateKey(token: string): string {
 }
 
 /** Joining by link: a class of students shares one IP; Turnstile guards abuse. */
-export const JOIN_GROUP_LIMIT = {
+export const JOIN_GROUP_LIMIT: RateLimit = {
 	points: 100,
 	durationSeconds: FIFTEEN_MINUTES,
 };
@@ -25,3 +26,20 @@ export const JOIN_GROUP_LIMIT = {
 export function joinGroupRateKey(ip: string, joinCode: string): string {
 	return `${ip}:${joinCode}`;
 }
+
+/** Auth endpoints: per IP + email, blocked for the window once exhausted. */
+export const SIGN_IN_LIMIT: RateLimit = {
+	points: 10,
+	durationSeconds: FIFTEEN_MINUTES,
+	blockDurationSeconds: FIFTEEN_MINUTES,
+};
+export const SIGN_UP_LIMIT: RateLimit = {
+	points: 6,
+	durationSeconds: FIFTEEN_MINUTES,
+	blockDurationSeconds: FIFTEEN_MINUTES,
+};
+export const MAGIC_LINK_LIMIT: RateLimit = {
+	points: 6,
+	durationSeconds: FIFTEEN_MINUTES,
+	blockDurationSeconds: FIFTEEN_MINUTES,
+};

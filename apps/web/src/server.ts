@@ -1,3 +1,14 @@
+import { warmUpJobQueue } from "@repo/jobs/client";
+
+// Start the pg-boss producer with the server, not inside the first request's
+// transaction. If it fails here, the first enqueue starts it lazily instead.
+void warmUpJobQueue().catch((error: unknown) => {
+	console.error(
+		"[jobs] pg-boss start-up failed; will retry on first enqueue",
+		error,
+	);
+});
+
 export default {
 	async fetch(request: Request) {
 		const [{ paraglideMiddleware }, { default: startHandler }] =

@@ -1,4 +1,5 @@
 import { env } from "@repo/env";
+import { appError } from "../errors";
 
 /** Verifies a Cloudflare Turnstile token. Skipped when no secret is configured. */
 export async function assertTurnstile(
@@ -9,7 +10,7 @@ export async function assertTurnstile(
 		return;
 	}
 	if (!token) {
-		throw new Error("CAPTCHA_REQUIRED");
+		throw appError("CAPTCHA_REQUIRED");
 	}
 	const body = new URLSearchParams({
 		secret: env.TURNSTILE_SECRET_KEY,
@@ -26,6 +27,6 @@ export async function assertTurnstile(
 		success?: boolean;
 	} | null;
 	if (!result?.success) {
-		throw new Error("CAPTCHA_FAILED");
+		throw appError("CAPTCHA_FAILED");
 	}
 }

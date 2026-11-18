@@ -6,6 +6,7 @@ import {
 import type { QueryClient } from "@tanstack/react-query";
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
+import { appError } from "../errors";
 import type { EventFiltersParams } from "./schemas";
 import { eventFiltersSchema, eventIdSchema } from "./schemas";
 
@@ -48,7 +49,7 @@ export const fetchEventDetailsServer = createServerFn({ method: "GET" })
 	.handler(async ({ data }) => {
 		const event = await getEventById(data.eventId);
 		if (!event) {
-			throw new Error("EVENT_NOT_FOUND");
+			throw appError("EVENT_NOT_FOUND");
 		}
 		return event;
 	});

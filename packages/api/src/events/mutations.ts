@@ -7,8 +7,9 @@ import {
 } from "@repo/db/queries/event-registrations";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { authMiddleware } from "../auth/middleware";
 import { getCurrentSession } from "../auth/user";
-import { withDomainErrors } from "../errors";
+import { appError, withDomainErrors } from "../errors";
 import { agendaItemIdSchema } from "./schemas";
 
 export const registerForEventInputSchema = z.object({
@@ -30,7 +31,7 @@ export const registerForEventServer = createServerFn({ method: "POST" })
 	.handler(async ({ data }) => {
 		const session = await getCurrentSession();
 		if (!session?.user) {
-			throw new Error("UNAUTHORIZED");
+			throw appError("UNAUTHORIZED");
 		}
 
 		try {
@@ -48,7 +49,7 @@ export const unregisterFromEventServer = createServerFn({ method: "POST" })
 	.handler(async ({ data }) => {
 		const session = await getCurrentSession();
 		if (!session?.user) {
-			throw new Error("UNAUTHORIZED");
+			throw appError("UNAUTHORIZED");
 		}
 
 		try {
@@ -61,28 +62,22 @@ export const unregisterFromEventServer = createServerFn({ method: "POST" })
 		}
 	});
 
-async function requireUserId(): Promise<string> {
-	const session = await getCurrentSession();
-	if (!session?.user) {
-		throw new Error("UNAUTHORIZED");
-	}
-	return session.user.id;
-}
+const protectedActionFn = createServerFn({ method: "POST" }).middleware([
+	authMiddleware,
+]);
 
-export const registerForAgendaItemServer = createServerFn({ method: "POST" })
+export const registerForAgendaItemServer = protectedActionFn
 	.inputValidator(agendaItemIdSchema)
-	.handler(async ({ data }) => {
-		const userId = await requireUserId();
-		return withDomainErrors(() =>
-			registerForAgendaItem(data.agendaItemId, userId),
-		);
-	});
+	.handler(async ({ data, context }) =>
+		withDomainErrors(() =>
+			registerForAgendaItem(data.agendaItemId, context.user.id),
+		),
+	);
 
-export const unregisterFromAgendaItemServer = createServerFn({ method: "POST" })
+export const unregisterFromAgendaItemServer = protectedActionFn
 	.inputValidator(agendaItemIdSchema)
-	.handler(async ({ data }) => {
-		const userId = await requireUserId();
-		return withDomainErrors(() =>
-			unregisterFromAgendaItem(data.agendaItemId, userId),
-		);
-	});
+	.handler(async ({ data, context }) =>
+		withDomainErrors(() =>
+			unregisterFromAgendaItem(data.agendaItemId, context.user.id),
+		),
+	);

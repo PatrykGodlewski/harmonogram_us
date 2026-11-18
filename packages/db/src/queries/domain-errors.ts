@@ -1,26 +1,57 @@
 /** Domain error codes thrown by queries; the API passes them to the UI as `Error(code)`. */
-export type DomainErrorCode =
-	| "EVENT_NOT_FOUND"
-	| "EVENT_FULL"
-	| "EVENT_ENDED"
-	| "ALREADY_REGISTERED"
-	| "NOT_REGISTERED"
-	| "ITEM_NOT_FOUND"
-	| "ITEM_FULL"
-	| "ITEM_NOT_REGISTRABLE"
-	| "ITEM_ENDED"
-	| "ITEM_LIMIT_ABOVE_EVENT"
-	| "END_BEFORE_START"
-	| "GROUP_PLACES_UNAVAILABLE"
-	| "GROUP_FULL"
-	| "GROUP_CLOSED"
-	| "GROUP_DEADLINE_PASSED"
-	| "GROUP_NOT_FOUND"
-	| "NOT_GROUP_OWNER"
-	| "INVITATION_INVALID"
-	| "EMAIL_NOT_VERIFIED"
-	| "ITEM_NOT_IN_GROUP"
-	| "MAX_SEATS_BELOW_REGISTERED";
+export const DOMAIN_ERROR_CODES = [
+	"EVENT_NOT_FOUND",
+	"EVENT_FULL",
+	"EVENT_ENDED",
+	"ALREADY_REGISTERED",
+	"NOT_REGISTERED",
+	"ITEM_NOT_FOUND",
+	"ITEM_FULL",
+	"ITEM_NOT_REGISTRABLE",
+	"ITEM_ENDED",
+	"ITEM_LIMIT_ABOVE_EVENT",
+	"END_BEFORE_START",
+	"GROUP_PLACES_UNAVAILABLE",
+	"GROUP_FULL",
+	"GROUP_CLOSED",
+	"GROUP_DEADLINE_PASSED",
+	"GROUP_NOT_FOUND",
+	"NOT_GROUP_OWNER",
+	"INVITATION_INVALID",
+	"EMAIL_NOT_VERIFIED",
+	"ITEM_NOT_IN_GROUP",
+	"MAX_SEATS_BELOW_REGISTERED",
+] as const;
+
+export type DomainErrorCode = (typeof DOMAIN_ERROR_CODES)[number];
+
+/** Codes raised outside the database layer (auth, permissions, abuse protection, input policy). */
+export const TRANSPORT_ERROR_CODES = [
+	"UNAUTHORIZED",
+	"FORBIDDEN",
+	"NOT_FOUND",
+	"RATE_LIMITED",
+	"CAPTCHA_REQUIRED",
+	"CAPTCHA_FAILED",
+	"EMAIL_NOT_ALLOWED",
+] as const;
+
+export type TransportErrorCode = (typeof TRANSPORT_ERROR_CODES)[number];
+
+/**
+ * Every error code the API sends to clients (as `Error(code)`). This module has
+ * no imports so the UI can use it to map codes to messages.
+ */
+export type AppErrorCode = DomainErrorCode | TransportErrorCode;
+
+const APP_ERROR_CODES: ReadonlySet<string> = new Set([
+	...DOMAIN_ERROR_CODES,
+	...TRANSPORT_ERROR_CODES,
+]);
+
+export function isAppErrorCode(value: unknown): value is AppErrorCode {
+	return typeof value === "string" && APP_ERROR_CODES.has(value);
+}
 
 export class DomainError extends Error {
 	constructor(
