@@ -1,9 +1,6 @@
 import { getLocale } from "@repo/i18n/paraglide/runtime";
+import { formatWarsawDate } from "@repo/ui/time";
 
 export function formatEventDate(date: Date | string) {
-	return new Date(date).toLocaleDateString(getLocale(), {
-		year: "numeric",
-		month: "short",
-		day: "numeric",
-	});
+	return formatWarsawDate(date, getLocale());
 }
