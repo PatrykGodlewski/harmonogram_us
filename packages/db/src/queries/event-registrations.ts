@@ -1,5 +1,5 @@
 import { and, asc, eq, max, sql } from "drizzle-orm";
-import { db } from "../client";
+import { type DbExecutor, db, type TransactionClient } from "../client";
 import { agendaItemRegistrations, agendaItems } from "../schema/agenda";
 import { authUsers } from "../schema/better-auth";
 import {
@@ -8,114 +8,15 @@ import {
 } from "../schema/event-registrations";
 import { events } from "../schema/events";
 import { registrationGroups } from "../schema/groups";
+import {
+	DomainError,
+	mapConstraintError,
+	REGISTRATION_ERRORS,
+} from "./domain-errors";
 import { getCurrentTxId } from "./txid";
 
-export type RegistrationErrorCode =
-	| "EVENT_NOT_FOUND"
-	| "EVENT_FULL"
-	| "EVENT_ENDED"
-	| "ALREADY_REGISTERED"
-	| "NOT_REGISTERED"
-	| "ITEM_NOT_FOUND"
-	| "ITEM_FULL"
-	| "ITEM_NOT_REGISTRABLE"
-	| "ITEM_ENDED"
-	| "ITEM_LIMIT_ABOVE_EVENT"
-	| "END_BEFORE_START"
-	| "GROUP_PLACES_UNAVAILABLE"
-	| "GROUP_FULL"
-	| "GROUP_CLOSED"
-	| "GROUP_DEADLINE_PASSED"
-	| "GROUP_NOT_FOUND"
-	| "NOT_GROUP_OWNER"
-	| "INVITATION_INVALID"
-	| "EMAIL_NOT_VERIFIED"
-	| "ITEM_NOT_IN_GROUP"
-	| "MAX_SEATS_BELOW_REGISTERED";
-
-export class EventRegistrationError extends Error {
-	constructor(
-		readonly code: RegistrationErrorCode,
-		message: string = code,
-	) {
-		super(message);
-		this.name = "EventRegistrationError";
-	}
-}
-
-type DbClient = typeof db;
-export type TransactionClient = Parameters<
-	Parameters<DbClient["transaction"]>[0]
->[0];
-
-const EVENT_SEATS_CONSTRAINT = "event_seat_counts_seats_remaining_nonnegative";
-const ITEM_SEATS_CONSTRAINT =
-	"agenda_item_seat_counts_seats_remaining_nonnegative";
-const ITEM_TIMES_CONSTRAINT = "agenda_items_ends_after_starts";
-const ITEM_EVENT_FK = "agenda_items_event_id_events_id_fk";
-
-type PgErrorFields = { code?: string; constraint_name?: string };
-
-function findPgError(error: unknown): PgErrorFields | null {
-	let current: unknown = error;
-	while (current && typeof current === "object") {
-		if ("constraint_name" in current || "severity" in current) {
-			return current as PgErrorFields;
-		}
-		current = (current as { cause?: unknown }).cause;
-	}
-	return null;
-}
-
-/**
- * Translates database constraint violations into domain errors.
- * `context` decides what a seat CHECK means: a registration that would
- * oversell (`register`) or a capacity edit below the registered count
- * (`capacity`). Rethrows anything it doesn't recognise.
- */
-export function mapConstraintError(
-	error: unknown,
-	context: "register" | "capacity" | "group",
-): never {
-	if (error instanceof EventRegistrationError) {
-		throw error;
-	}
-
-	const pg = findPgError(error);
-	if (pg?.code === "23514" && pg.constraint_name === ITEM_TIMES_CONSTRAINT) {
-		throw new EventRegistrationError("END_BEFORE_START");
-	}
-	if (pg?.code === "23503" && pg.constraint_name === ITEM_EVENT_FK) {
-		throw new EventRegistrationError("EVENT_NOT_FOUND");
-	}
-	if (
-		pg?.code === "23514" &&
-		context === "group" &&
-		(pg.constraint_name === EVENT_SEATS_CONSTRAINT ||
-			pg.constraint_name === ITEM_SEATS_CONSTRAINT)
-	) {
-		throw new EventRegistrationError("GROUP_PLACES_UNAVAILABLE");
-	}
-	if (pg?.code === "23514") {
-		if (context === "capacity") {
-			throw new EventRegistrationError("MAX_SEATS_BELOW_REGISTERED");
-		}
-		if (pg.constraint_name === EVENT_SEATS_CONSTRAINT) {
-			throw new EventRegistrationError("EVENT_FULL");
-		}
-		if (pg.constraint_name === ITEM_SEATS_CONSTRAINT) {
-			throw new EventRegistrationError("ITEM_FULL");
-		}
-	}
-	if (pg?.code === "23505" && context === "register") {
-		throw new EventRegistrationError("ALREADY_REGISTERED");
-	}
-
-	throw error;
-}
-
 export async function getEffectiveEventEnd(
-	tx: TransactionClient | DbClient,
+	tx: DbExecutor,
 	eventId: string,
 ): Promise<Date | null> {
 	const [row] = await tx
@@ -144,7 +45,7 @@ export async function getEffectiveEventEnd(
 export async function assertEventOpen(tx: TransactionClient, eventId: string) {
 	const end = await getEffectiveEventEnd(tx, eventId);
 	if (end && end.getTime() <= Date.now()) {
-		throw new EventRegistrationError("EVENT_ENDED");
+		throw new DomainError("EVENT_ENDED");
 	}
 }
 
@@ -177,7 +78,7 @@ async function insertEventRegistration(
 		.where(eq(eventSeatCounts.eventId, eventId));
 
 	if (count && count.seatsRemaining <= 0) {
-		throw new EventRegistrationError("EVENT_FULL");
+		throw new DomainError("EVENT_FULL");
 	}
 
 	const id = crypto.randomUUID();
@@ -198,19 +99,19 @@ export async function registerForEvent(eventId: string, userId: string) {
 	try {
 		return await db.transaction(async (tx) => {
 			if (!(await lockEvent(tx, eventId))) {
-				throw new EventRegistrationError("EVENT_NOT_FOUND");
+				throw new DomainError("EVENT_NOT_FOUND");
 			}
 			await assertEventOpen(tx, eventId);
 
 			if (await findEventRegistrationId(tx, eventId, userId)) {
-				throw new EventRegistrationError("ALREADY_REGISTERED");
+				throw new DomainError("ALREADY_REGISTERED");
 			}
 
 			await insertEventRegistration(tx, eventId, userId);
 			return { txid: await getCurrentTxId(tx) };
 		});
 	} catch (error) {
-		mapConstraintError(error, "register");
+		mapConstraintError(error, REGISTRATION_ERRORS);
 	}
 }
 
@@ -226,7 +127,7 @@ export async function registerForAgendaItem(
 				.from(agendaItems)
 				.where(eq(agendaItems.id, itemId));
 			if (!peek) {
-				throw new EventRegistrationError("ITEM_NOT_FOUND");
+				throw new DomainError("ITEM_NOT_FOUND");
 			}
 			await lockEvent(tx, peek.eventId);
 			const [item] = await tx
@@ -242,16 +143,16 @@ export async function registerForAgendaItem(
 				.for("update");
 
 			if (!item) {
-				throw new EventRegistrationError("ITEM_NOT_FOUND");
+				throw new DomainError("ITEM_NOT_FOUND");
 			}
 			if (!item.requiresRegistration) {
-				throw new EventRegistrationError("ITEM_NOT_REGISTRABLE");
+				throw new DomainError("ITEM_NOT_REGISTRABLE");
 			}
 
 			await assertEventOpen(tx, item.eventId);
 
 			if (item.endsAt.getTime() <= Date.now()) {
-				throw new EventRegistrationError("ITEM_ENDED");
+				throw new DomainError("ITEM_ENDED");
 			}
 
 			const [existing] = await tx
@@ -264,7 +165,7 @@ export async function registerForAgendaItem(
 					),
 				);
 			if (existing) {
-				throw new EventRegistrationError("ALREADY_REGISTERED");
+				throw new DomainError("ALREADY_REGISTERED");
 			}
 
 			let eventRegistrationId = await findEventRegistrationId(
@@ -287,7 +188,7 @@ export async function registerForAgendaItem(
 					.from(agendaItemRegistrations)
 					.where(eq(agendaItemRegistrations.agendaItemId, itemId));
 				if ((registered?.n ?? 0) >= item.maxSeats) {
-					throw new EventRegistrationError("ITEM_FULL");
+					throw new DomainError("ITEM_FULL");
 				}
 			}
 
@@ -301,7 +202,7 @@ export async function registerForAgendaItem(
 			return { txid: await getCurrentTxId(tx), eventRegistered };
 		});
 	} catch (error) {
-		mapConstraintError(error, "register");
+		mapConstraintError(error, REGISTRATION_ERRORS);
 	}
 }
 
@@ -321,7 +222,7 @@ export async function unregisterFromAgendaItem(
 			.returning({ id: agendaItemRegistrations.id });
 
 		if (!deleted) {
-			throw new EventRegistrationError("NOT_REGISTERED");
+			throw new DomainError("NOT_REGISTERED");
 		}
 
 		return { txid: await getCurrentTxId(tx) };
@@ -332,7 +233,7 @@ export async function unregisterFromEvent(eventId: string, userId: string) {
 	return db.transaction(async (tx) => {
 		const existingId = await findEventRegistrationId(tx, eventId, userId);
 		if (!existingId) {
-			throw new EventRegistrationError("NOT_REGISTERED");
+			throw new DomainError("NOT_REGISTERED");
 		}
 
 		// Item registrations cascade via event_registration_id.

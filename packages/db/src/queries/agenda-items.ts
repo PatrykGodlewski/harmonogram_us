@@ -1,12 +1,13 @@
 import { asc, eq } from "drizzle-orm";
-import { db } from "../client";
+import { type DbExecutor, db, type TransactionClient } from "../client";
 import { agendaItemSeatCounts, agendaItems } from "../schema/agenda";
 import { eventLocations } from "../schema/event-lookups";
 import { events } from "../schema/events";
 import {
-	EventRegistrationError,
+	CAPACITY_EDIT_ERRORS,
+	DomainError,
 	mapConstraintError,
-} from "./event-registrations";
+} from "./domain-errors";
 
 export type AgendaItem = {
 	id: string;
@@ -34,10 +35,7 @@ export type AgendaItemInput = {
 	requiresRegistration?: boolean;
 };
 
-type DbClient = typeof db;
-type TransactionClient = Parameters<Parameters<DbClient["transaction"]>[0]>[0];
-
-function selectAgendaItems(client: DbClient | TransactionClient) {
+function selectAgendaItems(client: DbExecutor) {
 	return client
 		.select({
 			id: agendaItems.id,
@@ -73,7 +71,7 @@ export async function listAgendaItems(eventId: string): Promise<AgendaItem[]> {
 }
 
 async function getAgendaItem(
-	client: DbClient | TransactionClient,
+	client: DbExecutor,
 	id: string,
 ): Promise<AgendaItem | null> {
 	const [row] = await selectAgendaItems(client).where(eq(agendaItems.id, id));
@@ -93,7 +91,7 @@ async function assertWithinEventLimit(
 		.from(events)
 		.where(eq(events.id, eventId));
 	if (event && maxSeats > event.maxSeats) {
-		throw new EventRegistrationError("ITEM_LIMIT_ABOVE_EVENT");
+		throw new DomainError("ITEM_LIMIT_ABOVE_EVENT");
 	}
 }
 
@@ -123,7 +121,7 @@ export async function createAgendaItem(
 			return item;
 		});
 	} catch (error) {
-		mapConstraintError(error, "capacity");
+		mapConstraintError(error, CAPACITY_EDIT_ERRORS);
 	}
 }
 
@@ -148,7 +146,7 @@ export async function updateAgendaItem(
 			return getAgendaItem(tx, id);
 		});
 	} catch (error) {
-		mapConstraintError(error, "capacity");
+		mapConstraintError(error, CAPACITY_EDIT_ERRORS);
 	}
 }
 

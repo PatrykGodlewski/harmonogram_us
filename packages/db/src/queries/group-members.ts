@@ -1,5 +1,5 @@
 import { and, eq, gt, inArray, sql } from "drizzle-orm";
-import { db } from "../client";
+import { type DbExecutor, db, type TransactionClient } from "../client";
 import { agendaItemRegistrations, agendaItems } from "../schema/agenda";
 import { authUsers } from "../schema/better-auth";
 import { eventRegistrations } from "../schema/event-registrations";
@@ -11,10 +11,10 @@ import {
 	registrationGroups,
 } from "../schema/groups";
 import {
-	EventRegistrationError,
+	DomainError,
 	mapConstraintError,
-	type TransactionClient,
-} from "./event-registrations";
+	REGISTRATION_ERRORS,
+} from "./domain-errors";
 import { createInvitationToken, hashToken } from "./group-tokens";
 import type { ActorOptions, PublicGroupInfo } from "./groups";
 import { getCurrentTxId } from "./txid";
@@ -22,17 +22,14 @@ import { getCurrentTxId } from "./txid";
 type Member = typeof registrationGroupMembers.$inferSelect;
 type Group = typeof registrationGroups.$inferSelect;
 
-async function deadlineOf(tx: TransactionClient | typeof db, eventId: string) {
+async function deadlineOf(tx: DbExecutor, eventId: string) {
 	const [row] = await tx.execute<{ deadline: string }>(
 		sql`SELECT group_deadline(${eventId})::text AS deadline`,
 	);
 	return new Date(row?.deadline ?? 0);
 }
 
-async function isPastDeadline(
-	tx: TransactionClient | typeof db,
-	eventId: string,
-) {
+async function isPastDeadline(tx: DbExecutor, eventId: string) {
 	return (await deadlineOf(tx, eventId)).getTime() <= Date.now();
 }
 
@@ -74,12 +71,12 @@ async function lockMemberAndGroup(
 
 function assertOwner(group: Group, actorUserId: string, opts?: ActorOptions) {
 	if (group.ownerUserId !== actorUserId && !opts?.actorIsAdmin) {
-		throw new EventRegistrationError("NOT_GROUP_OWNER");
+		throw new DomainError("NOT_GROUP_OWNER");
 	}
 }
 
 async function memberItemIds(
-	tx: TransactionClient | typeof db,
+	tx: DbExecutor,
 	memberId: string,
 ): Promise<string[]> {
 	const rows = await tx
@@ -166,11 +163,11 @@ export async function acceptInvitation(
 				tokenHash: hashToken(token),
 			});
 			if (!locked || locked.member.status !== "invited") {
-				throw new EventRegistrationError("INVITATION_INVALID");
+				throw new DomainError("INVITATION_INVALID");
 			}
 			const { member, group } = locked;
 			if (group.status !== "open") {
-				throw new EventRegistrationError("GROUP_CLOSED");
+				throw new DomainError("GROUP_CLOSED");
 			}
 			await tx
 				.select({ id: events.id })
@@ -178,7 +175,7 @@ export async function acceptInvitation(
 				.where(eq(events.id, group.eventId))
 				.for("update");
 			if (await isPastDeadline(tx, group.eventId)) {
-				throw new EventRegistrationError("GROUP_DEADLINE_PASSED");
+				throw new DomainError("GROUP_DEADLINE_PASSED");
 			}
 
 			// Confirm first so the held place is released before the registration takes it.
@@ -235,7 +232,7 @@ export async function acceptInvitation(
 			return { eventId: group.eventId, txid: await getCurrentTxId(tx) };
 		});
 	} catch (error) {
-		mapConstraintError(error, "register");
+		mapConstraintError(error, REGISTRATION_ERRORS);
 	}
 }
 
@@ -288,7 +285,7 @@ export async function removeMember(
 	return db.transaction(async (tx) => {
 		const locked = await lockMemberAndGroup(tx, { id: memberId });
 		if (!locked) {
-			throw new EventRegistrationError("GROUP_NOT_FOUND");
+			throw new DomainError("GROUP_NOT_FOUND");
 		}
 		assertOwner(locked.group, actorUserId, opts);
 		if (locked.member.eventRegistrationId) {
@@ -316,7 +313,7 @@ export async function setMemberItems(
 		return await db.transaction(async (tx) => {
 			const locked = await lockMemberAndGroup(tx, { id: memberId });
 			if (!locked) {
-				throw new EventRegistrationError("GROUP_NOT_FOUND");
+				throw new DomainError("GROUP_NOT_FOUND");
 			}
 			const { member, group } = locked;
 			assertOwner(group, actorUserId, opts);
@@ -330,7 +327,7 @@ export async function setMemberItems(
 				).map((row) => row.id),
 			);
 			if (next.some((id) => !allowed.has(id))) {
-				throw new EventRegistrationError("ITEM_NOT_IN_GROUP");
+				throw new DomainError("ITEM_NOT_IN_GROUP");
 			}
 
 			const previous = await memberItemIds(tx, member.id);
@@ -381,7 +378,7 @@ export async function setMemberItems(
 			return { txid: await getCurrentTxId(tx) };
 		});
 	} catch (error) {
-		mapConstraintError(error, "register");
+		mapConstraintError(error, REGISTRATION_ERRORS);
 	}
 }
 

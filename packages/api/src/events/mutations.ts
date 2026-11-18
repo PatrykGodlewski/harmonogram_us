@@ -1,5 +1,5 @@
+import { DomainError } from "@repo/db/queries/domain-errors";
 import {
-	EventRegistrationError,
 	registerForAgendaItem,
 	registerForEvent,
 	unregisterFromAgendaItem,
@@ -36,7 +36,7 @@ export const registerForEventServer = createServerFn({ method: "POST" })
 		try {
 			return await registerForEvent(data.eventId, session.user.id);
 		} catch (error) {
-			if (error instanceof EventRegistrationError) {
+			if (error instanceof DomainError) {
 				throw new Error(error.code);
 			}
 			throw error;
@@ -54,7 +54,7 @@ export const unregisterFromEventServer = createServerFn({ method: "POST" })
 		try {
 			return await unregisterFromEvent(data.eventId, session.user.id);
 		} catch (error) {
-			if (error instanceof EventRegistrationError) {
+			if (error instanceof DomainError) {
 				throw new Error(error.code);
 			}
 			throw error;

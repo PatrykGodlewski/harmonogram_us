@@ -1,5 +1,5 @@
 import { resetUnverifiedAccount } from "@repo/db/queries/account-safety";
-import { EventRegistrationError } from "@repo/db/queries/event-registrations";
+import { DomainError } from "@repo/db/queries/domain-errors";
 import {
 	acceptInvitation,
 	getInvitation,
@@ -62,7 +62,7 @@ export const groupInvitation = () =>
 					try {
 						({ eventId } = await acceptInvitation(token, user.id));
 					} catch (error) {
-						if (error instanceof EventRegistrationError) {
+						if (error instanceof DomainError) {
 							throw invitationError(error.code);
 						}
 						throw error;

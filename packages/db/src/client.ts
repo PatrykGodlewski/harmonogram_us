@@ -63,3 +63,15 @@ export const db = drizzle(env.DATABASE_URL, {
 		registrationGroupMemberItems,
 	},
 });
+
+export type DbClient = typeof db;
+export type TransactionClient = Parameters<
+	Parameters<DbClient["transaction"]>[0]
+>[0];
+/** Either the pool or an open transaction. */
+export type DbExecutor = DbClient | TransactionClient;
+
+/** Closes the connection pool (scripts and tests; servers keep it open). */
+export async function closeDb(): Promise<void> {
+	await db.$client.end();
+}

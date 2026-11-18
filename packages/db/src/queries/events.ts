@@ -10,10 +10,11 @@ import { eventSeatCounts } from "../schema/event-registrations";
 import { events } from "../schema/events";
 import { type AgendaItem, listAgendaItems } from "./agenda-items";
 import {
-	EventRegistrationError,
-	getEffectiveEventEnd,
+	CAPACITY_EDIT_ERRORS,
+	DomainError,
 	mapConstraintError,
-} from "./event-registrations";
+} from "./domain-errors";
+import { getEffectiveEventEnd } from "./event-registrations";
 
 export type EventFilters = {
 	search?: string;
@@ -216,7 +217,7 @@ export async function updateEvent(input: UpdateEventInput) {
 					.from(agendaItems)
 					.where(eq(agendaItems.eventId, id));
 				if (largest?.maxSeats != null && largest.maxSeats > values.maxSeats) {
-					throw new EventRegistrationError("ITEM_LIMIT_ABOVE_EVENT");
+					throw new DomainError("ITEM_LIMIT_ABOVE_EVENT");
 				}
 			}
 			const [event] = await tx
@@ -227,7 +228,7 @@ export async function updateEvent(input: UpdateEventInput) {
 			return event ?? null;
 		});
 	} catch (error) {
-		mapConstraintError(error, "capacity");
+		mapConstraintError(error, CAPACITY_EDIT_ERRORS);
 	}
 }
 

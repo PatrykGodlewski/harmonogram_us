@@ -23,11 +23,10 @@ export const EVENT_REGISTRATION_ERROR_CODES = [
 	"UNAUTHORIZED",
 ] as const;
 
-export type EventRegistrationErrorCode =
-	(typeof EVENT_REGISTRATION_ERROR_CODES)[number];
+export type DomainErrorCode = (typeof EVENT_REGISTRATION_ERROR_CODES)[number];
 
 const REGISTRATION_ERROR_MESSAGES: Partial<
-	Record<EventRegistrationErrorCode, () => string>
+	Record<DomainErrorCode, () => string>
 > = {
 	ALREADY_REGISTERED: events_register_already,
 	EVENT_FULL: events_register_full,
@@ -39,27 +38,23 @@ const REGISTRATION_ERROR_MESSAGES: Partial<
 	ITEM_NOT_REGISTRABLE: events_item_not_registrable,
 };
 
-function isEventRegistrationErrorCode(
-	value: string,
-): value is EventRegistrationErrorCode {
+function isDomainErrorCode(value: string): value is DomainErrorCode {
 	return EVENT_REGISTRATION_ERROR_CODES.some((code) => code === value);
 }
 
-export function getRegistrationErrorCode(
-	error: unknown,
-): EventRegistrationErrorCode | null {
+export function getDomainErrorCode(error: unknown): DomainErrorCode | null {
 	if (!(error instanceof Error)) {
 		return null;
 	}
 
-	return isEventRegistrationErrorCode(error.message) ? error.message : null;
+	return isDomainErrorCode(error.message) ? error.message : null;
 }
 
 export function showRegistrationErrorToast(
 	error: unknown,
 	fallbackMessage: () => string,
 ) {
-	const code = getRegistrationErrorCode(error);
+	const code = getDomainErrorCode(error);
 	const message = code ? REGISTRATION_ERROR_MESSAGES[code]?.() : undefined;
 
 	if (message) {

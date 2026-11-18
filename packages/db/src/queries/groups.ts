@@ -1,5 +1,5 @@
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
-import { db } from "../client";
+import { type DbExecutor, db, type TransactionClient } from "../client";
 import { agendaItems } from "../schema/agenda";
 import { authUsers } from "../schema/better-auth";
 import { events } from "../schema/events";
@@ -10,11 +10,11 @@ import {
 	registrationGroups,
 } from "../schema/groups";
 import {
-	assertEventOpen,
-	EventRegistrationError,
+	DomainError,
+	GROUP_HOLD_ERRORS,
 	mapConstraintError,
-	type TransactionClient,
-} from "./event-registrations";
+} from "./domain-errors";
+import { assertEventOpen } from "./event-registrations";
 import { createInvitationToken, createJoinCode } from "./group-tokens";
 
 /** `token` is null when the member is already confirmed (nothing to send). */
@@ -95,10 +95,7 @@ export function normalizeEmails(emails: string[]): string[] {
 	];
 }
 
-async function deadlineOf(
-	client: TransactionClient | typeof db,
-	eventId: string,
-): Promise<Date> {
+async function deadlineOf(client: DbExecutor, eventId: string): Promise<Date> {
 	const [row] = await client.execute<{ deadline: string }>(
 		sql`SELECT group_deadline(${eventId})::text AS deadline`,
 	);
@@ -107,7 +104,7 @@ async function deadlineOf(
 
 async function assertBeforeDeadline(tx: TransactionClient, eventId: string) {
 	if ((await deadlineOf(tx, eventId)).getTime() <= Date.now()) {
-		throw new EventRegistrationError("GROUP_DEADLINE_PASSED");
+		throw new DomainError("GROUP_DEADLINE_PASSED");
 	}
 }
 
@@ -125,7 +122,7 @@ async function lockGroup(
 		)
 		.for("update");
 	if (!group) {
-		throw new EventRegistrationError("GROUP_NOT_FOUND");
+		throw new DomainError("GROUP_NOT_FOUND");
 	}
 	return group;
 }
@@ -136,7 +133,7 @@ function assertOwner(
 	opts: ActorOptions | undefined,
 ) {
 	if (group.ownerUserId !== actorUserId && !opts?.actorIsAdmin) {
-		throw new EventRegistrationError("NOT_GROUP_OWNER");
+		throw new DomainError("NOT_GROUP_OWNER");
 	}
 }
 
@@ -145,7 +142,7 @@ async function assertGroupAcceptsMembers(
 	group: LockedGroup,
 ) {
 	if (group.status !== "open") {
-		throw new EventRegistrationError("GROUP_CLOSED");
+		throw new DomainError("GROUP_CLOSED");
 	}
 	await assertBeforeDeadline(tx, group.eventId);
 }
@@ -173,13 +170,13 @@ async function lockEventItems(
 		.orderBy(asc(agendaItems.id))
 		.for("update");
 	if (rows.length !== unique.length) {
-		throw new EventRegistrationError("ITEM_NOT_FOUND");
+		throw new DomainError("ITEM_NOT_FOUND");
 	}
 	return unique;
 }
 
 async function groupItemIds(
-	tx: TransactionClient | typeof db,
+	tx: DbExecutor,
 	groupId: string,
 ): Promise<string[]> {
 	const rows = await tx
@@ -210,7 +207,7 @@ async function addMembers(
 	const newEmails = emails.filter((email) => !byEmail.has(email));
 
 	if (existing.length + newEmails.length > group.places) {
-		throw new EventRegistrationError("GROUP_FULL");
+		throw new DomainError("GROUP_FULL");
 	}
 
 	const defaults = await groupItemIds(tx, group.id);
@@ -277,7 +274,7 @@ export async function createGroup(
 				.from(authUsers)
 				.where(eq(authUsers.id, input.ownerUserId));
 			if (!owner?.emailVerified) {
-				throw new EventRegistrationError("EMAIL_NOT_VERIFIED");
+				throw new DomainError("EMAIL_NOT_VERIFIED");
 			}
 
 			const [event] = await tx
@@ -286,14 +283,14 @@ export async function createGroup(
 				.where(eq(events.id, input.eventId))
 				.for("update");
 			if (!event) {
-				throw new EventRegistrationError("EVENT_NOT_FOUND");
+				throw new DomainError("EVENT_NOT_FOUND");
 			}
 			await assertEventOpen(tx, input.eventId);
 			await assertBeforeDeadline(tx, input.eventId);
 			const itemIds = await lockEventItems(tx, input.eventId, input.itemIds);
 
 			if (emails.length > input.places) {
-				throw new EventRegistrationError("GROUP_FULL");
+				throw new DomainError("GROUP_FULL");
 			}
 
 			const [group] = await tx
@@ -322,7 +319,7 @@ export async function createGroup(
 			return { groupId: group.id, joinCode: group.joinCode, invited };
 		});
 	} catch (error) {
-		mapConstraintError(error, "group");
+		mapConstraintError(error, GROUP_HOLD_ERRORS);
 	}
 }
 
@@ -348,7 +345,7 @@ export async function inviteToGroup(
 			return refs;
 		});
 	} catch (error) {
-		mapConstraintError(error, "group");
+		mapConstraintError(error, GROUP_HOLD_ERRORS);
 	}
 }
 
@@ -368,13 +365,13 @@ export async function joinGroup(
 				"link",
 			);
 			if (!ref) {
-				throw new EventRegistrationError("INVITATION_INVALID");
+				throw new DomainError("INVITATION_INVALID");
 			}
 			await runInvitedHook(tx, hooks, [ref]);
 			return ref;
 		});
 	} catch (error) {
-		mapConstraintError(error, "group");
+		mapConstraintError(error, GROUP_HOLD_ERRORS);
 	}
 }
 
@@ -393,14 +390,14 @@ export async function resendInvitation(
 			.from(registrationGroupMembers)
 			.where(eq(registrationGroupMembers.id, memberId));
 		if (!member) {
-			throw new EventRegistrationError("GROUP_NOT_FOUND");
+			throw new DomainError("GROUP_NOT_FOUND");
 		}
 		const group = await lockGroup(tx, { id: member.groupId });
 		assertOwner(group, actorUserId, opts);
 		await assertGroupAcceptsMembers(tx, group);
 		const [ref] = await addMembers(tx, group, [member.email], "email");
 		if (!ref) {
-			throw new EventRegistrationError("INVITATION_INVALID");
+			throw new DomainError("INVITATION_INVALID");
 		}
 		await runInvitedHook(tx, hooks, [ref]);
 		return ref;
@@ -432,7 +429,7 @@ export async function updateGroup(
 					.from(registrationGroupMembers)
 					.where(eq(registrationGroupMembers.groupId, groupId));
 				if ((count?.n ?? 0) > patch.places) {
-					throw new EventRegistrationError("GROUP_FULL");
+					throw new DomainError("GROUP_FULL");
 				}
 				values.places = patch.places;
 			}
@@ -457,7 +454,7 @@ export async function updateGroup(
 			}
 		});
 	} catch (error) {
-		mapConstraintError(error, "group");
+		mapConstraintError(error, GROUP_HOLD_ERRORS);
 	}
 	return getGroupDetails(groupId, actorUserId, opts);
 }
@@ -502,7 +499,7 @@ async function replaceGroupItems(
 }
 
 async function memberItemMap(
-	client: TransactionClient | typeof db,
+	client: DbExecutor,
 	groupId: string,
 ): Promise<Map<string, string[]>> {
 	const rows = await client
@@ -628,10 +625,10 @@ export async function getGroupDetails(
 		eq(registrationGroups.id, groupId),
 	);
 	if (!row) {
-		throw new EventRegistrationError("GROUP_NOT_FOUND");
+		throw new DomainError("GROUP_NOT_FOUND");
 	}
 	if (row.ownerUserId !== actorUserId && !opts?.actorIsAdmin) {
-		throw new EventRegistrationError("NOT_GROUP_OWNER");
+		throw new DomainError("NOT_GROUP_OWNER");
 	}
 	const [itemIds, items, members] = await Promise.all([
 		groupItemIds(db, groupId),

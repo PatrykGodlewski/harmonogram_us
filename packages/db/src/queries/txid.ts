@@ -1,8 +1,5 @@
 import { sql } from "drizzle-orm";
-import type { db } from "../client";
-
-type DbClient = typeof db;
-type TransactionClient = Parameters<Parameters<DbClient["transaction"]>[0]>[0];
+import type { TransactionClient } from "../client";
 
 type TxidRow = {
 	txid: string;
