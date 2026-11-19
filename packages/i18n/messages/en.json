@@ -335,5 +335,6 @@
 	"event_details_view_label": "Agenda view",
 	"event_details_view_list": "List",
 	"event_details_view_calendar": "Calendar",
-	"events_show_more": "Show more"
+	"events_show_more": "Show more",
+	"agenda_now": "Now"
 }

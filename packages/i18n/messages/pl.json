@@ -335,5 +335,6 @@
 	"event_details_view_label": "Widok programu",
 	"event_details_view_list": "Lista",
 	"event_details_view_calendar": "Kalendarz",
-	"events_show_more": "Pokaż więcej"
+	"events_show_more": "Pokaż więcej",
+	"agenda_now": "Teraz"
 }

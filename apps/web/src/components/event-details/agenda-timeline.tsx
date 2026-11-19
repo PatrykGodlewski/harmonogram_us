@@ -2,12 +2,14 @@ import {
 	event_details_agenda,
 	event_details_no_agenda,
 } from "@repo/i18n/paraglide/messages";
-import { findOverlaps, markParallel } from "@repo/ui/agenda";
+import { findOverlaps, markParallel, nowListIndex } from "@repo/ui/agenda";
+import { AgendaNowDivider, useNow } from "@repo/ui/composed/agenda-now";
 import {
 	type AgendaViewMode,
 	AgendaViewToggle,
 } from "@repo/ui/composed/agenda-view-toggle";
 import { getRouteApi } from "@tanstack/react-router";
+import * as React from "react";
 import type {
 	AgendaItemData,
 	EventDetailsData,
@@ -50,6 +52,8 @@ export function AgendaTimeline({
 		});
 
 	const items = markParallel(event.agenda);
+	const now = useNow();
+	const nowIndex = now ? nowListIndex(items, now) : null;
 	const overlaps = findOverlaps(event.agenda, registrations.registeredItemIds);
 	const seatCountOf = (item: AgendaItemData) =>
 		itemCounts.getItemCount(item.id, {
@@ -95,7 +99,17 @@ export function AgendaTimeline({
 				/>
 			) : (
 				<ol className="divide-y">
-					{items.map((item) => renderRow(item, "li"))}
+					{items.map((item, index) => (
+						<React.Fragment key={item.id}>
+							{index === nowIndex && now ? (
+								<AgendaNowDivider now={now} />
+							) : null}
+							{renderRow(item, "li")}
+						</React.Fragment>
+					))}
+					{nowIndex === items.length && now ? (
+						<AgendaNowDivider now={now} />
+					) : null}
 				</ol>
 			)}
 		</section>

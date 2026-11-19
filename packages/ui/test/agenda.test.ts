@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { findOverlaps, layoutAgenda, markParallel } from "../src/agenda";
+import {
+	findOverlaps,
+	layoutAgenda,
+	markParallel,
+	nowListIndex,
+	nowMinuteOnDay,
+} from "../src/agenda";
 
 const at = (time: string) => `2026-03-14T${time}:00Z`;
 const item = (id: string, start: string, end: string) => ({
@@ -159,5 +165,36 @@ describe("layoutAgenda", () => {
 		);
 		expect([day?.startMinute, day?.endMinute]).toEqual([10 * 60, 12 * 60]);
 		expect([day?.items[0]?.startMinute, day?.items[0]?.endMinute]).toEqual([10 * 60 + 15, 11 * 60 + 40]);
+	});
+});
+
+describe("now markers", () => {
+	const TZ = "Europe/Warsaw";
+	const item = (id: string, start: string, end: string) => ({
+		id,
+		title: id,
+		startsAt: new Date(start),
+		endsAt: new Date(end),
+	});
+	const agenda = [
+		item("a", "2026-11-19T09:00:00Z", "2026-11-19T10:00:00Z"),
+		item("b", "2026-11-19T11:00:00Z", "2026-11-19T12:00:00Z"),
+	];
+
+	it("nowMinuteOnDay: minutes since midnight in the time zone, only on that day and within its hours", () => {
+		const [day] = layoutAgenda(agenda, TZ);
+		if (!day) throw new Error("no day");
+		// 09:30Z is 10:30 in Warsaw.
+		expect(nowMinuteOnDay(day, new Date("2026-11-19T09:30:00Z"), TZ)).toBe(10 * 60 + 30);
+		expect(nowMinuteOnDay(day, new Date("2026-11-20T09:30:00Z"), TZ)).toBeNull();
+		expect(nowMinuteOnDay(day, new Date("2026-11-19T05:00:00Z"), TZ)).toBeNull();
+	});
+
+	it("nowListIndex: where 'now' goes in the sorted list while the agenda runs, else null", () => {
+		expect(nowListIndex(agenda, new Date("2026-11-19T09:30:00Z"))).toBe(1);
+		expect(nowListIndex(agenda, new Date("2026-11-19T10:30:00Z"))).toBe(1);
+		expect(nowListIndex(agenda, new Date("2026-11-19T11:30:00Z"))).toBe(2);
+		expect(nowListIndex(agenda, new Date("2026-11-19T08:00:00Z"))).toBeNull();
+		expect(nowListIndex(agenda, new Date("2026-11-19T12:30:00Z"))).toBeNull();
 	});
 });

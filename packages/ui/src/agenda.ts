@@ -152,3 +152,36 @@ export function layoutAgenda<T extends AgendaTimed>(
 		};
 	});
 }
+
+/** Minutes since midnight of `now` on this agenda day, or null when now is another day or outside its hours. */
+export function nowMinuteOnDay<T>(
+	day: AgendaDay<T>,
+	now: Date,
+	timeZone: string,
+): number | null {
+	const parts = zonedParts(now, timeZone);
+	if (parts.day !== day.day) {
+		return null;
+	}
+	return parts.minute >= day.startMinute && parts.minute <= day.endMinute
+		? parts.minute
+		: null;
+}
+
+/**
+ * Where "now" goes in the agenda list sorted by start (the number of items that have
+ * started), or null when the agenda isn't running (before its first start or after its last end).
+ */
+export function nowListIndex<T extends AgendaTimed>(
+	items: T[],
+	now: Date,
+): number | null {
+	const sorted = sortByStart(items);
+	const first = sorted[0];
+	const lastEnd = Math.max(...sorted.map((item) => ms(item.endsAt)));
+	const time = now.getTime();
+	if (!first || time < ms(first.startsAt) || time > lastEnd) {
+		return null;
+	}
+	return sorted.filter((item) => ms(item.startsAt) <= time).length;
+}

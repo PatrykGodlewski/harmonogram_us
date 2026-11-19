@@ -14,9 +14,10 @@ import {
 	event_details_no_registration,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
-import { markParallel } from "@repo/ui/agenda";
+import { markParallel, nowListIndex } from "@repo/ui/agenda";
 import { Button } from "@repo/ui/components/button";
 import { AgendaCalendarGrid } from "@repo/ui/composed/agenda-calendar-grid";
+import { AgendaNowDivider, useNow } from "@repo/ui/composed/agenda-now";
 import {
 	type AgendaViewMode,
 	AgendaViewToggle,
@@ -24,7 +25,7 @@ import {
 import { formatEventTime } from "@repo/ui/time";
 import { cn } from "@repo/ui/utils";
 import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { toast } from "sonner";
 import { formatMutationError } from "../../lib/format-mutation-error";
 import { AgendaItemDialog } from "./agenda-item-dialog";
@@ -63,6 +64,8 @@ export function AgendaEditor({
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [editingItem, setEditingItem] = useState<AgendaItem | null>(null);
 	const locale = getLocale();
+	const now = useNow();
+	const nowIndex = now ? nowListIndex(agenda, now) : null;
 
 	const deleteMutation = useMutation({
 		mutationFn: (id: string) => deleteAdminAgendaItemServer({ data: { id } }),
@@ -127,42 +130,49 @@ export function AgendaEditor({
 				/>
 			) : (
 				<ol className="divide-y rounded-lg border">
-					{markParallel(agenda).map((item) => (
-						<li
-							key={item.id}
-							className={cn(
-								"flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between",
-								item.parallel && "pl-6",
-							)}
-						>
-							<div className="flex flex-col gap-0.5">
-								<p className="text-sm text-muted-foreground tabular-nums">
-									{formatEventTime(item.startsAt, locale)}–
-									{formatEventTime(item.endsAt, locale)}
-									{item.locationLabel ? ` · ${item.locationLabel}` : ""}
-								</p>
-								<p className="font-medium">{item.title}</p>
-								<p className="text-sm tabular-nums">{placesLabel(item)}</p>
-							</div>
-							<div className="flex gap-2">
-								<Button
-									size="sm"
-									variant="outline"
-									onClick={() => handleEdit(item)}
-								>
-									{admin_action_edit()}
-								</Button>
-								<Button
-									size="sm"
-									variant="outline"
-									disabled={deleteMutation.isPending}
-									onClick={() => handleDelete(item)}
-								>
-									{admin_action_delete()}
-								</Button>
-							</div>
-						</li>
+					{markParallel(agenda).map((item, index) => (
+						<Fragment key={item.id}>
+							{index === nowIndex && now ? (
+								<AgendaNowDivider now={now} />
+							) : null}
+							<li
+								className={cn(
+									"flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between",
+									item.parallel && "pl-6",
+								)}
+							>
+								<div className="flex flex-col gap-0.5">
+									<p className="text-sm text-muted-foreground tabular-nums">
+										{formatEventTime(item.startsAt, locale)}–
+										{formatEventTime(item.endsAt, locale)}
+										{item.locationLabel ? ` · ${item.locationLabel}` : ""}
+									</p>
+									<p className="font-medium">{item.title}</p>
+									<p className="text-sm tabular-nums">{placesLabel(item)}</p>
+								</div>
+								<div className="flex gap-2">
+									<Button
+										size="sm"
+										variant="outline"
+										onClick={() => handleEdit(item)}
+									>
+										{admin_action_edit()}
+									</Button>
+									<Button
+										size="sm"
+										variant="outline"
+										disabled={deleteMutation.isPending}
+										onClick={() => handleDelete(item)}
+									>
+										{admin_action_delete()}
+									</Button>
+								</div>
+							</li>
+						</Fragment>
 					))}
+					{nowIndex === agenda.length && now ? (
+						<AgendaNowDivider now={now} />
+					) : null}
 				</ol>
 			)}
 

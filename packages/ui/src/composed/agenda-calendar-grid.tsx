@@ -1,8 +1,14 @@
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import type { ReactNode } from "react";
-import { type AgendaLaidOut, type AgendaTimed, layoutAgenda } from "../agenda";
+import {
+	type AgendaLaidOut,
+	type AgendaTimed,
+	layoutAgenda,
+	nowMinuteOnDay,
+} from "../agenda";
 import { EVENT_TIME_ZONE, formatEventDate } from "../time";
 import { cn } from "../utils";
+import { AgendaNowLine, useNow } from "./agenda-now";
 
 /** Grid scale: pixels per minute; a block is never shorter than a touch target. */
 const PX_PER_MINUTE = 1.6;
@@ -32,6 +38,7 @@ export function AgendaCalendarGrid<T extends AgendaTimed>({
 	disabled = false,
 }: AgendaCalendarGridProps<T>) {
 	const locale = getLocale();
+	const now = useNow();
 	const days = layoutAgenda(items, EVENT_TIME_ZONE, {
 		minDurationMinutes: MIN_BLOCK_PX / PX_PER_MINUTE,
 	});
@@ -60,6 +67,13 @@ export function AgendaCalendarGrid<T extends AgendaTimed>({
 								startMinute={day.startMinute}
 								endMinute={day.endMinute}
 							/>
+							{now ? (
+								<NowLine
+									now={now}
+									startMinute={day.startMinute}
+									minute={nowMinuteOnDay(day, now, EVENT_TIME_ZONE)}
+								/>
+							) : null}
 							{day.items.map((item) => (
 								<button
 									key={item.id}
@@ -88,6 +102,20 @@ export function AgendaCalendarGrid<T extends AgendaTimed>({
 				</div>
 			))}
 		</div>
+	);
+}
+
+function NowLine({
+	now,
+	startMinute,
+	minute,
+}: {
+	now: Date;
+	startMinute: number;
+	minute: number | null;
+}) {
+	return minute === null ? null : (
+		<AgendaNowLine now={now} top={(minute - startMinute) * PX_PER_MINUTE} />
 	);
 }
 

@@ -64,3 +64,37 @@ test("[F18] program w widoku listy i kalendarza @uczestnik", async ({
 	await page.locator("html[data-hydrated=true]").waitFor();
 	await expect(page.getByRole("button", { name: /Warsztat B/ })).toBeVisible();
 });
+
+test("[F18] program pokazuje bieżącą godzinę w liście i w kalendarzu @uczestnik", async ({
+	page,
+}) => {
+	// Given an event that started 30 minutes ago: one item running now, one later
+	const event = await createTestEvent({
+		startsInDays: -30 / (24 * 60),
+		agenda: [
+			{ title: "Trwa teraz", startHour: 0, durationMinutes: 90 },
+			{ title: "Później", startHour: 2, durationMinutes: 30 },
+		],
+	});
+	await open(page, `/pl/events/${event.id}`);
+
+	// Then the list marks "now" between the running item and the later one
+	const now = page.getByRole("separator", { name: /^Teraz/ });
+	await expect(now).toBeVisible();
+	// Read the order once the live list has replaced the server-rendered one.
+	const neighbours = async () => {
+		const order = await page
+			.locator("ol > li")
+			.evaluateAll((items) => items.map((item) => item.textContent ?? ""));
+		const at = order.findIndex((text) => text.startsWith("Teraz"));
+		return {
+			before: at > 0 && (order[at - 1] ?? "").includes("Trwa teraz"),
+			after: at >= 0 && (order[at + 1] ?? "").includes("Później"),
+		};
+	};
+	await expect.poll(neighbours).toEqual({ before: true, after: true });
+
+	// And the calendar shows a line at the current time
+	await page.getByRole("button", { name: "Kalendarz" }).click();
+	await expect(page.getByRole("separator", { name: /^Teraz/ })).toBeVisible();
+});
