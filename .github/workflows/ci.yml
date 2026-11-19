@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [next, main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: cp .env.example .env
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm build
+
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: cp .env.example .env
+      - run: pnpm install --frozen-lockfile
+      - run: docker compose up -d --wait db
+      - run: pnpm test
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Environment with fresh secrets
+        run: |
+          cp .env.example .env
+          sed -i "s|^ENCRYPTION_KEY=.*|ENCRYPTION_KEY='$(openssl rand -base64 16)'|" .env
+          sed -i "s|^BETTER_AUTH_SECRET=.*|BETTER_AUTH_SECRET='$(openssl rand -base64 32)'|" .env
+          sed -i "s|^ELECTRIC_SECRET=.*|ELECTRIC_SECRET='$(openssl rand -hex 16)'|" .env
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter e2e exec playwright install --with-deps chromium
+      - run: pnpm e2e:up
+      - run: pnpm e2e
+      - if: failure()
+        run: docker compose -p harmonogram-e2e logs --no-color > e2e-compose.log
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            e2e/playwright-report
+            e2e-compose.log
+          if-no-files-found: ignore
