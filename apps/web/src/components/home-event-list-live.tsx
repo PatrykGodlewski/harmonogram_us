@@ -17,10 +17,11 @@ export default function HomeEventListLive({
 	filters,
 	user,
 }: HomeEventListLiveProps) {
-	const { events, error, isError, loading, refetching } = useEventListData({
-		filters,
-		userId: user?.id,
-	});
+	const { events, hasMore, error, isError, loading, refetching } =
+		useEventListData({
+			filters,
+			userId: user?.id,
+		});
 	const seatCounts = useEventSeatCounts();
 	const registrations = useEventListRegistrations(user?.id);
 
@@ -30,6 +31,7 @@ export default function HomeEventListLive({
 			isError={isError}
 			loading={loading}
 			events={events}
+			hasMore={hasMore}
 		>
 			{/* The interactive list replaces the server-rendered one; aria-busy marks a refetch in progress. */}
 			<div data-live-list aria-busy={refetching}>

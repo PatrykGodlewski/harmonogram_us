@@ -1,24 +1,29 @@
 {
-	"name": "e2e",
-	"private": true,
-	"type": "module",
-	"scripts": {
-		"lint": "biome check .",
-		"typecheck": "tsc --noEmit",
-		"format": "biome check --write .",
-		"e2e": "playwright test"
-	},
-	"dependencies": {
-		"@repo/db": "workspace:*",
-		"drizzle-orm": "^0.45.2"
-	},
-	"devDependencies": {
-		"@playwright/test": "^1.65.1",
-		"@repo/config": "workspace:*",
-		"@types/node": "^25.6.0",
-		"@types/pngjs": "^6.0.5",
-		"jsqr": "^1.4.0",
-		"pngjs": "^7.0.0",
-		"typescript": "^6.0.3"
-	}
+  "name": "e2e",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "biome check .",
+    "typecheck": "tsc --noEmit",
+    "format": "biome check --write .",
+    "e2e": "playwright test",
+    "load": "tsx load/run.ts"
+  },
+  "dependencies": {
+    "@repo/db": "workspace:*",
+    "drizzle-orm": "^0.45.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1",
+    "@repo/config": "workspace:*",
+    "@repo/env": "workspace:*",
+    "@types/node": "^25.6.0",
+    "@types/pngjs": "^6.0.5",
+    "better-call": "1.3.5",
+    "jsqr": "^1.4.0",
+    "pngjs": "^7.0.0",
+    "seroval": "1.5.1",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.3"
+  }
 }

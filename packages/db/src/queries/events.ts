@@ -100,9 +100,21 @@ export async function getEvents(
 	return queryEvents(filters);
 }
 
+export type EventPage = { events: EventWithRelations[]; hasMore: boolean };
+
+/** The first `limit` events matching the filters, and whether there are more (the public list). */
+export async function getEventPage(
+	filters: EventFilters,
+	limit: number,
+): Promise<EventPage> {
+	const rows = await queryEvents(filters, undefined, limit + 1);
+	return { events: rows.slice(0, limit), hasMore: rows.length > limit };
+}
+
 async function queryEvents(
 	filters?: EventFilters,
 	eventId?: string,
+	limit?: number,
 ): Promise<EventWithRelations[]> {
 	const conditions = [];
 
@@ -126,8 +138,11 @@ async function queryEvents(
 		conditions.push(eq(eventTypes.slug, filters.eventTypeFilter));
 	}
 
+	// The id breaks ties, so pages stay stable for events at the same time.
 	const order =
-		filters?.sortOrder === "asc" ? asc(events.date) : desc(events.date);
+		filters?.sortOrder === "asc"
+			? [asc(events.date), asc(events.id)]
+			: [desc(events.date), desc(events.id)];
 
 	const rows = await db
 		.select({
@@ -157,7 +172,8 @@ async function queryEvents(
 		.leftJoin(eventFaculties, eq(events.facultyId, eventFaculties.id))
 		.leftJoin(eventSeatCounts, eq(events.id, eventSeatCounts.eventId))
 		.where(conditions.length > 0 ? and(...conditions) : undefined)
-		.orderBy(order);
+		.orderBy(...order)
+		.limit(limit ?? Number.MAX_SAFE_INTEGER);
 
 	return rows.map(({ seatsRemainingFromCounts, ...row }) => ({
 		...row,

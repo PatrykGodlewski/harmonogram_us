@@ -29,3 +29,26 @@ test("[F4] wyszukiwanie i filtr wydziału zawężają listę @uczestnik", async 
 	await expect(page.getByText(second.title)).toBeVisible();
 	await expect(page.getByText(first.title)).toHaveCount(0);
 });
+
+test("[F4] lista pokazuje 20 wydarzeń, a „Pokaż więcej” dociąga kolejne @uczestnik", async ({
+	page,
+}) => {
+	// Given 25 events matching one search
+	const tag = `Strona ${crypto.randomUUID().slice(0, 6)}`;
+	for (let index = 0; index < 25; index++) {
+		await createTestEvent({
+			title: `${tag} ${index}`,
+			startsInDays: 10 + index,
+		});
+	}
+	// When the list is opened with that search
+	await open(page, `/pl?search=${encodeURIComponent(tag)}`);
+	const cards = page.getByText(new RegExp(`^${tag} \\d+$`));
+	// Then the first page has 20 of them
+	await expect(cards).toHaveCount(20);
+	// When they ask for more
+	await page.getByRole("link", { name: "Pokaż więcej" }).click();
+	// Then all 25 are listed and there is nothing more to show
+	await expect(cards).toHaveCount(25);
+	await expect(page.getByRole("link", { name: "Pokaż więcej" })).toHaveCount(0);
+});

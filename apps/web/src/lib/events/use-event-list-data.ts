@@ -18,7 +18,8 @@ export function useEventListData({ filters, userId }: UseEventListDataOptions) {
 		eventsQuery.isFetching && eventsQuery.data !== undefined && !loading;
 
 	return {
-		events: eventsQuery.data ?? [],
+		events: eventsQuery.data?.events ?? [],
+		hasMore: eventsQuery.data?.hasMore ?? false,
 		error: eventsQuery.error,
 		isError: eventsQuery.isError,
 		loading,

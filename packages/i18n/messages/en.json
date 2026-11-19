@@ -334,5 +334,6 @@
 	"reg_email_ticket_button": "Show ticket",
 	"event_details_view_label": "Agenda view",
 	"event_details_view_list": "List",
-	"event_details_view_calendar": "Calendar"
+	"event_details_view_calendar": "Calendar",
+	"events_show_more": "Show more"
 }

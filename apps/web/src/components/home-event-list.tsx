@@ -12,8 +12,15 @@ export type HomeEventListProps = {
 
 /** SSR-safe list: loader data + query cache only (no Electric / mutations). */
 export function HomeEventList({ filters, user }: HomeEventListProps) {
-	const { events, error, isError, loading, refetching, registrationStates } =
-		useEventListData({ filters, userId: user?.id });
+	const {
+		events,
+		hasMore,
+		error,
+		isError,
+		loading,
+		refetching,
+		registrationStates,
+	} = useEventListData({ filters, userId: user?.id });
 
 	return (
 		<HomeEventListShell
@@ -21,6 +28,7 @@ export function HomeEventList({ filters, user }: HomeEventListProps) {
 			isError={isError}
 			loading={loading}
 			events={events}
+			hasMore={hasMore}
 		>
 			<HomeEventCards
 				events={events}

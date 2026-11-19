@@ -334,5 +334,6 @@
 	"reg_email_ticket_button": "Pokaż bilet",
 	"event_details_view_label": "Widok programu",
 	"event_details_view_list": "Lista",
-	"event_details_view_calendar": "Kalendarz"
+	"event_details_view_calendar": "Kalendarz",
+	"events_show_more": "Pokaż więcej"
 }

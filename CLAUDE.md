@@ -42,6 +42,7 @@ pnpm dlx shadcn@latest add <component>   # run inside packages/ui
 pnpm e2e:up                  # full stack from production images as compose project "harmonogram-e2e" (ports in e2e/ports.env: web 3100, admin 3101, Mailpit 18025) + migrations
 pnpm e2e                     # Playwright: projects "komputer" (1280px) and "telefon" (360px, tests tagged @uczestnik)
 pnpm e2e:down                # stop the e2e stack and drop its data
+pnpm load                    # k6 load tests (spike 500→50 places, 2 min steady) + DB invariant check, against the e2e stack; see e2e/load/README.md
 ```
 
 Automated checks: `pnpm lint`, `pnpm typecheck`, `pnpm test` (Vitest; DB tests run against real Postgres and truncate tables in `harmonogram_us_test`, never the dev DB) and `pnpm e2e` (after `pnpm e2e:up`; rebuild with `pnpm e2e:up` after code changes, the stack runs built images). CI (`.github/workflows/ci.yml`) runs all of them.

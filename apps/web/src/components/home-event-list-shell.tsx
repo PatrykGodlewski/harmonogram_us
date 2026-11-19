@@ -1,7 +1,14 @@
-import { events_empty, events_loading } from "@repo/i18n/paraglide/messages";
+import { EVENT_PAGE_SIZE } from "@repo/api/events/schemas";
+import {
+	events_empty,
+	events_loading,
+	events_show_more,
+} from "@repo/i18n/paraglide/messages";
+import { Button } from "@repo/ui/components/button";
 import { Card, CardContent } from "@repo/ui/components/card";
 import { Skeleton } from "@repo/ui/components/skeleton";
 import { EventErrorAlert } from "@repo/ui/composed/events/event-error-alert";
+import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import type { HomeEventListEvent } from "~/lib/events/types";
 
@@ -10,6 +17,8 @@ type HomeEventListShellProps = {
 	isError: boolean;
 	loading: boolean;
 	events: HomeEventListEvent[];
+	/** More events match than are listed: show a link that lists the next page too. */
+	hasMore: boolean;
 	children: ReactNode;
 };
 
@@ -18,6 +27,7 @@ export function HomeEventListShell({
 	isError,
 	loading,
 	events,
+	hasMore,
 	children,
 }: HomeEventListShellProps) {
 	if (isError) return <EventErrorAlert error={error} />;
@@ -47,5 +57,24 @@ export function HomeEventListShell({
 		);
 	}
 
-	return children;
+	return (
+		<div className="flex flex-col gap-4">
+			{children}
+			{hasMore ? (
+				<Button variant="outline" className="self-center" asChild>
+					{/* A link, so it works before hydration and the longer list can be shared. */}
+					<Link
+						to="/"
+						search={(prev) => ({
+							...prev,
+							limit: events.length + EVENT_PAGE_SIZE,
+						})}
+						resetScroll={false}
+					>
+						{events_show_more()}
+					</Link>
+				</Button>
+			) : null}
+		</div>
+	);
 }

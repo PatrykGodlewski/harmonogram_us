@@ -1,11 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
-// The e2e stack runs as its own compose project (see e2e/README.md); fixtures reach its database directly.
-process.env.DATABASE_URL ??=
-	"postgresql://postgres:postgres@localhost:15432/harmonogram_us";
-process.env.E2E_WEB_URL ??= "http://localhost:3100";
-process.env.E2E_MAILPIT_URL ??= "http://localhost:18025";
-process.env.E2E_ADMIN_URL ??= "http://localhost:3101";
+import "./stack-env";
 
 export default defineConfig({
 	testDir: "./tests",

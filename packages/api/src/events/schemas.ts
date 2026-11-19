@@ -1,7 +1,12 @@
 import { z } from "zod";
 import { optionalIdSchema } from "../admin/optional-id-schema";
 
+/** Events per "show more" step on the public list, and the most one request may ask for. */
+export const EVENT_PAGE_SIZE = 20;
+export const EVENT_PAGE_MAX = 200;
+
 export const eventFiltersSchema = z.object({
+	limit: z.number().int().min(1).max(EVENT_PAGE_MAX).default(EVENT_PAGE_SIZE),
 	search: z.string().max(200).optional(),
 	sortOrder: z.enum(["asc", "desc"]).default("desc"),
 	locationFilter: z.string().optional(),
@@ -12,6 +17,13 @@ export const eventFiltersSchema = z.object({
 export type EventFiltersParams = z.infer<typeof eventFiltersSchema>;
 
 export const eventSearchSchema = z.object({
+	limit: z.coerce
+		.number()
+		.int()
+		.min(1)
+		.max(EVENT_PAGE_MAX)
+		.optional()
+		.catch(undefined),
 	search: z.string().max(200).optional(),
 	sortOrder: z.enum(["asc", "desc"]).optional().catch("desc"),
 	locationFilter: z.string().optional().catch("all"),
@@ -23,6 +35,7 @@ export type EventSearch = z.infer<typeof eventSearchSchema>;
 
 export function toEventFiltersParams(search: EventSearch): EventFiltersParams {
 	const filters: EventFiltersParams = {
+		limit: search.limit ?? EVENT_PAGE_SIZE,
 		sortOrder: search.sortOrder ?? "desc",
 		locationFilter: search.locationFilter ?? "all",
 		facultyFilter: search.facultyFilter ?? "all",

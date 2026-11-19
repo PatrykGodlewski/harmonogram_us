@@ -2,7 +2,7 @@ import type { fetchEventsServer } from "@repo/api/events/queries";
 
 export type HomeEventListEvent = Awaited<
 	ReturnType<typeof fetchEventsServer>
->[number];
+>["events"][number];
 
 export type EventSeatCount = {
 	seatsRemaining: number;

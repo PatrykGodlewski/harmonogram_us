@@ -1,7 +1,7 @@
 import {
 	getEventById,
 	getEventFilterOptions,
-	getEvents,
+	getEventPage,
 } from "@repo/db/queries/events";
 import type { QueryClient } from "@tanstack/react-query";
 import { queryOptions } from "@tanstack/react-query";
@@ -22,7 +22,9 @@ export const eventFilterOptionsQueryOptions = queryOptions({
 
 export const fetchEventsServer = createServerFn({ method: "GET" })
 	.inputValidator((input: unknown) => eventFiltersSchema.parse(input))
-	.handler(async ({ data }) => getEvents(data));
+	.handler(async ({ data: { limit, ...filters } }) =>
+		getEventPage(filters, limit),
+	);
 
 /** Prefix of every event-list query, whatever the filters (for invalidation). */
 export const eventsQueryKeyPrefix = ["events"] as const;
