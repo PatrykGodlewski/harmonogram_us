@@ -112,3 +112,44 @@ describe("registration confirmations from every path", () => {
 		expect(changes.map((c) => c.change)).toEqual(["confirmed"]);
 	});
 });
+
+describe("closeExpiredGroups", () => {
+	it("one event's failure does not stop the other events, and the run still reports it", async () => {
+		const { events } = await import("../src/schema/events");
+		const { registrationGroups } = await import("../src/schema/groups");
+		const { closeExpiredGroups } = await import("../src/queries/groups");
+		const { eq } = await import("drizzle-orm");
+		async function eventWithGroup(maxSeats: number) {
+			const eventId = await createEvent({ maxSeats, date: hoursFromNow(24 * 10) });
+			const owner = await createUser();
+			const { groupId } = await createGroup({
+				eventId,
+				ownerUserId: owner,
+				places: 1,
+				itemIds: [],
+				emails: [],
+				joinLinkEnabled: false,
+			});
+			return { eventId, groupId };
+		}
+		// Events are processed in id order; the first one is full with someone waiting, so
+		// closing its group promotes and the hook fails.
+		const [failing, other] = [await eventWithGroup(1), await eventWithGroup(1)].sort((x, y) =>
+			x.eventId.localeCompare(y.eventId),
+		) as [{ eventId: string; groupId: string }, { eventId: string; groupId: string }];
+		await registerForEvent(failing.eventId, await createUser(), "pl");
+		for (const { eventId } of [failing, other]) {
+			await db.update(events).set({ groupDeadlineHours: 24 * 11 }).where(eq(events.id, eventId));
+		}
+		const hooks = {
+			onChanged: async () => {
+				throw new Error("mail queue down");
+			},
+		};
+		await expect(closeExpiredGroups(new Date(), hooks)).rejects.toThrow("mail queue down");
+		const status = async (groupId: string) =>
+			(await db.select().from(registrationGroups).where(eq(registrationGroups.id, groupId)))[0]?.status;
+		expect(await status(other.groupId)).toBe("closed");
+		expect(await status(failing.groupId)).toBe("open");
+	});
+});

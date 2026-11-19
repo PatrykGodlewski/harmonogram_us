@@ -520,20 +520,36 @@ export async function closeExpiredGroups(
 	const eventIds = await db
 		.selectDistinct({ eventId: registrationGroups.eventId })
 		.from(registrationGroups)
-		.where(expired);
+		.where(expired)
+		.orderBy(registrationGroups.eventId);
 	let closed = 0;
+	const failures: unknown[] = [];
 	// One transaction per event: lock it, close its expired groups, promote the waitlist.
+	// A failing event is retried on the next run; it doesn't hold up the others.
 	for (const { eventId } of eventIds) {
-		closed += await db.transaction(async (tx) => {
-			await lockEvent(tx, eventId);
-			const rows = await tx
-				.update(registrationGroups)
-				.set({ status: "closed", updatedAt: now })
-				.where(and(expired, eq(registrationGroups.eventId, eventId)))
-				.returning({ id: registrationGroups.id });
-			await promoteAndNotify(tx, eventId, hooks);
-			return rows.length;
-		});
+		try {
+			closed += await db.transaction(async (tx) => {
+				await lockEvent(tx, eventId);
+				const rows = await tx
+					.update(registrationGroups)
+					.set({ status: "closed", updatedAt: now })
+					.where(and(expired, eq(registrationGroups.eventId, eventId)))
+					.returning({ id: registrationGroups.id });
+				await promoteAndNotify(tx, eventId, hooks);
+				return rows.length;
+			});
+		} catch (error) {
+			failures.push(error);
+		}
+	}
+	if (failures.length === 1) {
+		throw failures[0];
+	}
+	if (failures.length > 1) {
+		throw new AggregateError(
+			failures,
+			`closing expired groups failed for ${failures.length} events`,
+		);
 	}
 	return closed;
 }
