@@ -124,3 +124,33 @@ describe("waitlist", () => {
 		expect((await readEventCount(eventId))?.seatsRemaining).toBe(1);
 	});
 });
+
+describe("waitlist order under lock waits", () => {
+	it("a registration that waited for the event lock queues after the one that held it", async () => {
+		const eventId = await createEvent({ maxSeats: 1 });
+		const [a, early, late] = await users(3);
+		await registerForEvent(eventId, a ?? "", "pl");
+		// `late` starts its transaction first, but inserts only after `early` has committed.
+		let release: () => void = () => {};
+		const lateMayInsert = new Promise<void>((resolve) => {
+			release = resolve;
+		});
+		const lateInsert = db.transaction(async (tx) => {
+			await tx.execute(sql`SELECT 1`);
+			await lateMayInsert;
+			await tx.insert(eventRegistrations).values({
+				id: crypto.randomUUID(),
+				eventId,
+				userId: late ?? "",
+				state: "waitlisted",
+			});
+		});
+		await new Promise((resolve) => setTimeout(resolve, 50));
+		await registerForEvent(eventId, early ?? "", "pl");
+		release();
+		await lateInsert;
+		await unregisterFromEvent(eventId, a ?? "");
+		expect(await stateOf(eventId, early ?? "")).toBe("registered");
+		expect(await stateOf(eventId, late ?? "")).toBe("waitlisted");
+	});
+});

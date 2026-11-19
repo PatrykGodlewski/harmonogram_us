@@ -1,0 +1,1 @@
+ALTER TABLE "event_registrations" ALTER COLUMN "created_at" SET DEFAULT clock_timestamp();
