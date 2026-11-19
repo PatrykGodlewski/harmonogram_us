@@ -13,22 +13,24 @@ import { useMyRegistrations } from "~/lib/registration/use-my-registrations";
 export function WaitlistLiveRefresh({ userId }: { userId: string }) {
 	const queryClient = useQueryClient();
 	const { byEvent } = useMyRegistrations(userId);
+	// Keyed by content: a refetch that returns the same waitlist keeps the same live query.
+	const waitedForKey = [...byEvent]
+		.flatMap(([eventId, entry]) =>
+			entry.state === "waitlisted" ? [eventId] : [],
+		)
+		.sort()
+		.join(",");
 	const waitedFor = React.useMemo(
-		() =>
-			new Set(
-				[...byEvent].flatMap(([eventId, entry]) =>
-					entry.state === "waitlisted" ? [eventId] : [],
-				),
-			),
-		[byEvent],
+		() => (waitedForKey === "" ? [] : waitedForKey.split(",")),
+		[waitedForKey],
 	);
 	const counts = useLiveQuery(
 		(q) =>
-			waitedFor.size === 0
+			waitedFor.length === 0
 				? undefined
 				: q
 						.from({ counts: eventSeatCountsCollection })
-						.where(({ counts }) => inArray(counts.event_id, [...waitedFor]))
+						.where(({ counts }) => inArray(counts.event_id, waitedFor))
 						.select(({ counts }) => ({
 							eventId: counts.event_id,
 							updatedAt: counts.updated_at,
@@ -57,8 +59,10 @@ export function WaitlistLiveRefresh({ userId }: { userId: string }) {
 				queryKey: myRegistrationsQueryOptions.queryKey,
 			});
 		}
+		// Only add to what was seen: a momentarily empty result (query re-created) must not
+		// erase it, or the next change would look like a first observation and be missed.
 		if (seen !== null || current.size > 0) {
-			previous.current = current;
+			previous.current = new Map([...(seen ?? []), ...current]);
 		}
 	}, [counts.data, queryClient]);
 

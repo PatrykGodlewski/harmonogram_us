@@ -38,11 +38,8 @@ export default defineConfig({
 			urlPatterns: paraglideUrlPatterns,
 			routeStrategies: paraglideRouteStrategies,
 		}),
-		tanstackStart({
-			start: {
-				entry: "./src/server.ts",
-			},
-		}),
+		// Entries are found by name in src/: server.ts (Paraglide-wrapped handler) and start.ts (global middleware).
+		tanstackStart(),
 		viteReact(),
 		babel({ presets: [reactCompilerPreset()] }),
 		tailwindcss(),

@@ -46,8 +46,12 @@ test("[F5] osoba z listy rezerwowej nie zapisze się na punkt programu", async (
 	await signInByEmail(page, email);
 	await open(page, `/pl/events/${event.id}`);
 	const item = page.getByRole("listitem").filter({ hasText: "Warsztaty" });
+	const response = page.waitForResponse(
+		(r) => r.url().includes("/_serverFn/") && r.request().method() === "POST",
+	);
 	await item.getByRole("button", { name: "Zarejestruj się" }).click();
-	// Then they are told why and the item keeps its place
+	// Then the server answers with a client error (not a 500) and they are told why
+	expect((await response).status()).toBe(409);
 	await expect(
 		page.getByText("Jesteś na liście rezerwowej tego wydarzenia"),
 	).toBeVisible();
