@@ -1,12 +1,15 @@
 import { getBoss } from "@repo/jobs/client";
 import {
 	CLOSE_EXPIRED_GROUPS_CRON,
+	emailJob,
 	groupInvitationEmailPayload,
 	JOBS_TIME_ZONE,
 	QUEUE_CLOSE_EXPIRED_GROUPS,
+	QUEUE_EMAILS,
 	QUEUE_GROUP_INVITATION_EMAIL,
 } from "@repo/jobs/queues";
 import { closeExpired } from "./handlers/close-expired";
+import { handleEmailJob } from "./handlers/send-email";
 import { sendInvitationEmail } from "./handlers/send-invitation";
 
 const boss = await getBoss("worker");
@@ -17,6 +20,12 @@ await boss.work(QUEUE_GROUP_INVITATION_EMAIL, async (jobs) => {
 			groupInvitationEmailPayload.parse(job.data),
 		);
 		console.log(`[worker] invitation ${job.id}: ${result}`);
+	}
+});
+
+await boss.work(QUEUE_EMAILS, async (jobs) => {
+	for (const job of jobs) {
+		await handleEmailJob(emailJob.parse(job.data));
 	}
 });
 

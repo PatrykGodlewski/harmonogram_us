@@ -17,15 +17,13 @@ import {
 	auth_email_magic_link_preview,
 	auth_error_password_breached,
 	auth_error_password_safety_check_failed,
-	verify_email_ignore,
-	verify_email_intro,
-	verify_email_subject,
 } from "@repo/i18n/paraglide/messages";
 import {
 	baseLocale,
 	type Locale,
 	toLocale,
 } from "@repo/i18n/paraglide/runtime";
+import { enqueueEmails } from "@repo/jobs/client";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
@@ -283,15 +281,15 @@ export const auth = betterAuth({
 	emailVerification: {
 		sendOnSignUp: true,
 		sendVerificationEmail: async ({ user, url }, request) => {
-			const locale = resolveAuthLocaleFromHeaders(request?.headers);
-			// Not awaited, per Better Auth docs (avoids timing attacks).
-			void sendTransactionalEmail({
-				to: user.email,
-				subject: verify_email_subject({}, { locale }),
-				text: `${verify_email_intro({}, { locale })}\n\n${url}\n\n${verify_email_ignore({}, { locale })}`,
-			}).catch((error: unknown) => {
-				console.error("[auth] verification email failed", error);
-			});
+			// Queued with retries; the worker sends it (verificationEmail).
+			await enqueueEmails([
+				{
+					kind: "verification",
+					to: user.email,
+					url,
+					locale: resolveAuthLocaleFromHeaders(request?.headers),
+				},
+			]);
 		},
 	},
 	hooks: {

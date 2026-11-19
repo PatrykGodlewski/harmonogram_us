@@ -78,3 +78,13 @@ export async function createTestEvent(input: {
 	}
 	return { id: event.id, title, itemIds };
 }
+
+/** Whether the account with `email` has a verified address (account state after an e-mail link). */
+export async function isEmailVerified(email: string): Promise<boolean> {
+	const { eq } = await import("drizzle-orm");
+	const [user] = await db
+		.select({ verified: authUsers.emailVerified })
+		.from(authUsers)
+		.where(eq(authUsers.email, email));
+	return user?.verified ?? false;
+}

@@ -2,7 +2,9 @@ import { env } from "@repo/env";
 import { sql } from "drizzle-orm";
 import { fromDrizzle, PgBoss } from "pg-boss";
 import {
+	type EmailJob,
 	type GroupInvitationEmailPayload,
+	QUEUE_EMAILS,
 	QUEUE_GROUP_INVITATION_EMAIL,
 	QUEUES,
 } from "./queues";
@@ -66,6 +68,25 @@ export async function enqueueInvitationEmails(
 			retryLimit: 3,
 			retryBackoff: true,
 		})),
+		opts.tx ? { db: fromDrizzle(opts.tx, sql) } : undefined,
+	);
+}
+
+/**
+ * Queues transactional e-mails with retries. Pass the caller's Drizzle transaction
+ * as `tx` so the jobs commit or roll back with the data that caused them.
+ */
+export async function enqueueEmails(
+	jobs: EmailJob[],
+	opts: { tx?: Parameters<typeof fromDrizzle>[0] } = {},
+): Promise<void> {
+	if (jobs.length === 0) {
+		return;
+	}
+	const boss = await getBoss();
+	await boss.insert(
+		QUEUE_EMAILS,
+		jobs.map((job) => ({ data: job, retryLimit: 3, retryBackoff: true })),
 		opts.tx ? { db: fromDrizzle(opts.tx, sql) } : undefined,
 	);
 }

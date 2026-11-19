@@ -4,6 +4,8 @@ import { z } from "zod";
 /** Policy "short" + singletonKey=memberId: at most one queued send per member. */
 export const QUEUE_GROUP_INVITATION_EMAIL = "group-invitations";
 export const QUEUE_CLOSE_EXPIRED_GROUPS = "close-expired-groups";
+/** Transactional e-mails (verification, registration), retried on failure. */
+export const QUEUE_EMAILS = "emails";
 
 /** Every 5 minutes, in the installation time zone. */
 export const CLOSE_EXPIRED_GROUPS_CRON = "*/5 * * * *";
@@ -18,7 +20,19 @@ export type GroupInvitationEmailPayload = z.infer<
 	typeof groupInvitationEmailPayload
 >;
 
+export const emailJob = z.discriminatedUnion("kind", [
+	z.object({
+		kind: z.literal("verification"),
+		to: z.email(),
+		url: z.url(),
+		locale: z.enum(["pl", "en"]),
+	}),
+]);
+
+export type EmailJob = z.infer<typeof emailJob>;
+
 export const QUEUES = [
 	{ name: QUEUE_GROUP_INVITATION_EMAIL, policy: "short" },
 	{ name: QUEUE_CLOSE_EXPIRED_GROUPS, policy: "standard" },
+	{ name: QUEUE_EMAILS, policy: "standard" },
 ] as const;
