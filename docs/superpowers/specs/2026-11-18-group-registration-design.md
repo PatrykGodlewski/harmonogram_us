@@ -1,3 +1,5 @@
+> **ARCHIWALNE (2026-11-19).** Zastąpione przez `docs/superpowers/specs/2026-11-19-produkt-design.md`. Zostaje jako zapis historii; nie jest źródłem prawdy.
+
 # Group registration — design
 
 Date: 2026-11-18 · Project 2 of 3. Builds on project 1 (agenda, per-item registration, trigger-maintained seat counts).

@@ -1,3 +1,5 @@
+> **ARCHIWALNE (2026-11-19).** Zastąpione przez `docs/superpowers/specs/2026-11-19-produkt-design.md`. Zostaje jako zapis historii; nie jest źródłem prawdy.
+
 # Narzędzia parytetu
 
 ## `inwentarz.py`: inwentarz Indico

@@ -1,3 +1,5 @@
+> **ARCHIWALNE (2026-11-19).** Zastąpione przez `docs/superpowers/specs/2026-11-19-produkt-design.md`. Zostaje jako zapis historii; nie jest źródłem prawdy.
+
 # Agenda and per-item registration — design
 
 Date: 2026-11-18 · Status: approved by delegation ("decide yourself and continue"), builder-checked · Project 1 of 3

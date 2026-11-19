@@ -1,3 +1,5 @@
+> **ARCHIWALNE (2026-11-19).** Zastąpione przez `docs/superpowers/specs/2026-11-19-produkt-design.md`. Zostaje jako zapis historii; nie jest źródłem prawdy.
+
 # Audyt stanu aplikacji — 2026-11-19
 
 Zlecenie: `docs/superpowers/briefs/2026-11-19-kierunek-produktu.md`, Krok 2. Stan kodu: gałąź `next`, commit `d9e28b4`. Każde stwierdzenie ma dowód (ścieżka:linia, commit albo komenda z wynikiem).
