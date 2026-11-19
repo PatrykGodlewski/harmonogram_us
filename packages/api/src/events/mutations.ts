@@ -13,6 +13,11 @@ import { appError, withDomainErrors } from "../errors";
 import { registrationEmailHooks } from "../notifications/registration-hooks";
 import { agendaItemIdSchema } from "./schemas";
 
+/** `locale` is the UI language for the confirmation e-mail (server functions have no locale prefix). */
+const registerForAgendaItemSchema = agendaItemIdSchema.extend({
+	locale: z.enum(["pl", "en"]),
+});
+
 export const registerForEventInputSchema = z.object({
 	eventId: z.string().min(1),
 	/** UI language, for the registrant's e-mails (server functions have no locale prefix). */
@@ -79,10 +84,15 @@ const protectedActionFn = createServerFn({ method: "POST" }).middleware([
 ]);
 
 export const registerForAgendaItemServer = protectedActionFn
-	.inputValidator(agendaItemIdSchema)
+	.inputValidator(registerForAgendaItemSchema)
 	.handler(async ({ data, context }) =>
 		withDomainErrors(() =>
-			registerForAgendaItem(data.agendaItemId, context.user.id),
+			registerForAgendaItem(
+				data.agendaItemId,
+				context.user.id,
+				data.locale,
+				registrationEmailHooks,
+			),
 		),
 	);
 

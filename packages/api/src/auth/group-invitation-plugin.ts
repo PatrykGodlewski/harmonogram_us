@@ -8,6 +8,7 @@ import type { BetterAuthPlugin } from "better-auth";
 import { APIError, createAuthEndpoint } from "better-auth/api";
 import { setSessionCookie } from "better-auth/cookies";
 import { z } from "zod";
+import { registrationEmailHooks } from "../notifications/registration-hooks";
 
 function invitationError(code: string): APIError {
 	return new APIError("BAD_REQUEST", { code, message: code });
@@ -60,7 +61,11 @@ export const groupInvitation = () =>
 
 					let eventId: string;
 					try {
-						({ eventId } = await acceptInvitation(token, user.id));
+						({ eventId } = await acceptInvitation(
+							token,
+							user.id,
+							registrationEmailHooks,
+						));
 					} catch (error) {
 						if (error instanceof DomainError) {
 							throw invitationError(error.code);

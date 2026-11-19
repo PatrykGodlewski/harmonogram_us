@@ -11,11 +11,9 @@ import {
 import { closeExpired } from "./handlers/close-expired";
 import { handleEmailJob } from "./handlers/send-email";
 import { sendInvitationEmail } from "./handlers/send-invitation";
+import { EMAIL_WORK } from "./work-options";
 
 const boss = await getBoss("worker");
-
-// E-mail queues take up to 10 jobs per fetch, so a burst of sign-ups doesn't wait 2 s per message.
-const EMAIL_WORK = { batchSize: 10 } as const;
 
 await boss.work(QUEUE_GROUP_INVITATION_EMAIL, EMAIL_WORK, async (jobs) => {
 	for (const job of jobs) {

@@ -94,9 +94,12 @@ export const removeMemberServer = protectedActionFn
 	.inputValidator(memberIdSchema)
 	.handler(async ({ data, context }) =>
 		withDomainErrors(() =>
-			removeMember(data.memberId, context.user.id, {
-				actorIsAdmin: context.user.isAdmin,
-			}),
+			removeMember(
+				data.memberId,
+				context.user.id,
+				{ actorIsAdmin: context.user.isAdmin },
+				registrationEmailHooks,
+			),
 		),
 	);
 

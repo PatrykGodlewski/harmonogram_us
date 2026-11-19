@@ -14,6 +14,12 @@ import {
 	REGISTRATION_ERRORS,
 } from "./domain-errors";
 import {
+	promoteAndNotify,
+	promoteFromWaitlist,
+	type RegistrationChange,
+	type RegistrationHooks,
+} from "./event-registrations";
+import {
 	type ActorOptions,
 	assertGroupOwner,
 	isGroupDeadlinePassed,
@@ -83,6 +89,7 @@ export async function getInvitation(
 export async function acceptInvitation(
 	token: string,
 	userId: string,
+	hooks?: RegistrationHooks,
 ): Promise<{ eventId: string; txid: number }> {
 	try {
 		return await db.transaction(async (tx) => {
@@ -127,6 +134,7 @@ export async function acceptInvitation(
 				.select({
 					id: eventRegistrations.id,
 					groupId: eventRegistrations.groupId,
+					state: eventRegistrations.state,
 				})
 				.from(eventRegistrations)
 				.where(
@@ -163,6 +171,16 @@ export async function acceptInvitation(
 				eventRegistrationId,
 				await memberItemIds(tx, member.id),
 			);
+
+			const changes: RegistrationChange[] =
+				existing?.state === "registered"
+					? []
+					: [{ registrationId: eventRegistrationId, change: "confirmed" }];
+			// A student who was already registered no longer needs the group's place.
+			changes.push(...(await promoteFromWaitlist(tx, group.eventId)));
+			if (hooks && changes.length > 0) {
+				await hooks.onChanged(tx, changes);
+			}
 
 			return { eventId: group.eventId, txid: await getCurrentTxId(tx) };
 		});
@@ -216,8 +234,22 @@ export async function removeMember(
 	memberId: string,
 	actorUserId: string,
 	opts?: ActorOptions,
+	hooks?: RegistrationHooks,
 ): Promise<{ txid: number }> {
 	return db.transaction(async (tx) => {
+		// Global lock order: event first, then group and member.
+		const [target] = await tx
+			.select({ eventId: registrationGroups.eventId })
+			.from(registrationGroupMembers)
+			.innerJoin(
+				registrationGroups,
+				eq(registrationGroups.id, registrationGroupMembers.groupId),
+			)
+			.where(eq(registrationGroupMembers.id, memberId));
+		if (!target) {
+			throw new DomainError("GROUP_NOT_FOUND");
+		}
+		await lockEvent(tx, target.eventId);
 		const locked = await lockMemberAndGroup(tx, { id: memberId });
 		if (!locked) {
 			throw new DomainError("GROUP_NOT_FOUND");
@@ -233,6 +265,8 @@ export async function removeMember(
 				.delete(registrationGroupMembers)
 				.where(eq(registrationGroupMembers.id, memberId));
 		}
+		// In a closed group the place goes back to the event, not the group.
+		await promoteAndNotify(tx, target.eventId, hooks);
 		return { txid: await getCurrentTxId(tx) };
 	});
 }

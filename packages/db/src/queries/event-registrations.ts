@@ -224,6 +224,8 @@ export async function registerForEvent(
 export async function registerForAgendaItem(
 	itemId: string,
 	userId: string,
+	locale: "pl" | "en",
+	hooks?: RegistrationHooks,
 ): Promise<{ txid: number; eventRegistered: boolean }> {
 	try {
 		return await db.transaction(async (tx) => {
@@ -289,7 +291,12 @@ export async function registerForAgendaItem(
 					tx,
 					item.eventId,
 					userId,
+					"registered",
+					locale,
 				);
+				await notify(tx, hooks, [
+					{ registrationId: eventRegistrationId, change: "confirmed" },
+				]);
 			}
 
 			// Item capacity (including group holds) is enforced by the seat-count CHECK (→ ITEM_FULL).

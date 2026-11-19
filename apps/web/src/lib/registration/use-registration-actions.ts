@@ -60,7 +60,7 @@ function runAction(action: RegistrationAction) {
 			return unregisterFromEventServer({ data: { eventId: action.eventId } });
 		case "registerItem":
 			return registerForAgendaItemServer({
-				data: { agendaItemId: action.item.id },
+				data: { agendaItemId: action.item.id, locale: getLocale() },
 			});
 		case "unregisterItem":
 			return unregisterFromAgendaItemServer({
