@@ -251,15 +251,149 @@ Pytanie O4 nie ma zastosowania.
 | lokalizacje tłumaczeń | 19 | 19 | 0 | katalogi z `LC_MESSAGES` |
 | wtyczki `indico-plugins` | 18 | 18 | 0 | katalogi bez `_meta` |
 
-Pozostałe rodzaje pozycji: 56 poleceń CLI, 20 zadań Celery (w tym cykliczne), 20 eksporterów HTTP API (hooki i formaty), 32 rozdziały referencji API, 7 funkcji wydarzenia, 30 uprawnień zarządzania. Razem 1802 pozycje. Dwa kolejne przebiegi skryptu dają bajtowo identyczny plik (`cmp` → brak różnic).
+Pozostałe rodzaje pozycji: 56 poleceń CLI, 20 zadań Celery (w tym cykliczne), 20 eksporterów HTTP API (hooki i formaty), 32 rozdziały referencji API, 7 funkcji wydarzenia, 30 uprawnień zarządzania. Razem 1776 pozycji: 1665 przypisanych do wierszy katalogu, 111 wyłączonych z powodów F1 (a: 83, b: 5, c: 23), 0 nieprzypisanych. Dwa kolejne przebiegi skryptu dają bajtowo identyczny plik (`cmp` → brak różnic).
 
 ## F. Mapa parytetu
 
-Uzupełniana po Kroku 3 (inwentarz Indico i `docs/superpowers/parity/katalog-funkcji.yaml`).
+Źródło wierszy: `docs/superpowers/parity/katalog-funkcji.yaml` (752 wiersze, commit `a80945a`). Status „spełniona” wymaga przechodzącego testu e2e oznaczonego ID wiersza. W repozytorium nie ma testów e2e (sekcja H), więc **żaden wiersz nie jest spełniony**. „Częściowo” oznacza, że część zachowania wiersza istnieje w kodzie albo jest sprawdzana testem integracyjnym. Dowód podano niżej. Pozostałe wiersze mają status „brak”: kodu realizującego ich zachowanie nie ma (sekcja C opisuje cały obecny zakres aplikacji).
+
+**Parytet: 0% wierszy zielonych** (0 z 747 wierszy „wymagana”).
+
+| Domena | Wiersze | wymagana | spełniona | częściowo | brak | wyłączone / do decyzji |
+|---|---|---|---|---|---|---|
+| WYD | 75 | 75 | 0 | 7 | 68 | 0 |
+| DOS | 21 | 21 | 0 | 1 | 20 | 0 |
+| REJ | 119 | 119 | 0 | 19 | 100 | 0 |
+| PLT | 16 | 16 | 0 | 0 | 16 | 0 |
+| ABS | 57 | 57 | 0 | 0 | 57 | 0 |
+| REF | 25 | 25 | 0 | 0 | 25 | 0 |
+| PAP | 27 | 27 | 0 | 0 | 27 | 0 |
+| EDI | 27 | 27 | 0 | 0 | 27 | 0 |
+| PRG | 25 | 25 | 0 | 0 | 25 | 0 |
+| MAT | 26 | 26 | 0 | 0 | 26 | 0 |
+| ANK | 14 | 14 | 0 | 0 | 14 | 0 |
+| WYG | 13 | 13 | 0 | 0 | 13 | 0 |
+| KOM | 26 | 26 | 0 | 2 | 24 | 0 |
+| DOK | 20 | 20 | 0 | 0 | 20 | 0 |
+| SAL | 50 | 50 | 0 | 0 | 50 | 0 |
+| WID | 14 | 14 | 0 | 0 | 14 | 0 |
+| UZY | 35 | 35 | 0 | 3 | 32 | 0 |
+| UWT | 23 | 23 | 0 | 3 | 20 | 0 |
+| WYS | 6 | 6 | 0 | 0 | 6 | 0 |
+| API | 16 | 16 | 0 | 0 | 16 | 0 |
+| ADM | 46 | 42 | 0 | 1 | 41 | 4 |
+| PLG | 42 | 42 | 0 | 0 | 42 | 0 |
+| I18 | 11 | 11 | 0 | 3 | 8 | 0 |
+| OPS | 15 | 15 | 0 | 2 | 13 | 0 |
+| MIG | 3 | 2 | 0 | 0 | 2 | 1 |
+| **Razem** | **752** | **747** | **0** | **41** | **706** | **5** |
+
+### Wiersze „częściowo” (dowód)
+
+| Wiersz | Tytuł | Co istnieje (dowód) |
+|---|---|---|
+| F-WYD-05.1 | Tworzenie wydarzenia | `packages/api/src/admin/mutations.ts` (`createAdminEventServer`), panel `apps/admin/src/components/admin-events-page.tsx` |
+| F-WYD-05.2 | Publikacja w dwie minuty | formularz tworzenia w panelu wymaga tytułu, terminu, typu, miejsca i wydziału (`packages/api/src/admin/mutations.ts`); brak publikacji z minimum pól i brak roli organizatora |
+| F-WYD-05.4 | Edycja tytułu, opisu i skrótu adresu | `updateAdminEventServer` (tytuł, opis); brak skrótu adresu |
+| F-WYD-05.5 | Edycja terminu i strefy czasowej | `updateAdminEventServer` (`date`, `endsAt`); brak strefy czasowej wydarzenia (D1) |
+| F-WYD-05.6 | Edycja miejsca wydarzenia | miejsce ze słownika `event_locations` (`packages/db/src/schema/event-lookups.ts`) |
+| F-WYD-05.9 | Usuwanie wydarzenia | `deleteAdminEventServer` |
+| F-WYD-09.11 | Kalendarz kampusu z filtrami i wyszukiwaniem | lista z wyszukiwaniem i filtrami miejsca, wydziału i typu (`packages/api/src/events/schemas.ts:4-12`, `apps/web/src/routes/index.tsx`); brak widoku kalendarza, filtra terminu i formy |
+| F-DOS-07.1 | Administratorzy systemu | kolumna `user.role`, `adminMiddleware` (`packages/api/src/auth/admin-middleware.ts`), `packages/db/test/roles.test.ts`; brak nadawania roli w interfejsie |
+| F-REJ-01.5 | Limit uczestników formularza | `events.max_seats` i `CHECK (seats_remaining >= 0)` (`migrations/0003`), `packages/db/test/concurrency.test.ts` |
+| F-REJ-05.5 | Wymóg logowania i konta | zapis wymaga zalogowania (`protectedActionFn`, `packages/api/src/events/mutations.ts`) |
+| F-REJ-05.7 | Jedna rejestracja na osobę w formularzu | UNIQUE (`event_id`, `user_id`) (`migrations/0001`) |
+| F-REJ-07.1 | Lista rejestracji w panelu | `apps/admin/src/components/admin-event-detail/registrants-list.tsx` |
+| F-REJ-09.4 | Wycofanie rejestracji przez uczestnika | `unregisterFromEventServer` (`packages/api/src/events/mutations.ts`); wycofanie usuwa wiersz zamiast zmiany stanu |
+| F-REJ-15.1 | CAPTCHA w formularzu | Turnstile w formularzu dołączania do grupy (`apps/web/src/routes/join/$code.tsx`); zwykły zapis nie ma CAPTCHA |
+| F-REJ-17.2 | Zapis na punkt programu z własnym limitem | `registerForAgendaItem` i `agenda_item_seat_counts` (`packages/db/src/queries/event-registrations.ts`, `migrations/0002`, `0003`) |
+| F-REJ-17.3 | Zapis na punkt programu rejestruje na wydarzenie | zapis na punkt programu tworzy rejestrację na wydarzenie (`packages/db/test/registrations.test.ts`) |
+| F-REJ-19.1 | Utworzenie grupy | rejestracja grupowa (`packages/db/src/queries/groups.ts`, `group-members.ts`, testy `groups.test.ts`, `group-members.test.ts`, `group-holds.test.ts`; UI `apps/web/src/routes/groups/`, `join/`, `invite/`) |
+| F-REJ-19.2 | Zaproszenia członków grupy e-mailem | rejestracja grupowa (`packages/db/src/queries/groups.ts`, `group-members.ts`, testy `groups.test.ts`, `group-members.test.ts`, `group-holds.test.ts`; UI `apps/web/src/routes/groups/`, `join/`, `invite/`) |
+| F-REJ-19.3 | Dołączanie do grupy przez link i kod QR | rejestracja grupowa (`packages/db/src/queries/groups.ts`, `group-members.ts`, testy `groups.test.ts`, `group-members.test.ts`, `group-holds.test.ts`; UI `apps/web/src/routes/groups/`, `join/`, `invite/`) |
+| F-REJ-19.4 | Potwierdzenie miejsca jednym przyciskiem | rejestracja grupowa (`packages/db/src/queries/groups.ts`, `group-members.ts`, testy `groups.test.ts`, `group-members.test.ts`, `group-holds.test.ts`; UI `apps/web/src/routes/groups/`, `join/`, `invite/`) |
+| F-REJ-19.5 | Zarządzanie grupą przez nauczyciela | rejestracja grupowa (`packages/db/src/queries/groups.ts`, `group-members.ts`, testy `groups.test.ts`, `group-members.test.ts`, `group-holds.test.ts`; UI `apps/web/src/routes/groups/`, `join/`, `invite/`) |
+| F-REJ-19.6 | Punkty programu członków grupy | rejestracja grupowa (`packages/db/src/queries/groups.ts`, `group-members.ts`, testy `groups.test.ts`, `group-members.test.ts`, `group-holds.test.ts`; UI `apps/web/src/routes/groups/`, `join/`, `invite/`) |
+| F-REJ-19.7 | Termin potwierdzeń i automatyczne zamknięcie grup | rejestracja grupowa (`packages/db/src/queries/groups.ts`, `group-members.ts`, testy `groups.test.ts`, `group-members.test.ts`, `group-holds.test.ts`; UI `apps/web/src/routes/groups/`, `join/`, `invite/`) |
+| F-REJ-19.8 | Liczniki miejsc uwzględniają grupy | rejestracja grupowa (`packages/db/src/queries/groups.ts`, `group-members.ts`, testy `groups.test.ts`, `group-members.test.ts`, `group-holds.test.ts`; UI `apps/web/src/routes/groups/`, `join/`, `invite/`) |
+| F-REJ-19.9 | Przejścia stanów grupy i członka grupy | rejestracja grupowa (`packages/db/src/queries/groups.ts`, `group-members.ts`, testy `groups.test.ts`, `group-members.test.ts`, `group-holds.test.ts`; UI `apps/web/src/routes/groups/`, `join/`, `invite/`) |
+| F-REJ-19.10 | Grupy w panelu administratora | rejestracja grupowa (`packages/db/src/queries/groups.ts`, `group-members.ts`, testy `groups.test.ts`, `group-members.test.ts`, `group-holds.test.ts`; UI `apps/web/src/routes/groups/`, `join/`, `invite/`) |
+| F-REJ-19.11 | Moje grupy na koncie użytkownika | rejestracja grupowa (`packages/db/src/queries/groups.ts`, `group-members.ts`, testy `groups.test.ts`, `group-members.test.ts`, `group-holds.test.ts`; UI `apps/web/src/routes/groups/`, `join/`, `invite/`) |
+| F-KOM-05.2 | Kolejka wysyłki i ponawianie | pg-boss, `retryLimit: 3` dla zaproszeń (`packages/jobs/src/client.ts:66`); e-mail weryfikacyjny bez kolejki (D5) |
+| F-KOM-05.4 | Konfiguracja serwera pocztowego instalacji | `SMTP_*` w `packages/env/src/index.ts`, `packages/api/src/notifications/email.tsx` |
+| F-UZY-01.1 | Zakładanie konta lokalnego z potwierdzeniem e-mail | `emailVerification` (`packages/api/src/auth/better-auth.ts:282`) |
+| F-UZY-01.2 | Wymagania bezpieczeństwa hasła | `assertPasswordMeetsPolicy` z HIBP (`packages/api/src/auth/better-auth.ts:184`) |
+| F-UZY-01.6 | Blokada adresów e-mail przy zakładaniu konta | `checkEmails`: domeny jednorazowe i MX (`packages/api/src/security/email-policy.ts`) |
+| F-UWT-01.1 | Logowanie i wylogowanie hasłem | Better Auth `emailAndPassword` (`packages/api/src/auth/better-auth.ts:279`), `apps/web/src/routes/logout.tsx` |
+| F-UWT-01.2 | Limit nieudanych prób logowania | `SIGN_IN_LIMIT` (`packages/api/src/security/rate-limits.ts:31`); wyłączony bez `REDIS_URL` (D8) |
+| F-UWT-01.6 | CAPTCHA przy zakładaniu konta | Turnstile w rejestracji konta (`packages/ui/src/composed/signup.tsx`) |
+| F-ADM-07.3 | Wysyłka wiadomości e-mail w tle | worker pg-boss (`apps/worker/src/handlers/send-invitation.ts`, `apps/worker/test/handlers.test.ts`) |
+| F-I18-01.1 | Przełączanie języka interfejsu | Paraglide, prefiksy `/pl`, `/en` (`packages/i18n/project.inlang/settings.json`) |
+| F-I18-01.4 | Wiadomości e-mail w języku odbiorcy | język e-maili logowania z nagłówków (`resolveAuthLocaleFromHeaders`, `packages/api/src/auth/better-auth.ts:243`) |
+| F-I18-02.2 | Formaty dat i godzin zgodne z językiem | `formatWarsawDateTime(date, locale)` (`packages/ui/src/time.ts`, `packages/ui/test/time.test.ts`) |
+| F-OPS-01.1 | Powtarzalne wdrożenie z kontenerów | `Dockerfile` (APP=web|admin|worker), `apps/*/railway.toml`; compose bez aplikacji (D6) |
+| F-OPS-06.5 | Ograniczanie liczby żądań | `consumeRateLimit` (`packages/api/src/security/rate-limit.ts`) |
+
+### Wiersze „brak” według domen
+
+- **WYD** (68): F-WYD-01.1, F-WYD-01.2, F-WYD-02.1, F-WYD-02.2, F-WYD-02.3, F-WYD-02.4, F-WYD-02.5, F-WYD-02.6, F-WYD-02.7, F-WYD-02.8, F-WYD-02.9, F-WYD-02.10, F-WYD-02.11, F-WYD-03.1, F-WYD-03.2, F-WYD-03.3, F-WYD-03.4, F-WYD-04.1, F-WYD-04.2, F-WYD-05.3, F-WYD-05.7, F-WYD-05.8, F-WYD-05.10, F-WYD-05.11, F-WYD-05.12, F-WYD-05.13, F-WYD-05.14, F-WYD-05.15, F-WYD-06.1, F-WYD-06.2, F-WYD-06.3, F-WYD-07.1, F-WYD-07.2, F-WYD-07.3, F-WYD-08.1, F-WYD-08.2, F-WYD-08.3, F-WYD-09.1, F-WYD-09.2, F-WYD-09.3, F-WYD-09.4, F-WYD-09.5, F-WYD-09.6, F-WYD-09.7, F-WYD-09.8, F-WYD-09.9, F-WYD-09.10, F-WYD-10.1, F-WYD-10.2, F-WYD-10.3, F-WYD-10.4, F-WYD-11.1, F-WYD-11.2, F-WYD-12.1, F-WYD-12.2, F-WYD-12.3, F-WYD-13.1, F-WYD-14.1, F-WYD-14.2, F-WYD-14.3, F-WYD-14.4, F-WYD-15.1, F-WYD-15.2, F-WYD-15.3, F-WYD-15.4, F-WYD-15.5, F-WYD-15.6, F-WYD-15.7
+- **DOS** (20): F-DOS-01.1, F-DOS-01.2, F-DOS-01.3, F-DOS-01.4, F-DOS-01.5, F-DOS-01.6, F-DOS-02.1, F-DOS-02.2, F-DOS-02.3, F-DOS-03.1, F-DOS-03.2, F-DOS-03.3, F-DOS-03.4, F-DOS-04.1, F-DOS-04.2, F-DOS-04.3, F-DOS-05.1, F-DOS-05.2, F-DOS-06.1, F-DOS-06.2
+- **REJ** (100): F-REJ-01.1, F-REJ-01.2, F-REJ-01.3, F-REJ-01.4, F-REJ-01.6, F-REJ-01.7, F-REJ-01.8, F-REJ-01.9, F-REJ-01.10, F-REJ-01.11, F-REJ-01.12, F-REJ-02.1, F-REJ-02.2, F-REJ-02.3, F-REJ-02.4, F-REJ-02.5, F-REJ-02.6, F-REJ-02.7, F-REJ-02.8, F-REJ-02.9, F-REJ-02.10, F-REJ-02.11, F-REJ-02.12, F-REJ-03.1, F-REJ-03.2, F-REJ-04.1, F-REJ-04.2, F-REJ-04.3, F-REJ-04.4, F-REJ-05.1, F-REJ-05.2, F-REJ-05.3, F-REJ-05.4, F-REJ-05.6, F-REJ-06.1, F-REJ-06.2, F-REJ-06.3, F-REJ-06.4, F-REJ-06.5, F-REJ-06.6, F-REJ-06.7, F-REJ-06.8, F-REJ-07.2, F-REJ-07.3, F-REJ-07.4, F-REJ-07.5, F-REJ-07.6, F-REJ-07.7, F-REJ-07.8, F-REJ-07.9, F-REJ-08.1, F-REJ-08.2, F-REJ-08.3, F-REJ-08.4, F-REJ-08.5, F-REJ-08.6, F-REJ-08.7, F-REJ-08.8, F-REJ-09.1, F-REJ-09.2, F-REJ-09.3, F-REJ-10.1, F-REJ-10.2, F-REJ-10.3, F-REJ-10.4, F-REJ-10.5, F-REJ-11.1, F-REJ-11.2, F-REJ-11.3, F-REJ-11.4, F-REJ-12.1, F-REJ-12.2, F-REJ-12.3, F-REJ-12.4, F-REJ-12.5, F-REJ-13.1, F-REJ-13.2, F-REJ-13.3, F-REJ-13.4, F-REJ-13.5, F-REJ-13.6, F-REJ-13.7, F-REJ-13.8, F-REJ-14.1, F-REJ-14.2, F-REJ-14.3, F-REJ-14.4, F-REJ-16.1, F-REJ-16.2, F-REJ-16.3, F-REJ-17.1, F-REJ-17.4, F-REJ-18.1, F-REJ-18.2, F-REJ-20.1, F-REJ-20.2, F-REJ-20.3, F-REJ-20.4, F-REJ-20.5, F-REJ-20.6
+- **PLT** (16): F-PLT-01.1, F-PLT-01.2, F-PLT-01.3, F-PLT-01.4, F-PLT-01.5, F-PLT-01.6, F-PLT-02.1, F-PLT-02.2, F-PLT-03.1, F-PLT-04.1, F-PLT-04.2, F-PLT-04.3, F-PLT-04.4, F-PLT-04.5, F-PLT-05.1, F-PLT-05.2
+- **ABS** (57): F-ABS-01.1, F-ABS-01.2, F-ABS-01.3, F-ABS-01.4, F-ABS-02.1, F-ABS-02.2, F-ABS-02.3, F-ABS-02.4, F-ABS-02.5, F-ABS-02.6, F-ABS-02.7, F-ABS-02.8, F-ABS-03.1, F-ABS-03.2, F-ABS-03.3, F-ABS-03.4, F-ABS-04.1, F-ABS-04.2, F-ABS-04.3, F-ABS-04.4, F-ABS-05.1, F-ABS-05.2, F-ABS-05.3, F-ABS-05.4, F-ABS-05.5, F-ABS-05.6, F-ABS-05.7, F-ABS-06.1, F-ABS-06.2, F-ABS-06.3, F-ABS-06.4, F-ABS-06.5, F-ABS-06.6, F-ABS-07.1, F-ABS-07.2, F-ABS-07.3, F-ABS-07.4, F-ABS-07.5, F-ABS-08.1, F-ABS-08.2, F-ABS-08.3, F-ABS-08.4, F-ABS-08.5, F-ABS-08.6, F-ABS-08.7, F-ABS-08.8, F-ABS-08.9, F-ABS-08.10, F-ABS-09.1, F-ABS-09.2, F-ABS-09.3, F-ABS-09.4, F-ABS-09.5, F-ABS-10.1, F-ABS-10.2, F-ABS-10.3, F-ABS-11
+- **REF** (25): F-REF-01.1, F-REF-01.2, F-REF-01.3, F-REF-01.4, F-REF-01.5, F-REF-01.6, F-REF-01.7, F-REF-01.8, F-REF-01.9, F-REF-02.1, F-REF-02.2, F-REF-02.3, F-REF-02.4, F-REF-02.5, F-REF-02.6, F-REF-02.7, F-REF-02.8, F-REF-03.1, F-REF-03.2, F-REF-03.3, F-REF-04.1, F-REF-04.2, F-REF-05.1, F-REF-05.2, F-REF-05.3
+- **PAP** (27): F-PAP-01.1, F-PAP-01.2, F-PAP-01.3, F-PAP-01.4, F-PAP-01.5, F-PAP-01.6, F-PAP-01.7, F-PAP-01.8, F-PAP-01.9, F-PAP-01.10, F-PAP-01.11, F-PAP-01.12, F-PAP-01.13, F-PAP-01.14, F-PAP-01.15, F-PAP-01.16, F-PAP-02.1, F-PAP-02.2, F-PAP-02.3, F-PAP-02.4, F-PAP-02.5, F-PAP-02.6, F-PAP-02.7, F-PAP-02.8, F-PAP-02.9, F-PAP-02.10, F-PAP-02.11
+- **EDI** (27): F-EDI-01.1, F-EDI-01.2, F-EDI-01.3, F-EDI-01.4, F-EDI-01.5, F-EDI-01.6, F-EDI-01.7, F-EDI-01.8, F-EDI-01.9, F-EDI-01.10, F-EDI-01.11, F-EDI-01.12, F-EDI-01.13, F-EDI-01.14, F-EDI-01.15, F-EDI-01.16, F-EDI-01.17, F-EDI-01.18, F-EDI-01.19, F-EDI-01.20, F-EDI-01.21, F-EDI-01.22, F-EDI-01.23, F-EDI-02.1, F-EDI-02.2, F-EDI-02.3, F-EDI-02.4
+- **PRG** (25): F-PRG-01.1, F-PRG-01.2, F-PRG-01.3, F-PRG-01.4, F-PRG-01.5, F-PRG-01.6, F-PRG-02.1, F-PRG-03.1, F-PRG-03.2, F-PRG-03.3, F-PRG-04.1, F-PRG-04.2, F-PRG-04.3, F-PRG-04.4, F-PRG-05.1, F-PRG-05.2, F-PRG-05.3, F-PRG-05.4, F-PRG-05.5, F-PRG-06.1, F-PRG-06.2, F-PRG-06.3, F-PRG-06.4, F-PRG-07.1, F-PRG-07.2
+- **MAT** (26): F-MAT-01.1, F-MAT-01.2, F-MAT-01.3, F-MAT-01.4, F-MAT-01.5, F-MAT-01.6, F-MAT-01.7, F-MAT-01.8, F-MAT-01.9, F-MAT-01.10, F-MAT-01.11, F-MAT-01.12, F-MAT-01.13, F-MAT-02.1, F-MAT-02.2, F-MAT-02.3, F-MAT-02.4, F-MAT-02.5, F-MAT-02.6, F-MAT-02.7, F-MAT-03.1, F-MAT-03.2, F-MAT-03.3, F-MAT-04.1, F-MAT-04.2, F-MAT-04.3
+- **ANK** (14): F-ANK-01.1, F-ANK-01.2, F-ANK-01.3, F-ANK-01.4, F-ANK-01.5, F-ANK-01.6, F-ANK-01.7, F-ANK-01.8, F-ANK-01.9, F-ANK-01.10, F-ANK-01.11, F-ANK-01.12, F-ANK-01.13, F-ANK-01.14
+- **WYG** (13): F-WYG-01.1, F-WYG-01.2, F-WYG-01.3, F-WYG-01.4, F-WYG-01.5, F-WYG-01.6, F-WYG-02.1, F-WYG-02.2, F-WYG-02.3, F-WYG-02.4, F-WYG-03.1, F-WYG-04.1, F-WYG-04.2
+- **KOM** (24): F-KOM-01.1, F-KOM-01.2, F-KOM-01.3, F-KOM-01.4, F-KOM-01.5, F-KOM-02.1, F-KOM-02.2, F-KOM-02.3, F-KOM-02.4, F-KOM-03.1, F-KOM-03.2, F-KOM-03.3, F-KOM-03.4, F-KOM-03.5, F-KOM-03.6, F-KOM-03.7, F-KOM-03.8, F-KOM-04.1, F-KOM-04.2, F-KOM-04.3, F-KOM-04.4, F-KOM-04.5, F-KOM-05.1, F-KOM-05.3
+- **DOK** (20): F-DOK-01.1, F-DOK-01.2, F-DOK-01.3, F-DOK-01.4, F-DOK-01.5, F-DOK-01.6, F-DOK-01.7, F-DOK-01.8, F-DOK-01.9, F-DOK-01.10, F-DOK-01.11, F-DOK-02.1, F-DOK-02.2, F-DOK-02.3, F-DOK-02.4, F-DOK-02.5, F-DOK-02.6, F-DOK-02.7, F-DOK-02.8, F-DOK-03.1
+- **SAL** (50): F-SAL-01.1, F-SAL-01.2, F-SAL-01.3, F-SAL-01.4, F-SAL-01.5, F-SAL-01.6, F-SAL-02.1, F-SAL-02.2, F-SAL-02.3, F-SAL-02.4, F-SAL-02.5, F-SAL-02.6, F-SAL-02.7, F-SAL-02.8, F-SAL-02.9, F-SAL-02.10, F-SAL-02.11, F-SAL-03.1, F-SAL-03.2, F-SAL-03.3, F-SAL-03.4, F-SAL-03.5, F-SAL-03.6, F-SAL-04.1, F-SAL-04.2, F-SAL-04.3, F-SAL-04.4, F-SAL-05.1, F-SAL-05.2, F-SAL-05.3, F-SAL-05.4, F-SAL-05.5, F-SAL-06.1, F-SAL-06.2, F-SAL-06.3, F-SAL-06.4, F-SAL-07.1, F-SAL-07.2, F-SAL-07.3, F-SAL-07.4, F-SAL-07.5, F-SAL-07.6, F-SAL-07.7, F-SAL-08.1, F-SAL-08.2, F-SAL-08.3, F-SAL-08.4, F-SAL-08.5, F-SAL-08.6, F-SAL-08.7
+- **WID** (14): F-WID-01.1, F-WID-01.2, F-WID-01.3, F-WID-01.4, F-WID-01.5, F-WID-01.6, F-WID-01.7, F-WID-01.8, F-WID-01.9, F-WID-01.10, F-WID-01.11, F-WID-02.1, F-WID-02.2, F-WID-02.3
+- **UZY** (32): F-UZY-01.3, F-UZY-01.4, F-UZY-01.5, F-UZY-01.7, F-UZY-01.8, F-UZY-01.9, F-UZY-02.1, F-UZY-02.2, F-UZY-02.3, F-UZY-02.4, F-UZY-02.5, F-UZY-02.6, F-UZY-02.7, F-UZY-02.8, F-UZY-02.9, F-UZY-03.1, F-UZY-03.2, F-UZY-03.3, F-UZY-03.4, F-UZY-04.1, F-UZY-04.2, F-UZY-05.1, F-UZY-05.2, F-UZY-05.3, F-UZY-05.4, F-UZY-06.1, F-UZY-06.2, F-UZY-07.1, F-UZY-07.2, F-UZY-07.4, F-UZY-07.5, F-UZY-07.6
+- **UWT** (20): F-UWT-01.3, F-UWT-01.4, F-UWT-01.5, F-UWT-02.1, F-UWT-02.2, F-UWT-02.3, F-UWT-02.4, F-UWT-02.5, F-UWT-02.6, F-UWT-02.7, F-UWT-03.1, F-UWT-03.2, F-UWT-04.1, F-UWT-04.2, F-UWT-04.3, F-UWT-04.4, F-UWT-04.5, F-UWT-04.6, F-UWT-04.7, F-UWT-04.8
+- **WYS** (6): F-WYS-01.1, F-WYS-01.2, F-WYS-01.3, F-WYS-01.4, F-WYS-02.1, F-WYS-02.2
+- **API** (16): F-API-01.1, F-API-01.2, F-API-01.3, F-API-01.4, F-API-01.5, F-API-01.6, F-API-01.7, F-API-01.8, F-API-01.9, F-API-02.1, F-API-02.2, F-API-02.3, F-API-03.1, F-API-03.2, F-API-04.1, F-API-04.2
+- **ADM** (41): F-ADM-01.1, F-ADM-01.2, F-ADM-01.3, F-ADM-01.4, F-ADM-01.5, F-ADM-01.6, F-ADM-01.7, F-ADM-01.8, F-ADM-01.9, F-ADM-01.10, F-ADM-01.11, F-ADM-01.12, F-ADM-02.1, F-ADM-02.2, F-ADM-02.3, F-ADM-02.4, F-ADM-03.1, F-ADM-03.2, F-ADM-03.3, F-ADM-03.4, F-ADM-03.5, F-ADM-04.3, F-ADM-04.4, F-ADM-04.5, F-ADM-05.1, F-ADM-05.2, F-ADM-06.1, F-ADM-06.2, F-ADM-06.3, F-ADM-06.4, F-ADM-06.5, F-ADM-06.6, F-ADM-07.1, F-ADM-07.2, F-ADM-07.4, F-ADM-07.5, F-ADM-07.6, F-ADM-08.1, F-ADM-09.1, F-ADM-09.2, F-ADM-09.3
+- **PLG** (42): F-PLG-01.1, F-PLG-02.1, F-PLG-03.1, F-PLG-03.2, F-PLG-04.1, F-PLG-04.2, F-PLG-04.3, F-PLG-04.4, F-PLG-04.5, F-PLG-04.6, F-PLG-04.7, F-PLG-04.8, F-PLG-04.9, F-PLG-04.10, F-PLG-04.11, F-PLG-04.12, F-PLG-04.13, F-PLG-04.14, F-PLG-04.15, F-PLG-04.16, F-PLG-05.1, F-PLG-05.2, F-PLG-05.3, F-PLG-05.4, F-PLG-05.5, F-PLG-05.6, F-PLG-05.7, F-PLG-06.1, F-PLG-06.2, F-PLG-06.3, F-PLG-06.4, F-PLG-06.5, F-PLG-06.6, F-PLG-06.7, F-PLG-06.8, F-PLG-06.9, F-PLG-06.10, F-PLG-07.1, F-PLG-07.2, F-PLG-07.3, F-PLG-08.1, F-PLG-08.2
+- **I18** (8): F-I18-01.2, F-I18-01.3, F-I18-01.5, F-I18-02.1, F-I18-03.1, F-I18-03.2, F-I18-03.3, F-I18-04.1
+- **OPS** (13): F-OPS-01.2, F-OPS-01.3, F-OPS-02.1, F-OPS-03.1, F-OPS-04.1, F-OPS-04.2, F-OPS-04.3, F-OPS-04.4, F-OPS-05.1, F-OPS-06.1, F-OPS-06.2, F-OPS-06.3, F-OPS-06.4
+- **MIG** (2): F-MIG-01.1, F-MIG-01.2
+
+### Wiersze wyłączone i do decyzji
+
+| Wiersz | Status | Powód |
+|---|---|---|
+| F-ADM-01.13 Ustawienia deweloperskie Indico | wylaczona | F1 (c): Tryb debugowania, dziennik zapytań SQL i profilowanie żądań służą wyłącznie deweloperom Indico. |
+| F-ADM-06.7 Narzędzia deweloperskie i tłumaczeniowe projektu Indico | wylaczona | F1 (c): Serwer deweloperski oraz obsługa tłumaczeń w projekcie Indico (ekstrakcja, push i pull do serwisu tłumaczeń) to narzędzia wyłącznie dla deweloperów Indico. |
+| F-ADM-06.8 Polecenia naprawcze dla historycznych wersji Indico | wylaczona | F1 (a): Reset stanu migracji po aktualizacji z Indico 1.9.x i naprawa list dostępu po błędzie sprzed 2.2.3 dotyczą wyłącznie historycznych wersji Indico. |
+| F-ADM-10 Rejestracja instancji we wspólnocie Indico | wylaczona | F1 (b): Telemetria cephalopod (rejestr instancji wspólnoty Indico i jego punkt informacji o systemie) to infrastruktura wspólnoty i CERN-u. Odrębna od F-ADM-05, które pobiera komunikaty bez wysyłania danych instancji. |
+| F-MIG-02 Jednorazowa pełna migracja archiwum Indico | do-decyzji | pytanie O2 (pełna migracja archiwum) |
 
 ## G. Mapa przewag
 
-Uzupełniana po Kroku 3 razem z F.
+Ta sama zasada co w F: bez testu e2e żadna pozycja nie jest „spełniona”.
+
+| Pozycja | Status | Dowód |
+|---|---|---|
+| P1 Uczestnik na telefonie | częściowo | Interfejs projektowany mobile-first (Tailwind, `apps/web/src/routes/*`); ścieżki lista → szczegóły → zapis → rezygnacja istnieją (`routes/index.tsx`, `routes/events/$eventId.tsx`). Brak testów e2e przy 360 px |
+| P2 Zapis bez tarcia | częściowo | Zapis jednym przyciskiem dla zalogowanego, dane z konta (`registerForEventServer`, `apps/web/src/components/event-details/event-summary.tsx`). Brak własnych pytań organizatora, więc warunek „bez pytań” jest jedynym przypadkiem. Brak testu e2e |
+| P3 Limit, lista rezerwowa, rezygnacja | częściowo | Limit z niezmiennikiem pod współbieżnością (`CHECK`, `packages/db/test/concurrency.test.ts`), rezygnacja jednym działaniem (`unregisterFromEventServer`). **Brak listy rezerwowej i awansu** (brak stanu rejestracji, sekcja C) |
+| P4 Publikacja w dwie minuty | częściowo | Tworzenie wydarzenia w panelu (`createAdminEventServer`). Brak minimalnego zestawu pól, roli organizatora i duplikowania (`grep -rn "duplicate\|clone" apps/admin/src packages/api/src/admin` → pusto) |
+| P5 Jeden kalendarz kampusu | częściowo | Publiczna lista z wyszukiwaniem i filtrami miejsca, wydziału i typu (`packages/api/src/events/schemas.ts`). Brak widoku kalendarza, ICS, Open Graph i schema.org (`grep -rn "og:\|schema.org\|ld+json" apps/web/src` → pusto) |
+| P6 Dostępność i dwa języki | częściowo | Interfejs pl/en (Paraglide), `aria-live` na licznikach. Teksty poza tłumaczeniami (D2), brak testu axe, deklaracji dostępności i przeglądu ręcznego |
+| P7 RODO w projekcie | brak | Brak klauzuli przy zapisie, retencji, eksportu i usunięcia konta (`apps/web/src/routes/account.tsx` nie ma tych funkcji) |
+| P8 Logowanie uczelniane | brak | Brak interfejsu tożsamości i adaptera uczelni; jest hasło, magic link i opcjonalni dostawcy społecznościowi (`packages/api/src/auth/social-providers.ts`) |
+| P9 Check-in w tej samej aplikacji | brak | Brak biletów i odhaczania obecności |
+| P10 Przypomnienia i zmiany | brak | Brak powiadomień o zmianie terminu, miejsca i odwołaniu (brak statusu wydarzenia, sekcja C) |
+| P11 Integracja z USOS | brak | Zależy od O1; brak kodu |
+| P12 Współistnienie z Indico | brak | Brak importu z Indico |
+| P13 Statystyki | częściowo | Organizator (admin) widzi zapisanych i liczniki miejsc (`registrants-list.tsx`, `event-summary-card.tsx`). Brak listy rezerwowej, obecności, odsetka nieobecnych i statystyk administratora w czasie |
+| P14 Treść w dwóch językach | brak | `events` ma jedną kolumnę `title` i `description` (`packages/db/src/schema/events.ts`) |
+| P15 API i osadzanie | brak | Brak publicznego REST API, OpenAPI i widżetu (sekcja C, „API”) |
+| P16 Goście bez konta | brak | Zapis wymaga konta. Magic link i zaproszenie grupowe zakładają konto niejawnie (`auth/group-invitation-plugin.ts`) |
 
 ## H. Infrastruktura testowa
 
