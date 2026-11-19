@@ -1,4 +1,4 @@
-import type { EventRegistrationActions } from "~/lib/event-registration/types";
+import type { EventRegistrationActions } from "~/lib/registration/use-event-list-registrations";
 
 export function createQueryRegistrationActions(
 	registeredEventIds: Set<string>,

@@ -10,12 +10,12 @@ import {
 } from "@repo/ui/components/card";
 import { Link } from "@tanstack/react-router";
 import { EventRegistrationButton } from "~/components/event-registration-button";
-import type { EventRegistrationActions } from "~/lib/event-registration/types";
 import { formatEventDate } from "~/lib/events/format-event-date";
 import type {
 	EventSeatCountSource,
 	HomeEventListEvent,
 } from "~/lib/events/types";
+import type { EventRegistrationActions } from "~/lib/registration/use-event-list-registrations";
 
 type HomeEventCardProps = {
 	event: HomeEventListEvent;

@@ -59,11 +59,7 @@ function EventDetailsPage() {
 			void navigate({ to: ".", search: {}, replace: true });
 		}
 	}, [joined, navigate]);
-	const registrations = useEventDetailsRegistrations(
-		eventId,
-		user?.id,
-		event.agenda.map((item) => item.id),
-	);
+	const registrations = useEventDetailsRegistrations(eventId, user?.id);
 
 	const props = {
 		event,

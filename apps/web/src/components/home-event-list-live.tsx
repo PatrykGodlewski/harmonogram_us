@@ -3,9 +3,9 @@
 import type { EventFiltersParams } from "@repo/api/events/schemas";
 import { HomeEventCards } from "~/components/home-event-card";
 import { HomeEventListShell } from "~/components/home-event-list-shell";
-import { useEventRegistrations } from "~/lib/event-registration/use-event-registrations";
 import { useEventListData } from "~/lib/events/use-event-list-data";
 import { useEventSeatCounts } from "~/lib/events/use-event-seat-counts";
+import { useEventListRegistrations } from "~/lib/registration/use-event-list-registrations";
 
 export type HomeEventListLiveProps = {
 	filters: EventFiltersParams;
@@ -22,11 +22,7 @@ export default function HomeEventListLive({
 		userId: user?.id,
 	});
 	const seatCounts = useEventSeatCounts();
-	const registrations = useEventRegistrations({
-		filters,
-		userId: user?.id,
-		seatCounts,
-	});
+	const registrations = useEventListRegistrations(user?.id);
 
 	return (
 		<HomeEventListShell

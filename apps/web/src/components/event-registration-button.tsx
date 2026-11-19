@@ -7,7 +7,7 @@ import {
 } from "@repo/i18n/paraglide/messages";
 import { Button } from "@repo/ui/components/button";
 import { Link } from "@tanstack/react-router";
-import type { EventRegistrationActions } from "~/lib/event-registration/types";
+import type { EventRegistrationActions } from "~/lib/registration/use-event-list-registrations";
 
 type EventRegistrationButtonProps = {
 	eventId: string;

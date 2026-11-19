@@ -24,9 +24,12 @@ export const fetchEventsServer = createServerFn({ method: "GET" })
 	.inputValidator((input: unknown) => eventFiltersSchema.parse(input))
 	.handler(async ({ data }) => getEvents(data));
 
+/** Prefix of every event-list query, whatever the filters (for invalidation). */
+export const eventsQueryKeyPrefix = ["events"] as const;
+
 export const eventsQueryOptions = (filters: EventFiltersParams) =>
 	queryOptions({
-		queryKey: ["events", filters] as const,
+		queryKey: [...eventsQueryKeyPrefix, filters] as const,
 		queryFn: () => fetchEventsServer({ data: filters }),
 		staleTime: 30_000,
 		placeholderData: (previousData) => previousData,
