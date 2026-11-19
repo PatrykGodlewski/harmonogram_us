@@ -1,6 +1,10 @@
 import { DomainError } from "../queries/domain-errors";
 import { registerForEvent } from "../queries/event-registrations";
-import { createGroup, listGroupsForEvent } from "../queries/groups";
+import {
+	acceptInvitation,
+	reissueInvitationToken,
+} from "../queries/group-members";
+import { closeGroup, createGroup, listGroupsForEvent } from "../queries/groups";
 import { ensureAccount } from "./accounts";
 import { accountSeeds, groupSeeds, registrationSeeds } from "./data";
 
@@ -67,14 +71,28 @@ export async function seedGroups(
 		if (existing.some((row) => row.ownerEmail === group.ownerEmail)) {
 			continue;
 		}
-		await createGroup({
+		const { groupId, invited } = await createGroup({
 			eventId: group.eventId,
 			ownerUserId,
 			places: group.places,
-			itemIds: [],
+			itemIds: group.itemIds,
 			name: group.name,
 			emails: group.invite,
-			joinLinkEnabled: true,
+			joinLinkEnabled: group.joinLinkEnabled,
 		});
+		// Invitation tokens are stored only as hashes: issue a fresh one to accept with.
+		for (const email of group.accept) {
+			const memberId = invited.find((ref) => ref.email === email)?.memberId;
+			const token = memberId ? await reissueInvitationToken(memberId) : null;
+			if (!token) {
+				throw new Error(
+					`Group seed: ${email} must be invited to ${group.name}`,
+				);
+			}
+			await acceptInvitation(token, accountId(accounts, email));
+		}
+		if (group.close) {
+			await closeGroup(groupId, ownerUserId);
+		}
 	}
 }

@@ -3,7 +3,7 @@ import { eq, sql } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "../src/client";
 import { authUsers } from "../src/schema/better-auth";
-import { accountSeeds, FULL_EVENT_ID } from "../src/seed/data";
+import { accountSeeds, FULL_EVENT_ID, groupSeeds } from "../src/seed/data";
 import { seedDatabase } from "../src/seed/seed";
 import { credentialHash, resetDb } from "./helpers";
 
@@ -30,7 +30,7 @@ describe("seedDatabase", () => {
 		expect(first?.events).toBeGreaterThanOrEqual(10);
 		expect(first?.users).toBe(accountSeeds.length);
 		expect(first?.waitlisted).toBeGreaterThan(0);
-		expect(first?.groups).toBe(1);
+		expect(first?.groups).toBe(groupSeeds.length);
 		await seedDatabase({ password: PASSWORD, nodeEnv: "development" });
 		expect(await counts()).toEqual(first);
 	});
@@ -57,6 +57,22 @@ describe("seedDatabase", () => {
 			expect(row, row.id).toMatchObject({ same_day: true, starts_with_event: true });
 			expect(row.items, row.id).toBeGreaterThanOrEqual(2);
 		}
+	});
+
+	it("seeds groups with accepted members, agenda items and a closed group", async () => {
+		await seedDatabase({ password: PASSWORD, nodeEnv: "development" });
+		const [row] = await db.execute<{ accepted: number; closed: number; with_items: number }>(sql`
+			SELECT
+				(SELECT count(*)::int FROM registration_group_members WHERE status = 'confirmed') AS accepted,
+				(SELECT count(*)::int FROM registration_groups WHERE status <> 'open') AS closed,
+				(SELECT count(DISTINCT group_id)::int FROM registration_group_items) AS with_items
+		`);
+		const expectedAccepted = groupSeeds.reduce((sum, group) => sum + group.accept.length, 0);
+		expect(row).toEqual({
+			accepted: expectedAccepted,
+			closed: groupSeeds.filter((group) => group.close).length,
+			with_items: groupSeeds.filter((group) => group.itemIds.length > 0).length,
+		});
 	});
 
 	it("refuses to run in production", async () => {

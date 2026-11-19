@@ -422,6 +422,12 @@ export const accountSeeds: AccountSeed[] = [
 		withPassword: true,
 	},
 	{
+		email: "nauczyciel2@harmonogram.local",
+		name: "Krzysztof Opiekun",
+		role: "user",
+		withPassword: true,
+	},
+	{
 		email: "student1@harmonogram.local",
 		name: "Jan Kowalski",
 		role: "user",
@@ -493,7 +499,14 @@ export type GroupSeed = {
 	ownerEmail: string;
 	name: string;
 	places: number;
+	/** Agenda items the whole group attends. */
+	itemIds: string[];
 	invite: string[];
+	/** Invited people with a seeded account who accept the invitation. */
+	accept: string[];
+	joinLinkEnabled: boolean;
+	/** Closed by the owner: unused places go back to the event. */
+	close?: boolean;
 };
 
 export const groupSeeds: GroupSeed[] = [
@@ -502,6 +515,55 @@ export const groupSeeds: GroupSeed[] = [
 		ownerEmail: "nauczyciel@harmonogram.local",
 		name: "Klasa 3B",
 		places: 4,
-		invite: ["uczen1@szkola.example", "uczen2@szkola.example"],
+		itemIds: ["agenda-evt-1-web"],
+		invite: [
+			"uczen1@szkola.example",
+			"uczen2@szkola.example",
+			"student5@harmonogram.local",
+		],
+		accept: ["student5@harmonogram.local"],
+		joinLinkEnabled: true,
+	},
+	{
+		eventId: "evt-robotics-contest",
+		ownerEmail: "nauczyciel2@harmonogram.local",
+		name: "Drużyna robotyczna LO nr 2",
+		places: 5,
+		itemIds: [
+			"agenda-evt-robotics-contest-qualifying",
+			"agenda-evt-robotics-contest-final",
+		],
+		invite: [
+			"uczen3@szkola.example",
+			"student2@harmonogram.local",
+			"student3@harmonogram.local",
+		],
+		accept: ["student2@harmonogram.local", "student3@harmonogram.local"],
+		joinLinkEnabled: true,
+	},
+	{
+		eventId: "evt-arts-exhibition",
+		ownerEmail: "nauczyciel@harmonogram.local",
+		name: "Koło plastyczne",
+		places: 3,
+		itemIds: ["agenda-evt-arts-exhibition-tour"],
+		invite: ["student4@harmonogram.local", "uczen4@szkola.example"],
+		accept: ["student4@harmonogram.local"],
+		joinLinkEnabled: false,
+		close: true,
+	},
+	{
+		eventId: "evt-career-day",
+		ownerEmail: "nauczyciel2@harmonogram.local",
+		name: "Rok III informatyki",
+		places: 6,
+		itemIds: [],
+		invite: [
+			"student1@harmonogram.local",
+			"uczen5@szkola.example",
+			"uczen6@szkola.example",
+		],
+		accept: ["student1@harmonogram.local"],
+		joinLinkEnabled: true,
 	},
 ];
