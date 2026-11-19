@@ -313,5 +313,12 @@
 	"reg_email_promoted_subject": "Miejsce się zwolniło: {event}",
 	"reg_email_promoted_intro": "Zwolniło się miejsce na wydarzeniu {event} ({date}). Jesteś zapisany.",
 	"reg_email_button": "Zobacz wydarzenie",
-	"reg_email_withdraw_hint": "Jeśli nie możesz przyjść, wypisz się na stronie wydarzenia — miejsce dostanie następna osoba."
+	"reg_email_withdraw_hint": "Jeśli nie możesz przyjść, wypisz się na stronie wydarzenia — miejsce dostanie następna osoba.",
+	"account_my_registrations": "Moje zapisy",
+	"account_upcoming": "Nadchodzące",
+	"account_past": "Minione",
+	"account_registrations_empty": "Nie masz jeszcze żadnych zapisów.",
+	"account_section_empty": "Brak wydarzeń.",
+	"account_waitlisted": "Lista rezerwowa (pozycja {position})",
+	"account_open_event": "Wydarzenie"
 }

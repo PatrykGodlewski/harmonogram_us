@@ -42,6 +42,7 @@ import { getRequestHeaders } from "@tanstack/react-start/server";
 import * as React from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { MyRegistrations } from "~/components/account/my-registrations";
 import { authClient } from "../lib/auth-client";
 
 const PASSWORD_MIN_LENGTH = 8;
@@ -163,6 +164,7 @@ function AccountPage() {
 						: account_password_status_missing()}
 				</p>
 			</div>
+			<MyRegistrations />
 			<MyGroups />
 			<div className="mt-6 rounded-lg border p-4">
 				<h2 className="mb-4 text-lg font-semibold">
