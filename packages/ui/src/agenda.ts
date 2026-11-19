@@ -48,3 +48,83 @@ export function findOverlaps<T extends AgendaTimed>(
 	}
 	return overlaps;
 }
+
+export type AgendaLaidOut<T> = T & {
+	/** 0-based column among items that run at the same time. */
+	lane: number;
+	/** Minutes since midnight of the item's day, in the layout's time zone. */
+	startMinute: number;
+	endMinute: number;
+};
+
+export type AgendaDay<T> = {
+	/** YYYY-MM-DD in the layout's time zone. */
+	day: string;
+	/** Whole hours around the day's items, in minutes since midnight. */
+	startMinute: number;
+	endMinute: number;
+	/** Number of columns the day needs. */
+	lanes: number;
+	items: AgendaLaidOut<T>[];
+};
+
+function zonedParts(date: Date, timeZone: string) {
+	const parts = new Intl.DateTimeFormat("en-CA", {
+		timeZone,
+		year: "numeric",
+		month: "2-digit",
+		day: "2-digit",
+		hour: "2-digit",
+		minute: "2-digit",
+		hourCycle: "h23",
+	}).formatToParts(date);
+	const get = (type: Intl.DateTimeFormatPartTypes) =>
+		parts.find((part) => part.type === type)?.value ?? "00";
+	return {
+		day: `${get("year")}-${get("month")}-${get("day")}`,
+		minute: Number(get("hour")) * 60 + Number(get("minute")),
+	};
+}
+
+/**
+ * Splits the agenda into days (in `timeZone`) and gives each item a column, so items
+ * that run at the same time sit side by side. An item takes the lowest column whose
+ * last item has ended; items that only touch share a column.
+ */
+export function layoutAgenda<T extends AgendaTimed>(
+	items: T[],
+	timeZone: string,
+): AgendaDay<T>[] {
+	const days = new Map<string, AgendaLaidOut<T>[]>();
+	for (const item of sortByStart(items)) {
+		const start = zonedParts(new Date(item.startsAt), timeZone);
+		const durationMinutes = Math.round(
+			(ms(item.endsAt) - ms(item.startsAt)) / 60_000,
+		);
+		const laid = {
+			...item,
+			lane: 0,
+			startMinute: start.minute,
+			endMinute: start.minute + durationMinutes,
+		};
+		days.set(start.day, [...(days.get(start.day) ?? []), laid]);
+	}
+
+	return [...days].map(([day, dayItems]) => {
+		const laneEnds: number[] = [];
+		for (const item of dayItems) {
+			const free = laneEnds.findIndex((end) => end <= item.startMinute);
+			item.lane = free === -1 ? laneEnds.length : free;
+			laneEnds[item.lane] = item.endMinute;
+		}
+		return {
+			day,
+			startMinute:
+				Math.floor(Math.min(...dayItems.map((i) => i.startMinute)) / 60) * 60,
+			endMinute:
+				Math.ceil(Math.max(...dayItems.map((i) => i.endMinute)) / 60) * 60,
+			lanes: Math.max(1, laneEnds.length),
+			items: dayItems,
+		};
+	});
+}
