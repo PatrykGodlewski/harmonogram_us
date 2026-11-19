@@ -10,7 +10,7 @@ import {
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
-import { formatWarsawDateTime } from "@repo/ui/time";
+import { formatEventDateTime } from "@repo/ui/time";
 import { Link } from "@tanstack/react-router";
 import type {
 	EventDetailsData,
@@ -44,7 +44,7 @@ export function EventSummary({
 			<div className="flex flex-col gap-2">
 				<h1 className="text-2xl font-semibold tracking-tight">{event.title}</h1>
 				<p className="text-muted-foreground">
-					{formatWarsawDateTime(event.date, locale)}
+					{formatEventDateTime(event.date, locale)}
 				</p>
 				<div className="flex flex-wrap gap-2">
 					<Badge variant="secondary">{event.typeLabel}</Badge>

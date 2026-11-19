@@ -3,6 +3,7 @@ import {
 	admin_action_delete,
 	admin_action_edit,
 	admin_table_empty,
+	ui_actions,
 } from "@repo/i18n/paraglide/messages";
 import { Button } from "@repo/ui/components/button";
 import {
@@ -71,7 +72,7 @@ export function AdminEntityTable<T>({
 							))}
 							{showActions ? (
 								<TableHead className="w-[140px] text-right">
-									<span className="sr-only">Actions</span>
+									<span className="sr-only">{ui_actions()}</span>
 								</TableHead>
 							) : null}
 						</TableRow>

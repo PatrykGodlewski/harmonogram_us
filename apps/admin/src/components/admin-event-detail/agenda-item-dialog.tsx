@@ -34,9 +34,9 @@ import {
 import { Textarea } from "@repo/ui/components/textarea";
 import { AdminFormDialog } from "@repo/ui/composed/admin/admin-form-dialog";
 import {
-	fromWarsawWallTime,
-	toWarsawDateInput,
-	toWarsawTimeInput,
+	fromEventWallTime,
+	toEventDateInput,
+	toEventTimeInput,
 } from "@repo/ui/time";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
@@ -61,8 +61,8 @@ const agendaItemFormSchema = z
 	})
 	.refine(
 		(value) =>
-			fromWarsawWallTime(value.date, value.endTime) >
-			fromWarsawWallTime(value.date, value.startTime),
+			fromEventWallTime(value.date, value.endTime) >
+			fromEventWallTime(value.date, value.startTime),
 		{ path: ["endTime"], message: admin_error_end_before_start() },
 	);
 
@@ -76,7 +76,7 @@ function toFormValues(
 		return {
 			title: "",
 			description: "",
-			date: toWarsawDateInput(eventDate),
+			date: toEventDateInput(eventDate),
 			startTime: "",
 			endTime: "",
 			locationId: NONE_VALUE,
@@ -88,9 +88,9 @@ function toFormValues(
 	return {
 		title: item.title,
 		description: item.description ?? "",
-		date: toWarsawDateInput(startsAt),
-		startTime: toWarsawTimeInput(startsAt),
-		endTime: toWarsawTimeInput(new Date(item.endsAt)),
+		date: toEventDateInput(startsAt),
+		startTime: toEventTimeInput(startsAt),
+		endTime: toEventTimeInput(new Date(item.endsAt)),
 		locationId: item.locationId ?? NONE_VALUE,
 		maxSeats: item.maxSeats === null ? "" : String(item.maxSeats),
 		requiresRegistration: item.requiresRegistration,
@@ -121,8 +121,8 @@ export function AgendaItemDialog({
 			const payload = {
 				title: values.title,
 				description: values.description.trim() || null,
-				startsAt: fromWarsawWallTime(values.date, values.startTime),
-				endsAt: fromWarsawWallTime(values.date, values.endTime),
+				startsAt: fromEventWallTime(values.date, values.startTime),
+				endsAt: fromEventWallTime(values.date, values.endTime),
 				locationId: values.locationId === NONE_VALUE ? null : values.locationId,
 				maxSeats: values.maxSeats === "" ? null : Number(values.maxSeats),
 				requiresRegistration: values.requiresRegistration,

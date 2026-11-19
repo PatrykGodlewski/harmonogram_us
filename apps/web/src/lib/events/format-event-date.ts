@@ -1,6 +1,7 @@
 import { getLocale } from "@repo/i18n/paraglide/runtime";
-import { formatWarsawDate } from "@repo/ui/time";
+import { formatEventDate } from "@repo/ui/time";
 
-export function formatEventDate(date: Date | string) {
-	return formatWarsawDate(date, getLocale());
+/** The event date in the current UI locale. */
+export function formatEventDateForLocale(date: Date | string) {
+	return formatEventDate(date, getLocale());
 }

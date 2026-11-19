@@ -10,7 +10,7 @@ import {
 } from "@repo/ui/components/card";
 import { Link } from "@tanstack/react-router";
 import { EventRegistrationButton } from "~/components/event-registration-button";
-import { formatEventDate } from "~/lib/events/format-event-date";
+import { formatEventDateForLocale } from "~/lib/events/format-event-date";
 import type {
 	EventSeatCountSource,
 	HomeEventListEvent,
@@ -54,7 +54,7 @@ export function HomeEventCard({
 					</Link>
 				</CardTitle>
 				<CardDescription>
-					{formatEventDate(event.date)}
+					{formatEventDateForLocale(event.date)}
 					{" · "}
 					{events_seats_remaining({ remaining: seatsRemaining, max: maxSeats })}
 				</CardDescription>

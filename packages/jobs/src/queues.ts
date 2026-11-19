@@ -1,12 +1,13 @@
+import { env } from "@repo/env";
 import { z } from "zod";
 
 /** Policy "short" + singletonKey=memberId: at most one queued send per member. */
 export const QUEUE_GROUP_INVITATION_EMAIL = "group-invitations";
 export const QUEUE_CLOSE_EXPIRED_GROUPS = "close-expired-groups";
 
-/** Every 5 minutes, Warsaw time. */
+/** Every 5 minutes, in the installation time zone. */
 export const CLOSE_EXPIRED_GROUPS_CRON = "*/5 * * * *";
-export const JOBS_TIME_ZONE = "Europe/Warsaw";
+export const JOBS_TIME_ZONE = env.APP_TIME_ZONE;
 
 export const groupInvitationEmailPayload = z.object({
 	memberId: z.string().min(1),

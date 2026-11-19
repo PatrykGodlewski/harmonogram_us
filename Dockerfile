@@ -23,6 +23,7 @@ FROM base AS builder
 
 ARG APP=web
 ARG VITE_TURNSTILE_SITE_KEY=""
+ARG VITE_APP_TIME_ZONE="Europe/Warsaw"
 
 WORKDIR /app
 
@@ -34,6 +35,7 @@ RUN pnpm install --frozen-lockfile --ignore-scripts
 COPY --from=pruner /app/out/full/ .
 
 ENV VITE_TURNSTILE_SITE_KEY=${VITE_TURNSTILE_SITE_KEY}
+ENV VITE_APP_TIME_ZONE=${VITE_APP_TIME_ZONE}
 
 RUN pnpm turbo run build --filter="${APP}"
 

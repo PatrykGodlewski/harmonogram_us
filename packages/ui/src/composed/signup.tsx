@@ -6,6 +6,7 @@ import {
 	auth_field_email,
 	auth_field_invalid_value,
 	auth_field_password,
+	auth_signup_failed,
 	auth_submit_signing_up,
 	auth_submit_signup,
 	auth_success_account_created_message,
@@ -271,10 +272,10 @@ function useSignup(redirectTo: string, captchaToken: string | null) {
 						: undefined,
 				});
 				if (error) {
-					throw new Error(getRequestErrorMessage(error, "Failed to sign up"));
+					throw new Error(getRequestErrorMessage(error, auth_signup_failed()));
 				}
 			} catch (error) {
-				throw new Error(getRequestErrorMessage(error, "Failed to sign up"));
+				throw new Error(getRequestErrorMessage(error, auth_signup_failed()));
 			}
 		},
 		onSuccess: async () => {

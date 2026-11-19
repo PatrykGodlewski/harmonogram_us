@@ -51,10 +51,10 @@ import { Textarea } from "@repo/ui/components/textarea";
 import { AdminEntityTable } from "@repo/ui/composed/admin/admin-entity-table";
 import { AdminFormDialog } from "@repo/ui/composed/admin/admin-form-dialog";
 import {
-	formatWarsawDateTime,
-	fromWarsawWallTime,
-	toWarsawDateInput,
-	toWarsawTimeInput,
+	formatEventDateTime,
+	fromEventWallTime,
+	toEventDateInput,
+	toEventTimeInput,
 } from "@repo/ui/time";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -69,12 +69,12 @@ const NONE_VALUE = "__none__";
 
 /** `datetime-local` value in Warsaw time (event times are always Polish time). */
 function formatDateTimeLocal(value: Date) {
-	return `${toWarsawDateInput(value)}T${toWarsawTimeInput(value)}`;
+	return `${toEventDateInput(value)}T${toEventTimeInput(value)}`;
 }
 
 function parseDateTimeLocal(value: string) {
 	const [date = "", time = "00:00"] = value.split("T");
-	return fromWarsawWallTime(date, time);
+	return fromEventWallTime(date, time);
 }
 
 export function AdminEventsPage() {
@@ -241,7 +241,7 @@ export function AdminEventsPage() {
 					{
 						key: "date",
 						header: admin_field_date(),
-						cell: (row) => formatWarsawDateTime(row.date, getLocale()),
+						cell: (row) => formatEventDateTime(row.date, getLocale()),
 					},
 					{
 						key: "type",

@@ -292,5 +292,12 @@
 	"admin_group_unnamed": "group",
 	"admin_field_group_deadline_hours": "Group confirmation deadline (hours before start)",
 	"admin_field_group_deadline_hours_hint": "Group places that aren't confirmed are released this many hours before the event. 0 = until it starts.",
-	"error_email_not_allowed": "One or more email addresses can't receive invitations (disposable address or no mail server)."
+	"error_email_not_allowed": "One or more email addresses can't receive invitations (disposable address or no mail server).",
+	"ui_close": "Close",
+	"ui_toggle_sidebar": "Toggle sidebar",
+	"ui_sidebar_title": "Sidebar",
+	"ui_sidebar_description": "Navigation on small screens.",
+	"ui_actions": "Actions",
+	"auth_login_link_failed": "Failed to send the login link",
+	"auth_signup_failed": "Failed to sign up"
 }

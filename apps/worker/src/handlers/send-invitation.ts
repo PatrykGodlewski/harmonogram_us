@@ -12,7 +12,7 @@ import {
 	group_email_preview,
 } from "@repo/i18n/paraglide/messages";
 import type { GroupInvitationEmailPayload } from "@repo/jobs/queues";
-import { formatWarsawDateTime } from "@repo/ui/time";
+import { formatEventDateTime } from "@repo/ui/time";
 
 export type SendInvitationDeps = {
 	send: typeof sendTransactionalEmail;
@@ -50,7 +50,7 @@ export async function sendInvitationEmail(
 
 	const { locale } = payload;
 	const url = new URL(`/${locale}/invite/${token}`, deps.baseUrl).toString();
-	const eventDate = formatWarsawDateTime(view.group.eventDate, locale);
+	const eventDate = formatEventDateTime(view.group.eventDate, locale);
 	const teacherName = view.group.ownerName ?? "";
 
 	await deps.send({
@@ -65,7 +65,7 @@ export async function sendInvitationEmail(
 			locale,
 			eventTitle: view.group.eventTitle,
 			eventDate,
-			deadline: formatWarsawDateTime(view.group.deadline, locale),
+			deadline: formatEventDateTime(view.group.deadline, locale),
 			teacherName,
 			groupName: view.group.name,
 			itemTitles: view.itemTitles,

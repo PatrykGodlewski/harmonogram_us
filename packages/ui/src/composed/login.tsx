@@ -6,6 +6,7 @@ import {
 	auth_error_try_again,
 	auth_field_email,
 	auth_field_password,
+	auth_login_link_failed,
 	auth_status_success_title,
 	auth_submit_magic_link,
 	auth_submit_sending_magic_link,
@@ -255,7 +256,7 @@ function useLogin(redirectTo: string, captchaToken: string | null) {
 						}
 					: undefined,
 			});
-			if (error) throw new Error(error.message ?? "Failed to send login link");
+			if (error) throw new Error(error.message ?? auth_login_link_failed());
 		},
 		onSuccess: () => {
 			toast.success(auth_status_success_title(), {

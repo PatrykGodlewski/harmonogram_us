@@ -18,7 +18,7 @@ import { appErrorMessage } from "@repo/ui/app-errors";
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
 import { Label } from "@repo/ui/components/label";
-import { formatWarsawDateTime } from "@repo/ui/time";
+import { formatEventDateTime } from "@repo/ui/time";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
@@ -82,7 +82,7 @@ function JoinGroupPage() {
 				{join_description({
 					teacher: group.ownerName ?? "",
 					event: group.eventTitle,
-					date: formatWarsawDateTime(group.eventDate, locale),
+					date: formatEventDateTime(group.eventDate, locale),
 				})}
 			</p>
 			{accepting ? (

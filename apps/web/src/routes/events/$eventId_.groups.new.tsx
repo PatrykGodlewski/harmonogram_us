@@ -23,7 +23,7 @@ import { appErrorMessage } from "@repo/ui/app-errors";
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
 import { Label } from "@repo/ui/components/label";
-import { formatWarsawTime } from "@repo/ui/time";
+import { formatEventTime } from "@repo/ui/time";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
@@ -156,8 +156,8 @@ function NewGroupPage() {
 								<span className="flex flex-col">
 									<span>{item.title}</span>
 									<span className="text-sm text-muted-foreground tabular-nums">
-										{formatWarsawTime(item.startsAt, locale)}–
-										{formatWarsawTime(item.endsAt, locale)}
+										{formatEventTime(item.startsAt, locale)}–
+										{formatEventTime(item.endsAt, locale)}
 									</span>
 								</span>
 							</label>

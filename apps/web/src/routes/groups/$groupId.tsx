@@ -42,7 +42,7 @@ import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
 import { Label } from "@repo/ui/components/label";
-import { formatWarsawDateTime } from "@repo/ui/time";
+import { formatEventDateTime } from "@repo/ui/time";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -162,7 +162,7 @@ function GroupPage() {
 				<p className="text-sm text-muted-foreground">
 					{open
 						? groups_deadline({
-								deadline: formatWarsawDateTime(group.deadline, locale),
+								deadline: formatEventDateTime(group.deadline, locale),
 							})
 						: groups_status_closed()}
 				</p>

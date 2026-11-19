@@ -60,6 +60,7 @@ services:
       args:
         APP: web
         VITE_TURNSTILE_SITE_KEY: ${VITE_TURNSTILE_SITE_KEY:-}
+        VITE_APP_TIME_ZONE: ${VITE_APP_TIME_ZONE:-Europe/Warsaw}
     env_file: .env
     environment:
       <<: *app-env
@@ -78,6 +79,7 @@ services:
       args:
         APP: admin
         VITE_TURNSTILE_SITE_KEY: ${VITE_TURNSTILE_SITE_KEY:-}
+        VITE_APP_TIME_ZONE: ${VITE_APP_TIME_ZONE:-Europe/Warsaw}
     env_file: .env
     environment:
       <<: *app-env

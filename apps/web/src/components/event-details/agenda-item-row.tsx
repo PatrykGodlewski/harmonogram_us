@@ -11,7 +11,7 @@ import {
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
-import { formatWarsawTime } from "@repo/ui/time";
+import { formatEventTime } from "@repo/ui/time";
 import { cn } from "@repo/ui/utils";
 import type {
 	AgendaItemData,
@@ -54,8 +54,8 @@ export function AgendaItemRow({
 		>
 			<div className="flex flex-col gap-1">
 				<p className="text-sm text-muted-foreground tabular-nums">
-					{formatWarsawTime(item.startsAt, locale)}–
-					{formatWarsawTime(item.endsAt, locale)}
+					{formatEventTime(item.startsAt, locale)}–
+					{formatEventTime(item.endsAt, locale)}
 					{item.locationLabel ? ` · ${item.locationLabel}` : ""}
 				</p>
 				<p className="font-medium">{item.title}</p>

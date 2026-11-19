@@ -14,7 +14,7 @@ import {
 import { getLocale, localizeHref } from "@repo/i18n/paraglide/runtime";
 import { appErrorMessage } from "@repo/ui/app-errors";
 import { Button } from "@repo/ui/components/button";
-import { formatWarsawDateTime } from "@repo/ui/time";
+import { formatEventDateTime } from "@repo/ui/time";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import type { ReactNode } from "react";
@@ -84,7 +84,7 @@ function InvitePage() {
 				{invite_description({
 					teacher: view.group.ownerName ?? "",
 					event: view.group.eventTitle,
-					date: formatWarsawDateTime(view.group.eventDate, locale),
+					date: formatEventDateTime(view.group.eventDate, locale),
 				})}
 			</p>
 			{view.group.name ? (
@@ -101,7 +101,7 @@ function InvitePage() {
 				</p>
 				<p className="text-sm text-muted-foreground">
 					{invite_deadline({
-						deadline: formatWarsawDateTime(view.group.deadline, locale),
+						deadline: formatEventDateTime(view.group.deadline, locale),
 					})}
 				</p>
 				{accept.isError ? (

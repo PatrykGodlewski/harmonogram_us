@@ -29,7 +29,7 @@ export async function sendTransactionalEmail(params: {
 	text: string;
 	html?: string;
 }) {
-	const from = env.SMTP_FROM ?? "noreply@harmonogram.local";
+	const from = env.SMTP_FROM;
 	await transport.sendMail({
 		from,
 		to: params.to,

@@ -16,7 +16,7 @@ import {
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { markParallel } from "@repo/ui/agenda";
 import { Button } from "@repo/ui/components/button";
-import { formatWarsawTime } from "@repo/ui/time";
+import { formatEventTime } from "@repo/ui/time";
 import { cn } from "@repo/ui/utils";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
@@ -95,8 +95,8 @@ export function AgendaEditor({
 						>
 							<div className="flex flex-col gap-0.5">
 								<p className="text-sm text-muted-foreground tabular-nums">
-									{formatWarsawTime(item.startsAt, locale)}–
-									{formatWarsawTime(item.endsAt, locale)}
+									{formatEventTime(item.startsAt, locale)}–
+									{formatEventTime(item.endsAt, locale)}
 									{item.locationLabel ? ` · ${item.locationLabel}` : ""}
 								</p>
 								<p className="font-medium">{item.title}</p>

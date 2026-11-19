@@ -292,5 +292,12 @@
 	"admin_group_unnamed": "grupa",
 	"admin_field_group_deadline_hours": "Termin potwierdzeń grupowych (godzin przed startem)",
 	"admin_field_group_deadline_hours_hint": "Niepotwierdzone miejsca grupowe są zwalniane tyle godzin przed wydarzeniem. 0 = do rozpoczęcia.",
-	"error_email_not_allowed": "Co najmniej jeden adres nie może otrzymać zaproszenia (adres tymczasowy lub brak serwera poczty)."
+	"error_email_not_allowed": "Co najmniej jeden adres nie może otrzymać zaproszenia (adres tymczasowy lub brak serwera poczty).",
+	"ui_close": "Zamknij",
+	"ui_toggle_sidebar": "Pokaż lub ukryj panel boczny",
+	"ui_sidebar_title": "Panel boczny",
+	"ui_sidebar_description": "Nawigacja w widoku telefonu.",
+	"ui_actions": "Akcje",
+	"auth_login_link_failed": "Nie udało się wysłać linku logowania",
+	"auth_signup_failed": "Nie udało się założyć konta"
 }
