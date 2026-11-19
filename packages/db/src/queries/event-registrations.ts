@@ -87,12 +87,17 @@ async function seatsRemaining(
 
 /**
  * Moves the oldest waitlisted registrations into free places. Call it with the
- * event row locked, after any change that frees places.
+ * event row locked, after any change that frees places. An event that has ended
+ * promotes nobody (no "a place freed up" e-mail after the fact).
  */
 export async function promoteFromWaitlist(
 	tx: TransactionClient,
 	eventId: string,
 ): Promise<RegistrationChange[]> {
+	const end = await getEffectiveEventEnd(tx, eventId);
+	if (end && end.getTime() <= Date.now()) {
+		return [];
+	}
 	const free = await seatsRemaining(tx, eventId);
 	if (free <= 0) {
 		return [];

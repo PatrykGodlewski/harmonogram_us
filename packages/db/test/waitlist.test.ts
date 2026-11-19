@@ -154,3 +154,23 @@ describe("waitlist order under lock waits", () => {
 		expect(await stateOf(eventId, late ?? "")).toBe("waitlisted");
 	});
 });
+
+describe("ended events", () => {
+	it("withdrawing from or raising the limit of an ended event promotes nobody", async () => {
+		const eventId = await createEvent({ maxSeats: 1 });
+		const [a, w] = await users(2);
+		await registerForEvent(eventId, a ?? "", "pl");
+		await registerForEvent(eventId, w ?? "", "pl");
+		const { events } = await import("../src/schema/events");
+		await db
+			.update(events)
+			.set({ date: hoursFromNow(-48), endsAt: hoursFromNow(-47) })
+			.where(eq(events.id, eventId));
+		const changes: RegistrationChange[] = [];
+		const hooks = { onChanged: async (_tx: unknown, c: RegistrationChange[]) => void changes.push(...c) };
+		await updateEvent({ id: eventId, maxSeats: 2 }, hooks);
+		await unregisterFromEvent(eventId, a ?? "", hooks);
+		expect(await stateOf(eventId, w ?? "")).toBe("waitlisted");
+		expect(changes).toEqual([]);
+	});
+});
