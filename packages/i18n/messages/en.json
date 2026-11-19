@@ -305,5 +305,13 @@
 	"events_leave_waitlist": "Leave the waitlist",
 	"events_join_waitlist_success": "You joined the waitlist",
 	"error_event_waitlisted": "You're on this event's waitlist — you can register for agenda items once a place frees up.",
-	"admin_registrant_waitlisted": "Waitlist"
+	"admin_registrant_waitlisted": "Waitlist",
+	"reg_email_confirmed_subject": "Registered: {event}",
+	"reg_email_confirmed_intro": "Your registration for {event} ({date}) is confirmed.",
+	"reg_email_waitlisted_subject": "Waitlist: {event}",
+	"reg_email_waitlisted_intro": "{event} ({date}) is full. You're on the waitlist — we'll e-mail you when a place frees up.",
+	"reg_email_promoted_subject": "A place freed up: {event}",
+	"reg_email_promoted_intro": "A place freed up at {event} ({date}). You're registered.",
+	"reg_email_button": "View the event",
+	"reg_email_withdraw_hint": "If you can't come, withdraw on the event page so the next person gets the place."
 }

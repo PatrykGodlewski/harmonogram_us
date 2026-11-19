@@ -305,5 +305,13 @@
 	"events_leave_waitlist": "Wypisz się z listy",
 	"events_join_waitlist_success": "Zapisano na listę rezerwową",
 	"error_event_waitlisted": "Jesteś na liście rezerwowej tego wydarzenia — na punkty programu zapiszesz się po zwolnieniu miejsca.",
-	"admin_registrant_waitlisted": "Lista rezerwowa"
+	"admin_registrant_waitlisted": "Lista rezerwowa",
+	"reg_email_confirmed_subject": "Zapisano: {event}",
+	"reg_email_confirmed_intro": "Twój zapis na wydarzenie {event} ({date}) jest potwierdzony.",
+	"reg_email_waitlisted_subject": "Lista rezerwowa: {event}",
+	"reg_email_waitlisted_intro": "Wydarzenie {event} ({date}) nie ma wolnych miejsc. Jesteś na liście rezerwowej — napiszemy, gdy zwolni się miejsce.",
+	"reg_email_promoted_subject": "Miejsce się zwolniło: {event}",
+	"reg_email_promoted_intro": "Zwolniło się miejsce na wydarzeniu {event} ({date}). Jesteś zapisany.",
+	"reg_email_button": "Zobacz wydarzenie",
+	"reg_email_withdraw_hint": "Jeśli nie możesz przyjść, wypisz się na stronie wydarzenia — miejsce dostanie następna osoba."
 }

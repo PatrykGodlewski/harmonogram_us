@@ -10,6 +10,10 @@ import {
 	type GroupInvitationEmailProps,
 } from "./group-invitation-email";
 import { MagicLinkEmail } from "./magic-link-email";
+import {
+	RegistrationEmail,
+	type RegistrationEmailProps,
+} from "./registration-email";
 
 const transport = env.SMTP_HOST
 	? nodemailer.createTransport({
@@ -51,4 +55,8 @@ export async function renderGroupInvitationEmail(
 	props: GroupInvitationEmailProps,
 ) {
 	return render(<GroupInvitationEmail {...props} />);
+}
+
+export async function renderRegistrationEmail(props: RegistrationEmailProps) {
+	return render(<RegistrationEmail {...props} />);
 }

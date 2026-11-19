@@ -10,6 +10,7 @@ import { z } from "zod";
 import { authMiddleware } from "../auth/middleware";
 import { getCurrentSession } from "../auth/user";
 import { appError, withDomainErrors } from "../errors";
+import { registrationEmailHooks } from "../notifications/registration-hooks";
 import { agendaItemIdSchema } from "./schemas";
 
 export const registerForEventInputSchema = z.object({
@@ -37,7 +38,12 @@ export const registerForEventServer = createServerFn({ method: "POST" })
 		}
 
 		try {
-			return await registerForEvent(data.eventId, session.user.id, data.locale);
+			return await registerForEvent(
+				data.eventId,
+				session.user.id,
+				data.locale,
+				registrationEmailHooks,
+			);
 		} catch (error) {
 			if (error instanceof DomainError) {
 				throw new Error(error.code);
@@ -55,7 +61,11 @@ export const unregisterFromEventServer = createServerFn({ method: "POST" })
 		}
 
 		try {
-			return await unregisterFromEvent(data.eventId, session.user.id);
+			return await unregisterFromEvent(
+				data.eventId,
+				session.user.id,
+				registrationEmailHooks,
+			);
 		} catch (error) {
 			if (error instanceof DomainError) {
 				throw new Error(error.code);

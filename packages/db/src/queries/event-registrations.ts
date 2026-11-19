@@ -410,6 +410,35 @@ export async function getMyRegistrations(userId: string): Promise<{
 	};
 }
 
+export type RegistrationForEmail = {
+	state: RegistrationState;
+	locale: "pl" | "en";
+	email: string;
+	eventId: string;
+	eventTitle: string;
+	eventDate: Date;
+};
+
+/** What a registration e-mail needs; null when the registration no longer exists. */
+export async function getRegistrationForEmail(
+	registrationId: string,
+): Promise<RegistrationForEmail | null> {
+	const [row] = await db
+		.select({
+			state: eventRegistrations.state,
+			locale: eventRegistrations.locale,
+			email: authUsers.email,
+			eventId: events.id,
+			eventTitle: events.title,
+			eventDate: events.date,
+		})
+		.from(eventRegistrations)
+		.innerJoin(authUsers, eq(authUsers.id, eventRegistrations.userId))
+		.innerJoin(events, eq(events.id, eventRegistrations.eventId))
+		.where(eq(eventRegistrations.id, registrationId));
+	return row ?? null;
+}
+
 export type EventRegistrant = {
 	registrationId: string;
 	userId: string;

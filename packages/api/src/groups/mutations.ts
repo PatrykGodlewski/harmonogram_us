@@ -14,6 +14,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeaders } from "@tanstack/react-start/server";
 import { authMiddleware } from "../auth/middleware";
 import { withDomainErrors } from "../errors";
+import { registrationEmailHooks } from "../notifications/registration-hooks";
 import { getClientIp } from "../security/client-ip";
 import { assertEmailsAllowed } from "../security/email-policy";
 import { consumeRateLimit } from "../security/rate-limit";
@@ -114,9 +115,13 @@ export const updateGroupServer = protectedActionFn
 	.handler(async ({ data, context }) => {
 		const { groupId, ...patch } = data;
 		return withDomainErrors(() =>
-			updateGroup(groupId, context.user.id, patch, {
-				actorIsAdmin: context.user.isAdmin,
-			}),
+			updateGroup(
+				groupId,
+				context.user.id,
+				patch,
+				{ actorIsAdmin: context.user.isAdmin },
+				registrationEmailHooks,
+			),
 		);
 	});
 
@@ -124,9 +129,12 @@ export const closeGroupServer = protectedActionFn
 	.inputValidator(groupIdSchema)
 	.handler(async ({ data, context }) => {
 		await withDomainErrors(() =>
-			closeGroup(data.groupId, context.user.id, {
-				actorIsAdmin: context.user.isAdmin,
-			}),
+			closeGroup(
+				data.groupId,
+				context.user.id,
+				{ actorIsAdmin: context.user.isAdmin },
+				registrationEmailHooks,
+			),
 		);
 		return { ok: true };
 	});

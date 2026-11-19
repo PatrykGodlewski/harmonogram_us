@@ -7,20 +7,29 @@ const mailpit = () => process.env.E2E_MAILPIT_URL ?? "http://localhost:18025";
 type SearchResult = { messages: { ID: string; Subject: string }[] };
 type MessageDetail = { Subject: string; Text: string; HTML: string };
 
-/** The newest message to `email`, waiting up to 15 s for it to arrive. */
-export async function latestMessageTo(email: string): Promise<MailMessage> {
+/**
+ * The newest message to `email` (optionally whose subject contains `subject`),
+ * waiting up to 15 s for it to arrive.
+ */
+export async function latestMessageTo(
+	email: string,
+	opts: { subject?: string } = {},
+): Promise<MailMessage> {
 	let id = "";
+	const query = opts.subject
+		? `to:"${email}" subject:"${opts.subject}"`
+		: `to:"${email}"`;
 	await expect
 		.poll(
 			async () => {
 				const res = await fetch(
-					`${mailpit()}/api/v1/search?query=${encodeURIComponent(`to:"${email}"`)}&limit=1`,
+					`${mailpit()}/api/v1/search?query=${encodeURIComponent(query)}&limit=1`,
 				);
 				const body = (await res.json()) as SearchResult;
 				id = body.messages[0]?.ID ?? "";
 				return id;
 			},
-			{ timeout: 15_000, message: `no e-mail to ${email}` },
+			{ timeout: 15_000, message: `no e-mail to ${email} (${query})` },
 		)
 		.not.toBe("");
 	const res = await fetch(`${mailpit()}/api/v1/message/${id}`);

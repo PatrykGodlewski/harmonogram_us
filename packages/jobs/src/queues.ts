@@ -27,6 +27,11 @@ export const emailJob = z.discriminatedUnion("kind", [
 		url: z.url(),
 		locale: z.enum(["pl", "en"]),
 	}),
+	z.object({
+		kind: z.literal("registration"),
+		registrationId: z.string().min(1),
+		change: z.enum(["confirmed", "waitlisted", "promoted"]),
+	}),
 ]);
 
 export type EmailJob = z.infer<typeof emailJob>;

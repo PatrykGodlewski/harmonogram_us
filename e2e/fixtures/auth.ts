@@ -10,7 +10,9 @@ export async function signInByEmail(page: Page, email: string): Promise<void> {
 	await page
 		.getByRole("button", { name: "Wyślij bezpieczny link logowania" })
 		.click();
-	const message = await latestMessageTo(email);
+	const message = await latestMessageTo(email, {
+		subject: "link logowania",
+	});
 	const link = message.links.find((href) =>
 		href.includes("/magic-link/verify"),
 	);

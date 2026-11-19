@@ -6,7 +6,8 @@
   "exports": {
     "./*": "./src/*.ts",
     "./*/*": "./src/*/*.ts",
-    "./notifications/email": "./src/notifications/email.tsx"
+    "./notifications/email": "./src/notifications/email.tsx",
+    "./notifications/registration-email": "./src/notifications/registration-email.tsx"
   },
   "dependencies": {
     "@react-email/components": "^1.0.12",

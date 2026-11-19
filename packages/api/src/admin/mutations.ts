@@ -18,6 +18,7 @@ import {
 import { createServerFn } from "@tanstack/react-start";
 import { adminMiddleware } from "../auth/admin-middleware";
 import { appError, withDomainErrors } from "../errors";
+import { registrationEmailHooks } from "../notifications/registration-hooks";
 import {
 	createAgendaItemSchema,
 	createEventSchema,
@@ -39,7 +40,9 @@ export const createAdminEventServer = adminActionFn
 export const updateAdminEventServer = adminActionFn
 	.inputValidator((input: unknown) => updateEventSchema.parse(input))
 	.handler(async ({ data }) => {
-		const event = await withDomainErrors(() => updateEvent(data));
+		const event = await withDomainErrors(() =>
+			updateEvent(data, registrationEmailHooks),
+		);
 		if (!event) {
 			throw appError("NOT_FOUND");
 		}
