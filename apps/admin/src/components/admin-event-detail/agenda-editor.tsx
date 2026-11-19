@@ -16,6 +16,11 @@ import {
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { markParallel } from "@repo/ui/agenda";
 import { Button } from "@repo/ui/components/button";
+import { AgendaCalendarGrid } from "@repo/ui/composed/agenda-calendar-grid";
+import {
+	type AgendaViewMode,
+	AgendaViewToggle,
+} from "@repo/ui/composed/agenda-view-toggle";
 import { formatEventTime } from "@repo/ui/time";
 import { cn } from "@repo/ui/utils";
 import { useMutation } from "@tanstack/react-query";
@@ -30,7 +35,21 @@ type AgendaEditorProps = {
 	agenda: AgendaItem[];
 	locations: FilterOption[];
 	onChanged: () => Promise<unknown>;
+	view: AgendaViewMode;
+	onViewChange: (view: AgendaViewMode) => void;
 };
+
+function placesLabel(item: AgendaItem): string {
+	if (!item.requiresRegistration) {
+		return event_details_no_registration();
+	}
+	return item.maxSeats === null
+		? admin_event_registered_count({ registered: item.registeredCount })
+		: admin_event_places({
+				registered: item.registeredCount,
+				max: item.maxSeats,
+			});
+}
 
 export function AgendaEditor({
 	eventId,
@@ -38,6 +57,8 @@ export function AgendaEditor({
 	agenda,
 	locations,
 	onChanged,
+	view,
+	onViewChange,
 }: AgendaEditorProps) {
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [editingItem, setEditingItem] = useState<AgendaItem | null>(null);
@@ -74,15 +95,36 @@ export function AgendaEditor({
 		<section className="flex flex-col gap-3">
 			<div className="flex items-center justify-between gap-2">
 				<h2 className="text-lg font-semibold">{admin_event_agenda()}</h2>
-				<Button size="sm" onClick={handleAdd}>
-					{admin_event_agenda_add()}
-				</Button>
+				<div className="flex flex-wrap items-center justify-end gap-2">
+					{agenda.length > 0 ? (
+						<AgendaViewToggle value={view} onChange={onViewChange} />
+					) : null}
+					<Button size="sm" onClick={handleAdd}>
+						{admin_event_agenda_add()}
+					</Button>
+				</div>
 			</div>
 
 			{agenda.length === 0 ? (
 				<p className="text-sm text-muted-foreground">
 					{admin_event_agenda_empty()}
 				</p>
+			) : view === "calendar" ? (
+				<AgendaCalendarGrid
+					items={agenda}
+					onSelect={handleEdit}
+					renderBlock={(item) => (
+						<>
+							<span className="tabular-nums text-muted-foreground">
+								{formatEventTime(item.startsAt, locale)}–
+								{formatEventTime(item.endsAt, locale)}
+								{item.locationLabel ? ` · ${item.locationLabel}` : ""}
+							</span>
+							<span className="line-clamp-2 font-medium">{item.title}</span>
+							<span className="tabular-nums">{placesLabel(item)}</span>
+						</>
+					)}
+				/>
 			) : (
 				<ol className="divide-y rounded-lg border">
 					{markParallel(agenda).map((item) => (
@@ -100,18 +142,7 @@ export function AgendaEditor({
 									{item.locationLabel ? ` · ${item.locationLabel}` : ""}
 								</p>
 								<p className="font-medium">{item.title}</p>
-								<p className="text-sm tabular-nums">
-									{!item.requiresRegistration
-										? event_details_no_registration()
-										: item.maxSeats === null
-											? admin_event_registered_count({
-													registered: item.registeredCount,
-												})
-											: admin_event_places({
-													registered: item.registeredCount,
-													max: item.maxSeats,
-												})}
-								</p>
+								<p className="text-sm tabular-nums">{placesLabel(item)}</p>
 							</div>
 							<div className="flex gap-2">
 								<Button

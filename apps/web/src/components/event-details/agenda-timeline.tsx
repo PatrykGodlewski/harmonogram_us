@@ -3,6 +3,10 @@ import {
 	event_details_no_agenda,
 } from "@repo/i18n/paraglide/messages";
 import { findOverlaps, markParallel } from "@repo/ui/agenda";
+import {
+	type AgendaViewMode,
+	AgendaViewToggle,
+} from "@repo/ui/composed/agenda-view-toggle";
 import { getRouteApi } from "@tanstack/react-router";
 import type {
 	AgendaItemData,
@@ -12,7 +16,6 @@ import type {
 } from "~/lib/event-details/types";
 import { AgendaCalendar } from "./agenda-calendar";
 import { AgendaItemRow } from "./agenda-item-row";
-import { type AgendaViewMode, AgendaViewToggle } from "./agenda-view-toggle";
 
 const eventRoute = getRouteApi("/events/$eventId");
 

@@ -18,12 +18,13 @@ export function uniqueEmail(testInfo: TestInfo): string {
 
 export async function createTestUser(
 	email: string,
-	opts?: { admin?: boolean },
+	opts?: { admin?: boolean; password?: string },
 ): Promise<{ id: string }> {
 	const { id } = await ensureAccount({
 		email,
 		name: "Test User",
 		role: opts?.admin ? "admin" : "user",
+		password: opts?.password,
 	});
 	return { id };
 }

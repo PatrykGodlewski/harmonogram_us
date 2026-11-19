@@ -29,3 +29,22 @@ export async function waitForCaptcha(page: Page): Promise<void> {
 		},
 	);
 }
+
+/** The admin panel's address (its own app and origin). */
+export function adminUrl(path: string): string {
+	return new URL(path, process.env.E2E_ADMIN_URL).toString();
+}
+
+/** Signs in to the admin panel with an e-mail and password (admins need both). */
+export async function signInAsAdmin(
+	page: Page,
+	email: string,
+	password: string,
+): Promise<void> {
+	await open(page, adminUrl("/pl/login"));
+	await page.getByLabel("E-mail").fill(email);
+	await page.getByLabel("Hasło", { exact: true }).fill(password);
+	await waitForCaptcha(page);
+	await page.getByRole("button", { name: "Zaloguj się", exact: true }).click();
+	await page.waitForURL((url) => !url.pathname.endsWith("/login"));
+}

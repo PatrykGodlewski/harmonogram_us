@@ -3,7 +3,7 @@ import {
 	event_details_view_label,
 	event_details_view_list,
 } from "@repo/i18n/paraglide/messages";
-import { Button } from "@repo/ui/components/button";
+import { Button } from "../components/button";
 
 export type AgendaViewMode = "list" | "calendar";
 

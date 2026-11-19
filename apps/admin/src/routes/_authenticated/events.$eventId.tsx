@@ -7,6 +7,7 @@ import {
 import { admin_error_generic } from "@repo/i18n/paraglide/messages";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
 import { AgendaEditor } from "~/components/admin-event-detail/agenda-editor";
 import { EventSummaryCard } from "~/components/admin-event-detail/event-summary-card";
 import { GroupsList } from "~/components/admin-event-detail/groups-list";
@@ -14,11 +15,25 @@ import { RegistrantsList } from "~/components/admin-event-detail/registrants-lis
 import { formatMutationError } from "~/lib/format-mutation-error";
 
 export const Route = createFileRoute("/_authenticated/events/$eventId")({
+	validateSearch: z.object({
+		agenda: z.enum(["list", "calendar"]).optional().catch(undefined),
+	}),
 	component: AdminEventDetailPage,
 });
 
 function AdminEventDetailPage() {
 	const { eventId } = Route.useParams();
+	const view = Route.useSearch().agenda ?? "list";
+	const navigate = Route.useNavigate();
+	const handleViewChange = (next: "list" | "calendar") =>
+		void navigate({
+			search: (prev) => ({
+				...prev,
+				agenda: next === "list" ? undefined : next,
+			}),
+			replace: true,
+			resetScroll: false,
+		});
 	const queryClient = useQueryClient();
 	const { data: event, error } = useQuery(
 		adminEventDetailsQueryOptions(eventId),
@@ -56,6 +71,8 @@ function AdminEventDetailPage() {
 					agenda={event.agenda}
 					locations={filterOptions?.locations ?? []}
 					onChanged={handleChanged}
+					view={view}
+					onViewChange={handleViewChange}
 				/>
 			</div>
 			<div className="flex flex-col gap-8">
