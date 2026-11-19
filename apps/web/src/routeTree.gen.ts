@@ -14,6 +14,7 @@ import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TicketsRegistrationIdRouteImport } from './routes/tickets/$registrationId'
 import { Route as JoinCodeRouteImport } from './routes/join/$code'
 import { Route as InviteTokenRouteImport } from './routes/invite/$token'
 import { Route as GroupsGroupIdRouteImport } from './routes/groups/$groupId'
@@ -46,6 +47,11 @@ const AccountRoute = AccountRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TicketsRegistrationIdRoute = TicketsRegistrationIdRouteImport.update({
+  id: '/tickets/$registrationId',
+  path: '/tickets/$registrationId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JoinCodeRoute = JoinCodeRouteImport.update({
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/groups/$groupId': typeof GroupsGroupIdRoute
   '/invite/$token': typeof InviteTokenRoute
   '/join/$code': typeof JoinCodeRoute
+  '/tickets/$registrationId': typeof TicketsRegistrationIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/electric/agenda-item-seat-counts': typeof ApiElectricAgendaItemSeatCountsRoute
   '/api/electric/event-seat-counts': typeof ApiElectricEventSeatCountsRoute
@@ -116,6 +123,7 @@ export interface FileRoutesByTo {
   '/groups/$groupId': typeof GroupsGroupIdRoute
   '/invite/$token': typeof InviteTokenRoute
   '/join/$code': typeof JoinCodeRoute
+  '/tickets/$registrationId': typeof TicketsRegistrationIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/electric/agenda-item-seat-counts': typeof ApiElectricAgendaItemSeatCountsRoute
   '/api/electric/event-seat-counts': typeof ApiElectricEventSeatCountsRoute
@@ -132,6 +140,7 @@ export interface FileRoutesById {
   '/groups/$groupId': typeof GroupsGroupIdRoute
   '/invite/$token': typeof InviteTokenRoute
   '/join/$code': typeof JoinCodeRoute
+  '/tickets/$registrationId': typeof TicketsRegistrationIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/electric/agenda-item-seat-counts': typeof ApiElectricAgendaItemSeatCountsRoute
   '/api/electric/event-seat-counts': typeof ApiElectricEventSeatCountsRoute
@@ -149,6 +158,7 @@ export interface FileRouteTypes {
     | '/groups/$groupId'
     | '/invite/$token'
     | '/join/$code'
+    | '/tickets/$registrationId'
     | '/api/auth/$'
     | '/api/electric/agenda-item-seat-counts'
     | '/api/electric/event-seat-counts'
@@ -164,6 +174,7 @@ export interface FileRouteTypes {
     | '/groups/$groupId'
     | '/invite/$token'
     | '/join/$code'
+    | '/tickets/$registrationId'
     | '/api/auth/$'
     | '/api/electric/agenda-item-seat-counts'
     | '/api/electric/event-seat-counts'
@@ -179,6 +190,7 @@ export interface FileRouteTypes {
     | '/groups/$groupId'
     | '/invite/$token'
     | '/join/$code'
+    | '/tickets/$registrationId'
     | '/api/auth/$'
     | '/api/electric/agenda-item-seat-counts'
     | '/api/electric/event-seat-counts'
@@ -195,6 +207,7 @@ export interface RootRouteChildren {
   GroupsGroupIdRoute: typeof GroupsGroupIdRoute
   InviteTokenRoute: typeof InviteTokenRoute
   JoinCodeRoute: typeof JoinCodeRoute
+  TicketsRegistrationIdRoute: typeof TicketsRegistrationIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiElectricAgendaItemSeatCountsRoute: typeof ApiElectricAgendaItemSeatCountsRoute
   ApiElectricEventSeatCountsRoute: typeof ApiElectricEventSeatCountsRoute
@@ -236,6 +249,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tickets/$registrationId': {
+      id: '/tickets/$registrationId'
+      path: '/tickets/$registrationId'
+      fullPath: '/tickets/$registrationId'
+      preLoaderRoute: typeof TicketsRegistrationIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/join/$code': {
@@ -307,6 +327,7 @@ const rootRouteChildren: RootRouteChildren = {
   GroupsGroupIdRoute: GroupsGroupIdRoute,
   InviteTokenRoute: InviteTokenRoute,
   JoinCodeRoute: JoinCodeRoute,
+  TicketsRegistrationIdRoute: TicketsRegistrationIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiElectricAgendaItemSeatCountsRoute: ApiElectricAgendaItemSeatCountsRoute,
   ApiElectricEventSeatCountsRoute: ApiElectricEventSeatCountsRoute,

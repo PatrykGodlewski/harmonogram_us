@@ -6,6 +6,7 @@ import {
 	account_past,
 	account_registrations_empty,
 	account_section_empty,
+	account_ticket,
 	account_upcoming,
 	account_waitlisted,
 	events_registered,
@@ -129,12 +130,22 @@ function RegistrationRow({
 					</ul>
 				) : null}
 			</div>
-			<div className="flex gap-2 sm:shrink-0">
+			<div className="flex flex-wrap gap-2 sm:shrink-0">
 				<Button size="sm" variant="outline" asChild>
 					<Link to="/events/$eventId" params={{ eventId: row.eventId }}>
 						{account_open_event()}
 					</Link>
 				</Button>
+				{row.state === "registered" ? (
+					<Button size="sm" variant="outline" asChild>
+						<Link
+							to="/tickets/$registrationId"
+							params={{ registrationId: row.registrationId }}
+						>
+							{account_ticket()}
+						</Link>
+					</Button>
+				) : null}
 				{canWithdraw ? (
 					<UnregisterEventDialog onConfirm={handleWithdraw}>
 						<Button

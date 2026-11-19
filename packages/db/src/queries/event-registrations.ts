@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, max, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, max, type SQL, sql } from "drizzle-orm";
 import { type DbExecutor, db, type TransactionClient } from "../client";
 import { agendaItemRegistrations, agendaItems } from "../schema/agenda";
 import { authUsers } from "../schema/better-auth";
@@ -16,6 +16,18 @@ import {
 } from "./domain-errors";
 import { lockEvent } from "./locks";
 import { getCurrentTxId } from "./txid";
+
+/**
+ * SQL for an event's effective end (same rule as getEffectiveEventEnd), for queries that
+ * list many events. `eventsRef` is how the query refers to the events table (e.g. sql\`e\`).
+ */
+export function effectiveEventEndSql(eventsRef: SQL): SQL<string> {
+	return sql<string>`coalesce(
+		${eventsRef}.ends_at,
+		(SELECT max(a.ends_at) FROM agenda_items a WHERE a.event_id = ${eventsRef}.id),
+		${eventsRef}.date + interval '1 day'
+	)`;
+}
 
 export async function getEffectiveEventEnd(
 	tx: DbExecutor,

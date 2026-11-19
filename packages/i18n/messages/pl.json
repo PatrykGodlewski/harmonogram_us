@@ -320,5 +320,14 @@
 	"account_registrations_empty": "Nie masz jeszcze żadnych zapisów.",
 	"account_section_empty": "Brak wydarzeń.",
 	"account_waitlisted": "Lista rezerwowa (pozycja {position})",
-	"account_open_event": "Wydarzenie"
+	"account_open_event": "Wydarzenie",
+	"account_ticket": "Bilet",
+	"tickets_title": "Bilet",
+	"tickets_qr_alt": "Kod QR biletu",
+	"tickets_not_found": "Nie znaleziono biletu.",
+	"tickets_waitlisted": "Bilet pojawi się po awansie z listy rezerwowej.",
+	"tickets_print": "Drukuj",
+	"tickets_holder": "Uczestnik",
+	"tickets_show_at_entry": "Pokaż ten kod przy wejściu.",
+	"tickets_back": "Moje konto"
 }

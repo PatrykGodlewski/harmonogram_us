@@ -6,6 +6,7 @@ import {
 	registerForEvent,
 	unregisterFromEvent,
 } from "../src/queries/event-registrations";
+import { getMyTicket } from "../src/queries/tickets";
 import { eventRegistrations } from "../src/schema/event-registrations";
 import { createEvent, createItem, createUser, resetDb } from "./helpers";
 
@@ -53,5 +54,29 @@ describe("ticket code", () => {
 		const before = await ticketCodeOf(eventId, user);
 		await registerForAgendaItem(itemId, user, "pl");
 		expect(await ticketCodeOf(eventId, user)).toBe(before);
+	});
+});
+
+describe("getMyTicket", () => {
+	it("returns the owner's ticket and nothing for anyone else", async () => {
+		const eventId = await createEvent();
+		const [owner, stranger] = [await createUser("owner@x.test"), await createUser()];
+		await registerForEvent(eventId, owner, "pl");
+		const [registration] = await db
+			.select({ id: eventRegistrations.id })
+			.from(eventRegistrations)
+			.where(eq(eventRegistrations.userId, owner));
+		const id = registration?.id ?? "";
+
+		const ticket = await getMyTicket(id, owner);
+		expect(ticket).toMatchObject({
+			registrationId: id,
+			eventId,
+			state: "registered",
+			holderEmail: "owner@x.test",
+			ticketCode: await ticketCodeOf(eventId, owner),
+		});
+		expect(await getMyTicket(id, stranger)).toBeNull();
+		expect(await getMyTicket(crypto.randomUUID(), owner)).toBeNull();
 	});
 });

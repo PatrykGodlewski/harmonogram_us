@@ -320,5 +320,14 @@
 	"account_registrations_empty": "You haven't registered for anything yet.",
 	"account_section_empty": "No events.",
 	"account_waitlisted": "Waitlist (position {position})",
-	"account_open_event": "Event"
+	"account_open_event": "Event",
+	"account_ticket": "Ticket",
+	"tickets_title": "Ticket",
+	"tickets_qr_alt": "Ticket QR code",
+	"tickets_not_found": "Ticket not found.",
+	"tickets_waitlisted": "Your ticket will appear once you're promoted from the waitlist.",
+	"tickets_print": "Print",
+	"tickets_holder": "Attendee",
+	"tickets_show_at_entry": "Show this code at the entrance.",
+	"tickets_back": "My account"
 }

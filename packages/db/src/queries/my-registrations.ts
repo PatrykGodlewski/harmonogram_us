@@ -2,6 +2,7 @@ import { asc, eq, sql } from "drizzle-orm";
 import { db } from "../client";
 import { agendaItemRegistrations, agendaItems } from "../schema/agenda";
 import type { RegistrationState } from "../schema/event-registrations";
+import { effectiveEventEndSql } from "./event-registrations";
 
 export type MyRegistrationListItem = {
 	registrationId: string;
@@ -33,11 +34,7 @@ export async function listMyRegistrations(
 			position: number | null;
 		}>(sql`
 			SELECT mine.id AS registration_id, e.id AS event_id, e.title, e.date,
-				coalesce(
-					e.ends_at,
-					(SELECT max(a.ends_at) FROM agenda_items a WHERE a.event_id = e.id),
-					e.date + interval '1 day'
-				) AS effective_ends_at,
+				${effectiveEventEndSql(sql`e`)} AS effective_ends_at,
 				l.label AS location_label,
 				mine.state,
 				CASE WHEN mine.state = 'waitlisted' THEN (
