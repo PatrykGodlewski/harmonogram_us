@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "../src/client";
-import { hitRateLimit } from "../src/queries/rate-limits";
+import { hitRateLimit, pruneRateLimits } from "../src/queries/rate-limits";
 
 beforeEach(async () => {
 	await db.execute(sql`TRUNCATE app_rate_limits`);
@@ -38,5 +38,19 @@ describe("hitRateLimit", () => {
 		expect(await hitRateLimit("a", limit)).toBe(false);
 		await shiftWindow("a", 11);
 		expect(await hitRateLimit("a", limit)).toBe(false);
+	});
+});
+
+describe("pruneRateLimits", () => {
+	it("deletes counters older than a day unless still blocked", async () => {
+		await hitRateLimit("old", { points: 5, durationSeconds: 60 });
+		await hitRateLimit("fresh", { points: 5, durationSeconds: 60 });
+		await hitRateLimit("blocked", { points: 1, durationSeconds: 60, blockDurationSeconds: 3 * 86_400 });
+		await hitRateLimit("blocked", { points: 1, durationSeconds: 60, blockDurationSeconds: 3 * 86_400 });
+		await shiftWindow("old", 2 * 86_400);
+		await shiftWindow("blocked", 2 * 86_400);
+		expect(await pruneRateLimits()).toBe(1);
+		const keys = await db.execute<{ key: string }>(sql`SELECT key FROM app_rate_limits ORDER BY key`);
+		expect(keys.map((row) => row.key)).toEqual(["blocked", "fresh"]);
 	});
 });

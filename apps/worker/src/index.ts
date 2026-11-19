@@ -1,12 +1,15 @@
+import { pruneRateLimits } from "@repo/db/queries/rate-limits";
 import { getBoss } from "@repo/jobs/client";
 import {
 	CLOSE_EXPIRED_GROUPS_CRON,
 	emailJob,
 	groupInvitationEmailPayload,
 	JOBS_TIME_ZONE,
+	PRUNE_RATE_LIMITS_CRON,
 	QUEUE_CLOSE_EXPIRED_GROUPS,
 	QUEUE_EMAILS,
 	QUEUE_GROUP_INVITATION_EMAIL,
+	QUEUE_PRUNE_RATE_LIMITS,
 } from "@repo/jobs/queues";
 import { closeExpired } from "./handlers/close-expired";
 import { handleEmailJob } from "./handlers/send-email";
@@ -45,6 +48,15 @@ await boss.schedule(
 		tz: JOBS_TIME_ZONE,
 	},
 );
+
+await boss.work(QUEUE_PRUNE_RATE_LIMITS, async () => {
+	const pruned = await pruneRateLimits();
+	console.log(`[worker] pruned ${pruned} rate-limit counter(s)`);
+});
+
+await boss.schedule(QUEUE_PRUNE_RATE_LIMITS, PRUNE_RATE_LIMITS_CRON, null, {
+	tz: JOBS_TIME_ZONE,
+});
 
 console.log("[worker] worker started");
 

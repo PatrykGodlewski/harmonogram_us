@@ -36,3 +36,17 @@ export async function hitRateLimit(
 	`);
 	return rows[0]?.allowed ?? false;
 }
+
+/**
+ * Deletes counters whose window started more than a day ago and that are not blocked.
+ * Keys contain e-mail addresses and IPs, so they are kept only as long as limits need them.
+ */
+export async function pruneRateLimits(): Promise<number> {
+	const rows = await db.execute<{ key: string }>(sql`
+		DELETE FROM app_rate_limits
+		WHERE window_start < now() - interval '1 day'
+			AND (blocked_until IS NULL OR blocked_until <= now())
+		RETURNING key
+	`);
+	return rows.length;
+}
