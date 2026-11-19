@@ -1,7 +1,7 @@
 import { eventsQueryOptions } from "@repo/api/events/queries";
 import type { EventFiltersParams } from "@repo/api/events/schemas";
 import { useQuery } from "@tanstack/react-query";
-import { useRegistrationStates } from "~/lib/registration/use-event-list-registrations";
+import { useMyRegistrations } from "~/lib/registration/use-my-registrations";
 
 type UseEventListDataOptions = {
 	filters: EventFiltersParams;
@@ -10,7 +10,7 @@ type UseEventListDataOptions = {
 
 export function useEventListData({ filters, userId }: UseEventListDataOptions) {
 	const eventsQuery = useQuery(eventsQueryOptions(filters));
-	const registrationStates = useRegistrationStates(userId);
+	const registrationStates = useMyRegistrations(userId).byEvent;
 
 	// Prefer loader-dehydrated data on SSR; only skeleton when there is no cached data yet.
 	const loading = eventsQuery.isPending && eventsQuery.data === undefined;

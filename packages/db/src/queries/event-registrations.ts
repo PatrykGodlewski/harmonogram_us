@@ -372,7 +372,7 @@ export type MyRegistrationState = {
 	waitlistPosition: number | null;
 };
 
-export async function getMyRegistrationStates(
+async function getMyRegistrationStates(
 	userId: string,
 ): Promise<MyRegistrationState[]> {
 	const rows = await db.execute<{
@@ -396,30 +396,24 @@ export async function getMyRegistrationStates(
 	}));
 }
 
-export async function getMyRegistrations(userId: string): Promise<{
-	eventIds: string[];
+export type MyRegistrations = {
+	/** Every event the user is registered for or waiting for. */
+	events: MyRegistrationState[];
 	agendaItemIds: string[];
-	waitlist: { eventId: string; position: number }[];
-}> {
-	const [states, itemRows] = await Promise.all([
+};
+
+/** The user's registrations: one source for the event list and the event page. */
+export async function getMyRegistrations(
+	userId: string,
+): Promise<MyRegistrations> {
+	const [events, itemRows] = await Promise.all([
 		getMyRegistrationStates(userId),
 		db
 			.select({ agendaItemId: agendaItemRegistrations.agendaItemId })
 			.from(agendaItemRegistrations)
 			.where(eq(agendaItemRegistrations.userId, userId)),
 	]);
-
-	return {
-		eventIds: states
-			.filter((row) => row.state === "registered")
-			.map((row) => row.eventId),
-		agendaItemIds: itemRows.map((row) => row.agendaItemId),
-		waitlist: states.flatMap((row) =>
-			row.waitlistPosition === null
-				? []
-				: [{ eventId: row.eventId, position: row.waitlistPosition }],
-		),
-	};
+	return { events, agendaItemIds: itemRows.map((row) => row.agendaItemId) };
 }
 
 export type RegistrationForEmail = {

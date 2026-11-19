@@ -101,3 +101,66 @@ test("[F5] po rezygnacji pierwsza osoba z listy awansuje @uczestnik", async ({
 		await context.close();
 	}
 });
+
+test("[F5] awans z listy widać na otwartej stronie bez odświeżania @uczestnik", async ({
+	page,
+}, testInfo) => {
+	// Given B on the waitlist of a full 1-place event, with the event page open
+	const base = uniqueEmail(testInfo);
+	const event = await createTestEvent({ maxSeats: 1 });
+	const { registerForEvent, unregisterFromEvent } = await import(
+		"@repo/db/queries/event-registrations"
+	);
+	const a = await createTestUser(`a-${base}`);
+	const b = await createTestUser(`b-${base}`);
+	await registerForEvent(event.id, a.id, "pl");
+	await registerForEvent(event.id, b.id, "pl");
+	await signInByEmail(page, `b-${base}`);
+	await open(page, `/pl/events/${event.id}`);
+	const summary = page.locator("section").first();
+	await expect(
+		summary.getByText("Jesteś na liście rezerwowej (pozycja 1)"),
+	).toBeVisible();
+	// When A withdraws somewhere else
+	await unregisterFromEvent(event.id, a.id);
+	// Then B's open page shows the promotion
+	await expect(summary.getByText("Zarejestrowano")).toBeVisible();
+});
+
+test("[F5] szybkie zapisy na dwa wydarzenia z listy oba się udają", async ({
+	page,
+}, testInfo) => {
+	// Given two events on the list
+	const email = uniqueEmail(testInfo);
+	await createTestUser(email);
+	const tag = crypto.randomUUID().slice(0, 6);
+	const first = await createTestEvent({
+		title: `Pierwsze ${tag}`,
+		maxSeats: 5,
+	});
+	const second = await createTestEvent({ title: `Drugie ${tag}`, maxSeats: 5 });
+	await signInByEmail(page, email);
+	await open(page, "/pl");
+	await page.getByPlaceholder("Wyszukaj wydarzenie...").fill(tag);
+	// Act only on the interactive list once the search results have settled.
+	const list = page.locator("[data-live-list]");
+	await expect(list).toHaveAttribute("aria-busy", "false");
+	const card = (title: string) =>
+		list.locator('[data-slot="card"]').filter({ hasText: title });
+	await expect(card(first.title)).toBeVisible();
+	await expect(card(second.title)).toBeVisible();
+	// When the user taps both, the second tap while the first registration is still in flight
+	await card(first.title)
+		.getByRole("button", { name: "Zarejestruj się" })
+		.click();
+	await card(second.title)
+		.getByRole("button", { name: "Zarejestruj się" })
+		.click();
+	// Then both registrations exist
+	await expect(
+		card(first.title).getByRole("button", { name: "Wypisz się" }),
+	).toBeVisible();
+	await expect(
+		card(second.title).getByRole("button", { name: "Wypisz się" }),
+	).toBeVisible();
+});

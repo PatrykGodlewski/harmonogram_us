@@ -19,7 +19,8 @@ export type EventDetailsRegistrations = {
 	registeredItemIds: ReadonlySet<string>;
 	/** 1-based waitlist position, or null when not waitlisted. */
 	waitlistPosition: number | null;
-	pendingKey: string | null;
+	/** An action on this page is in flight (buttons wait for it). */
+	isBusy: boolean;
 	registerEvent: () => void;
 	unregisterEvent: () => void;
 	registerItem: (item: AgendaItemRef) => void;

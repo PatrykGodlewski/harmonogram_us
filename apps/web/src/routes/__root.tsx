@@ -23,7 +23,9 @@ import {
 } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import appCss from "~/app.css?url";
+import { ClientOnly } from "~/components/client-only";
 import { EventSeatCountsSync } from "~/components/event-seat-counts-sync";
+import { WaitlistLiveRefresh } from "~/components/waitlist-live-refresh";
 
 function NotFound() {
 	return (
@@ -70,6 +72,11 @@ function RootComponent() {
 	return (
 		<>
 			<EventSeatCountsSync />
+			{user ? (
+				<ClientOnly fallback={null}>
+					<WaitlistLiveRefresh userId={user.id} />
+				</ClientOnly>
+			) : null}
 			<ReactQueryDevtools buttonPosition="bottom-right" />
 			<Header user={user} />
 			<Outlet />

@@ -31,14 +31,17 @@ export default function HomeEventListLive({
 			loading={loading}
 			events={events}
 		>
-			<HomeEventCards
-				events={events}
-				user={user}
-				refetching={refetching}
-				interactive
-				seatCounts={seatCounts}
-				registrations={registrations}
-			/>
+			{/* The interactive list replaces the server-rendered one; aria-busy marks a refetch in progress. */}
+			<div data-live-list aria-busy={refetching}>
+				<HomeEventCards
+					events={events}
+					user={user}
+					refetching={refetching}
+					interactive
+					seatCounts={seatCounts}
+					registrations={registrations}
+				/>
+			</div>
 		</HomeEventListShell>
 	);
 }

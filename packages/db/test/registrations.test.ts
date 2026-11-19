@@ -72,9 +72,8 @@ describe("agenda item registration", () => {
 		expect(result.eventRegistered).toBe(true);
 		expect(typeof result.txid).toBe("number");
 		expect(await getMyRegistrations(user)).toEqual({
-			eventIds: [eventId],
+			events: [{ eventId: eventId, state: "registered", waitlistPosition: null }],
 			agendaItemIds: [itemId],
-			waitlist: [],
 		});
 		expect((await readItemCount(itemId))?.seatsRemaining).toBe(2);
 		expect((await readEventCount(eventId))?.seatsRemaining).toBe(4);
@@ -111,9 +110,8 @@ describe("agenda item registration", () => {
 			"EVENT_FULL",
 		);
 		expect(await getMyRegistrations(late)).toEqual({
-			eventIds: [],
+			events: [],
 			agendaItemIds: [],
-			waitlist: [],
 		});
 	});
 
@@ -163,9 +161,8 @@ describe("agenda item registration", () => {
 			"txid",
 		);
 		expect(await getMyRegistrations(user)).toEqual({
-			eventIds: [eventId],
+			events: [{ eventId: eventId, state: "registered", waitlistPosition: null }],
 			agendaItemIds: [],
-			waitlist: [],
 		});
 		expect(await rejectionCode(unregisterFromAgendaItem(itemId, user))).toBe(
 			"NOT_REGISTERED",

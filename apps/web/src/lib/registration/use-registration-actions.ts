@@ -4,10 +4,7 @@ import {
 	unregisterFromAgendaItemServer,
 	unregisterFromEventServer,
 } from "@repo/api/events/mutations";
-import {
-	myRegistrationStatesQueryOptions,
-	myRegistrationsQueryOptions,
-} from "@repo/api/events/my-registrations";
+import { myRegistrationsQueryOptions } from "@repo/api/events/my-registrations";
 import {
 	eventDetailsQueryOptions,
 	eventsQueryKeyPrefix,
@@ -23,7 +20,8 @@ import {
 	events_unregister_success,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
+import * as React from "react";
 import { toast } from "sonner";
 import { showRegistrationErrorToast } from "~/lib/event-registration/errors";
 
@@ -40,8 +38,10 @@ export type RegistrationActions = {
 	unregister: (eventId: string) => void;
 	registerItem: (eventId: string, item: AgendaItemTarget) => void;
 	unregisterItem: (eventId: string, item: AgendaItemTarget) => void;
-	/** Key of the action in flight: `register:<eventId>`, `unregister:<eventId>`, `registerItem:<itemId>`, `unregisterItem:<itemId>`. */
-	pendingKey: string | null;
+	/** Whether this action is in flight. Keys: `register:<eventId>`, `unregister:<eventId>`, `registerItem:<itemId>`, `unregisterItem:<itemId>`. */
+	isPending: (key: string) => boolean;
+	/** Whether any action is in flight. */
+	hasPending: boolean;
 };
 
 function actionKey(action: RegistrationAction): string {
@@ -104,17 +104,25 @@ function isSyncUnconfirmed(error: unknown): boolean {
  */
 export function useRegistrationActions(): RegistrationActions {
 	const queryClient = useQueryClient();
+	// Actions on different events (or items) run side by side; a repeat of the same one is ignored.
+	const [pending, setPending] = React.useState<ReadonlySet<string>>(new Set());
+	const finish = (key: string) =>
+		setPending((current) => {
+			const next = new Set(current);
+			next.delete(key);
+			return next;
+		});
 
 	const refreshKeys = (eventId: string) => [
 		myRegistrationsQueryOptions.queryKey,
-		myRegistrationStatesQueryOptions.queryKey,
 		eventDetailsQueryOptions(eventId).queryKey,
 		eventsQueryKeyPrefix,
 	];
 
-	const mutation = useMutation({
-		mutationFn: runAction,
-		onSuccess: async (result, action) => {
+	/** Runs one action end to end; actions with different keys run side by side. */
+	const execute = async (action: RegistrationAction) => {
+		try {
+			const result = await runAction(action);
 			toast.success(successMessage(action, result));
 			const collection =
 				action.type === "registerItem" || action.type === "unregisterItem"
@@ -126,28 +134,26 @@ export function useRegistrationActions(): RegistrationActions {
 				if (!isSyncUnconfirmed(error)) {
 					throw error;
 				}
-				await Promise.all(
-					refreshKeys(action.eventId).map((queryKey) =>
-						queryClient.refetchQueries({ queryKey }),
-					),
-				);
 			}
-		},
-		onError: (error) => {
+		} catch (error) {
 			showRegistrationErrorToast(error, events_register_full);
-		},
-		onSettled: (_result, _error, action) =>
-			Promise.all(
+		} finally {
+			finish(actionKey(action));
+			await Promise.all(
 				refreshKeys(action.eventId).map((queryKey) =>
 					queryClient.invalidateQueries({ queryKey }),
 				),
-			),
-	});
+			);
+		}
+	};
 
 	const run = (action: RegistrationAction) => {
-		if (!mutation.isPending) {
-			mutation.mutate(action);
+		const key = actionKey(action);
+		if (pending.has(key)) {
+			return;
 		}
+		setPending((current) => new Set(current).add(key));
+		void execute(action);
 	};
 
 	return {
@@ -157,9 +163,7 @@ export function useRegistrationActions(): RegistrationActions {
 			run({ type: "registerItem", eventId, item }),
 		unregisterItem: (eventId, item) =>
 			run({ type: "unregisterItem", eventId, item }),
-		pendingKey:
-			mutation.isPending && mutation.variables
-				? actionKey(mutation.variables)
-				: null,
+		isPending: (key) => pending.has(key),
+		hasPending: pending.size > 0,
 	};
 }

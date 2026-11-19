@@ -65,7 +65,7 @@ describe("acceptInvitation", () => {
 		const before = { event: await readEventCount(eventId), web: await readItemCount(web) };
 		const student = await createUser("kid@x.test");
 		await expect(acceptInvitation(token, student)).resolves.toMatchObject({ eventId });
-		expect(await getMyRegistrations(student)).toEqual({ eventIds: [eventId], agendaItemIds: [web], waitlist: [] });
+		expect(await getMyRegistrations(student)).toEqual({ events: [{ eventId: eventId, state: "registered", waitlistPosition: null }], agendaItemIds: [web] });
 		expect((await readEventCount(eventId))?.seatsRemaining).toBe(before.event?.seatsRemaining);
 		expect((await readItemCount(web))?.seatsRemaining).toBe(before.web?.seatsRemaining);
 	});
@@ -116,7 +116,7 @@ describe("acceptInvitation", () => {
 		);
 		const student = await createUser("kid@x.test");
 		await acceptInvitation(await invitationToken(created.invited[0]?.memberId ?? ""), student);
-		expect(await getMyRegistrations(student)).toEqual({ eventIds: [eventId], agendaItemIds: [], waitlist: [] });
+		expect(await getMyRegistrations(student)).toEqual({ events: [{ eventId: eventId, state: "registered", waitlistPosition: null }], agendaItemIds: [] });
 	});
 });
 
@@ -143,7 +143,7 @@ describe("member changes", () => {
 		const { eventId, student, memberId, owner } = await confirmed();
 		const before = (await readEventCount(eventId))?.seatsRemaining;
 		await removeMember(memberId, owner);
-		expect(await getMyRegistrations(student)).toEqual({ eventIds: [], agendaItemIds: [], waitlist: [] });
+		expect(await getMyRegistrations(student)).toEqual({ events: [], agendaItemIds: [] });
 		expect((await readEventCount(eventId))?.seatsRemaining).toBe(before);
 	});
 

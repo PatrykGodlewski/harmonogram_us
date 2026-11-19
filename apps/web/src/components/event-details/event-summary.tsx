@@ -107,7 +107,7 @@ function EventRegistrationAction({
 	isFull,
 	registrations,
 }: EventRegistrationActionProps) {
-	const busy = !interactive || registrations.pendingKey !== null;
+	const busy = !interactive || registrations.isBusy;
 
 	if (!user) {
 		return isClosed ? (

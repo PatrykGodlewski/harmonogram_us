@@ -1,6 +1,4 @@
-import { myRegistrationsQueryOptions } from "@repo/api/events/my-registrations";
-import { useQuery } from "@tanstack/react-query";
-import * as React from "react";
+import { useMyRegistrations } from "~/lib/registration/use-my-registrations";
 import { useRegistrationActions } from "~/lib/registration/use-registration-actions";
 import type { EventDetailsRegistrations } from "./types";
 
@@ -9,24 +7,15 @@ export function useEventDetailsRegistrations(
 	eventId: string,
 	userId: string | undefined,
 ): EventDetailsRegistrations {
-	const registrations = useQuery({
-		...myRegistrationsQueryOptions,
-		enabled: Boolean(userId),
-	});
+	const { byEvent, agendaItemIds } = useMyRegistrations(userId);
 	const actions = useRegistrationActions();
-
-	const registeredItemIds = React.useMemo(
-		() => new Set(registrations.data?.agendaItemIds ?? []),
-		[registrations.data],
-	);
+	const mine = byEvent.get(eventId);
 
 	return {
-		isEventRegistered: (registrations.data?.eventIds ?? []).includes(eventId),
-		registeredItemIds,
-		waitlistPosition:
-			registrations.data?.waitlist.find((entry) => entry.eventId === eventId)
-				?.position ?? null,
-		pendingKey: actions.pendingKey,
+		isEventRegistered: mine?.state === "registered",
+		registeredItemIds: agendaItemIds,
+		waitlistPosition: mine?.waitlistPosition ?? null,
+		isBusy: actions.hasPending,
 		registerEvent: () => actions.register(eventId),
 		unregisterEvent: () => actions.unregister(eventId),
 		registerItem: (item) => actions.registerItem(eventId, item),

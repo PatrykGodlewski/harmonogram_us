@@ -124,7 +124,7 @@ function AgendaItemAction({
 		);
 	}
 
-	const busy = !interactive || registrations.pendingKey !== null;
+	const busy = !interactive || registrations.isBusy;
 	const ref = { id: item.id, title: item.title };
 
 	if (user && registrations.registeredItemIds.has(item.id)) {
