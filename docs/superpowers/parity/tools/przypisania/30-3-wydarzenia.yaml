@@ -1,0 +1,348 @@
+# Przypisania pozycji inwentarza, część 3 (wydarzenia, kategorie, dzienniki, grupy, sieci)
+# Pierwsza pasująca reguła wygrywa: reguły szczegółowe przed ogólnymi.
+
+# ---------------------------------------------------------------- wyłączenia (a): adresy legacy
+- rodzaj: trasa
+  gdy: {blueprint_regex: "^compat_(categories|events|event_management)$"}
+  wylaczenie: {powod: a, uzasadnienie: "Przekierowania ze starych adresów Indico 1.x (modpython, legacy ID kategorii i wydarzeń, stary adres ustawień)"}
+- rodzaj: trasa
+  gdy: {blueprint: categories, endpoint: export_rss}
+  wylaczenie: {powod: a, uzasadnienie: "Stary adres kanału RSS kategorii, przekierowany na kanał Atom"}
+- rodzaj: trasa
+  gdy: {blueprint: events, endpoint: display_other}
+  wylaczenie: {powod: a, uzasadnienie: "Stary adres „other view” z Indico 1.x, przekierowany na program wydarzenia"}
+- rodzaj: tabela
+  gdy: {nazwa_regex: "^(categories|events)\\.legacy_id_map$"}
+  wylaczenie: {powod: a, uzasadnienie: "Mapowanie identyfikatorów kategorii i wydarzeń z Indico 1.x"}
+
+# ---------------------------------------------------------------- kategorie: trasy
+- rodzaj: trasa
+  gdy: {blueprint: categories, endpoint_regex: "^(create_subcategory)$"}
+  funkcja: F-WYD-02.1
+- rodzaj: trasa
+  gdy: {blueprint: categories, endpoint: manage_settings}
+  funkcja: F-WYD-02.2
+- rodzaj: trasa
+  gdy: {blueprint: categories, endpoint_regex: "^(manage_icon|manage_logo|display_icon|display_logo)$"}
+  funkcja: F-WYD-02.3
+- rodzaj: trasa
+  gdy: {blueprint: categories, endpoint_regex: "^(move|move_subcategories|info_from)$"}
+  funkcja: F-WYD-02.4
+- rodzaj: trasa
+  gdy: {blueprint: categories, endpoint_regex: "^(delete|delete_subcategories)$"}
+  funkcja: F-WYD-02.5
+- rodzaj: trasa
+  gdy: {blueprint: categories, endpoint: sort_subcategories}
+  funkcja: F-WYD-02.6
+- rodzaj: trasa
+  gdy: {blueprint: categories, endpoint_regex: "^(manage_content|delete_events|move_events|split_category)$"}
+  funkcja: F-WYD-02.7
+- rodzaj: trasa
+  gdy: {blueprint: categories, endpoint: manage_moderation}
+  funkcja: F-WYD-03.3
+- rodzaj: trasa
+  gdy: {blueprint: categories, endpoint: api_event_move_requests}
+  funkcja: F-WYD-03.3
+- rodzaj: trasa
+  gdy: {blueprint: categories, endpoint: manage_protection}
+  funkcja: F-DOS-01.2
+- rodzaj: trasa
+  gdy: {blueprint: categories, endpoint_regex: "^(manage_roles|add_role|edit_role|delete_role|add_role_members|remove_role_member|add_members_import_csv|members_export_csv|api_roles)$"}
+  funkcja: F-DOS-04.3
+- rodzaj: trasa
+  gdy: {blueprint: categories, endpoint: event_search}
+  funkcja: F-WYD-07.1
+- rodzaj: trasa
+  gdy: {blueprint: categories, endpoint_regex: "^(display|event_list|show_future_events|show_past_events)$"}
+  funkcja: F-WYD-09.1
+- rodzaj: trasa
+  gdy: {blueprint: categories, endpoint: overview}
+  funkcja: F-WYD-09.2
+- rodzaj: trasa
+  gdy: {blueprint: categories, endpoint_regex: "^(calendar|calendar_events)$"}
+  funkcja: F-WYD-09.3
+- rodzaj: trasa
+  gdy: {blueprint: categories, endpoint_regex: "^(previous_event|upcoming_event|closest_event)$"}
+  funkcja: F-WYD-09.5
+- rodzaj: trasa
+  gdy: {blueprint: categories, endpoint_regex: "^(statistics|statistics_json)$"}
+  funkcja: F-WYD-09.6
+- rodzaj: trasa
+  gdy: {blueprint: categories, endpoint_regex: "^(search|info|subcat_info)$"}
+  funkcja: F-WYD-09.7
+- rodzaj: trasa
+  gdy: {blueprint: categories, endpoint: export_atom}
+  funkcja: F-WYD-09.8
+- rodzaj: trasa
+  gdy: {blueprint: categories, endpoint: manage_upcoming}
+  funkcja: F-WYD-09.9
+- rodzaj: trasa
+  gdy: {blueprint: categories, endpoint: export_ical}
+  funkcja: F-WYD-14.2
+- rodzaj: trasa
+  gdy: {blueprint: categories, obsluga: _redirect_event_creation}
+  funkcja: F-WYD-05.1
+- rodzaj: trasa
+  gdy: {blueprint: categories, sciezka_regex: "^/category/<int:category_id>!/(categ|c)/"}
+  funkcja: F-WYD-09.10
+
+# ---------------------------------------------------------------- funkcje wydarzenia, serie, role
+- rodzaj: trasa
+  gdy: {blueprint: event_features}
+  funkcja: F-WYD-13.1
+- rodzaj: trasa
+  gdy: {blueprint: event_series}
+  funkcja: F-WYD-07.1
+- rodzaj: trasa
+  gdy: {blueprint: event_roles, endpoint_regex: "^(add_members_import_csv|members_export_csv|api_roles)$"}
+  funkcja: F-DOS-04.2
+- rodzaj: trasa
+  gdy: {blueprint: event_roles}
+  funkcja: F-DOS-04.1
+
+# ---------------------------------------------------------------- zarządzanie wydarzeniem
+- rodzaj: trasa
+  gdy: {blueprint: event_management, endpoint: change_type}
+  funkcja: F-WYD-01.2
+- rodzaj: trasa
+  gdy: {blueprint: event_management, endpoint_regex: "^(clone)$"}
+  funkcja: F-WYD-06.1
+- rodzaj: trasa
+  gdy: {blueprint: event_management, endpoint: clone_preview}
+  funkcja: F-WYD-06.2
+- rodzaj: trasa
+  gdy: {blueprint: event_management, endpoint_regex: "^(import|import_event_details)$"}
+  funkcja: F-WYD-06.3
+- rodzaj: trasa
+  gdy: {blueprint: event_management, endpoint: delete}
+  funkcja: F-WYD-05.9
+- rodzaj: trasa
+  gdy: {blueprint: event_management, endpoint: move}
+  funkcja: F-WYD-05.10
+- rodzaj: trasa
+  gdy: {blueprint: event_management, endpoint: withdraw_move_request}
+  funkcja: F-WYD-03.2
+- rodzaj: trasa
+  gdy: {blueprint: event_management, endpoint_regex: "^(lock|unlock)$"}
+  funkcja: F-WYD-05.11
+- rodzaj: trasa
+  gdy: {blueprint: event_management, endpoint: edit_data}
+  funkcja: F-WYD-05.4
+- rodzaj: trasa
+  gdy: {blueprint: event_management, endpoint: edit_dates}
+  funkcja: F-WYD-05.5
+- rodzaj: trasa
+  gdy: {blueprint: event_management, endpoint: edit_location}
+  funkcja: F-WYD-05.6
+- rodzaj: trasa
+  gdy: {blueprint: event_management, endpoint: edit_contact_info}
+  funkcja: F-WYD-05.7
+- rodzaj: trasa
+  gdy: {blueprint: event_management, endpoint: edit_languages}
+  funkcja: F-WYD-05.8
+- rodzaj: trasa
+  gdy: {blueprint: event_management, endpoint: edit_classification}
+  funkcja: F-WYD-08.3
+- rodzaj: trasa
+  gdy: {blueprint: event_management, endpoint: edit_persons}
+  funkcja: F-WYD-15.7
+- rodzaj: trasa
+  gdy: {blueprint: event_management, endpoint: privacy_dashboard}
+  funkcja: F-WYD-05.14
+- rodzaj: trasa
+  gdy: {blueprint: event_management, endpoint: protection}
+  funkcja: F-DOS-01.1
+- rodzaj: trasa
+  gdy: {blueprint: event_management, endpoint_regex: "^(acl|acl_message|show_non_inheriting)$"}
+  funkcja: F-DOS-01.4
+- rodzaj: trasa
+  gdy: {blueprint: event_management, endpoint_regex: "^(api_principals|api_event_roles|api_category_roles)$"}
+  funkcja: F-DOS-02.1
+- rodzaj: trasa
+  gdy: {blueprint: event_management, endpoint_regex: "^(settings|permissions_dialog)$"}
+  funkcja: F-DOS-03.1
+
+# ---------------------------------------------------------------- events (wyświetlanie, tworzenie, administracja)
+- rodzaj: trasa
+  gdy: {blueprint: events, endpoint: create}
+  funkcja: F-WYD-05.1
+- rodzaj: trasa
+  gdy: {blueprint: events, endpoint: prepare}
+  funkcja: F-WYD-05.3
+- rodzaj: trasa
+  gdy: {blueprint: events, endpoint_regex: "^(display|display_overview|shorturl)$"}
+  funkcja: F-WYD-05.12
+- rodzaj: trasa
+  gdy: {blueprint: events, endpoint: display_privacy}
+  funkcja: F-WYD-05.14
+- rodzaj: trasa
+  gdy: {blueprint: events, endpoint_regex: "^url_qr_code_(image|metadata)$"}
+  funkcja: F-WYD-05.15
+- rodzaj: trasa
+  gdy: {blueprint: events, endpoint: export_event_ical}
+  funkcja: F-WYD-14.1
+- rodzaj: trasa
+  gdy: {blueprint: events, endpoint: key_access}
+  funkcja: F-DOS-02.2
+- rodzaj: trasa
+  gdy: {blueprint: events, endpoint: single_event_api}
+  funkcja: F-WYD-07.1
+- rodzaj: trasa
+  gdy: {blueprint: events, endpoint: check_email}
+  funkcja: F-WYD-15.6
+- rodzaj: trasa
+  gdy: {blueprint: events, endpoint: unlisted_events}
+  funkcja: F-WYD-04.1
+- rodzaj: trasa
+  gdy: {blueprint: events, endpoint_regex: "^(event_labels|create_event_label|update_event_label|delete_event_label)$"}
+  funkcja: F-WYD-08.1
+- rodzaj: trasa
+  gdy: {blueprint: events, endpoint_regex: "^(reference_types|create_reference_type|update_reference_type|delete_reference_type)$"}
+  funkcja: F-WYD-08.2
+- rodzaj: trasa
+  gdy: {blueprint: events, endpoint: allowed_keywords}
+  funkcja: F-WYD-08.3
+
+# ---------------------------------------------------------------- osoby wydarzenia
+- rodzaj: trasa
+  gdy: {blueprint: persons, endpoint: person_list}
+  funkcja: F-WYD-15.1
+- rodzaj: trasa
+  gdy: {blueprint: persons, endpoint_regex: "^(update_person|sync_with_user|delete_unused_person)$"}
+  funkcja: F-WYD-15.2
+- rodzaj: trasa
+  gdy: {blueprint: persons, endpoint_regex: "email"}
+  funkcja: F-WYD-15.3
+- rodzaj: trasa
+  gdy: {blueprint: persons, endpoint_regex: "^(grant_submission_rights|grant_modification_rights|revoke_submission_rights)$"}
+  funkcja: F-WYD-15.4
+- rodzaj: trasa
+  gdy: {blueprint: persons, endpoint: manage_person_lists}
+  funkcja: F-WYD-15.5
+- rodzaj: trasa
+  gdy: {blueprint: persons, endpoint: event_person_search}
+  funkcja: F-WYD-15.6
+
+# ---------------------------------------------------------------- dzienniki (wydarzenie, kategoria)
+- rodzaj: trasa
+  gdy: {blueprint: logs, endpoint_regex: "^(event|api_event_logs)$"}
+  funkcja: F-WYD-10.1
+- rodzaj: trasa
+  gdy: {blueprint: logs, endpoint: resend_email}
+  funkcja: F-WYD-10.2
+- rodzaj: trasa
+  gdy: {blueprint: logs, endpoint_regex: "^(event|category)_email_attachment$"}
+  funkcja: F-WYD-10.3
+- rodzaj: trasa
+  gdy: {blueprint: logs, endpoint_regex: "^(category|api_category_logs)$"}
+  funkcja: F-WYD-10.4
+
+# ---------------------------------------------------------------- grupy i sieci
+- rodzaj: trasa
+  gdy: {blueprint: groups, endpoint_regex: "^(group_details|group_members|group_search)$"}
+  funkcja: F-DOS-05.2
+- rodzaj: trasa
+  gdy: {blueprint: groups}
+  funkcja: F-DOS-05.1
+- rodzaj: trasa
+  gdy: {blueprint: networks}
+  funkcja: F-DOS-06.1
+
+# ---------------------------------------------------------------- tabele
+- rodzaj: tabela
+  gdy: {nazwa_regex: "^categories\\.(categories|settings)$"}
+  funkcja: F-WYD-02.2
+- rodzaj: tabela
+  gdy: {nazwa: categories.event_move_requests}
+  funkcja: F-WYD-03.4
+- rodzaj: tabela
+  gdy: {nazwa: categories.logs}
+  funkcja: F-WYD-10.4
+- rodzaj: tabela
+  gdy: {nazwa: events.logs}
+  funkcja: F-WYD-10.1
+- rodzaj: tabela
+  gdy: {nazwa: categories.principals}
+  funkcja: F-DOS-03.2
+- rodzaj: tabela
+  gdy: {nazwa: events.principals}
+  funkcja: F-DOS-02.1
+- rodzaj: tabela
+  gdy: {nazwa_regex: "^categories\\.(roles|role_members)$"}
+  funkcja: F-DOS-04.3
+- rodzaj: tabela
+  gdy: {nazwa_regex: "^events\\.(roles|role_members)$"}
+  funkcja: F-DOS-04.1
+- rodzaj: tabela
+  gdy: {nazwa_regex: "^events\\.(events|settings|settings_principals)$"}
+  funkcja: F-WYD-05.1
+- rodzaj: tabela
+  gdy: {nazwa: events.labels}
+  funkcja: F-WYD-08.1
+- rodzaj: tabela
+  gdy: {nazwa_regex: "^(events\\.event_references|indico\\.reference_types)$"}
+  funkcja: F-WYD-08.2
+- rodzaj: tabela
+  gdy: {nazwa: events.series}
+  funkcja: F-WYD-07.2
+- rodzaj: tabela
+  gdy: {nazwa: events.persons}
+  funkcja: F-WYD-15.1
+- rodzaj: tabela
+  gdy: {nazwa: events.event_person_links}
+  funkcja: F-WYD-15.7
+- rodzaj: tabela
+  gdy: {nazwa_regex: "^users\\.(groups|group_members)$"}
+  funkcja: F-DOS-05.1
+- rodzaj: tabela
+  gdy: {nazwa: indico.ip_network_groups}
+  funkcja: F-DOS-06.1
+- rodzaj: tabela
+  gdy: {nazwa: indico.ip_networks}
+  funkcja: F-DOS-06.2
+
+# ---------------------------------------------------------------- enumy
+- rodzaj: enum
+  gdy: {nazwa: EventType}
+  funkcja: F-WYD-01.2
+- rodzaj: enum
+  gdy: {nazwa: InheritableConfigMode}
+  funkcja: F-WYD-02.10
+- rodzaj: enum
+  gdy: {nazwa: EventCreationMode}
+  funkcja: F-WYD-03.1
+- rodzaj: enum
+  gdy: {nazwa: MoveRequestState}
+  funkcja: F-WYD-03.4
+- rodzaj: enum
+  gdy: {nazwa: GroupBy}
+  funkcja: F-WYD-09.3
+- rodzaj: enum
+  gdy: {nazwa: EventMessageMode}
+  funkcja: F-WYD-09.4
+- rodzaj: enum
+  gdy: {nazwa_regex: "^(EventLogRealm|LogKind)$"}
+  funkcja: F-WYD-10.1
+- rodzaj: enum
+  gdy: {nazwa: CategoryLogRealm}
+  funkcja: F-WYD-10.4
+- rodzaj: enum
+  gdy: {nazwa: CalendarScope}
+  funkcja: F-WYD-14.1
+- rodzaj: enum
+  gdy: {nazwa: CustomPersonsMode}
+  funkcja: F-WYD-15.5
+
+# ---------------------------------------------------------------- uprawnienia i zadania
+- rodzaj: uprawnienie
+  gdy: {nazwa_regex: "^(create|event_move_request)$", plik_regex: "^indico/modules/categories/"}
+  funkcja: F-DOS-03.2
+- rodzaj: uprawnienie
+  gdy: {id: "uprawnienie:submit:indico/modules/events/__init__.py"}
+  funkcja: F-DOS-03.3
+- rodzaj: zadanie
+  gdy: {nazwa: category_cleanup}
+  funkcja: F-WYD-02.9
+- rodzaj: zadanie
+  gdy: {nazwa: category_suggestions}
+  funkcja: F-WYD-12.2

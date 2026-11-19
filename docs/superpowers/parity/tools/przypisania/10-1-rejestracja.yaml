@@ -1,0 +1,1085 @@
+- rodzaj: trasa
+  gdy:
+    blueprint: compat_event_registration
+  wylaczenie:
+    powod: a
+    uzasadnienie: Przekierowania ze starych adresów rejestracji Indico 1.x (registration/, confRegistrantsDisplay.py)
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint_regex: ^api_registrants?$
+  wylaczenie:
+    powod: a
+    uzasadnienie: Przestarzałe API rejestrantów dla starych wersji aplikacji check-in (oznaczone w Indico jako deprecated); zastępuje je API check-in
+- rodzaj: tabela
+  gdy:
+    nazwa: event_registration.legacy_registration_map
+  wylaczenie:
+    powod: a
+    uzasadnienie: Tabela mapowania identyfikatorów rejestracji z migracji z Indico 1.x
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: create_regform
+  funkcja: F-REJ-01.1
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: edit_regform
+  funkcja: F-REJ-01.2
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: open_regform
+  funkcja: F-REJ-01.3
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: close_regform
+  funkcja: F-REJ-01.3
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: schedule_regform
+  funkcja: F-REJ-01.4
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: display_regform_list
+  funkcja: F-REJ-01.6
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: manage_registration_multi_forms_announcement
+  funkcja: F-REJ-01.6
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: clone_regform
+  funkcja: F-REJ-01.8
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: delete_regform
+  funkcja: F-REJ-01.9
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: manage_regform_list
+  funkcja: F-REJ-01.10
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: manage_regform
+  funkcja: F-REJ-01.10
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: manage_registration_managers
+  funkcja: F-REJ-01.12
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: add_section
+  funkcja: F-REJ-02.1
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: modify_section
+  funkcja: F-REJ-02.1
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: toggle_section
+  funkcja: F-REJ-02.1
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: move_section
+  funkcja: F-REJ-02.1
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: modify_regform
+  funkcja: F-REJ-02.2
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: add_field
+  funkcja: F-REJ-02.2
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: move_field
+  funkcja: F-REJ-02.2
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: modify_field
+  funkcja: F-REJ-02.3
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: toggle_field
+  funkcja: F-REJ-02.3
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: add_text
+  funkcja: F-REJ-02.4
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: modify_text
+  funkcja: F-REJ-02.4
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: move_text
+  funkcja: F-REJ-02.4
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: toggle_text
+  funkcja: F-REJ-02.4
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: upload_registration_file
+  funkcja: F-REJ-02.8
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: upload_registration_picture
+  funkcja: F-REJ-02.8
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: registration_picture
+  funkcja: F-REJ-02.8
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: manage_registration_file
+  funkcja: F-REJ-02.8
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: search_registration_affiliation
+  funkcja: F-REJ-02.10
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: check_email
+  funkcja: F-REJ-03.2
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: check_email_management
+  funkcja: F-REJ-03.2
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: approve_registration
+  funkcja: F-REJ-05.2
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: reject_registration
+  funkcja: F-REJ-05.2
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: registrations_approve
+  funkcja: F-REJ-05.3
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: registrations_reject
+  funkcja: F-REJ-05.3
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: reset_registration
+  funkcja: F-REJ-05.4
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: registrations_reset
+  funkcja: F-REJ-05.4
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: display_regform
+  funkcja: F-REJ-05.7
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: invite
+  funkcja: F-REJ-06.1
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: api_invitations_metadata
+  funkcja: F-REJ-06.1
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: invitation_preview
+  funkcja: F-REJ-06.1
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: api_invitations_import
+  funkcja: F-REJ-06.2
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: api_invitations_import_upload
+  funkcja: F-REJ-06.2
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: decline_invitation
+  funkcja: F-REJ-06.5
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: manager_decline_invitation
+  funkcja: F-REJ-06.5
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: invitations
+  funkcja: F-REJ-06.6
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: delete_invitation
+  funkcja: F-REJ-06.6
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: api_invitations_reminders_metadata
+  funkcja: F-REJ-06.7
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: api_invitations_reminders_preview
+  funkcja: F-REJ-06.7
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: api_invitations_reminders_send
+  funkcja: F-REJ-06.7
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: manage_reglist
+  funkcja: F-REJ-07.1
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: customize_reglist
+  funkcja: F-REJ-07.2
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: generate_static_url
+  funkcja: F-REJ-07.3
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: registration_details
+  funkcja: F-REJ-07.4
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: registrations_csv_export
+  funkcja: F-REJ-07.5
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: registrations_excel_export
+  funkcja: F-REJ-07.5
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: registrations_pdf_export
+  funkcja: F-REJ-07.6
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: registrations_attachments_export
+  funkcja: F-REJ-07.7
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: manage_registration_tags
+  funkcja: F-REJ-07.8
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: manage_registration_tags_add
+  funkcja: F-REJ-07.8
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: manage_registration_tags_edit
+  funkcja: F-REJ-07.8
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: manage_registration_tags_delete
+  funkcja: F-REJ-07.8
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: manage_registration_tags_assign
+  funkcja: F-REJ-07.9
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: api_registration_tags_assign
+  funkcja: F-REJ-07.9
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: create_registration
+  funkcja: F-REJ-08.1
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: upload_file_management
+  funkcja: F-REJ-08.1
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: upload_picture_management
+  funkcja: F-REJ-08.1
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: create_multiple_registrations
+  funkcja: F-REJ-08.2
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: registrations_import
+  funkcja: F-REJ-08.3
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: edit_registration
+  funkcja: F-REJ-08.4
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: delete_registrations
+  funkcja: F-REJ-08.5
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: registrations_update_price
+  funkcja: F-REJ-08.6
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: manage_withdraw_registration
+  funkcja: F-REJ-08.7
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: registration_schedule_modification
+  funkcja: F-REJ-08.8
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: registration_close_modification
+  funkcja: F-REJ-08.8
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: edit_registration_display
+  funkcja: F-REJ-09.3
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: withdraw_registration
+  funkcja: F-REJ-09.4
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: notification_preview
+  funkcja: F-REJ-10.5
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: tickets
+  funkcja: F-REJ-11.1
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: ticket_download
+  funkcja: F-REJ-11.2
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: ticket_google_wallet
+  funkcja: F-REJ-11.4
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: ticket_apple_wallet
+  funkcja: F-REJ-11.4
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: registration_check_in
+  funkcja: F-REJ-12.1
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: registrations_check_in
+  funkcja: F-REJ-12.2
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: tickets_qrcode
+  funkcja: F-REJ-12.3
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: tickets_qrcode_image
+  funkcja: F-REJ-12.3
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: api_checkin_registration_uuid
+  funkcja: F-REJ-12.4
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: api_checkin_registration
+  funkcja: F-REJ-12.4
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: api_checkin_registration_custom_qr_code
+  funkcja: F-REJ-12.4
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: api_checkin_event
+  funkcja: F-REJ-12.5
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: api_checkin_regforms
+  funkcja: F-REJ-12.5
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: api_checkin_regform
+  funkcja: F-REJ-12.5
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: api_checkin_registrations
+  funkcja: F-REJ-12.5
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: api_checkin_registration_picture
+  funkcja: F-REJ-12.5
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: participant_list
+  funkcja: F-REJ-13.1
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: api_participant_list
+  funkcja: F-REJ-13.1
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: api_registration_change_consent
+  funkcja: F-REJ-13.2
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: manage_regforms_display
+  funkcja: F-REJ-13.4
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: manage_regform_display
+  funkcja: F-REJ-13.4
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: manage_participant_list_preview
+  funkcja: F-REJ-13.4
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: manage_participant_list_preview_api
+  funkcja: F-REJ-13.4
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: hide_registration
+  funkcja: F-REJ-13.6
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: participant_picture
+  funkcja: F-REJ-13.7
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: registration_avatar
+  funkcja: F-REJ-13.7
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: manage_registration_privacy_settings
+  funkcja: F-REJ-14.1
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: api_session_blocks
+  funkcja: F-REJ-17.1
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: regform_stats
+  funkcja: F-REJ-18.1
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: email_registrants
+  funkcja: F-KOM-02.1
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: email_registrants_preview
+  funkcja: F-KOM-02.2
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: toggle_registration_payment
+  funkcja: F-PLT-05.1
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: registrations_config_badges
+  funkcja: F-DOK-01.9
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: registrations_print_badges
+  funkcja: F-DOK-01.9
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: registrations_config_tickets
+  funkcja: F-DOK-01.10
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: publish_receipt
+  funkcja: F-DOK-02.6
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: unpublish_receipt
+  funkcja: F-DOK-02.6
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: receipt_download_display
+  funkcja: F-DOK-02.6
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: download_receipt
+  funkcja: F-DOK-02.7
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: delete_receipt
+  funkcja: F-DOK-02.7
+- rodzaj: trasa
+  gdy:
+    blueprint: event_registration
+    endpoint: registrations_receipts_export
+  funkcja: F-DOK-02.7
+- rodzaj: trasa
+  gdy:
+    blueprint: event_participation
+    endpoint: manage
+  funkcja: F-REJ-01.11
+- rodzaj: trasa
+  gdy:
+    blueprint: payment
+    endpoint: admin_settings
+  funkcja: F-PLT-01.1
+- rodzaj: trasa
+  gdy:
+    blueprint: payment
+    endpoint: event_settings
+  funkcja: F-PLT-01.2
+- rodzaj: trasa
+  gdy:
+    blueprint: payment
+    endpoint: event_settings_edit
+  funkcja: F-PLT-01.2
+- rodzaj: trasa
+  gdy:
+    blueprint: payment
+    endpoint: event_plugin_edit
+  funkcja: F-PLT-01.3
+- rodzaj: trasa
+  gdy:
+    blueprint: payment
+    endpoint: admin_plugin_settings
+  funkcja: F-PLT-01.4
+- rodzaj: trasa
+  gdy:
+    blueprint: payment
+    endpoint: event_payment
+  funkcja: F-PLT-01.5
+- rodzaj: trasa
+  gdy:
+    blueprint: payment
+    endpoint: event_payment_form
+  funkcja: F-PLT-01.5
+- rodzaj: trasa
+  gdy:
+    blueprint: payment
+    endpoint: event_payment_conditions
+  funkcja: F-PLT-01.6
+- rodzaj: trasa
+  gdy:
+    blueprint: designer
+    endpoint: template_list
+  funkcja: F-DOK-01.1
+- rodzaj: trasa
+  gdy:
+    blueprint: designer
+    endpoint: add_template
+  funkcja: F-DOK-01.1
+- rodzaj: trasa
+  gdy:
+    blueprint: designer
+    endpoint: edit_template
+  funkcja: F-DOK-01.2
+- rodzaj: trasa
+  gdy:
+    blueprint: designer
+    endpoint: get_template_data
+  funkcja: F-DOK-01.2
+- rodzaj: trasa
+  gdy:
+    blueprint: designer
+    endpoint: upload_image
+  funkcja: F-DOK-01.3
+- rodzaj: trasa
+  gdy:
+    blueprint: designer
+    endpoint: download_image
+  funkcja: F-DOK-01.3
+- rodzaj: trasa
+  gdy:
+    blueprint: designer
+    endpoint: backside_template_list
+  funkcja: F-DOK-01.4
+- rodzaj: trasa
+  gdy:
+    blueprint: designer
+    endpoint: clone_template
+  funkcja: F-DOK-01.5
+- rodzaj: trasa
+  gdy:
+    blueprint: designer
+    endpoint: delete_template
+  funkcja: F-DOK-01.6
+- rodzaj: trasa
+  gdy:
+    blueprint: designer
+    endpoint: link_regform
+  funkcja: F-DOK-01.7
+- rodzaj: trasa
+  gdy:
+    blueprint: designer
+    endpoint: unlink_regform
+  funkcja: F-DOK-01.7
+- rodzaj: trasa
+  gdy:
+    blueprint: designer
+    endpoint: toggle_category_default_badge
+  funkcja: F-DOK-01.8
+- rodzaj: trasa
+  gdy:
+    blueprint: designer
+    endpoint: toggle_category_default_ticket
+  funkcja: F-DOK-01.8
+- rodzaj: trasa
+  gdy:
+    blueprint: receipts
+    endpoint: template_list
+  funkcja: F-DOK-02.1
+- rodzaj: trasa
+  gdy:
+    blueprint: receipts
+    endpoint: template
+  funkcja: F-DOK-02.1
+- rodzaj: trasa
+  gdy:
+    blueprint: receipts
+    endpoint: add_template_page
+  funkcja: F-DOK-02.1
+- rodzaj: trasa
+  gdy:
+    blueprint: receipts
+    endpoint: add_template
+  funkcja: F-DOK-02.1
+- rodzaj: trasa
+  gdy:
+    blueprint: receipts
+    endpoint: edit_template
+  funkcja: F-DOK-02.1
+- rodzaj: trasa
+  gdy:
+    blueprint: receipts
+    endpoint: get_default_template
+  funkcja: F-DOK-02.2
+- rodzaj: trasa
+  gdy:
+    blueprint: receipts
+    endpoint: add_default_template
+  funkcja: F-DOK-02.2
+- rodzaj: trasa
+  gdy:
+    blueprint: receipts
+    endpoint: template_live_preview
+  funkcja: F-DOK-02.3
+- rodzaj: trasa
+  gdy:
+    blueprint: receipts
+    endpoint: template_preview
+  funkcja: F-DOK-02.3
+- rodzaj: trasa
+  gdy:
+    blueprint: receipts
+    endpoint: clone_template
+  funkcja: F-DOK-02.4
+- rodzaj: trasa
+  gdy:
+    blueprint: receipts
+    endpoint: delete_template
+  funkcja: F-DOK-02.4
+- rodzaj: trasa
+  gdy:
+    blueprint: receipts
+    endpoint: all_templates
+  funkcja: F-DOK-02.4
+- rodzaj: trasa
+  gdy:
+    blueprint: receipts
+    endpoint: receipts_preview
+  funkcja: F-DOK-02.5
+- rodzaj: trasa
+  gdy:
+    blueprint: receipts
+    endpoint: generate_receipts
+  funkcja: F-DOK-02.5
+- rodzaj: trasa
+  gdy:
+    blueprint: receipts
+    endpoint: images
+  funkcja: F-DOK-02.5
+- rodzaj: trasa
+  gdy:
+    blueprint: receipts
+    endpoint: receipts_export
+  funkcja: F-DOK-02.7
+- rodzaj: trasa
+  gdy:
+    blueprint: receipts
+    endpoint: admin_settings
+  funkcja: F-DOK-02.8
+- rodzaj: trasa
+  gdy:
+    blueprint: event_reminders
+    endpoint: add
+  funkcja: F-KOM-01.1
+- rodzaj: trasa
+  gdy:
+    blueprint: event_reminders
+    endpoint: list
+  funkcja: F-KOM-01.4
+- rodzaj: trasa
+  gdy:
+    blueprint: event_reminders
+    endpoint: edit
+  funkcja: F-KOM-01.4
+- rodzaj: trasa
+  gdy:
+    blueprint: event_reminders
+    endpoint: delete
+  funkcja: F-KOM-01.4
+- rodzaj: trasa
+  gdy:
+    blueprint: event_reminders
+    endpoint: preview
+  funkcja: F-KOM-01.5
+- rodzaj: trasa
+  gdy:
+    blueprint: agreements
+    endpoint: event_agreements
+  funkcja: F-KOM-03.1
+- rodzaj: trasa
+  gdy:
+    blueprint: agreements
+    endpoint: event_agreements_details
+  funkcja: F-KOM-03.1
+- rodzaj: trasa
+  gdy:
+    blueprint: agreements
+    endpoint: event_agreements_details_send
+  funkcja: F-KOM-03.2
+- rodzaj: trasa
+  gdy:
+    blueprint: agreements
+    endpoint: event_agreements_details_send_all
+  funkcja: F-KOM-03.2
+- rodzaj: trasa
+  gdy:
+    blueprint: agreements
+    endpoint: event_agreements_details_remind
+  funkcja: F-KOM-03.3
+- rodzaj: trasa
+  gdy:
+    blueprint: agreements
+    endpoint: event_agreements_details_remind_all
+  funkcja: F-KOM-03.3
+- rodzaj: trasa
+  gdy:
+    blueprint: agreements
+    endpoint: agreement_form
+  funkcja: F-KOM-03.4
+- rodzaj: trasa
+  gdy:
+    blueprint: agreements
+    endpoint: event_agreements_details_submit_answer
+  funkcja: F-KOM-03.5
+- rodzaj: trasa
+  gdy:
+    blueprint: agreements
+    endpoint: download_file
+  funkcja: F-KOM-03.5
+- rodzaj: trasa
+  gdy:
+    blueprint: agreements
+    endpoint: toggle_notifications
+  funkcja: F-KOM-03.6
+- rodzaj: trasa
+  gdy:
+    blueprint: requests
+    endpoint: event_requests
+  funkcja: F-KOM-04.1
+- rodzaj: trasa
+  gdy:
+    blueprint: requests
+    endpoint: event_requests_details
+  funkcja: F-KOM-04.2
+- rodzaj: trasa
+  gdy:
+    blueprint: requests
+    endpoint: event_requests_process
+  funkcja: F-KOM-04.3
+- rodzaj: trasa
+  gdy:
+    blueprint: requests
+    endpoint: event_requests_withdraw
+  funkcja: F-KOM-04.4
+- rodzaj: tabela
+  gdy:
+    nazwa: event_registration.forms
+  funkcja: F-REJ-01.1
+- rodzaj: tabela
+  gdy:
+    nazwa: event_registration.form_items
+  funkcja: F-REJ-02.2
+- rodzaj: tabela
+  gdy:
+    nazwa: event_registration.form_field_data
+  funkcja: F-REJ-02.2
+- rodzaj: tabela
+  gdy:
+    nazwa: event_registration.registrations
+  funkcja: F-REJ-05.1
+- rodzaj: tabela
+  gdy:
+    nazwa: event_registration.registration_data
+  funkcja: F-REJ-07.4
+- rodzaj: tabela
+  gdy:
+    nazwa: event_registration.invitations
+  funkcja: F-REJ-06.8
+- rodzaj: tabela
+  gdy:
+    nazwa: event_registration.tags
+  funkcja: F-REJ-07.8
+- rodzaj: tabela
+  gdy:
+    nazwa: event_registration.registration_tags
+  funkcja: F-REJ-07.9
+- rodzaj: tabela
+  gdy:
+    nazwa: event_registration.receipt_files
+  funkcja: F-DOK-02.5
+- rodzaj: tabela
+  gdy:
+    nazwa: events.payment_transactions
+  funkcja: F-PLT-02.2
+- rodzaj: tabela
+  gdy:
+    nazwa: events.reminders
+  funkcja: F-KOM-01.1
+- rodzaj: tabela
+  gdy:
+    nazwa: events.reminders_forms
+  funkcja: F-KOM-01.2
+- rodzaj: tabela
+  gdy:
+    nazwa: events.reminders_tags
+  funkcja: F-KOM-01.2
+- rodzaj: tabela
+  gdy:
+    nazwa: events.agreements
+  funkcja: F-KOM-03.7
+- rodzaj: tabela
+  gdy:
+    nazwa: events.requests
+  funkcja: F-KOM-04.5
+- rodzaj: tabela
+  gdy:
+    nazwa: indico.designer_templates
+  funkcja: F-DOK-01.1
+- rodzaj: tabela
+  gdy:
+    nazwa: indico.designer_image_files
+  funkcja: F-DOK-01.3
+- rodzaj: tabela
+  gdy:
+    nazwa: indico.receipt_templates
+  funkcja: F-DOK-02.1
+- rodzaj: enum
+  gdy:
+    nazwa: RegistrationState
+  funkcja: F-REJ-05.1
+- rodzaj: enum
+  gdy:
+    nazwa: InvitationState
+  funkcja: F-REJ-06.8
+- rodzaj: enum
+  gdy:
+    nazwa: ModificationMode
+  funkcja: F-REJ-09.3
+- rodzaj: enum
+  gdy:
+    nazwa: PublishRegistrationsMode
+  funkcja: F-REJ-13.1
+- rodzaj: enum
+  gdy:
+    nazwa: RegistrationVisibility
+  funkcja: F-REJ-13.2
+- rodzaj: enum
+  gdy:
+    nazwa: PersonalDataType
+  funkcja: F-REJ-03.1
+- rodzaj: enum
+  gdy:
+    nazwa: RegistrationFormItemType
+  funkcja: F-REJ-02.1
+- rodzaj: enum
+  gdy:
+    nazwa: AffiliationMode
+  funkcja: F-REJ-02.10
+- rodzaj: enum
+  gdy:
+    nazwa: GoogleCredentialValidationResult
+  funkcja: F-REJ-11.4
+- rodzaj: enum
+  gdy:
+    nazwa: TransactionStatus
+  funkcja: F-PLT-02.1
+- rodzaj: enum
+  gdy:
+    nazwa: TransactionAction
+  funkcja: F-PLT-02.1
+- rodzaj: enum
+  gdy:
+    nazwa: TemplateType
+  funkcja: F-DOK-01.1
+- rodzaj: enum
+  gdy:
+    nazwa: PageSize
+  funkcja: F-DOK-01.9
+- rodzaj: enum
+  gdy:
+    nazwa: PageOrientation
+  funkcja: F-DOK-01.9
+- rodzaj: enum
+  gdy:
+    nazwa: PageLayout
+  funkcja: F-DOK-01.9
+- rodzaj: enum
+  gdy:
+    nazwa: ReminderType
+  funkcja: F-KOM-01.5
+- rodzaj: enum
+  gdy:
+    nazwa: AgreementState
+  funkcja: F-KOM-03.7
+- rodzaj: enum
+  gdy:
+    nazwa: RequestState
+  funkcja: F-KOM-04.5
+- rodzaj: zadanie
+  gdy:
+    nazwa: registration_retention_period
+  funkcja: F-REJ-14.3
+- rodzaj: zadanie
+  gdy:
+    nazwa: registration_fields_retention_period
+  funkcja: F-REJ-14.4
+- rodzaj: zadanie
+  gdy:
+    nazwa: delete_previous_registration_file
+  funkcja: F-REJ-02.8
+- rodzaj: zadanie
+  gdy:
+    nazwa: event_reminders
+  funkcja: F-KOM-01.3
+- rodzaj: uprawnienie
+  gdy:
+    nazwa_regex: ^registration
+  funkcja: F-REJ-01.12
+- rodzaj: funkcja_wydarzenia
+  gdy:
+    nazwa: registration
+  funkcja: F-REJ-01.1
+- rodzaj: funkcja_wydarzenia
+  gdy:
+    nazwa: payment
+  funkcja: F-PLT-01.2
+- rodzaj: eksporter_api
+  gdy:
+    nazwa: AgreementExportHook
+  funkcja: F-KOM-03.8

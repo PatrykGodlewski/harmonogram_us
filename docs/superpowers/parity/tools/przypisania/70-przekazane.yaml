@@ -1,0 +1,41 @@
+# Pozycje przekazane między częściami katalogu (pierwsza pasująca reguła wygrywa).
+- gdy: {id: 'trasa:event_registration:api_registration_forms:266'}
+  funkcja: F-DOS-02.1
+- gdy: {id: 'eksporter:CategoryEventHook'}
+  funkcja: F-API-01.1
+- gdy: {id_regex: '^eksporter:(ContributionHook|EventTimeTableHook|SessionHook)$'}
+  funkcja: F-API-01.2
+- gdy: {id: 'eksporter:EventSearchHook'}
+  funkcja: F-API-01.3
+- gdy: {id: 'eksporter:UserInfoHook'}
+  funkcja: F-API-01.9
+- gdy: {id: 'trasa:users:export_dashboard_ics:86'}
+  funkcja: F-API-02.3
+- gdy: {id_regex: '^(enum:indico/modules/logs/models/entries\.py:AppLogRealm|tabela:indico\.logs|trasa:logs:(api_app_logs|app):)'}
+  funkcja: F-ADM-04.4
+- gdy: {id_regex: '^(enum:indico/modules/logs/models/entries\.py:UserLogRealm|tabela:users\.logs|trasa:logs:(api_user_logs|user):)'}
+  funkcja: F-ADM-04.3
+- gdy: {id_regex: '^trasa:logs:(app|user)_email_attachment:'}
+  funkcja: F-ADM-04.5
+- gdy: {id_regex: '^trasa:event_management:(program_codes|program_code_templates):'}
+  funkcja: F-PRG-07.1
+- gdy: {id_regex: '^trasa:event_management:(assign_program_codes_|api_program_codes_)'}
+  funkcja: F-PRG-07.2
+- gdy: {id_regex: '^trasa:event_management:(poster_settings|print_poster):'}
+  funkcja: F-DOK-01.11
+- gdy: {id_regex: '^trasa:events:autolinker_'}
+  funkcja: F-MAT-02.7
+- gdy: {id: 'trasa:events:data_retention:33'}
+  funkcja: F-REJ-14.3
+- gdy: {id: 'tabela:events.static_list_links'}
+  funkcja: F-REJ-07.3
+- gdy: {id: 'enum:indico/core/db/sqlalchemy/principals.py:PrincipalType'}
+  funkcja: F-DOS-02.1
+- gdy: {id: 'enum:indico/core/db/sqlalchemy/protection.py:ProtectionMode'}
+  funkcja: F-DOS-01.3
+- gdy: {id: 'enum:indico/core/db/sqlalchemy/links.py:LinkType'}
+  funkcja: F-MAT-01.4
+- gdy: {id: 'enum:indico/core/db/sqlalchemy/descriptions.py:RenderMode'}
+  funkcja: F-WYD-05.4
+- gdy: {id: 'enum:indico/util/spreadsheets.py:CSVFieldDelimiter'}
+  funkcja: F-REJ-08.3

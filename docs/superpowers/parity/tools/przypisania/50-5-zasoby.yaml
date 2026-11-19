@@ -1,0 +1,414 @@
+- rodzaj: trasa
+  gdy: {blueprint: compat_rb, endpoint: display_booking}
+  wylaczenie: {powod: a, uzasadnienie: Przekierowanie ze starego adresu rezerwacji sali z Indico 1.x}
+- rodzaj: trasa
+  gdy: {blueprint: compat_vc, endpoint_regex: '^collaboration(py)?$'}
+  wylaczenie: {powod: a, uzasadnienie: Przekierowania ze starych adresów modułu „collaboration” z Indico 1.x na stronę wideokonferencji}
+- rodzaj: trasa
+  gdy: {blueprint: api, endpoint_regex: ^(admin_keys|admin_settings|user_profile|key_(create|delete|toggle_persistent|block))$}
+  wylaczenie: {powod: a, uzasadnienie: 'Klucze API z podpisami HMAC są w Indico przestarzałe od wersji 3.0 (zastąpione tokenami osobistymi i OAuth, wiersz F-API-01.7); utrzymywane wyłącznie dla zgodności
+      wstecznej'}
+- rodzaj: tabela
+  gdy: {nazwa: users.api_keys}
+  wylaczenie: {powod: a, uzasadnienie: 'Klucze API z podpisami HMAC są w Indico przestarzałe od wersji 3.0 (zastąpione tokenami osobistymi i OAuth, wiersz F-API-01.7); utrzymywane wyłącznie dla zgodności
+      wstecznej'}
+- rodzaj: enum
+  gdy: {nazwa: APIMode}
+  wylaczenie: {powod: a, uzasadnienie: 'Klucze API z podpisami HMAC są w Indico przestarzałe od wersji 3.0 (zastąpione tokenami osobistymi i OAuth, wiersz F-API-01.7); utrzymywane wyłącznie dla zgodności
+      wstecznej (tryby bezpieczeństwa kluczy i podpisów)'}
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: room}
+  funkcja: F-SAL-01.1
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: room_attributes}
+  funkcja: F-SAL-01.1
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: room_availability}
+  funkcja: F-SAL-01.1
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: room_photo}
+  funkcja: F-SAL-01.1
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: sprite}
+  funkcja: F-SAL-01.1
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: rooms}
+  funkcja: F-SAL-01.1
+- rodzaj: tabela
+  gdy: {nazwa: roombooking.rooms}
+  funkcja: F-SAL-01.1
+- rodzaj: tabela
+  gdy: {nazwa: roombooking.photos}
+  funkcja: F-SAL-01.1
+- rodzaj: tabela
+  gdy: {nazwa: roombooking.room_attribute_values}
+  funkcja: F-SAL-01.1
+- rodzaj: tabela
+  gdy: {nazwa: roombooking.room_attributes}
+  funkcja: F-SAL-01.1
+- rodzaj: tabela
+  gdy: {nazwa: roombooking.room_equipment}
+  funkcja: F-SAL-01.1
+- rodzaj: tabela
+  gdy: {nazwa: roombooking.equipment_types}
+  funkcja: F-SAL-01.1
+- rodzaj: tabela
+  gdy: {nazwa: roombooking.features}
+  funkcja: F-SAL-01.1
+- rodzaj: tabela
+  gdy: {nazwa: roombooking.equipment_features}
+  funkcja: F-SAL-01.1
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: room_permissions}
+  funkcja: F-SAL-01.2
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: rooms_permissions}
+  funkcja: F-SAL-01.2
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: room_permission_types}
+  funkcja: F-SAL-01.2
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: location_permission_types}
+  funkcja: F-SAL-01.2
+- rodzaj: tabela
+  gdy: {nazwa: roombooking.room_principals}
+  funkcja: F-SAL-01.2
+- rodzaj: tabela
+  gdy: {nazwa: roombooking.location_principals}
+  funkcja: F-SAL-01.2
+- rodzaj: uprawnienie
+  gdy: {nazwa: book, klasa: BookPermission}
+  funkcja: F-SAL-01.2
+- rodzaj: uprawnienie
+  gdy: {nazwa: prebook, klasa: PrebookPermission}
+  funkcja: F-SAL-01.2
+- rodzaj: uprawnienie
+  gdy: {nazwa: override}
+  funkcja: F-SAL-01.3
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: roombooking}
+  funkcja: F-SAL-01.4
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: '404'}
+  funkcja: F-SAL-01.4
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: config}
+  funkcja: F-SAL-01.4
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: user_info}
+  funkcja: F-SAL-01.4
+- rodzaj: tabela
+  gdy: {nazwa: roombooking.room_bookable_hours}
+  funkcja: F-SAL-01.5
+- rodzaj: tabela
+  gdy: {nazwa: roombooking.room_nonbookable_periods}
+  funkcja: F-SAL-01.5
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: map_areas}
+  funkcja: F-SAL-01.6
+- rodzaj: tabela
+  gdy: {nazwa: roombooking.map_areas}
+  funkcja: F-SAL-01.6
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: search_rooms}
+  funkcja: F-SAL-02.1
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: equipment_types}
+  funkcja: F-SAL-02.1
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: locations}
+  funkcja: F-SAL-02.1
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: timeline}
+  funkcja: F-SAL-02.2
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: create_booking}
+  funkcja: F-SAL-02.3
+- rodzaj: tabela
+  gdy: {nazwa: roombooking.reservations}
+  funkcja: F-SAL-02.3
+- rodzaj: tabela
+  gdy: {nazwa: roombooking.reservation_occurrences}
+  funkcja: F-SAL-02.3
+- rodzaj: enum
+  gdy: {nazwa: BookingReasonRequiredOptions}
+  funkcja: F-SAL-02.3
+- rodzaj: enum
+  gdy: {nazwa: RepeatFrequency}
+  funkcja: F-SAL-02.4
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: suggestions}
+  funkcja: F-SAL-02.6
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: check_room_available}
+  funkcja: F-SAL-02.7
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: update_booking}
+  funkcja: F-SAL-02.9
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: booking_edit_calendars}
+  funkcja: F-SAL-02.9
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: booking_details}
+  funkcja: F-SAL-02.10
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: my_bookings}
+  funkcja: F-SAL-02.11
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: active_bookings}
+  funkcja: F-SAL-02.11
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: booking_state_actions}
+  funkcja: F-SAL-03.1
+- rodzaj: enum
+  gdy: {nazwa: ReservationState}
+  funkcja: F-SAL-03.1
+- rodzaj: uprawnienie
+  gdy: {nazwa: moderate}
+  funkcja: F-SAL-03.1
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: delete_booking}
+  funkcja: F-SAL-03.4
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: booking_occurrence_state_actions}
+  funkcja: F-SAL-03.5
+- rodzaj: enum
+  gdy: {nazwa: ReservationOccurrenceState}
+  funkcja: F-SAL-03.5
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: create_blocking}
+  funkcja: F-SAL-04.1
+- rodzaj: tabela
+  gdy: {nazwa: roombooking.blockings}
+  funkcja: F-SAL-04.1
+- rodzaj: tabela
+  gdy: {nazwa: roombooking.blocking_principals}
+  funkcja: F-SAL-04.1
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: blocking_actions}
+  funkcja: F-SAL-04.2
+- rodzaj: enum
+  gdy: {nazwa: BlockedRoomState}
+  funkcja: F-SAL-04.2
+- rodzaj: tabela
+  gdy: {nazwa: roombooking.blocked_rooms}
+  funkcja: F-SAL-04.2
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: blockings}
+  funkcja: F-SAL-04.4
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: blocking}
+  funkcja: F-SAL-04.4
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: update_blocking}
+  funkcja: F-SAL-04.4
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: delete_blocking}
+  funkcja: F-SAL-04.4
+- rodzaj: zadanie
+  gdy: {nazwa: roombooking_occurrences}
+  funkcja: F-SAL-05.2
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: notification_settings}
+  funkcja: F-SAL-05.2
+- rodzaj: zadanie
+  gdy: {nazwa: roombooking_end_notifications}
+  funkcja: F-SAL-05.3
+- rodzaj: enum
+  gdy: {nazwa: RoomEmailMode}
+  funkcja: F-SAL-05.4
+- rodzaj: tabela
+  gdy: {nazwa: roombooking.reservation_edit_logs}
+  funkcja: F-SAL-05.5
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: event_booking_list}
+  funkcja: F-SAL-06.1
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: event_linkable_contributions}
+  funkcja: F-SAL-06.1
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: event_linkable_session_blocks}
+  funkcja: F-SAL-06.1
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: linked_object_data}
+  funkcja: F-SAL-06.2
+- rodzaj: tabela
+  gdy: {nazwa: roombooking.reservation_occurrence_links}
+  funkcja: F-SAL-06.2
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: booking_occurrence_link}
+  funkcja: F-SAL-06.3
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: linkable_bookings}
+  funkcja: F-SAL-06.3
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: booking_links_data}
+  funkcja: F-SAL-06.3
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: events}
+  funkcja: F-SAL-06.3
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: favorite_rooms}
+  funkcja: F-SAL-07.1
+- rodzaj: tabela
+  gdy: {nazwa: roombooking.favorite_rooms}
+  funkcja: F-SAL-07.1
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: calendar}
+  funkcja: F-SAL-07.2
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: stats}
+  funkcja: F-SAL-07.3
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: room_stats}
+  funkcja: F-SAL-07.3
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: export_bookings}
+  funkcja: F-SAL-07.4
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: export_bookings_file}
+  funkcja: F-SAL-07.4
+- rodzaj: eksporter_api
+  gdy: {nazwa: RoomHook}
+  funkcja: F-SAL-07.5
+- rodzaj: eksporter_api
+  gdy: {nazwa: RoomNameHook}
+  funkcja: F-SAL-07.5
+- rodzaj: eksporter_api
+  gdy: {nazwa: ReservationHook}
+  funkcja: F-SAL-07.6
+- rodzaj: eksporter_api
+  gdy: {nazwa: BookRoomHook}
+  funkcja: F-SAL-07.7
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: admin_settings}
+  funkcja: F-SAL-08.1
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: admin_locations}
+  funkcja: F-SAL-08.2
+- rodzaj: tabela
+  gdy: {nazwa: roombooking.locations}
+  funkcja: F-SAL-08.2
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: admin_equipment_types}
+  funkcja: F-SAL-08.3
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: admin_features}
+  funkcja: F-SAL-08.3
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: admin_attributes}
+  funkcja: F-SAL-08.4
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: admin_rooms}
+  funkcja: F-SAL-08.5
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: admin_room}
+  funkcja: F-SAL-08.5
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: admin_room_attributes}
+  funkcja: F-SAL-08.5
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: admin_update_room_attributes}
+  funkcja: F-SAL-08.5
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: admin_room_equipment}
+  funkcja: F-SAL-08.5
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: admin_update_room_equipment}
+  funkcja: F-SAL-08.5
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: admin_room_photo}
+  funkcja: F-SAL-08.5
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: admin_room_availability}
+  funkcja: F-SAL-08.6
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: admin_update_room_availability}
+  funkcja: F-SAL-08.6
+- rodzaj: trasa
+  gdy: {blueprint: rb, endpoint: admin_map_areas}
+  funkcja: F-SAL-08.7
+- rodzaj: trasa
+  gdy: {blueprint: vc, endpoint: manage_vc_rooms}
+  funkcja: F-WID-01.1
+- rodzaj: trasa
+  gdy: {blueprint: vc, endpoint: manage_vc_rooms_select}
+  funkcja: F-WID-01.1
+- rodzaj: trasa
+  gdy: {blueprint: vc, endpoint: manage_vc_rooms_create}
+  funkcja: F-WID-01.2
+- rodzaj: tabela
+  gdy: {nazwa: events.vc_rooms}
+  funkcja: F-WID-01.2
+- rodzaj: trasa
+  gdy: {blueprint: vc, endpoint: manage_vc_rooms_modify}
+  funkcja: F-WID-01.3
+- rodzaj: trasa
+  gdy: {blueprint: vc, endpoint: manage_vc_rooms_remove}
+  funkcja: F-WID-01.4
+- rodzaj: trasa
+  gdy: {blueprint: vc, endpoint: manage_vc_rooms_search_form}
+  funkcja: F-WID-01.5
+- rodzaj: trasa
+  gdy: {blueprint: vc, endpoint: manage_vc_rooms_search}
+  funkcja: F-WID-01.5
+- rodzaj: trasa
+  gdy: {blueprint: vc, endpoint: manage_vc_rooms_refresh}
+  funkcja: F-WID-01.6
+- rodzaj: enum
+  gdy: {nazwa: VCRoomStatus}
+  funkcja: F-WID-01.6
+- rodzaj: trasa
+  gdy: {blueprint: vc, endpoint: event_videoconference}
+  funkcja: F-WID-01.7
+- rodzaj: enum
+  gdy: {nazwa: VCRoomLinkType}
+  funkcja: F-WID-01.8
+- rodzaj: tabela
+  gdy: {nazwa: events.vc_room_events}
+  funkcja: F-WID-01.8
+- rodzaj: trasa
+  gdy: {blueprint: vc, endpoint: vc_room_list}
+  funkcja: F-WID-01.10
+- rodzaj: trasa
+  gdy: {blueprint: search, endpoint: search}
+  funkcja: F-WYS-01.1
+- rodzaj: trasa
+  gdy: {blueprint: search, endpoint: api_search}
+  funkcja: F-WYS-01.1
+- rodzaj: trasa
+  gdy: {blueprint: search, endpoint: api_search_options}
+  funkcja: F-WYS-01.1
+- rodzaj: enum
+  gdy: {nazwa: SearchTarget}
+  funkcja: F-WYS-01.1
+- rodzaj: trasa
+  gdy: {blueprint: search, endpoint: category_search}
+  funkcja: F-WYS-01.2
+- rodzaj: trasa
+  gdy: {blueprint: search, endpoint: event_search}
+  funkcja: F-WYS-01.3
+- rodzaj: eksporter_api
+  gdy: {nazwa: FileHook}
+  funkcja: F-API-01.4
+- rodzaj: eksporter_api
+  gdy: {id: 'eksporter:format:atom'}
+  funkcja: F-API-01.5
+- rodzaj: eksporter_api
+  gdy: {id: 'eksporter:format:html'}
+  funkcja: F-API-01.5
+- rodzaj: eksporter_api
+  gdy: {id: 'eksporter:format:ical'}
+  funkcja: F-API-01.5
+- rodzaj: eksporter_api
+  gdy: {id: 'eksporter:format:json'}
+  funkcja: F-API-01.5
+- rodzaj: eksporter_api
+  gdy: {id: 'eksporter:format:jsonp'}
+  funkcja: F-API-01.5
+- rodzaj: eksporter_api
+  gdy: {id: 'eksporter:format:xml'}
+  funkcja: F-API-01.5
+- rodzaj: trasa
+  gdy: {blueprint: api, endpoint: httpapi}
+  funkcja: F-API-01.7

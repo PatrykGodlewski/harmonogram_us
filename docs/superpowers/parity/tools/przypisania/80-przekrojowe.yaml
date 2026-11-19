@@ -1,0 +1,502 @@
+# Pozycje przekrojowe: sygnały, ustawienia, CLI, referencja API, moduły, lokalizacje, wtyczki.
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^acl\.}
+  funkcja: F-PLG-04.10
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^affiliations\.}
+  funkcja: F-PLG-04.15
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^agreements\.get-definitions$}
+  funkcja: F-PLG-06.7
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^attachments\.get-file-previewers$}
+  funkcja: F-PLG-06.8
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^attachments\.}
+  funkcja: F-PLG-04.9
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^category\.}
+  funkcja: F-PLG-04.7
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^core\.(add-form-fields|get-fields|form-validated)$}
+  funkcja: F-PLG-05.2
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^core\.get-placeholders$}
+  funkcja: F-PLG-05.3
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^core\.get-search-providers$}
+  funkcja: F-PLG-06.5
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^core\.get-storage-backends$}
+  funkcja: F-PLG-06.3
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^core\.get-csp-script-sources$}
+  funkcja: F-PLG-05.6
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^core\.}
+  funkcja: F-PLG-04.13
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^event\.abstracts\.}
+  funkcja: F-PLG-04.3
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^event\.contributions\.}
+  funkcja: F-PLG-04.4
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^event\.core\.session-}
+  funkcja: F-PLG-04.5
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^event\.timetable\.}
+  funkcja: F-PLG-04.5
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^event\.core\.get-feature-definitions$}
+  funkcja: F-PLG-06.10
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^event\.core\.(sidemenu|timetable-buttons)$}
+  funkcja: F-PLG-05.1
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^event\.core\.}
+  funkcja: F-PLG-04.1
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^event\.designer\.}
+  funkcja: F-PLG-04.16
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^event\.reminder\.}
+  funkcja: F-PLG-04.16
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^event\.notes\.}
+  funkcja: F-PLG-04.9
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^event\.persons\.(person-link-field-extra-params|person-required-fields)$}
+  funkcja: F-PLG-05.2
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^event\.persons\.}
+  funkcja: F-PLG-04.1
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^event\.registration\.(registrant-list-action-menu|registrant-list-item|filter-registration-list)$}
+  funkcja: F-PLG-05.5
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^event\.registration\.}
+  funkcja: F-PLG-04.2
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^event_management\.get-cloners$}
+  funkcja: F-PLG-06.10
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^event_management\.management-url$}
+  funkcja: F-PLG-05.1
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^event_management\.}
+  funkcja: F-PLG-04.1
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^menu\.}
+  funkcja: F-PLG-04.11
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^plugin\.cli$}
+  funkcja: F-PLG-07.3
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^plugin\.get-blueprints$}
+  funkcja: F-PLG-07.1
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^plugin\.(get-conference-themes|get-event-themes-files)$}
+  funkcja: F-PLG-05.4
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^plugin\.get-event-request-definitions$}
+  funkcja: F-PLG-06.6
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^plugin\.(get-template-customization-paths|inject-bundle|template-hook)$}
+  funkcja: F-PLG-05.6
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^plugin\.}
+  funkcja: F-PLG-04.13
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^rb\.}
+  funkcja: F-PLG-04.8
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^rh\.}
+  funkcja: F-PLG-04.12
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^users\.preferences$}
+  funkcja: F-PLG-05.7
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^users\.}
+  funkcja: F-PLG-04.6
+- rodzaj: sygnal
+  gdy: {nazwa_regex: ^vc\.}
+  funkcja: F-PLG-04.14
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(FAILED_LOGIN_RATE_LIMIT)$}
+  funkcja: F-UWT-01.2
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(SIGNUP_CAPTCHA)$}
+  funkcja: F-UWT-01.6
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(LOCAL_MODERATION)$}
+  funkcja: F-UZY-01.3
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(LOCAL_PASSWORD_MIN_LENGTH)$}
+  funkcja: F-UZY-01.2
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(LOCAL_GROUPS)$}
+  funkcja: F-DOS-05.1
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(LOCAL_IDENTITIES|LOCAL_REGISTRATION|LOCAL_USERNAMES)$}
+  funkcja: F-UWT-01.3
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(AUTH_PROVIDERS|EXTERNAL_REGISTRATION_URL|IDENTITY_PROVIDERS|PROVIDER_MAP|SIGNUP_RATE_LIMIT)$}
+  funkcja: F-ADM-01.5
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(CELERY_BROKER|CELERY_CONFIG|CELERY_RESULT_BACKEND|REDIS_CACHE_URL)$}
+  funkcja: F-ADM-01.8
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(SCHEDULED_TASK_OVERRIDE)$}
+  funkcja: F-ADM-07.1
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(ALLOWED_LANGUAGES|CUSTOM_LANGUAGES|DEFAULT_LOCALE)$}
+  funkcja: F-I18-01.3
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(CUSTOM_COUNTRIES)$}
+  funkcja: F-I18-01.5
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(CHECKIN_APP_URL)$}
+  funkcja: F-REJ-12.3
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(ENABLE_APPLE_WALLET|ENABLE_GOOGLE_WALLET|WALLET_LOGO_URL)$}
+  funkcja: F-REJ-11.4
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(CUSTOMIZATION_DIR|FAVICON_URL|LOGIN_LOGO_URL|LOGO_URL)$}
+  funkcja: F-ADM-01.9
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(HELP_URL|PUBLIC_SUPPORT_EMAIL|SUPPORT_EMAIL)$}
+  funkcja: F-ADM-01.12
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(SQLALCHEMY_DATABASE_URI|SQLALCHEMY_POOL_RECYCLE|SQLALCHEMY_POOL_SIZE|SQLALCHEMY_POOL_TIMEOUT)$}
+  funkcja: F-ADM-01.10
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(SYSTEM_NOTICES_URL)$}
+  funkcja: F-ADM-05.1
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(BASE_URL|CACHE_DIR|LOG_DIR|STATIC_FILE_METHOD|TEMP_DIR|USE_PROXY|WORKER_NAME)$}
+  funkcja: F-ADM-01.2
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(NO_REPLY_EMAIL|SMTP_ALLOWED_SENDERS|SMTP_SENDER_FALLBACK)$}
+  funkcja: F-KOM-05.1
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(EMAIL_LOG_STORAGE)$}
+  funkcja: F-KOM-05.3
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(EMAIL_BACKEND|MAX_EMAIL_ATTACHMENT_SIZE|SMTP_CERTFILE|SMTP_KEYFILE|SMTP_LOGIN|SMTP_PASSWORD|SMTP_SERVER|SMTP_TIMEOUT|SMTP_USE_SSL|SMTP_USE_TLS)$}
+  funkcja: F-KOM-05.4
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(EXPERIMENTAL_EDITING_SERVICE)$}
+  funkcja: F-EDI-02.1
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(LATEX_RATE_LIMIT|STRICT_LATEX|XELATEX_PATH)$}
+  funkcja: F-ADM-01.11
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(LOGGING_CONFIG_FILE|SENTRY_DSN|SENTRY_ENVIRONMENT|SENTRY_LOGGING_LEVEL)$}
+  funkcja: F-ADM-01.7
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(ALLOW_PUBLIC_USER_SEARCH)$}
+  funkcja: F-UZY-04.1
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(CSP_DIRECTIVES|CSP_ENABLED|CSP_REPORT_URI|CSP_SCRIPT_SOURCES)$}
+  funkcja: F-OPS-06.4
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(CHECK_ACTION_PERMISSIONS|SECRET_KEY)$}
+  funkcja: F-ADM-01.6
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(SESSION_LIFETIME|SESSION_MAX_LIFETIME)$}
+  funkcja: F-UWT-01.5
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(ATTACHMENT_STORAGE|MAX_UPLOAD_FILES_TOTAL_SIZE|MAX_UPLOAD_FILE_SIZE|STORAGE_BACKENDS)$}
+  funkcja: F-ADM-01.4
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(MATERIAL_PACKAGE_RATE_LIMIT)$}
+  funkcja: F-MAT-01.9
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(MAX_DATA_EXPORT_SIZE)$}
+  funkcja: F-UZY-05.1
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(STATIC_SITE_STORAGE)$}
+  funkcja: F-MAT-04.1
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(ALLOW_ADMIN_USER_DELETION)$}
+  funkcja: F-UZY-05.3
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(CATEGORY_CLEANUP)$}
+  funkcja: F-WYD-02.11
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(DEFAULT_TIMEZONE)$}
+  funkcja: F-I18-02.1
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(DISABLE_GRAVATAR)$}
+  funkcja: F-UZY-02.6
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(ENABLE_ROOMBOOKING)$}
+  funkcja: F-SAL-01.4
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(PLUGINS)$}
+  funkcja: F-ADM-09.3
+- rodzaj: ustawienie
+  gdy: {nazwa: COMMUNITY_HUB_URL}
+  wylaczenie: {powod: b, uzasadnienie: Adres serwisu wspólnoty Indico (rejestr instancji cephalopod).}
+- rodzaj: ustawienie
+  gdy: {nazwa: ROUTE_OLD_URLS}
+  wylaczenie: {powod: a, uzasadnienie: Obsługa starych adresów URL z Indico 1.x.}
+- rodzaj: ustawienie
+  gdy: {nazwa_regex: ^(DB_LOG|DEBUG|DISABLE_CELERY_CHECK|PROFILE|SMTP_USE_CELERY|CUSTOMIZATION_DEBUG)$}
+  wylaczenie: {powod: c, uzasadnienie: 'Ustawienie wyłącznie do pracy nad kodem Indico (tryb debugowania, profilowanie, dziennik zapytań, pomijanie kontroli kolejki).'}
+- rodzaj: cli
+  gdy: {id_regex: '^cli:indico/cli/i18n\.py:'}
+  wylaczenie: {powod: c, uzasadnienie: 'Obsługa tłumaczeń w projekcie Indico (ekstrakcja, kompilacja, Transifex, kontrola formatów) — narzędzie deweloperów Indico.'}
+- rodzaj: cli
+  gdy: {id: 'cli:indico/cli/core.py:cli:i18n'}
+  wylaczenie: {powod: c, uzasadnienie: 'Obsługa tłumaczeń w projekcie Indico (ekstrakcja, kompilacja, Transifex, kontrola formatów) — narzędzie deweloperów Indico.'}
+- rodzaj: cli
+  gdy: {id: 'cli:indico/cli/core.py:cli:run'}
+  wylaczenie: {powod: c, uzasadnienie: Serwer deweloperski Indico.}
+- rodzaj: cli
+  gdy: {id_regex: '^cli:indico/cli/(database\.py:cli:reset-alembic|maintenance\.py:cli:fix-event-role-acls)$'}
+  wylaczenie: {powod: a, uzasadnienie: 'Naprawa stanu po historycznych wersjach Indico (reset Alembic, poprawka list ról z dawnych migracji).'}
+- rodzaj: cli
+  gdy: {id: 'cli:indico/cli/core.py:cli:celery'}
+  funkcja: F-ADM-07.2
+- rodzaj: cli
+  gdy: {id_regex: '^cli:indico/cli/(core\.py:cli:(cleanup|maint|resend-email)|maintenance\.py:cli_group:cli)$'}
+  funkcja: F-ADM-06.4
+- rodzaj: cli
+  gdy: {id: 'cli:indico/cli/maintenance.py:cli:pull-latex-image'}
+  funkcja: F-ADM-01.11
+- rodzaj: cli
+  gdy: {id: 'cli:indico/cli/core.py:cli:shell'}
+  funkcja: F-ADM-06.6
+- rodzaj: cli
+  gdy: {id_regex: '^cli:indico/cli/(core\.py:cli:db|database\.py:)'}
+  funkcja: F-ADM-06.1
+- rodzaj: cli
+  gdy: {id_regex: '^cli:indico/cli/(core\.py:cli:event|event\.py:)'}
+  funkcja: F-ADM-06.3
+- rodzaj: cli
+  gdy: {id_regex: '^cli:indico/cli/(core\.py:cli:user|user\.py:)'}
+  funkcja: F-ADM-06.2
+- rodzaj: cli
+  gdy: {id: 'cli:indico/cli/setup.py:cli:list-plugins'}
+  funkcja: F-ADM-09.1
+- rodzaj: cli
+  gdy: {id: 'cli:indico/cli/setup.py:cli:create-logging-config'}
+  funkcja: F-OPS-04.3
+- rodzaj: cli
+  gdy: {id: 'cli:indico/cli/setup.py:cli:create-symlinks'}
+  funkcja: F-OPS-01.2
+- rodzaj: cli
+  gdy: {id: 'cli:indico/cli/setup.py:cli:upgrade-python'}
+  funkcja: F-OPS-02.1
+- rodzaj: cli
+  gdy: {id_regex: '^cli:indico/cli/(core\.py:(cli:setup|click:cli)|setup\.py:)'}
+  funkcja: F-ADM-06.5
+- rodzaj: rozdzial_api
+  gdy: {nazwa_regex: .}
+  funkcja: F-PLG-08.1
+- rodzaj: modul
+  gdy: {nazwa: cephalopod}
+  wylaczenie: {powod: b, uzasadnienie: Telemetria wspólnoty Indico (rejestr instancji).}
+- rodzaj: podmodul
+  gdy: {nazwa_regex: /testing$}
+  wylaczenie: {powod: c, uzasadnienie: 'Dane i fabryki testowe Indico (pytest), nie funkcja produktu.'}
+- rodzaj: modul
+  gdy: {nazwa: admin}
+  funkcja: F-ADM-01.1
+- rodzaj: modul
+  gdy: {nazwa: announcement}
+  funkcja: F-ADM-02.1
+- rodzaj: modul
+  gdy: {nazwa: api}
+  funkcja: F-API-01.7
+- rodzaj: modul
+  gdy: {nazwa: attachments}
+  funkcja: F-MAT-01.1
+- rodzaj: modul
+  gdy: {nazwa: auth}
+  funkcja: F-UWT-01.1
+- rodzaj: modul
+  gdy: {nazwa: bootstrap}
+  funkcja: F-OPS-01.3
+- rodzaj: modul
+  gdy: {nazwa: categories}
+  funkcja: F-WYD-02.1
+- rodzaj: modul
+  gdy: {nazwa: core}
+  funkcja: F-ADM-01.1
+- rodzaj: modul
+  gdy: {nazwa: designer}
+  funkcja: F-DOK-01.1
+- rodzaj: modul
+  gdy: {nazwa: events}
+  funkcja: F-WYD-05.1
+- rodzaj: modul
+  gdy: {nazwa: files}
+  funkcja: F-MAT-03.1
+- rodzaj: modul
+  gdy: {nazwa: groups}
+  funkcja: F-DOS-05.1
+- rodzaj: modul
+  gdy: {nazwa: legal}
+  funkcja: F-ADM-03.1
+- rodzaj: modul
+  gdy: {nazwa: logs}
+  funkcja: F-WYD-10.1
+- rodzaj: modul
+  gdy: {nazwa: networks}
+  funkcja: F-DOS-06.1
+- rodzaj: modul
+  gdy: {nazwa: news}
+  funkcja: F-ADM-02.2
+- rodzaj: modul
+  gdy: {nazwa: oauth}
+  funkcja: F-UWT-04.1
+- rodzaj: modul
+  gdy: {nazwa: rb}
+  funkcja: F-SAL-01.1
+- rodzaj: modul
+  gdy: {nazwa: receipts}
+  funkcja: F-DOK-02.1
+- rodzaj: modul
+  gdy: {nazwa: search}
+  funkcja: F-WYS-01.1
+- rodzaj: modul
+  gdy: {nazwa: users}
+  funkcja: F-UZY-02.1
+- rodzaj: modul
+  gdy: {nazwa: vc}
+  funkcja: F-WID-01.1
+- rodzaj: podmodul
+  gdy: {nazwa: events/abstracts}
+  funkcja: F-ABS-01.1
+- rodzaj: podmodul
+  gdy: {nazwa: events/agreements}
+  funkcja: F-KOM-03.1
+- rodzaj: podmodul
+  gdy: {nazwa: events/contributions}
+  funkcja: F-REF-01.1
+- rodzaj: podmodul
+  gdy: {nazwa: events/editing}
+  funkcja: F-EDI-01.1
+- rodzaj: podmodul
+  gdy: {nazwa: events/features}
+  funkcja: F-WYD-13.1
+- rodzaj: podmodul
+  gdy: {nazwa: events/layout}
+  funkcja: F-WYG-01.1
+- rodzaj: podmodul
+  gdy: {nazwa: events/management}
+  funkcja: F-WYD-05.4
+- rodzaj: podmodul
+  gdy: {nazwa: events/notes}
+  funkcja: F-MAT-02.1
+- rodzaj: podmodul
+  gdy: {nazwa: events/papers}
+  funkcja: F-PAP-01.1
+- rodzaj: podmodul
+  gdy: {nazwa: events/payment}
+  funkcja: F-PLT-01.1
+- rodzaj: podmodul
+  gdy: {nazwa: events/persons}
+  funkcja: F-WYD-15.1
+- rodzaj: podmodul
+  gdy: {nazwa: events/registration}
+  funkcja: F-REJ-01.1
+- rodzaj: podmodul
+  gdy: {nazwa: events/reminders}
+  funkcja: F-KOM-01.1
+- rodzaj: podmodul
+  gdy: {nazwa: events/requests}
+  funkcja: F-KOM-04.1
+- rodzaj: podmodul
+  gdy: {nazwa: events/roles}
+  funkcja: F-DOS-04.1
+- rodzaj: podmodul
+  gdy: {nazwa: events/series}
+  funkcja: F-WYD-07.1
+- rodzaj: podmodul
+  gdy: {nazwa: events/sessions}
+  funkcja: F-PRG-05.1
+- rodzaj: podmodul
+  gdy: {nazwa: events/static}
+  funkcja: F-MAT-04.1
+- rodzaj: podmodul
+  gdy: {nazwa: events/surveys}
+  funkcja: F-ANK-01.1
+- rodzaj: podmodul
+  gdy: {nazwa: events/timetable}
+  funkcja: F-PRG-01.1
+- rodzaj: podmodul
+  gdy: {nazwa: events/tracks}
+  funkcja: F-PRG-06.1
+- rodzaj: podmodul
+  gdy: {nazwa: rb/event}
+  funkcja: F-SAL-06.1
+- rodzaj: podmodul
+  gdy: {nazwa: rb/notifications}
+  funkcja: F-SAL-05.1
+- rodzaj: podmodul
+  gdy: {nazwa: rb/operations}
+  funkcja: F-SAL-02.3
+- rodzaj: lokalizacja
+  gdy: {nazwa_regex: ^(pl_PL|en_GB|en_US|en_CA)$}
+  funkcja: F-I18-01.1
+- rodzaj: lokalizacja
+  gdy: {nazwa_regex: .}
+  funkcja: F-I18-01.2
+- rodzaj: wtyczka
+  gdy: {nazwa: livesync_debug}
+  wylaczenie: {powod: c, uzasadnienie: Narzędzie diagnostyczne deweloperów do podglądu kolejki livesync.}
+- rodzaj: wtyczka
+  gdy: {nazwa: vc_dummy}
+  wylaczenie: {powod: c, uzasadnienie: Atrapa dostawcy wideokonferencji do testów i pracy deweloperskiej Indico.}
+- rodzaj: wtyczka
+  gdy: {nazwa: themes_legacy}
+  wylaczenie: {powod: a, uzasadnienie: Motywy wydarzeń z dawnych wersji Indico zachowane dla zgodności wstecznej.}
+- rodzaj: wtyczka
+  gdy: {nazwa: citadel}
+  funkcja: F-WYS-02.1
+- rodzaj: wtyczka
+  gdy: {nazwa: cloud_captchas}
+  funkcja: F-PLG-06.9
+- rodzaj: wtyczka
+  gdy: {nazwa: livesync}
+  funkcja: F-API-04.1
+- rodzaj: wtyczka
+  gdy: {nazwa: owncloud}
+  funkcja: F-MAT-01.13
+- rodzaj: wtyczka
+  gdy: {nazwa: payment_manual}
+  funkcja: F-PLT-03.1
+- rodzaj: wtyczka
+  gdy: {nazwa: payment_paypal}
+  funkcja: F-PLT-04.1
+- rodzaj: wtyczka
+  gdy: {nazwa: payment_sixpay}
+  funkcja: F-PLT-04.1
+- rodzaj: wtyczka
+  gdy: {nazwa: payment_stripe}
+  funkcja: F-PLT-04.1
+- rodzaj: wtyczka
+  gdy: {nazwa: piwik}
+  funkcja: F-OPS-05.1
+- rodzaj: wtyczka
+  gdy: {nazwa: previewer_code}
+  funkcja: F-MAT-01.6
+- rodzaj: wtyczka
+  gdy: {nazwa: previewer_jupyter}
+  funkcja: F-MAT-01.6
+- rodzaj: wtyczka
+  gdy: {nazwa: prometheus}
+  funkcja: F-OPS-04.2
+- rodzaj: wtyczka
+  gdy: {nazwa: storage_s3}
+  funkcja: F-MAT-03.3
+- rodzaj: wtyczka
+  gdy: {nazwa: ursh}
+  funkcja: F-WYD-05.12
+- rodzaj: wtyczka
+  gdy: {nazwa: vc_zoom}
+  funkcja: F-WID-02.1

@@ -1,0 +1,433 @@
+# Udział 2-konferencja: abstrakty (ABS), referaty naukowe (PAP), redakcja (EDI).
+# W obrębie pliku wygrywa pierwsza pasująca reguła.
+
+# --- compat (adresy Indico 1.x) ---------------------------------------------------------
+- rodzaj: trasa
+  gdy: {blueprint: compat_abstracts}
+  wylaczenie: {powod: a, uzasadnienie: "Przekierowania ze starych adresów naboru abstraktów z Indico 1.x (call-for-abstracts, abstract-book.pdf, program/tracks)"}
+
+# --- abstracts: trasy -------------------------------------------------------------------
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: management}
+  funkcja: F-ABS-01.1
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint_regex: "^(schedule|open|close)_abstracts_call$"}
+  funkcja: F-ABS-01.2
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: manage_submission_settings}
+  funkcja: F-ABS-01.3
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: call_for_abstracts}
+  funkcja: F-ABS-01.4
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: submit}
+  funkcja: F-ABS-02.1
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: download_attachment}
+  funkcja: F-ABS-02.5
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: manage_create_abstract}
+  funkcja: F-ABS-02.7
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: submit_invited_abstract}
+  funkcja: F-ABS-02.8
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: manage_reviewing_roles}
+  funkcja: F-ABS-04.1
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint_regex: "^display_(reviewable_tracks|reviewable_track_abstracts|customize_abstract_list|download_attachments|abstracts_(csv|xlsx|pdf)_export)$"}
+  funkcja: F-ABS-04.2
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: edit_review_tracks}
+  funkcja: F-ABS-04.4
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint_regex: "^(manage|create|edit|delete|sort)_reviewing_questions?$"}
+  funkcja: F-ABS-05.1
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: manage_reviewing_settings}
+  funkcja: F-ABS-05.2
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: review_abstract}
+  funkcja: F-ABS-05.3
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: edit_review}
+  funkcja: F-ABS-05.4
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint_regex: "^(comment_abstract|edit_abstract_comment|delete_abstract_comment)$"}
+  funkcja: F-ABS-05.5
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: manage_abstract_pdf_export}
+  funkcja: F-ABS-05.7
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: judge_abstract}
+  funkcja: F-ABS-06.1
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: other_abstracts}
+  funkcja: F-ABS-06.3
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: reset_abstract_state}
+  funkcja: F-ABS-06.5
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: manage_judge_abstracts}
+  funkcja: F-ABS-06.6
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: email_tpl_rule_edit}
+  funkcja: F-ABS-07.2
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: quick_setup_notifications}
+  funkcja: F-ABS-07.3
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint_regex: "^email_tpl_(add|delete|list|rest|sort|text_edit)$"}
+  funkcja: F-ABS-07.1
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: notification_log}
+  funkcja: F-ABS-07.4
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint_regex: "^api_email_abstract_roles_(metadata|preview|send)$"}
+  funkcja: F-ABS-07.5
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint_regex: "^(manage_abstract_list|customize_abstract_list|generate_static_url)$"}
+  funkcja: F-ABS-08.1
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint_regex: "^abstracts_(csv|xlsx|json)_export$"}
+  funkcja: F-ABS-08.2
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint_regex: "^(abstracts_pdf_export|display_abstract_pdf_export)$"}
+  funkcja: F-ABS-08.3
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: download_attachments}
+  funkcja: F-ABS-08.4
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: person_list}
+  funkcja: F-ABS-08.5
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: manage_delete_abstracts}
+  funkcja: F-ABS-08.6
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: export_boa}
+  funkcja: F-ABS-08.7
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: manage_boa_settings}
+  funkcja: F-ABS-08.8
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint_regex: "^(manage_custom_boa|upload_boa_file)$"}
+  funkcja: F-ABS-08.9
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: export_boa_tex}
+  funkcja: F-ABS-08.10
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: my_abstracts_pdf}
+  funkcja: F-ABS-09.1
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: edit_abstract}
+  funkcja: F-ABS-09.2
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: withdraw_abstract}
+  funkcja: F-ABS-09.3
+- rodzaj: trasa
+  gdy: {blueprint: abstracts, endpoint: display_abstract}
+  funkcja: F-ABS-09.5
+
+# --- abstracts: tabele, enumy, funkcja, uprawnienia ---------------------------------------
+- rodzaj: tabela
+  gdy: {nazwa: event_abstracts.abstracts}
+  funkcja: F-ABS-02.1
+- rodzaj: tabela
+  gdy: {nazwa: event_abstracts.abstract_person_links}
+  funkcja: F-ABS-02.3
+- rodzaj: tabela
+  gdy: {nazwa: event_abstracts.submitted_for_tracks}
+  funkcja: F-ABS-02.4
+- rodzaj: tabela
+  gdy: {nazwa: event_abstracts.files}
+  funkcja: F-ABS-02.5
+- rodzaj: tabela
+  gdy: {nazwa: event_abstracts.abstract_field_values}
+  funkcja: F-ABS-02.6
+- rodzaj: tabela
+  gdy: {nazwa: event_abstracts.reviewed_for_tracks}
+  funkcja: F-ABS-04.4
+- rodzaj: tabela
+  gdy: {nazwa: event_abstracts.abstract_review_questions}
+  funkcja: F-ABS-05.1
+- rodzaj: tabela
+  gdy: {nazwa_regex: "^event_abstracts\\.(abstract_reviews|abstract_review_ratings|proposed_for_tracks)$"}
+  funkcja: F-ABS-05.3
+- rodzaj: tabela
+  gdy: {nazwa: event_abstracts.abstract_comments}
+  funkcja: F-ABS-05.5
+- rodzaj: tabela
+  gdy: {nazwa: event_abstracts.email_templates}
+  funkcja: F-ABS-07.1
+- rodzaj: tabela
+  gdy: {nazwa: event_abstracts.email_logs}
+  funkcja: F-ABS-07.4
+- rodzaj: enum
+  gdy: {nazwa_regex: "^(AbstractState|AbstractAction)$"}
+  funkcja: F-ABS-03.1
+- rodzaj: enum
+  gdy: {nazwa: AbstractPublicState}
+  funkcja: F-ABS-03.2
+- rodzaj: enum
+  gdy: {nazwa: AbstractReviewingState}
+  funkcja: F-ABS-03.3
+- rodzaj: enum
+  gdy: {nazwa: EditTrackMode}
+  funkcja: F-ABS-03.4
+- rodzaj: enum
+  gdy: {nazwa: AbstractCommentVisibility}
+  funkcja: F-ABS-05.5
+- rodzaj: enum
+  gdy: {nazwa_regex: "^BOA(SortField|CorrespondingAuthorType|LinkFormat)$"}
+  funkcja: F-ABS-08.8
+- rodzaj: enum
+  gdy: {nazwa: AllowEditingType}
+  funkcja: F-ABS-09.2
+- rodzaj: enum
+  gdy: {nazwa: SubmissionRightsType}
+  funkcja: F-ABS-10.2
+- rodzaj: funkcja_wydarzenia
+  gdy: {nazwa: abstracts}
+  funkcja: F-ABS-01.1
+- rodzaj: uprawnienie
+  gdy: {nazwa_regex: "^(abstract_reviewer|review_all_abstracts|review)$"}
+  funkcja: F-ABS-04.1
+- rodzaj: uprawnienie
+  gdy: {nazwa: abstracts}
+  funkcja: F-ABS-11
+
+# --- papers: trasy ----------------------------------------------------------------------
+- rodzaj: trasa
+  gdy: {blueprint: papers, endpoint: management}
+  funkcja: F-PAP-01.1
+- rodzaj: trasa
+  gdy: {blueprint: papers, endpoint_regex: "^(schedule|open|close)_cfp$"}
+  funkcja: F-PAP-01.2
+- rodzaj: trasa
+  gdy: {blueprint: papers, endpoint: call_for_papers}
+  funkcja: F-PAP-01.3
+- rodzaj: trasa
+  gdy: {blueprint: papers, endpoint: manage_reviewing_settings}
+  funkcja: F-PAP-01.4
+- rodzaj: trasa
+  gdy: {blueprint: papers, endpoint: manage_teams}
+  funkcja: F-PAP-01.5
+- rodzaj: trasa
+  gdy: {blueprint: papers, endpoint: manage_competences}
+  funkcja: F-PAP-01.6
+- rodzaj: trasa
+  gdy: {blueprint: papers, endpoint: manage_deadline}
+  funkcja: F-PAP-01.7
+- rodzaj: trasa
+  gdy: {blueprint: papers, endpoint_regex: "^(manage|create|edit|delete|sort)_reviewing_questions?$"}
+  funkcja: F-PAP-01.8
+- rodzaj: trasa
+  gdy: {blueprint: papers, endpoint_regex: "^(manage_templates|upload_template|edit_template|delete_template|download_template)$"}
+  funkcja: F-PAP-01.9
+- rodzaj: trasa
+  gdy: {blueprint: papers, endpoint_regex: "^(manage_file_types|api_file_types|api_add_file_type|api_edit_file_type)$"}
+  funkcja: F-PAP-01.10
+- rodzaj: trasa
+  gdy: {blueprint: papers, endpoint: contact_staff}
+  funkcja: F-PAP-01.11
+- rodzaj: trasa
+  gdy: {blueprint: papers, endpoint_regex: "^(assign|unassign)_papers$"}
+  funkcja: F-PAP-01.12
+- rodzaj: trasa
+  gdy: {blueprint: papers, endpoint_regex: "^(papers_list|customize_paper_list)$"}
+  funkcja: F-PAP-01.13
+- rodzaj: trasa
+  gdy: {blueprint: papers, endpoint_regex: "^(download_papers|export_json)$"}
+  funkcja: F-PAP-01.14
+- rodzaj: trasa
+  gdy: {blueprint: papers, endpoint: reviewing_area}
+  funkcja: F-PAP-01.15
+- rodzaj: trasa
+  gdy: {blueprint: papers, endpoint: switch}
+  funkcja: F-PAP-01.16
+- rodzaj: trasa
+  gdy: {blueprint: papers, endpoint_regex: "^(select_contribution|api_upload|submit_revision|submit_revision_single)$"}
+  funkcja: F-PAP-02.1
+- rodzaj: trasa
+  gdy: {blueprint: papers, endpoint_regex: "^(paper_timeline|api_paper_details)$"}
+  funkcja: F-PAP-02.2
+- rodzaj: trasa
+  gdy: {blueprint: papers, endpoint_regex: "^api_(create|update)_review$"}
+  funkcja: F-PAP-02.3
+- rodzaj: trasa
+  gdy: {blueprint: papers, endpoint: api_judge_paper}
+  funkcja: F-PAP-02.4
+- rodzaj: trasa
+  gdy: {blueprint: papers, endpoint: judge_papers}
+  funkcja: F-PAP-02.5
+- rodzaj: trasa
+  gdy: {blueprint: papers, endpoint_regex: "^submit_revision_new(_single)?$"}
+  funkcja: F-PAP-02.6
+- rodzaj: trasa
+  gdy: {blueprint: papers, endpoint: api_reset_paper_state}
+  funkcja: F-PAP-02.7
+- rodzaj: trasa
+  gdy: {blueprint: papers, endpoint_regex: "^api_(create_comment|comment_actions)$"}
+  funkcja: F-PAP-02.8
+- rodzaj: trasa
+  gdy: {blueprint: papers, endpoint: download_file}
+  funkcja: F-PAP-02.10
+
+# --- papers: tabele, enumy, funkcja, uprawnienia -------------------------------------------
+- rodzaj: tabela
+  gdy: {nazwa: event_paper_reviewing.competences}
+  funkcja: F-PAP-01.6
+- rodzaj: tabela
+  gdy: {nazwa: event_paper_reviewing.review_questions}
+  funkcja: F-PAP-01.8
+- rodzaj: tabela
+  gdy: {nazwa: event_paper_reviewing.templates}
+  funkcja: F-PAP-01.9
+- rodzaj: tabela
+  gdy: {nazwa: event_paper_reviewing.file_types}
+  funkcja: F-PAP-01.10
+- rodzaj: tabela
+  gdy: {nazwa_regex: "^event_paper_reviewing\\.(judges|content_reviewers|layout_reviewers)$"}
+  funkcja: F-PAP-01.12
+- rodzaj: tabela
+  gdy: {nazwa: event_paper_reviewing.files}
+  funkcja: F-PAP-02.1
+- rodzaj: tabela
+  gdy: {nazwa_regex: "^event_paper_reviewing\\.(reviews|review_ratings)$"}
+  funkcja: F-PAP-02.3
+- rodzaj: tabela
+  gdy: {nazwa: event_paper_reviewing.review_comments}
+  funkcja: F-PAP-02.8
+- rodzaj: tabela
+  gdy: {nazwa: event_paper_reviewing.revisions}
+  funkcja: F-PAP-02.11
+- rodzaj: enum
+  gdy: {nazwa: PaperReviewingRole}
+  funkcja: F-PAP-01.5
+- rodzaj: enum
+  gdy: {nazwa: PaperReviewType}
+  funkcja: F-PAP-01.16
+- rodzaj: enum
+  gdy: {nazwa: PaperActionField}
+  funkcja: F-PAP-02.4
+- rodzaj: enum
+  gdy: {nazwa: PaperCommentVisibility}
+  funkcja: F-PAP-02.8
+- rodzaj: enum
+  gdy: {nazwa_regex: "^(PaperRevisionState|PaperAction)$"}
+  funkcja: F-PAP-02.11
+- rodzaj: funkcja_wydarzenia
+  gdy: {nazwa: papers}
+  funkcja: F-PAP-01.1
+- rodzaj: uprawnienie
+  gdy: {nazwa_regex: "^paper_(manager|judge|content_reviewer|layout_reviewer)$"}
+  funkcja: F-PAP-01.5
+
+# --- editing: trasy ---------------------------------------------------------------------
+- rodzaj: trasa
+  gdy: {blueprint: event_editing, endpoint_regex: "^(dashboard|manage_editable_type|api_enabled_editable_types|api_menu_entries)$"}
+  funkcja: F-EDI-01.1
+- rodzaj: trasa
+  gdy: {blueprint: event_editing, endpoint_regex: "^api_(submission|editing)_enabled$"}
+  funkcja: F-EDI-01.2
+- rodzaj: trasa
+  gdy: {blueprint: event_editing, endpoint_regex: "^(manage_file_types|api_file_types|api_add_file_type|api_edit_file_type)$"}
+  funkcja: F-EDI-01.3
+- rodzaj: trasa
+  gdy: {blueprint: event_editing, endpoint_regex: "^(manage_review_conditions|api_review_conditions|api_edit_review_condition)$"}
+  funkcja: F-EDI-01.4
+- rodzaj: trasa
+  gdy: {blueprint: event_editing, endpoint_regex: "^(manage_tags|api_tags|api_create_tag|api_edit_tag)$"}
+  funkcja: F-EDI-01.5
+- rodzaj: trasa
+  gdy: {blueprint: event_editing, endpoint_regex: "^(api_editable_type_principals|api_editable_type_editors|contact_team)$"}
+  funkcja: F-EDI-01.6
+- rodzaj: trasa
+  gdy: {blueprint: event_editing, endpoint_regex: "^api_(self_assign_enabled|anonymous_team|editor_self_assign_allowed)$"}
+  funkcja: F-EDI-01.7
+- rodzaj: trasa
+  gdy: {blueprint: event_editing, endpoint_regex: "^api_(create_editable|upload|add_contribution_file)$"}
+  funkcja: F-EDI-01.8
+- rodzaj: trasa
+  gdy: {blueprint: event_editing, endpoint_regex: "^(editable_type_list|manage_editable_type_list|api_editable_list|api_filter_editables_by_filetypes)$"}
+  funkcja: F-EDI-01.9
+- rodzaj: trasa
+  gdy: {blueprint: event_editing, endpoint_regex: "^api_(assign_editor|assign_myself|unassign_editor|assign_editable_self|unassign_editable)$"}
+  funkcja: F-EDI-01.10
+- rodzaj: trasa
+  gdy: {blueprint: event_editing, endpoint: api_review_editable}
+  funkcja: F-EDI-01.11
+- rodzaj: trasa
+  gdy: {blueprint: event_editing, endpoint: api_confirm_changes}
+  funkcja: F-EDI-01.12
+- rodzaj: trasa
+  gdy: {blueprint: event_editing, endpoint: api_create_submitter_revision}
+  funkcja: F-EDI-01.13
+- rodzaj: trasa
+  gdy: {blueprint: event_editing, endpoint_regex: "^api_(create_revision_comment|edit_comment)$"}
+  funkcja: F-EDI-01.15
+- rodzaj: trasa
+  gdy: {blueprint: event_editing, endpoint_regex: "^api_(apply_judgment|create_comment)$"}
+  funkcja: F-EDI-01.16
+- rodzaj: trasa
+  gdy: {blueprint: event_editing, endpoint_regex: "^(editable|api_editable)$"}
+  funkcja: F-EDI-01.17
+- rodzaj: trasa
+  gdy: {blueprint: event_editing, endpoint: api_delete_editable}
+  funkcja: F-EDI-01.18
+- rodzaj: trasa
+  gdy: {blueprint: event_editing, endpoint_regex: "^api_(contribs_with_no_editables|email_not_submitted_(metadata|preview|send))$"}
+  funkcja: F-EDI-01.19
+- rodzaj: trasa
+  gdy: {blueprint: event_editing, endpoint_regex: "^(api_prepare_editables_archive|download_archive)$"}
+  funkcja: F-EDI-01.22
+- rodzaj: trasa
+  gdy: {blueprint: event_editing, endpoint_regex: "^(download_file|revision_files_export)$"}
+  funkcja: F-EDI-01.23
+- rodzaj: trasa
+  gdy: {blueprint: event_editing, endpoint_regex: "^api_(check_service_url|service_connect|service_disconnect|service_status)$"}
+  funkcja: F-EDI-02.1
+- rodzaj: trasa
+  gdy: {blueprint: event_editing, endpoint: api_custom_action}
+  funkcja: F-EDI-02.3
+- rodzaj: trasa
+  gdy: {blueprint: event_editing, endpoint: api_replace_revision}
+  funkcja: F-EDI-02.4
+
+# --- editing: tabele, enumy, funkcja, uprawnienia ------------------------------------------
+- rodzaj: tabela
+  gdy: {nazwa: event_editing.file_types}
+  funkcja: F-EDI-01.3
+- rodzaj: tabela
+  gdy: {nazwa_regex: "^event_editing\\.(review_conditions|review_condition_file_types)$"}
+  funkcja: F-EDI-01.4
+- rodzaj: tabela
+  gdy: {nazwa_regex: "^event_editing\\.(tags|revision_tags)$"}
+  funkcja: F-EDI-01.5
+- rodzaj: tabela
+  gdy: {nazwa_regex: "^event_editing\\.(editables|revision_files)$"}
+  funkcja: F-EDI-01.8
+- rodzaj: tabela
+  gdy: {nazwa: event_editing.comments}
+  funkcja: F-EDI-01.15
+- rodzaj: tabela
+  gdy: {nazwa: event_editing.revisions}
+  funkcja: F-EDI-01.21
+- rodzaj: enum
+  gdy: {nazwa: EditableType}
+  funkcja: F-EDI-01.1
+- rodzaj: enum
+  gdy: {nazwa: EditingConfirmationAction}
+  funkcja: F-EDI-01.12
+- rodzaj: enum
+  gdy: {nazwa_regex: "^(EditableState|EditingReviewAction)$"}
+  funkcja: F-EDI-01.20
+- rodzaj: enum
+  gdy: {nazwa: RevisionType}
+  funkcja: F-EDI-01.21
+- rodzaj: funkcja_wydarzenia
+  gdy: {nazwa: editing}
+  funkcja: F-EDI-01.1
+- rodzaj: uprawnienie
+  gdy: {nazwa_regex: "^(editing_manager|paper_editing|slides_editing|poster_editing)$"}
+  funkcja: F-EDI-01.6

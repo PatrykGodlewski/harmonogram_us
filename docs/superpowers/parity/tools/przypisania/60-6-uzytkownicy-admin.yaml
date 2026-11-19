@@ -1,0 +1,309 @@
+# Reguły przypisań części 6-uzytkownicy-admin (pierwsza pasująca reguła wygrywa).
+
+# ---------------------------------------------------------------- wyłączenia
+- rodzaj: trasa
+  gdy: {blueprint: cephalopod}
+  wylaczenie: {powod: b, uzasadnienie: "Telemetria cephalopod: rejestr instancji wspólnoty Indico, synchronizacja z nim i punkt informacji o systemie dla serwisu wspólnoty (wiersz F-ADM-10)."}
+- rodzaj: trasa
+  gdy: {blueprint: compat_auth}
+  wylaczenie: {powod: a, uzasadnienie: "Przekierowania ze starych adresów logowania i rejestracji Indico 1.x (/user/login, /user/register)."}
+- rodzaj: trasa
+  gdy: {blueprint: users, endpoint: export_dashboard_ics_legacy}
+  wylaczenie: {powod: a, uzasadnienie: "Stary format podpisanego linku do kalendarza pulpitu z identyfikatorem użytkownika w adresie, zachowany dla zgodności z dawnymi wersjami Indico."}
+
+# ---------------------------------------------------------------- auth
+- rodzaj: trasa
+  gdy: {blueprint: auth, endpoint_regex: "^(login|logout)$"}
+  funkcja: F-UWT-01.1
+- rodzaj: trasa
+  gdy: {blueprint: auth, endpoint: login_form}
+  funkcja: F-UWT-01.4
+- rodzaj: trasa
+  gdy: {blueprint: auth, endpoint: link_account}
+  funkcja: F-UZY-03.2
+- rodzaj: trasa
+  gdy: {blueprint: auth, endpoint: register}
+  funkcja: F-UZY-01.1
+- rodzaj: trasa
+  gdy: {blueprint: auth, endpoint: resetpass}
+  funkcja: F-UZY-01.7
+- rodzaj: trasa
+  gdy: {blueprint: auth, endpoint: create_local_identity}
+  funkcja: F-UZY-01.8
+- rodzaj: trasa
+  gdy: {blueprint: auth, endpoint: accounts}
+  funkcja: F-UZY-01.9
+- rodzaj: trasa
+  gdy: {blueprint: auth, endpoint: remove_account}
+  funkcja: F-UZY-03.1
+- rodzaj: trasa
+  gdy: {blueprint: auth, endpoint: admin_impersonate}
+  funkcja: F-UZY-07.6
+
+# ---------------------------------------------------------------- users
+- rodzaj: trasa
+  gdy: {blueprint: users, endpoint_regex: "^(registration_request_list|accept_registration_request|reject_registration_request)$"}
+  funkcja: F-UZY-01.4
+- rodzaj: trasa
+  gdy: {blueprint: users, endpoint: admins}
+  funkcja: F-DOS-07.1
+- rodzaj: trasa
+  gdy: {blueprint: users, endpoint_regex: "^(affiliations_dashboard|api_admin_affiliations?)$"}
+  funkcja: F-UZY-07.4
+- rodzaj: trasa
+  gdy: {blueprint: users, endpoint: api_affiliations}
+  funkcja: F-UZY-02.2
+- rodzaj: trasa
+  gdy: {blueprint: users, endpoint_regex: "^(user_data_export|user_data_export_download|api_user_data_export)$"}
+  funkcja: F-UZY-05.1
+- rodzaj: trasa
+  gdy: {blueprint: users, endpoint: authenticated_user}
+  funkcja: F-UWT-04.8
+- rodzaj: trasa
+  gdy: {blueprint: users, endpoint: favorites_api}
+  funkcja: F-WYD-11.2
+- rodzaj: trasa
+  gdy: {blueprint: users, endpoint_regex: "^(user_favorites|user_favorites_category_api|user_favorites_event_api)$"}
+  funkcja: F-WYD-11.1
+- rodzaj: trasa
+  gdy: {blueprint: users, endpoint_regex: "^(user_profile_picture_page|profile_picture_preview|save_profile_picture|user_profile_picture_display)$"}
+  funkcja: F-UZY-02.5
+- rodzaj: trasa
+  gdy: {blueprint: users, endpoint: user_block}
+  funkcja: F-UZY-03.4
+- rodzaj: trasa
+  gdy: {blueprint: users, endpoint: user_dashboard}
+  funkcja: F-WYD-12.1
+- rodzaj: trasa
+  gdy: {blueprint: users, endpoint: user_suggestions_remove}
+  funkcja: F-WYD-12.2
+- rodzaj: trasa
+  gdy: {blueprint: users, endpoint: user_delete}
+  funkcja: F-UZY-05.3
+- rodzaj: trasa
+  gdy: {blueprint: users, endpoint_regex: "^user_emails"}
+  funkcja: F-UZY-02.3
+- rodzaj: trasa
+  gdy: {blueprint: users, endpoint_regex: "^(user_preferences|user_preferences_markdown_api)$"}
+  funkcja: F-UZY-02.7
+- rodzaj: trasa
+  gdy: {blueprint: users, endpoint: user_preferences_mastodon_server}
+  funkcja: F-UZY-02.9
+- rodzaj: trasa
+  gdy: {blueprint: users, endpoint_regex: "^(user_profile|user_profile_update)$"}
+  funkcja: F-UZY-02.1
+- rodzaj: trasa
+  gdy: {blueprint: users, endpoint_regex: "^(user_search|user_search_token)$"}
+  funkcja: F-UZY-04.1
+- rodzaj: trasa
+  gdy: {blueprint: users, endpoint: user_search_info}
+  funkcja: F-UZY-04.2
+- rodzaj: trasa
+  gdy: {blueprint: users, endpoint: users_admin}
+  funkcja: F-UZY-07.1
+- rodzaj: trasa
+  gdy: {blueprint: users, endpoint: users_admin_settings}
+  funkcja: F-UZY-07.5
+- rodzaj: trasa
+  gdy: {blueprint: users, endpoint: users_create}
+  funkcja: F-UZY-07.2
+- rodzaj: trasa
+  gdy: {blueprint: users, endpoint_regex: "^users_merge"}
+  funkcja: F-UZY-03.3
+
+# ---------------------------------------------------------------- oauth
+- rodzaj: trasa
+  gdy: {blueprint: oauth, endpoint_regex: "^(apps|app_new|app_details|app_reset|app_revoke)$"}
+  funkcja: F-UWT-04.1
+- rodzaj: trasa
+  gdy: {blueprint: oauth, endpoint: app_delete}
+  funkcja: F-UWT-04.2
+- rodzaj: trasa
+  gdy: {blueprint: oauth, endpoint: oauth_authorize}
+  funkcja: F-UWT-04.3
+- rodzaj: trasa
+  gdy: {blueprint: oauth, endpoint_regex: "^oauth_(token|introspect|revoke|metadata)$"}
+  funkcja: F-UWT-04.4
+- rodzaj: trasa
+  gdy: {blueprint: oauth, endpoint_regex: "^user_app"}
+  funkcja: F-UWT-04.5
+- rodzaj: trasa
+  gdy: {blueprint: oauth, endpoint_regex: "^user_token"}
+  funkcja: F-UWT-04.6
+
+# ---------------------------------------------------------------- legal, news, announcement
+- rodzaj: trasa
+  gdy: {blueprint: legal, endpoint: manage}
+  funkcja: F-ADM-03.1
+- rodzaj: trasa
+  gdy: {blueprint: legal, endpoint_regex: "^display_(tos|privacy)$"}
+  funkcja: F-ADM-03.2
+- rodzaj: trasa
+  gdy: {blueprint: legal, endpoint: accept_agreement}
+  funkcja: F-UZY-06.2
+- rodzaj: trasa
+  gdy: {blueprint: news, endpoint_regex: "^(display|display_item)$"}
+  funkcja: F-ADM-02.3
+- rodzaj: trasa
+  gdy: {blueprint: news, endpoint: settings}
+  funkcja: F-ADM-02.4
+- rodzaj: trasa
+  gdy: {blueprint: news}
+  funkcja: F-ADM-02.2
+- rodzaj: trasa
+  gdy: {blueprint: announcement}
+  funkcja: F-ADM-02.1
+
+# ---------------------------------------------------------------- core
+- rodzaj: trasa
+  gdy: {blueprint: core, endpoint_regex: "^(admin_dashboard|settings)$"}
+  funkcja: F-ADM-01.1
+- rodzaj: trasa
+  gdy: {blueprint: core, endpoint: api_countries}
+  funkcja: F-I18-01.5
+- rodzaj: trasa
+  gdy: {blueprint: core, endpoint: change_lang}
+  funkcja: F-I18-01.1
+- rodzaj: trasa
+  gdy: {blueprint: core, endpoint: change_tz}
+  funkcja: F-I18-02.1
+- rodzaj: trasa
+  gdy: {blueprint: core, endpoint_regex: "^(config|contact)$"}
+  funkcja: F-ADM-01.12
+- rodzaj: trasa
+  gdy: {blueprint: core, endpoint: generate_captcha}
+  funkcja: F-UWT-01.6
+- rodzaj: trasa
+  gdy: {blueprint: core, endpoint: markdown}
+  funkcja: F-OPS-06.2
+- rodzaj: trasa
+  gdy: {blueprint: core, endpoint: ping}
+  funkcja: F-OPS-04.1
+- rodzaj: trasa
+  gdy: {blueprint: core, endpoint: principals}
+  funkcja: F-UZY-04.1
+- rodzaj: trasa
+  gdy: {blueprint: core, endpoint: report_error_api}
+  funkcja: F-OPS-04.4
+- rodzaj: trasa
+  gdy: {blueprint: core, endpoint_regex: "^(sign_url|reset_signature_tokens)$"}
+  funkcja: F-UWT-04.7
+- rodzaj: trasa
+  gdy: {blueprint: core, endpoint_regex: "^session_(expiry|refresh)$"}
+  funkcja: F-UWT-01.5
+- rodzaj: trasa
+  gdy: {blueprint: core, endpoint: version_check}
+  funkcja: F-ADM-05.2
+
+# ---------------------------------------------------------------- pozostałe trasy
+- rodzaj: trasa
+  gdy: {blueprint: assets}
+  funkcja: F-OPS-01.2
+- rodzaj: trasa
+  gdy: {blueprint: bootstrap}
+  funkcja: F-OPS-01.3
+- rodzaj: trasa
+  gdy: {blueprint: celery}
+  funkcja: F-ADM-07.1
+- rodzaj: trasa
+  gdy: {blueprint: plugins, endpoint: index}
+  funkcja: F-ADM-09.1
+- rodzaj: trasa
+  gdy: {blueprint: plugins, endpoint: details}
+  funkcja: F-ADM-09.2
+
+# ---------------------------------------------------------------- tabele
+- rodzaj: tabela
+  gdy: {nazwa: indico.affiliations}
+  funkcja: F-UZY-07.4
+- rodzaj: tabela
+  gdy: {nazwa: indico.news}
+  funkcja: F-ADM-02.2
+- rodzaj: tabela
+  gdy: {nazwa_regex: "^indico\\.settings(_principals)?$"}
+  funkcja: F-ADM-01.1
+- rodzaj: tabela
+  gdy: {nazwa_regex: "^oauth\\.(applications|application_user_links|tokens)$"}
+  funkcja: F-UWT-04.3
+- rodzaj: tabela
+  gdy: {nazwa: users.data_export_requests}
+  funkcja: F-UZY-05.1
+- rodzaj: tabela
+  gdy: {nazwa: users.emails}
+  funkcja: F-UZY-02.3
+- rodzaj: tabela
+  gdy: {nazwa: users.favorite_users}
+  funkcja: F-WYD-11.2
+- rodzaj: tabela
+  gdy: {nazwa_regex: "^users\\.favorite_"}
+  funkcja: F-WYD-11.1
+- rodzaj: tabela
+  gdy: {nazwa: users.identities}
+  funkcja: F-UZY-03.1
+- rodzaj: tabela
+  gdy: {nazwa: users.registration_requests}
+  funkcja: F-UZY-01.3
+- rodzaj: tabela
+  gdy: {nazwa: users.settings}
+  funkcja: F-UZY-02.7
+- rodzaj: tabela
+  gdy: {nazwa: users.suggested_categories}
+  funkcja: F-WYD-12.2
+- rodzaj: tabela
+  gdy: {nazwa: users.tokens}
+  funkcja: F-UWT-04.6
+- rodzaj: tabela
+  gdy: {nazwa: users.users}
+  funkcja: F-UZY-02.1
+
+# ---------------------------------------------------------------- enumy
+- rodzaj: enum
+  gdy: {nazwa: SystemAppType}
+  funkcja: F-UWT-04.2
+- rodzaj: enum
+  gdy: {nazwa: PluginCategory}
+  funkcja: F-ADM-09.1
+- rodzaj: enum
+  gdy: {nazwa: NoticeSeverity}
+  funkcja: F-ADM-05.1
+- rodzaj: enum
+  gdy: {nazwa: DataExportOptions}
+  funkcja: F-UZY-05.1
+- rodzaj: enum
+  gdy: {nazwa: DataExportRequestState}
+  funkcja: F-UZY-05.2
+- rodzaj: enum
+  gdy: {nazwa: NameFormat}
+  funkcja: F-UZY-02.8
+- rodzaj: enum
+  gdy: {nazwa: ProfilePictureSource}
+  funkcja: F-UZY-02.5
+- rodzaj: enum
+  gdy: {nazwa: UserTitle}
+  funkcja: F-UZY-02.1
+
+# ---------------------------------------------------------------- zadania i CLI
+- rodzaj: zadanie
+  gdy: {nazwa: heartbeat}
+  funkcja: F-ADM-07.2
+- rodzaj: zadanie
+  gdy: {nazwa: send_email}
+  funkcja: F-ADM-07.3
+- rodzaj: zadanie
+  gdy: {nazwa: update_system_notices}
+  funkcja: F-ADM-05.1
+- rodzaj: zadanie
+  gdy: {nazwa: export_user_data}
+  funkcja: F-UZY-05.1
+- rodzaj: zadanie
+  gdy: {nazwa: update_gravatars}
+  funkcja: F-UZY-02.6
+- rodzaj: zadanie
+  gdy: {nazwa: user_data_export_cleanup}
+  funkcja: F-UZY-05.2
+- rodzaj: zadanie
+  gdy: {nazwa: temp_cleanup}
+  funkcja: F-ADM-07.4
+- rodzaj: cli
+  gdy: {grupa: celery_cmd, nazwa: unlock}
+  funkcja: F-ADM-07.6
