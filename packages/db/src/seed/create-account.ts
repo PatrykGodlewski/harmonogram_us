@@ -1,17 +1,21 @@
 import { randomBytes } from "node:crypto";
 import { parseArgs } from "node:util";
+import { z } from "zod";
 import { closeDb } from "../client";
-import { type AccountRole, ensureAccount } from "../queries/accounts";
+import { ensureAccount, MIN_ACCOUNT_PASSWORD_LENGTH } from "./accounts";
 
 const USAGE = `Usage: pnpm db:account --email <address> [--role user|admin] [--name <name>] [--password <password> | --link-only]
 
 Creates or updates a verified account. Without --password a random password is generated
 and printed once; --link-only creates an account that signs in with e-mail links only.`;
 
-function fail(message: string): never {
-	console.error(`${message}\n\n${USAGE}`);
-	process.exit(1);
-}
+const argsSchema = z.object({
+	email: z.email(),
+	role: z.enum(["user", "admin"]),
+	name: z.string().min(1).optional(),
+	password: z.string().min(MIN_ACCOUNT_PASSWORD_LENGTH).optional(),
+	"link-only": z.boolean(),
+});
 
 const { values } = parseArgs({
 	options: {
@@ -28,35 +32,31 @@ if (values.help) {
 	console.log(USAGE);
 	process.exit(0);
 }
-if (!values.email?.includes("@")) {
-	fail("--email is required");
+const parsed = argsSchema.safeParse(values);
+if (!parsed.success) {
+	console.error(`${z.prettifyError(parsed.error)}\n\n${USAGE}`);
+	process.exit(1);
 }
-if (values.role !== "user" && values.role !== "admin") {
-	fail("--role must be user or admin");
-}
-if (values.password && values.password.length < 12) {
-	fail("--password must have at least 12 characters");
-}
+const args = parsed.data;
 
 const generated =
-	!values.password && !values["link-only"]
+	!args.password && !args["link-only"]
 		? randomBytes(12).toString("base64url")
 		: undefined;
-const password = values.password ?? generated;
 
 const { created } = await ensureAccount({
-	email: values.email,
-	name: values.name ?? values.email.split("@")[0] ?? values.email,
-	role: values.role as AccountRole,
-	password,
+	email: args.email,
+	name: args.name ?? args.email.split("@")[0] ?? args.email,
+	role: args.role,
+	password: args.password ?? generated,
 });
 await closeDb();
 
 console.log(
-	`${created ? "Created" : "Updated"} ${values.role} account ${values.email.toLowerCase()}.`,
+	`${created ? "Created" : "Updated"} ${args.role} account ${args.email.toLowerCase()}.`,
 );
 if (generated) {
 	console.log(`Generated password (shown once): ${generated}`);
-} else if (values["link-only"]) {
+} else if (args["link-only"]) {
 	console.log("Signs in with an e-mail link (no password).");
 }

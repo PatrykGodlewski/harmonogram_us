@@ -546,13 +546,12 @@ export async function closeExpiredGroups(
 			failures.push(error);
 		}
 	}
-	if (failures.length === 1) {
-		throw failures[0];
-	}
-	if (failures.length > 1) {
+	if (failures.length > 0) {
+		const first =
+			failures[0] instanceof Error ? failures[0].message : String(failures[0]);
 		throw new AggregateError(
 			failures,
-			`closing expired groups failed for ${failures.length} events`,
+			`closing expired groups failed for ${failures.length} event(s): ${first}`,
 		);
 	}
 	return closed;

@@ -1,20 +1,12 @@
 import { verifyPassword } from "better-auth/crypto";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "../src/client";
-import { ensureAccount } from "../src/queries/accounts";
+import { ensureAccount } from "../src/seed/accounts";
 import { authAccounts, authUsers } from "../src/schema/better-auth";
-import { resetDb } from "./helpers";
+import { credentialHash, resetDb } from "./helpers";
 
 beforeEach(resetDb);
-
-async function credentialHash(userId: string) {
-	const [account] = await db
-		.select({ password: authAccounts.password })
-		.from(authAccounts)
-		.where(and(eq(authAccounts.userId, userId), eq(authAccounts.providerId, "credential")));
-	return account?.password ?? "";
-}
 
 describe("ensureAccount", () => {
 	it("creates a verified account that can sign in with the password", async () => {

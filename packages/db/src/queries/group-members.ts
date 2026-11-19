@@ -14,9 +14,9 @@ import {
 	REGISTRATION_ERRORS,
 } from "./domain-errors";
 import {
+	notify,
 	promoteAndNotify,
 	promoteFromWaitlist,
-	type RegistrationChange,
 	type RegistrationHooks,
 } from "./event-registrations";
 import {
@@ -26,7 +26,7 @@ import {
 } from "./group-guards";
 import { createInvitationToken, hashToken } from "./group-tokens";
 import { findPublicGroupInfo, type PublicGroupInfo } from "./groups";
-import { lockEvent, lockMemberAndGroup } from "./locks";
+import { lockEventMemberAndGroup, lockMemberAndGroup } from "./locks";
 import { getCurrentTxId } from "./txid";
 
 async function memberItemIds(
@@ -94,20 +94,7 @@ export async function acceptInvitation(
 	try {
 		return await db.transaction(async (tx) => {
 			const tokenHash = hashToken(token);
-			// Global lock order: event first, then group and member.
-			const [target] = await tx
-				.select({ eventId: registrationGroups.eventId })
-				.from(registrationGroupMembers)
-				.innerJoin(
-					registrationGroups,
-					eq(registrationGroups.id, registrationGroupMembers.groupId),
-				)
-				.where(eq(registrationGroupMembers.tokenHash, tokenHash));
-			if (!target) {
-				throw new DomainError("INVITATION_INVALID");
-			}
-			await lockEvent(tx, target.eventId);
-			const locked = await lockMemberAndGroup(tx, { tokenHash });
+			const locked = await lockEventMemberAndGroup(tx, { tokenHash });
 			if (!locked || locked.member.status !== "invited") {
 				throw new DomainError("INVITATION_INVALID");
 			}
@@ -172,15 +159,14 @@ export async function acceptInvitation(
 				await memberItemIds(tx, member.id),
 			);
 
-			const changes: RegistrationChange[] =
+			// A student who was already registered no longer needs the group's place: it frees up.
+			await notify(
+				tx,
+				hooks,
 				existing?.state === "registered"
-					? []
-					: [{ registrationId: eventRegistrationId, change: "confirmed" }];
-			// A student who was already registered no longer needs the group's place.
-			changes.push(...(await promoteFromWaitlist(tx, group.eventId)));
-			if (hooks && changes.length > 0) {
-				await hooks.onChanged(tx, changes);
-			}
+					? await promoteFromWaitlist(tx, group.eventId)
+					: [{ registrationId: eventRegistrationId, change: "confirmed" }],
+			);
 
 			return { eventId: group.eventId, txid: await getCurrentTxId(tx) };
 		});
@@ -237,20 +223,7 @@ export async function removeMember(
 	hooks?: RegistrationHooks,
 ): Promise<{ txid: number }> {
 	return db.transaction(async (tx) => {
-		// Global lock order: event first, then group and member.
-		const [target] = await tx
-			.select({ eventId: registrationGroups.eventId })
-			.from(registrationGroupMembers)
-			.innerJoin(
-				registrationGroups,
-				eq(registrationGroups.id, registrationGroupMembers.groupId),
-			)
-			.where(eq(registrationGroupMembers.id, memberId));
-		if (!target) {
-			throw new DomainError("GROUP_NOT_FOUND");
-		}
-		await lockEvent(tx, target.eventId);
-		const locked = await lockMemberAndGroup(tx, { id: memberId });
+		const locked = await lockEventMemberAndGroup(tx, { id: memberId });
 		if (!locked) {
 			throw new DomainError("GROUP_NOT_FOUND");
 		}
@@ -265,8 +238,10 @@ export async function removeMember(
 				.delete(registrationGroupMembers)
 				.where(eq(registrationGroupMembers.id, memberId));
 		}
-		// In a closed group the place goes back to the event, not the group.
-		await promoteAndNotify(tx, target.eventId, hooks);
+		// In a closed group the place goes back to the event; an open group keeps it as a hold.
+		if (locked.group.status !== "open") {
+			await promoteAndNotify(tx, locked.group.eventId, hooks);
+		}
 		return { txid: await getCurrentTxId(tx) };
 	});
 }

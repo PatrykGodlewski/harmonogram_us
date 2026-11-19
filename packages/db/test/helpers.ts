@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { expect } from "vitest";
 import { db } from "../src/client";
 import { reissueInvitationToken } from "../src/queries/group-members";
@@ -6,7 +6,8 @@ import {
 	agendaItemSeatCounts,
 	agendaItems,
 } from "../src/schema/agenda";
-import { authUsers } from "../src/schema/better-auth";
+import type { RegistrationChange } from "../src/queries/event-registrations";
+import { authAccounts, authUsers } from "../src/schema/better-auth";
 import {
 	registrationGroupItems,
 	registrationGroupMemberItems,
@@ -14,7 +15,7 @@ import {
 	registrationGroups,
 } from "../src/schema/groups";
 import { eventTypes } from "../src/schema/event-lookups";
-import { eventSeatCounts } from "../src/schema/event-registrations";
+import { eventRegistrations, eventSeatCounts } from "../src/schema/event-registrations";
 import { events } from "../src/schema/events";
 
 const TEST_TYPE_ID = "test-type";
@@ -204,4 +205,31 @@ export async function invitationToken(memberId: string): Promise<string> {
 	const token = await reissueInvitationToken(memberId);
 	if (!token) throw new Error(`no invitation token for member ${memberId}`);
 	return token;
+}
+
+/** A registration's state, or null when the user isn't registered for the event. */
+export async function stateOf(eventId: string, userId: string) {
+	const [row] = await db
+		.select({ state: eventRegistrations.state })
+		.from(eventRegistrations)
+		.where(and(eq(eventRegistrations.eventId, eventId), eq(eventRegistrations.userId, userId)));
+	return row?.state ?? null;
+}
+
+/** Registration hooks that record every reported change. */
+export function collectChanges() {
+	const changes: RegistrationChange[] = [];
+	return {
+		changes,
+		hooks: { onChanged: async (_tx: unknown, c: RegistrationChange[]) => void changes.push(...c) },
+	};
+}
+
+/** The stored password hash of a user's credential account ("" when there is none). */
+export async function credentialHash(userId: string) {
+	const [account] = await db
+		.select({ password: authAccounts.password })
+		.from(authAccounts)
+		.where(and(eq(authAccounts.userId, userId), eq(authAccounts.providerId, "credential")));
+	return account?.password ?? "";
 }

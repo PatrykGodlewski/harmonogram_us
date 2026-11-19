@@ -42,11 +42,10 @@ export async function hitRateLimit(
  * Keys contain e-mail addresses and IPs, so they are kept only as long as limits need them.
  */
 export async function pruneRateLimits(): Promise<number> {
-	const rows = await db.execute<{ key: string }>(sql`
+	const result = await db.execute(sql`
 		DELETE FROM app_rate_limits
 		WHERE window_start < now() - interval '1 day'
 			AND (blocked_until IS NULL OR blocked_until <= now())
-		RETURNING key
 	`);
-	return rows.length;
+	return result.count;
 }

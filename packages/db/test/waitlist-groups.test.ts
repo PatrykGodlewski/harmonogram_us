@@ -17,22 +17,11 @@ import {
 	invitationToken,
 	readEventCount,
 	resetDb,
+	stateOf,
+	collectChanges,
 } from "./helpers";
 
 beforeEach(resetDb);
-
-async function stateOf(eventId: string, userId: string) {
-	const [row] = await db
-		.select({ state: eventRegistrations.state })
-		.from(eventRegistrations)
-		.where(sql`${eventRegistrations.eventId} = ${eventId} AND ${eventRegistrations.userId} = ${userId}`);
-	return row?.state ?? null;
-}
-
-function collect() {
-	const changes: RegistrationChange[] = [];
-	return { changes, hooks: { onChanged: async (_tx: unknown, c: RegistrationChange[]) => void changes.push(...c) } };
-}
 
 /** Event of 3 places: a group holds 1 place for `student`, who already registered on their own; X fills the last place; W waits. */
 async function fullEventWithInvitedRegistrant() {
@@ -90,7 +79,7 @@ describe("registration confirmations from every path", () => {
 	it("registering for an agenda item confirms the event registration it creates", async () => {
 		const eventId = await createEvent({ maxSeats: 5 });
 		const itemId = await createItem(eventId, { maxSeats: 5 });
-		const { changes, hooks } = collect();
+		const { changes, hooks } = collectChanges();
 		await registerForAgendaItem(itemId, await createUser(), "en", hooks);
 		expect(changes.map((c) => c.change)).toEqual(["confirmed"]);
 	});
@@ -107,7 +96,7 @@ describe("registration confirmations from every path", () => {
 			emails: ["kid2@x.test"],
 			joinLinkEnabled: false,
 		});
-		const { changes, hooks } = collect();
+		const { changes, hooks } = collectChanges();
 		await acceptInvitation(await invitationToken(invited[0]?.memberId ?? ""), student, hooks);
 		expect(changes.map((c) => c.change)).toEqual(["confirmed"]);
 	});

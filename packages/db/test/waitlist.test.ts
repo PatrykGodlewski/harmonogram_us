@@ -18,17 +18,11 @@ import {
 	readEventCount,
 	rejectionCode,
 	resetDb,
+	stateOf,
+	collectChanges,
 } from "./helpers";
 
 beforeEach(resetDb);
-
-async function stateOf(eventId: string, userId: string) {
-	const [row] = await db
-		.select({ state: eventRegistrations.state })
-		.from(eventRegistrations)
-		.where(sql`${eventRegistrations.eventId} = ${eventId} AND ${eventRegistrations.userId} = ${userId}`);
-	return row?.state ?? null;
-}
 
 async function users(n: number) {
 	return Promise.all(Array.from({ length: n }, () => createUser()));
@@ -70,8 +64,8 @@ describe("waitlist", () => {
 		const eventId = await createEvent({ maxSeats: 1 });
 		const [a, w1, w2, w3] = await users(4);
 		for (const u of [a, w1, w2, w3]) await registerForEvent(eventId, u ?? "", "pl");
-		const changes: RegistrationChange[] = [];
-		await updateEvent({ id: eventId, maxSeats: 3 }, { onChanged: async (_tx, c) => void changes.push(...c) });
+		const { changes, hooks } = collectChanges();
+		await updateEvent({ id: eventId, maxSeats: 3 }, hooks);
 		expect(await stateOf(eventId, w1 ?? "")).toBe("registered");
 		expect(await stateOf(eventId, w2 ?? "")).toBe("registered");
 		expect(await stateOf(eventId, w3 ?? "")).toBe("waitlisted");
@@ -98,8 +92,7 @@ describe("waitlist", () => {
 	it("reports confirmed, waitlisted and promoted changes to the hook", async () => {
 		const eventId = await createEvent({ maxSeats: 1 });
 		const [a, b] = await users(2);
-		const changes: RegistrationChange[] = [];
-		const hooks = { onChanged: async (_tx: unknown, c: RegistrationChange[]) => void changes.push(...c) };
+		const { changes, hooks } = collectChanges();
 		await registerForEvent(eventId, a ?? "", "pl", hooks);
 		await registerForEvent(eventId, b ?? "", "en", hooks);
 		await unregisterFromEvent(eventId, a ?? "", hooks);
@@ -166,8 +159,7 @@ describe("ended events", () => {
 			.update(events)
 			.set({ date: hoursFromNow(-48), endsAt: hoursFromNow(-47) })
 			.where(eq(events.id, eventId));
-		const changes: RegistrationChange[] = [];
-		const hooks = { onChanged: async (_tx: unknown, c: RegistrationChange[]) => void changes.push(...c) };
+		const { changes, hooks } = collectChanges();
 		await updateEvent({ id: eventId, maxSeats: 2 }, hooks);
 		await unregisterFromEvent(eventId, a ?? "", hooks);
 		expect(await stateOf(eventId, w ?? "")).toBe("waitlisted");

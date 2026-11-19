@@ -88,27 +88,63 @@ export async function lockEventAndGroup(
 	return lockGroup(tx, { id: groupId });
 }
 
-/** Locks a member's group, then the member (group before member). Null if the member doesn't exist. */
-export async function lockMemberAndGroup(
+type MemberWhere = { id: string } | { tokenHash: string };
+
+function memberCondition(where: MemberWhere) {
+	return "id" in where
+		? eq(registrationGroupMembers.id, where.id)
+		: eq(registrationGroupMembers.tokenHash, where.tokenHash);
+}
+
+async function lockMemberOfGroup(
 	tx: TransactionClient,
-	memberWhere: { id: string } | { tokenHash: string },
+	groupId: string,
+	where: MemberWhere,
 ): Promise<{ member: LockedMember; group: LockedGroup } | null> {
-	const condition =
-		"id" in memberWhere
-			? eq(registrationGroupMembers.id, memberWhere.id)
-			: eq(registrationGroupMembers.tokenHash, memberWhere.tokenHash);
-	const [peek] = await tx
-		.select({ groupId: registrationGroupMembers.groupId })
-		.from(registrationGroupMembers)
-		.where(condition);
-	if (!peek) {
-		return null;
-	}
-	const group = await lockGroup(tx, { id: peek.groupId });
+	const group = await lockGroup(tx, { id: groupId });
 	const [member] = await tx
 		.select()
 		.from(registrationGroupMembers)
-		.where(condition)
+		.where(memberCondition(where))
 		.for("update");
 	return member ? { member, group } : null;
+}
+
+/** Locks a member's group, then the member (group before member). Null if the member doesn't exist. */
+export async function lockMemberAndGroup(
+	tx: TransactionClient,
+	where: MemberWhere,
+): Promise<{ member: LockedMember; group: LockedGroup } | null> {
+	const [peek] = await tx
+		.select({ groupId: registrationGroupMembers.groupId })
+		.from(registrationGroupMembers)
+		.where(memberCondition(where));
+	return peek ? lockMemberOfGroup(tx, peek.groupId, where) : null;
+}
+
+/**
+ * Locks the member's event, then its group, then the member (global lock order). Use it
+ * when the change can free or take places, so the waitlist can be promoted in the same
+ * transaction. Null if the member doesn't exist.
+ */
+export async function lockEventMemberAndGroup(
+	tx: TransactionClient,
+	where: MemberWhere,
+): Promise<{ member: LockedMember; group: LockedGroup } | null> {
+	const [peek] = await tx
+		.select({
+			groupId: registrationGroupMembers.groupId,
+			eventId: registrationGroups.eventId,
+		})
+		.from(registrationGroupMembers)
+		.innerJoin(
+			registrationGroups,
+			eq(registrationGroups.id, registrationGroupMembers.groupId),
+		)
+		.where(memberCondition(where));
+	if (!peek) {
+		return null;
+	}
+	await lockEvent(tx, peek.eventId);
+	return lockMemberOfGroup(tx, peek.groupId, where);
 }

@@ -1,7 +1,7 @@
-import { ensureAccount } from "../queries/accounts";
 import { DomainError } from "../queries/domain-errors";
 import { registerForEvent } from "../queries/event-registrations";
 import { createGroup, listGroupsForEvent } from "../queries/groups";
+import { ensureAccount } from "./accounts";
 import { accountSeeds, groupSeeds, registrationSeeds } from "./data";
 
 /** Creates the test accounts; returns their ids by e-mail. */
@@ -21,16 +21,24 @@ export async function seedAccounts(
 	return ids;
 }
 
+function accountId(
+	accounts: ReadonlyMap<string, string>,
+	email: string,
+): string {
+	const id = accounts.get(email);
+	if (!id) {
+		throw new Error(`Seed data refers to unknown account ${email}`);
+	}
+	return id;
+}
+
 /** Registers through the domain functions, so seat counts and the waitlist stay consistent. */
 export async function seedRegistrations(
 	accounts: ReadonlyMap<string, string>,
 ): Promise<void> {
 	for (const { eventId, emails } of registrationSeeds) {
 		for (const email of emails) {
-			const userId = accounts.get(email);
-			if (!userId) {
-				throw new Error(`Registration seed refers to unknown account ${email}`);
-			}
+			const userId = accountId(accounts, email);
 			try {
 				await registerForEvent(eventId, userId, "pl");
 			} catch (error) {

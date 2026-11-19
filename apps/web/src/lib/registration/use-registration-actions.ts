@@ -20,8 +20,12 @@ import {
 	events_unregister_success,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
-import { useQueryClient } from "@tanstack/react-query";
-import * as React from "react";
+import {
+	type Mutation,
+	useMutation,
+	useMutationState,
+	useQueryClient,
+} from "@tanstack/react-query";
 import { toast } from "sonner";
 import { showRegistrationErrorToast } from "~/lib/event-registration/errors";
 
@@ -38,16 +42,28 @@ export type RegistrationActions = {
 	unregister: (eventId: string) => void;
 	registerItem: (eventId: string, item: AgendaItemTarget) => void;
 	unregisterItem: (eventId: string, item: AgendaItemTarget) => void;
-	/** Whether this action is in flight. Keys: `register:<eventId>`, `unregister:<eventId>`, `registerItem:<itemId>`, `unregisterItem:<itemId>`. */
-	isPending: (key: string) => boolean;
+	/** Whether this action is in flight: `id` is the event id, or the agenda item id for item actions. */
+	isPending: (type: RegistrationAction["type"], id: string) => boolean;
 	/** Whether any action is in flight. */
 	hasPending: boolean;
 };
 
-function actionKey(action: RegistrationAction): string {
-	return "item" in action
-		? `${action.type}:${action.item.id}`
-		: `${action.type}:${action.eventId}`;
+/** Shared by every screen, so all of them see the same actions in flight. */
+const REGISTRATION_MUTATION_KEY = ["registration-action"];
+
+function actionKey(type: RegistrationAction["type"], id: string): string {
+	return `${type}:${id}`;
+}
+
+function keyOf(action: RegistrationAction): string {
+	return actionKey(
+		action.type,
+		"item" in action ? action.item.id : action.eventId,
+	);
+}
+
+function pendingKeyOf(mutation: Mutation<unknown, Error, unknown>): string {
+	return keyOf(mutation.state.variables as RegistrationAction);
 }
 
 function runAction(action: RegistrationAction) {
@@ -104,14 +120,6 @@ function isSyncUnconfirmed(error: unknown): boolean {
  */
 export function useRegistrationActions(): RegistrationActions {
 	const queryClient = useQueryClient();
-	// Actions on different events (or items) run side by side; a repeat of the same one is ignored.
-	const [pending, setPending] = React.useState<ReadonlySet<string>>(new Set());
-	const finish = (key: string) =>
-		setPending((current) => {
-			const next = new Set(current);
-			next.delete(key);
-			return next;
-		});
 
 	const refreshKeys = (eventId: string) => [
 		myRegistrationsQueryOptions.queryKey,
@@ -119,7 +127,7 @@ export function useRegistrationActions(): RegistrationActions {
 		eventsQueryKeyPrefix,
 	];
 
-	/** Runs one action end to end; actions with different keys run side by side. */
+	/** Runs one action end to end; errors are shown here, so the mutation itself never fails. */
 	const execute = async (action: RegistrationAction) => {
 		try {
 			const result = await runAction(action);
@@ -138,7 +146,6 @@ export function useRegistrationActions(): RegistrationActions {
 		} catch (error) {
 			showRegistrationErrorToast(error, events_register_full);
 		} finally {
-			finish(actionKey(action));
 			await Promise.all(
 				refreshKeys(action.eventId).map((queryKey) =>
 					queryClient.invalidateQueries({ queryKey }),
@@ -147,13 +154,29 @@ export function useRegistrationActions(): RegistrationActions {
 		}
 	};
 
+	// Mutations without a scope run side by side, so actions on different events don't wait for each other.
+	const { mutate } = useMutation({
+		mutationKey: REGISTRATION_MUTATION_KEY,
+		mutationFn: execute,
+	});
+	const pending = new Set(
+		useMutationState({
+			filters: { mutationKey: REGISTRATION_MUTATION_KEY, status: "pending" },
+			select: pendingKeyOf,
+		}),
+	);
+
 	const run = (action: RegistrationAction) => {
-		const key = actionKey(action);
-		if (pending.has(key)) {
-			return;
+		// Read the cache, not render state: a second click before the re-render is still ignored.
+		const key = keyOf(action);
+		const inFlight = queryClient.isMutating({
+			mutationKey: REGISTRATION_MUTATION_KEY,
+			status: "pending",
+			predicate: (mutation) => pendingKeyOf(mutation) === key,
+		});
+		if (inFlight === 0) {
+			mutate(action);
 		}
-		setPending((current) => new Set(current).add(key));
-		void execute(action);
 	};
 
 	return {
@@ -163,7 +186,7 @@ export function useRegistrationActions(): RegistrationActions {
 			run({ type: "registerItem", eventId, item }),
 		unregisterItem: (eventId, item) =>
 			run({ type: "unregisterItem", eventId, item }),
-		isPending: (key) => pending.has(key),
+		isPending: (type, id) => pending.has(actionKey(type, id)),
 		hasPending: pending.size > 0,
 	};
 }

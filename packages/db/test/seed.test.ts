@@ -1,11 +1,11 @@
 import { verifyPassword } from "better-auth/crypto";
-import { and, eq, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "../src/client";
-import { authAccounts, authUsers } from "../src/schema/better-auth";
+import { authUsers } from "../src/schema/better-auth";
 import { accountSeeds, FULL_EVENT_ID } from "../src/seed/data";
 import { seedDatabase } from "../src/seed/seed";
-import { resetDb } from "./helpers";
+import { credentialHash, resetDb } from "./helpers";
 
 beforeEach(resetDb);
 
@@ -40,11 +40,7 @@ describe("seedDatabase", () => {
 		const admin = accountSeeds.find((account) => account.role === "admin");
 		const [user] = await db.select().from(authUsers).where(eq(authUsers.email, admin?.email ?? ""));
 		expect(user?.role).toBe("admin");
-		const [account] = await db
-			.select({ password: authAccounts.password })
-			.from(authAccounts)
-			.where(and(eq(authAccounts.userId, user?.id ?? ""), eq(authAccounts.providerId, "credential")));
-		expect(await verifyPassword({ hash: account?.password ?? "", password: PASSWORD })).toBe(true);
+		expect(await verifyPassword({ hash: await credentialHash(user?.id ?? ""), password: PASSWORD })).toBe(true);
 	});
 
 	it("refuses to run in production", async () => {

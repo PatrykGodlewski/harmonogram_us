@@ -2,7 +2,7 @@ import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 import { mergeClientRuntimeEnv } from "./runtime-env";
 
-export const isTimeZone = (value: string): boolean =>
+const isTimeZone = (value: string): boolean =>
 	Intl.supportedValuesOf("timeZone").includes(value) || value === "UTC";
 
 export const env = createEnv({

@@ -1,10 +1,10 @@
 import type { TestInfo } from "@playwright/test";
 import { db } from "@repo/db/client";
-import { ensureAccount } from "@repo/db/queries/accounts";
 import { createAgendaItem } from "@repo/db/queries/agenda-items";
 import { createEvent } from "@repo/db/queries/events";
 import { authUsers } from "@repo/db/schema/better-auth";
 import { eventFaculties, eventTypes } from "@repo/db/schema/event-lookups";
+import { ensureAccount } from "@repo/db/seed/accounts";
 
 /** A unique address per test, so tests never share mailboxes or accounts. */
 export function uniqueEmail(testInfo: TestInfo): string {

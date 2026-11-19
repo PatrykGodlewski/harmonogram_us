@@ -44,9 +44,16 @@ export async function getEffectiveEventEnd(
 	return new Date(row.date.getTime() + 24 * 60 * 60 * 1000);
 }
 
-export async function assertEventOpen(tx: TransactionClient, eventId: string) {
+export async function hasEventEnded(
+	tx: DbExecutor,
+	eventId: string,
+): Promise<boolean> {
 	const end = await getEffectiveEventEnd(tx, eventId);
-	if (end && end.getTime() <= Date.now()) {
+	return end !== null && end.getTime() <= Date.now();
+}
+
+export async function assertEventOpen(tx: TransactionClient, eventId: string) {
+	if (await hasEventEnded(tx, eventId)) {
 		throw new DomainError("EVENT_ENDED");
 	}
 }
@@ -64,7 +71,8 @@ export type RegistrationHooks = {
 	): Promise<void>;
 };
 
-async function notify(
+/** Reports registration changes to the hooks, if any changed. */
+export async function notify(
 	tx: TransactionClient,
 	hooks: RegistrationHooks | undefined,
 	changes: RegistrationChange[],
@@ -94,12 +102,8 @@ export async function promoteFromWaitlist(
 	tx: TransactionClient,
 	eventId: string,
 ): Promise<RegistrationChange[]> {
-	const end = await getEffectiveEventEnd(tx, eventId);
-	if (end && end.getTime() <= Date.now()) {
-		return [];
-	}
 	const free = await seatsRemaining(tx, eventId);
-	if (free <= 0) {
+	if (free <= 0 || (await hasEventEnded(tx, eventId))) {
 		return [];
 	}
 	const next = await tx
@@ -365,7 +369,7 @@ export async function unregisterFromEvent(
 	});
 }
 
-export type MyRegistrationState = {
+type MyRegistrationState = {
 	eventId: string;
 	state: RegistrationState;
 	/** 1-based place on the waitlist; null when registered. */
