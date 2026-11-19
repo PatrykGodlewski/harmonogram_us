@@ -62,4 +62,30 @@ describe("registration e-mails", () => {
 		);
 		expect(sent).toHaveLength(0);
 	});
+
+	it("a job whose registration changed state before sending sends nothing", async () => {
+		const { createEvent, createUser, resetDb } = await import("../../../packages/db/test/helpers");
+		const { registerForEvent, unregisterFromEvent } = await import(
+			"@repo/db/queries/event-registrations"
+		);
+		await resetDb();
+		const eventId = await createEvent({ maxSeats: 1 });
+		const holder = await createUser();
+		const waiting = await createUser("waiting@x.test");
+		await registerForEvent(eventId, holder, "pl");
+		let waitlistedId = "";
+		await registerForEvent(eventId, waiting, "pl", {
+			onChanged: async (_tx, changes) => {
+				waitlistedId = changes[0]?.registrationId ?? "";
+			},
+		});
+		// Promoted before the "you're on the waitlist" job ran.
+		await unregisterFromEvent(eventId, holder);
+		const { sent, deps } = capture();
+		await handleEmailJob({ kind: "registration", registrationId: waitlistedId, change: "waitlisted" }, deps);
+		expect(sent).toHaveLength(0);
+		// And the promotion e-mail for the same registration still goes out.
+		await handleEmailJob({ kind: "registration", registrationId: waitlistedId, change: "promoted" }, deps);
+		expect(sent.map((m) => m.to)).toEqual(["waiting@x.test"]);
+	});
 });
