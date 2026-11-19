@@ -13,6 +13,7 @@
 			"**/project.inlang/**/*",
 			"**/messages/*.json",
 			"**/index.html",
+			"**/e2e/**/*.ts",
 			"**/vite.config.ts",
 			"!**/src/routeTree.gen.ts",
 			"!**/src/paraglide",
@@ -21,14 +22,22 @@
 			"!**/project.inlang/cache",
 			"!**/packages/db/src/migrations",
 			"!**/src/styles.css",
-			"!**/src/app.css"
+			"!**/src/app.css",
+			"!**/playwright-report",
+			"!**/test-results"
 		]
 	},
 	"formatter": {
 		"enabled": true,
 		"indentStyle": "tab"
 	},
-	"assist": { "actions": { "source": { "organizeImports": "on" } } },
+	"assist": {
+		"actions": {
+			"source": {
+				"organizeImports": "on"
+			}
+		}
+	},
 	"linter": {
 		"enabled": true,
 		"rules": {

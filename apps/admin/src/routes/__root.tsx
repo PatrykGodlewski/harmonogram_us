@@ -11,6 +11,7 @@ import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { createAdminRootDocumentHead } from "@repo/router-utils/metadata/admin-root-document-head";
 import { Toaster } from "@repo/ui/components/sonner";
 import { AdminHeader } from "@repo/ui/composed/admin-header";
+import { HydrationMarker } from "@repo/ui/composed/hydration-marker";
 import type { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import {
@@ -77,6 +78,7 @@ function RootComponent() {
 			{showHeader ? <AdminHeader user={user} /> : null}
 			<Outlet />
 			<Toaster />
+			<HydrationMarker />
 		</>
 	);
 }

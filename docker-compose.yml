@@ -1,9 +1,26 @@
+# Development: `docker compose up -d` starts the services the apps need (db, mailpit, redis, electric).
+# Full stack (production images of web, admin and worker): `docker compose --profile app up -d --build`.
+# The e2e suite runs the full stack as a separate project on other ports: see e2e/README.md.
+
+x-app-env: &app-env
+  NODE_ENV: production
+  DATABASE_URL: postgresql://postgres:postgres@db:5432/harmonogram_us
+  ELECTRIC_URL: http://electric:3000
+  SMTP_HOST: mailpit
+  SMTP_PORT: "1025"
+  BETTER_AUTH_URL: http://localhost:${WEB_PORT:-3000}
+  ADMIN_URL: http://localhost:${ADMIN_PORT:-3001}
+
+x-app-build: &app-build
+  context: .
+  dockerfile: Dockerfile
+
 services:
   db:
     image: postgres:16-alpine
     restart: unless-stopped
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -11,33 +28,91 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     command: ["postgres", "-c", "wal_level=logical"]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 2s
+      retries: 30
 
   mailpit:
-    image: axllent/mailpit:latest
+    image: axllent/mailpit@sha256:23a2ef85bc50853ab3093645d1d64679afd8887e89da5e48a88940c172591a4e
     restart: unless-stopped
     ports:
-      - "1025:1025"
-      - "8025:8025"
+      - "${SMTP_PORT_HOST:-1025}:1025"
+      - "${MAILPIT_PORT:-8025}:8025"
 
   redis:
     image: redis:7-alpine
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     command: ["redis-server", "--appendonly", "yes"]
 
   electric:
-    image: electricsql/electric:latest
+    image: electricsql/electric@sha256:efb6fa43859d67cb8c73439e0c8bc0f7a3daa467500fb06f2a924bcb2070c139
     restart: unless-stopped
     ports:
-      - "5133:3000"
+      - "${ELECTRIC_PORT:-5133}:3000"
     environment:
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/harmonogram_us
       ELECTRIC_SECRET: ${ELECTRIC_SECRET}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+
+  web:
+    profiles: [app]
+    build:
+      <<: *app-build
+      args:
+        APP: web
+        VITE_TURNSTILE_SITE_KEY: ${VITE_TURNSTILE_SITE_KEY:-}
+    env_file: .env
+    environment:
+      <<: *app-env
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    restart: unless-stopped
+    depends_on:
+      db: { condition: service_healthy }
+      electric: { condition: service_started }
+      mailpit: { condition: service_started }
+      redis: { condition: service_started }
+
+  admin:
+    profiles: [app]
+    build:
+      <<: *app-build
+      args:
+        APP: admin
+        VITE_TURNSTILE_SITE_KEY: ${VITE_TURNSTILE_SITE_KEY:-}
+    env_file: .env
+    environment:
+      <<: *app-env
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "${ADMIN_PORT:-3001}:3000"
+    restart: unless-stopped
+    depends_on:
+      db: { condition: service_healthy }
+      mailpit: { condition: service_started }
+      redis: { condition: service_started }
+
+  worker:
+    profiles: [app]
+    build:
+      <<: *app-build
+      args:
+        APP: worker
+    command: ["node", "dist/index.mjs"]
+    env_file: .env
+    environment: *app-env
+    restart: unless-stopped
+    depends_on:
+      db: { condition: service_healthy }
+      mailpit: { condition: service_started }
 
 volumes:
   postgres_data:

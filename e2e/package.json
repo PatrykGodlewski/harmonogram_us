@@ -1,0 +1,21 @@
+{
+	"name": "e2e",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"test": "playwright test",
+		"lint": "biome check .",
+		"typecheck": "tsc --noEmit",
+		"format": "biome check --write ."
+	},
+	"dependencies": {
+		"@repo/db": "workspace:*",
+		"drizzle-orm": "^0.45.2"
+	},
+	"devDependencies": {
+		"@playwright/test": "^1.65.1",
+		"@repo/config": "workspace:*",
+		"@types/node": "^25.6.0",
+		"typescript": "^6.0.3"
+	}
+}

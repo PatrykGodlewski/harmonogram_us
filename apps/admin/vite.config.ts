@@ -1,3 +1,4 @@
+import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { paraglideVitePlugin } from "@inlang/paraglide-js";
@@ -12,6 +13,7 @@ import { paraglideRouteStrategies } from "../../packages/i18n/paraglide-route-st
 import { paraglideUrlPatterns } from "../../packages/i18n/paraglide-url-patterns.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
 const i18nRoot = path.resolve(__dirname, "../../packages/i18n");
 const workspaceRoot = path.resolve(__dirname, "../..");
 
@@ -22,6 +24,8 @@ export default defineConfig({
 		alias: {
 			"~": path.join(__dirname, "src"),
 			"#paraglide-runtime": path.join(i18nRoot, "src/paraglide/runtime.js"),
+			/** Radix dialogs use react-remove-scroll → tslib; its CJS interop breaks in the production SSR bundle. */
+			tslib: require.resolve("tslib/tslib.es6.mjs"),
 		},
 	},
 	plugins: [

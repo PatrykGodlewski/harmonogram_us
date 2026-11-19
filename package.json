@@ -28,7 +28,10 @@
     "db:migrate": "turbo db:migrate",
     "db:push": "turbo db:push",
     "db:seed": "turbo db:seed",
-    "clean": "turbo clean && rm -rf node_modules"
+    "clean": "turbo clean && rm -rf node_modules",
+    "e2e:up": "docker compose -p harmonogram-e2e --env-file .env --env-file e2e/ports.env --profile app up -d --build --wait && DATABASE_URL=postgresql://postgres:postgres@localhost:15432/harmonogram_us pnpm --filter @repo/db db:migrate",
+    "e2e:down": "docker compose -p harmonogram-e2e --env-file .env --env-file e2e/ports.env --profile app down -v",
+    "e2e": "pnpm --filter e2e test"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.13",

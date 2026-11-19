@@ -2,15 +2,26 @@
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "outputs": [".output/**", "dist/**", "!.output/private/**"]
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        ".output/**",
+        "dist/**",
+        "!.output/private/**"
+      ],
+      "env": [
+        "VITE_*"
+      ]
     },
     "dev": {
       "cache": false,
       "persistent": true
     },
     "lint": {
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "cache": false
     },
     "format": {
@@ -35,7 +46,9 @@
       "cache": false
     },
     "typecheck": {
-      "dependsOn": ["^build"]
+      "dependsOn": [
+        "^build"
+      ]
     }
   }
 }

@@ -11,6 +11,7 @@ import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { createStudentsRootDocumentHead } from "@repo/router-utils/metadata/students-root-document-head";
 import { Toaster } from "@repo/ui/components/sonner";
 import { Header } from "@repo/ui/composed/header";
+import { HydrationMarker } from "@repo/ui/composed/hydration-marker";
 import type { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import {
@@ -73,6 +74,7 @@ function RootComponent() {
 			<Header user={user} />
 			<Outlet />
 			<Toaster />
+			<HydrationMarker />
 		</>
 	);
 }
