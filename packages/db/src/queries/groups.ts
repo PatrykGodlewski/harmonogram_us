@@ -404,6 +404,10 @@ export async function updateGroup(
 				.where(eq(registrationGroups.id, groupId));
 
 			if (patch.itemIds) {
+				// Locks agenda items after the group, against the global order. Safe only because
+				// lockEventAndGroup took the event row first: every path that locks items or this
+				// group locks the event before them, so no transaction can hold the items and wait
+				// for the group.
 				await replaceGroupItems(tx, group, patch.itemIds);
 			}
 			if (patch.places !== undefined && patch.places < group.places) {
