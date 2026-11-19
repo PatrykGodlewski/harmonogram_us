@@ -75,7 +75,7 @@ Mailpit inbox for local email (magic links): http://localhost:8025.
 
 **Auth:** Better Auth (`packages/api/src/auth/better-auth.ts`) with a Drizzle adapter, magic link, Turnstile captcha (production refuses to start without `TURNSTILE_SECRET_KEY`), optional social providers, rate limiting in Postgres (`app_rate_limits`, `consumeRateLimit`), disposable-email and HIBP password checks, and Nodemailer + react-email for mail. Server functions have no locale prefix, so `getLocale()` there returns the base locale: pass the UI locale from the client when a server action needs it (as `registerForEventServer` does).
 
-**Configuration:** the installation time zone is `APP_TIME_ZONE` / `VITE_APP_TIME_ZONE` (default `Europe/Warsaw`; helpers `formatEventDate/Time/DateTime` in `@repo/ui/time`), the sender is `SMTP_FROM`. `VITE_*` values are inlined at build time (Turbo passes them to builds, the Dockerfile takes them as build args).
+**Configuration:** the installation time zone is `VITE_APP_TIME_ZONE` for UI, e-mails and cron (default `Europe/Warsaw`; the build-time value wins over the runtime one, `@repo/env/runtime-env`; helpers `formatEventDate/Time/DateTime` in `@repo/ui/time`), the sender is `SMTP_FROM`. `VITE_*` values are inlined at build time (Turbo passes them to builds, the Dockerfile takes them as build args).
 
 **Deployment:** Railway, with one service per app (`apps/*/railway.toml`). See the bottom of `.env.example` for the variables each service needs.
 

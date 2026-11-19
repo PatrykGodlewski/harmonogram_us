@@ -2,7 +2,6 @@ import "./loadEnv";
 import { decodeBase64 } from "@oslojs/encoding";
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
-import { isTimeZone } from "./client";
 
 function isValidEncryptionKey(value: string): boolean {
 	try {
@@ -44,12 +43,6 @@ export const env = createEnv({
 		SMTP_USER: z.string().optional(),
 		SMTP_PASSWORD: z.string().optional(),
 		SMTP_FROM: z.string().min(1, "SMTP_FROM must be provided (sender address)"),
-		APP_TIME_ZONE: z
-			.string()
-			.refine(isTimeZone, {
-				message: "APP_TIME_ZONE must be an IANA time zone",
-			})
-			.default("Europe/Warsaw"),
 
 		ELECTRIC_URL: z.url().optional().default("http://localhost:5133"),
 		ELECTRIC_SECRET: z.string().optional(),

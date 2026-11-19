@@ -1,5 +1,6 @@
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
+import { mergeClientRuntimeEnv } from "./runtime-env";
 
 export const isTimeZone = (value: string): boolean =>
 	Intl.supportedValuesOf("timeZone").includes(value) || value === "UTC";
@@ -15,12 +16,11 @@ export const env = createEnv({
 			})
 			.default("Europe/Warsaw"),
 	},
-	// Browser: values Vite inlined at build time. Server, worker and tests: process.env wins.
-	runtimeEnv: {
-		...(
-			import.meta as ImportMeta & { env?: Record<string, string | undefined> }
-		).env,
-		...(typeof process === "undefined" ? {} : process.env),
-	},
+	// Browser and SSR: values Vite inlined at build time. Worker and tests: process.env.
+	runtimeEnv: mergeClientRuntimeEnv(
+		(import.meta as ImportMeta & { env?: Record<string, string | undefined> })
+			.env,
+		typeof process === "undefined" ? {} : process.env,
+	),
 	emptyStringAsUndefined: true,
 });

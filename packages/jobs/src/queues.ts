@@ -1,4 +1,4 @@
-import { env } from "@repo/env";
+import { env as clientEnv } from "@repo/env/client";
 import { z } from "zod";
 
 /** Policy "short" + singletonKey=memberId: at most one queued send per member. */
@@ -12,7 +12,8 @@ export const QUEUE_EMAILS = "emails";
 
 /** Every 5 minutes, in the installation time zone. */
 export const CLOSE_EXPIRED_GROUPS_CRON = "*/5 * * * *";
-export const JOBS_TIME_ZONE = env.APP_TIME_ZONE;
+/** Cron schedules run in the installation time zone (the same value the UI uses). */
+export const JOBS_TIME_ZONE = clientEnv.VITE_APP_TIME_ZONE;
 
 export const groupInvitationEmailPayload = z.object({
 	memberId: z.string().min(1),
