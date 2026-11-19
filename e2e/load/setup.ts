@@ -12,6 +12,7 @@ import {
 	LOAD_FUNCTIONS,
 	type LoadFunction,
 	type LoadRun,
+	type LoadUsers,
 } from "./config";
 
 /**
@@ -94,24 +95,52 @@ async function payload(data: Record<string, string>): Promise<string> {
 	return JSON.stringify(await toJSONAsync({ data }));
 }
 
-export async function setupLoadRun(): Promise<LoadRun> {
+/** Users who browse and register/withdraw on the given events. */
+async function usersFor(
+	count: number,
+	label: string,
+	eventIds: string[],
+): Promise<LoadUsers> {
+	const users = await createUsers(count, label);
+	return {
+		eventIds,
+		users: await Promise.all(
+			users.map(async (user) => ({
+				cookie: user.cookie,
+				register: await Promise.all(
+					eventIds.map((eventId) => payload({ eventId, locale: "pl" })),
+				),
+				unregister: await Promise.all(
+					eventIds.map((eventId) => payload({ eventId })),
+				),
+			})),
+		),
+	};
+}
+
+async function createEvents(count: number, label: string, maxSeats: number) {
+	const created = await Promise.all(
+		Array.from({ length: count }, (_, index) =>
+			createTestEvent({
+				title: `Load ${label} ${index} ${randomBytes(3).toString("hex")}`,
+				maxSeats,
+				startsInDays: 21,
+			}),
+		),
+	);
+	return created.map((event) => event.id);
+}
+
+export async function setupLoadRun(options: {
+	stress: boolean;
+}): Promise<LoadRun> {
 	const functionIds = readFunctionIds();
 	const spikeEvent = await createTestEvent({
 		title: `Load spike ${randomBytes(3).toString("hex")}`,
 		maxSeats: LOAD.spikeSeats,
 		startsInDays: 20,
 	});
-	const steadyEvents = await Promise.all(
-		Array.from({ length: LOAD.steadyEvents }, (_, index) =>
-			createTestEvent({
-				title: `Load steady ${index} ${randomBytes(3).toString("hex")}`,
-				maxSeats: LOAD.steadySeats,
-				startsInDays: 21,
-			}),
-		),
-	);
 	const spikeUsers = await createUsers(LOAD.spikeUsers, "spike");
-	const steadyUsers = await createUsers(LOAD.steadyUsers, "steady");
 
 	const run: LoadRun = {
 		webUrl: LOAD.webUrl,
@@ -125,22 +154,18 @@ export async function setupLoadRun(): Promise<LoadRun> {
 				})),
 			),
 		},
-		steady: {
-			eventIds: steadyEvents.map((event) => event.id),
-			users: await Promise.all(
-				steadyUsers.map(async (user) => ({
-					cookie: user.cookie,
-					register: await Promise.all(
-						steadyEvents.map((event) =>
-							payload({ eventId: event.id, locale: "pl" }),
-						),
-					),
-					unregister: await Promise.all(
-						steadyEvents.map((event) => payload({ eventId: event.id })),
-					),
-				})),
-			),
-		},
+		steady: await usersFor(
+			LOAD.steadyUsers,
+			"steady",
+			await createEvents(LOAD.steadyEvents, "steady", LOAD.steadySeats),
+		),
+		stress: options.stress
+			? await usersFor(
+					LOAD.stressUsers,
+					"stress",
+					await createEvents(LOAD.steadyEvents, "stress", LOAD.steadySeats * 5),
+				)
+			: undefined,
 	};
 	mkdirSync(LOAD.runDir, { recursive: true });
 	writeFileSync(new URL("run.json", LOAD.runDir), JSON.stringify(run));

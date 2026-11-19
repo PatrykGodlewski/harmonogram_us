@@ -1,5 +1,6 @@
 import { setPasswordForCurrentSession } from "@repo/api/auth/user";
 import { myRegistrationListQueryOptions } from "@repo/api/events/my-registration-list";
+import { ensureMyRegistrations } from "@repo/api/events/my-registrations";
 import { myGroupsQueryOptions } from "@repo/api/groups/queries";
 import {
 	account_field_email,
@@ -73,7 +74,10 @@ export const Route = createFileRoute("/account")({
 		requireAuthenticatedUser(context, { loginRedirect: "/account" });
 	},
 	loader: ({ context: { queryClient } }) =>
-		queryClient.ensureQueryData(myRegistrationListQueryOptions),
+		Promise.all([
+			queryClient.ensureQueryData(myRegistrationListQueryOptions),
+			ensureMyRegistrations(queryClient),
+		]),
 	component: AccountPage,
 });
 
@@ -167,7 +171,7 @@ function AccountPage() {
 						: account_password_status_missing()}
 				</p>
 			</div>
-			<MyRegistrations />
+			{user ? <MyRegistrations userId={user.id} /> : null}
 			<MyGroups />
 			<div className="mt-6 rounded-lg border p-4">
 				<h2 className="mb-4 text-lg font-semibold">

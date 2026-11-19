@@ -16,6 +16,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
 const i18nRoot = path.resolve(__dirname, "../../packages/i18n");
 const workspaceRoot = path.resolve(__dirname, "../..");
+/** @opentelemetry/api as the Prometheus client (in @repo/api) resolves it, but its ESM build. */
+const requireFromApi = createRequire(
+	path.join(workspaceRoot, "packages/api/package.json"),
+);
+const openTelemetryApiEsm = createRequire(
+	requireFromApi.resolve("@prometheus-io/client"),
+)
+	.resolve("@opentelemetry/api")
+	.replace(/index\.cjs$/, "index.mjs");
 
 export default defineConfig({
 	envDir: workspaceRoot,
@@ -27,6 +36,8 @@ export default defineConfig({
 			"#paraglide-runtime": path.join(i18nRoot, "src/paraglide/runtime.js"),
 			/** Radix dialogs use react-remove-scroll → tslib; its CJS interop breaks in the production SSR bundle. */
 			tslib: require.resolve("tslib/tslib.es6.mjs"),
+			/** Its CJS build (required by the Prometheus client) breaks in the SSR bundle the same way. */
+			"@opentelemetry/api": openTelemetryApiEsm,
 		},
 	},
 	plugins: [

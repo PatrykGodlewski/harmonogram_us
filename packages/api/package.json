@@ -10,11 +10,13 @@
     "./notifications/registration-email": "./src/notifications/registration-email.tsx"
   },
   "dependencies": {
+    "@prometheus-io/client": "0.16.1",
     "@react-email/components": "^1.0.12",
     "@react-email/render": "^2.0.7",
     "@repo/db": "workspace:*",
     "@repo/env": "workspace:*",
     "@repo/i18n": "workspace:*",
+    "@repo/jobs": "workspace:*",
     "@tanstack/react-query": "^5.100.1",
     "@tanstack/react-start": "^1.167.45",
     "better-auth": "^1.6.9",
@@ -23,8 +25,7 @@
     "nodemailer": "^8.0.6",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "zod": "^4.3.6",
-    "@repo/jobs": "workspace:*"
+    "zod": "^4.3.6"
   },
   "scripts": {
     "lint": "biome check .",

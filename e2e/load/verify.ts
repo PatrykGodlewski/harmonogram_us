@@ -1,6 +1,6 @@
 import { db } from "@repo/db/client";
 import { sql } from "drizzle-orm";
-import type { LoadRun } from "./config";
+import type { LoadRun, LoadUsers } from "./config";
 
 type EventCounts = {
 	event_id: string;
@@ -71,12 +71,41 @@ export async function verifySpike(run: LoadRun): Promise<string[]> {
 }
 
 /** After the steady run: every event's counters agree with its rows and nobody is stuck. */
-export async function verifySteady(run: LoadRun): Promise<string[]> {
-	const rows = await countsOf(run.steady.eventIds);
+export async function verifySteady(users: LoadUsers): Promise<string[]> {
+	const rows = await countsOf(users.eventIds);
 	for (const row of rows) {
 		console.log(
 			`steady ${row.event_id}: ${row.registered}/${row.max_seats} registered, ${row.waitlisted} waitlisted`,
 		);
 	}
 	return invariantProblems(rows);
+}
+
+/**
+ * Waits until the worker has sent every queued e-mail; returns how long that took, or a
+ * problem when it doesn't drain in time (registrations queue a confirmation each).
+ */
+export async function drainEmails(
+	timeoutSeconds: number,
+): Promise<{ seconds: number; problems: string[] }> {
+	const started = Date.now();
+	for (;;) {
+		const [row] = await db.execute<{ pending: number }>(sql`
+			SELECT count(*)::int AS pending FROM pgboss.job
+			WHERE name = 'emails' AND state IN ('created', 'retry', 'active')
+		`);
+		const seconds = (Date.now() - started) / 1000;
+		if ((row?.pending ?? 0) === 0) {
+			return { seconds, problems: [] };
+		}
+		if (seconds > timeoutSeconds) {
+			return {
+				seconds,
+				problems: [
+					`e-mails: ${row?.pending} still queued after ${timeoutSeconds} s`,
+				],
+			};
+		}
+		await new Promise((resolve) => setTimeout(resolve, 1000));
+	}
 }

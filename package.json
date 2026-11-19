@@ -33,7 +33,9 @@
     "e2e:down": "docker compose -p harmonogram-e2e --env-file .env --env-file e2e/ports.env --profile app down -v",
     "e2e": "pnpm --filter e2e e2e",
     "db:account": "pnpm --filter @repo/db db:account",
-    "load": "pnpm --filter e2e load"
+    "load": "pnpm --filter e2e load",
+    "load:stress": "pnpm --filter e2e load:stress",
+    "observability:up": "docker compose -p harmonogram-e2e --env-file .env --env-file e2e/ports.env --profile app --profile observability up -d --wait prometheus grafana"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.13",

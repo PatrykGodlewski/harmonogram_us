@@ -1,6 +1,7 @@
 # Development: `docker compose up -d` starts the services the apps need (db, mailpit, electric).
 # Full stack (production images of web, admin and worker): `docker compose --profile app up -d --build`.
 # The e2e suite runs the full stack as a separate project on other ports: see e2e/README.md.
+# Metrics: add `--profile observability` for Prometheus (scrapes /api/metrics, receives k6) and Grafana.
 
 x-app-env: &app-env
   NODE_ENV: production
@@ -104,5 +105,45 @@ services:
       db: { condition: service_healthy }
       mailpit: { condition: service_started }
 
+  prometheus:
+    profiles: [observability]
+    image: prom/prometheus@sha256:e04987641b57704f408e31f6373ba4138ecf27cb4a165d24aabb6c38fddd0f06
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.enable-remote-write-receiver
+      - --storage.tsdb.retention.time=7d
+    configs:
+      - source: prometheus_config
+        target: /etc/prometheus/prometheus.yml
+      - source: metrics_token
+        target: /etc/prometheus/metrics-token
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - prometheus_data:/prometheus
+    restart: unless-stopped
+
+  grafana:
+    profiles: [observability]
+    image: grafana/grafana@sha256:0615ec4fbd4072004b7d86b46ded63013a74b7d6eb1119273dd89e8fa25c13cf
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/provisioning/dashboards/harmonogram.json
+    volumes:
+      - ./observability/grafana:/etc/grafana/provisioning:ro
+    ports:
+      - "${GRAFANA_PORT:-3002}:3000"
+    depends_on:
+      prometheus: { condition: service_started }
+    restart: unless-stopped
+
+configs:
+  prometheus_config:
+    file: ./observability/prometheus.yml
+  metrics_token:
+    content: ${METRICS_TOKEN:-}
+
 volumes:
   postgres_data:
+  prometheus_data:

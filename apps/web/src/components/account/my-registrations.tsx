@@ -20,13 +20,19 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import * as React from "react";
 import { UnregisterEventDialog } from "~/components/event-details/unregister-event-dialog";
+import { useMyRegistrations } from "~/lib/registration/use-my-registrations";
 import { useRegistrationActions } from "~/lib/registration/use-registration-actions";
 
 /** The user's registrations, upcoming and past, on the account page. */
-export function MyRegistrations() {
-	const { data: registrations } = useSuspenseQuery(
-		myRegistrationListQueryOptions,
-	);
+export function MyRegistrations({ userId }: { userId: string }) {
+	const { data: list } = useSuspenseQuery(myRegistrationListQueryOptions);
+	// State and waitlist position come from the live-refreshed registrations every screen
+	// uses (a promotion shows here too); this list only adds the event details.
+	const { byEvent } = useMyRegistrations(userId);
+	const registrations = list.map((row) => ({
+		...row,
+		...byEvent.get(row.eventId),
+	}));
 	const now = Date.now();
 	const upcoming = registrations.filter(
 		(row) => new Date(row.effectiveEndsAt).getTime() > now,

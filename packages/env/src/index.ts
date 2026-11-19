@@ -47,6 +47,9 @@ export const env = createEnv({
 		/** Password of the seeded local test accounts (pnpm db:seed); never set in production. */
 		SEED_ACCOUNT_PASSWORD: z.string().min(12).optional(),
 
+		/** Bearer token Prometheus sends to /api/metrics; unset = the endpoint answers 404. */
+		METRICS_TOKEN: z.string().min(16).optional(),
+
 		ELECTRIC_URL: z.url().optional().default("http://localhost:5133"),
 		ELECTRIC_SECRET: z.string().optional(),
 	},

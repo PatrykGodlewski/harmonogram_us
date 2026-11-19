@@ -34,6 +34,11 @@ export function getBoss(
 				connectionString: env.DATABASE_URL,
 				supervise: role === "worker",
 				schedule: role === "worker",
+				// Queue stats drive burst mode (EMAIL_WORK.burstWhenReadyExceeds); refreshed every
+				// 60 s by default, a backlog waited that long before draining at full speed.
+				queueCacheIntervalSeconds: 10,
+				monitorIntervalSeconds: 10,
+				superviseIntervalSeconds: 10,
 			});
 			boss.on("error", (error) => console.error("[jobs]", error));
 			await boss.start();

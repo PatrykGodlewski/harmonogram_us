@@ -33,13 +33,24 @@ test("[F18] program w widoku listy i kalendarza @uczestnik", async ({
 	const a = page.getByRole("button", { name: /Warsztat A/ });
 	const b = page.getByRole("button", { name: /Warsztat B/ });
 	await expect(a).toBeVisible();
-	const [boxA, boxB] = [await a.boundingBox(), await b.boundingBox()];
-	const width = page.viewportSize()?.width ?? 0;
-	expect(boxA?.y).toBe(boxB?.y);
-	expect(boxA?.x).not.toBe(boxB?.x);
-	for (const box of [boxA, boxB]) {
-		expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(width);
-	}
+	await expect(b).toBeVisible();
+	// Measure once the layout is stable (the server-rendered view is replaced by the live one).
+	const layout = async () => {
+		const [boxA, boxB] = [await a.boundingBox(), await b.boundingBox()];
+		const width = page.viewportSize()?.width ?? 0;
+		return {
+			sameRow: boxA !== null && boxA.y === boxB?.y,
+			sideBySide: boxA !== null && boxB !== null && boxA.x !== boxB.x,
+			inside:
+				boxA !== null &&
+				boxB !== null &&
+				boxA.x + boxA.width <= width &&
+				boxB.x + boxB.width <= width,
+		};
+	};
+	await expect
+		.poll(layout)
+		.toEqual({ sameRow: true, sideBySide: true, inside: true });
 
 	// And registering from the calendar works like in the list
 	await a.click();

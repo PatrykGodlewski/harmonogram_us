@@ -43,6 +43,8 @@ pnpm e2e:up                  # full stack from production images as compose proj
 pnpm e2e                     # Playwright: projects "komputer" (1280px) and "telefon" (360px, tests tagged @uczestnik)
 pnpm e2e:down                # stop the e2e stack and drop its data
 pnpm load                    # k6 load tests (spike 500→50 places, 2 min steady) + DB invariant check, against the e2e stack; see e2e/load/README.md
+pnpm load:stress             # stepped ramp to 400 users, stops where p95 > 2 s or errors > 5% (informational)
+pnpm observability:up        # Prometheus (:19090) + Grafana (:13002) for the e2e stack; `pnpm load` then streams k6 metrics there
 ```
 
 Automated checks: `pnpm lint`, `pnpm typecheck`, `pnpm test` (Vitest; DB tests run against real Postgres and truncate tables in `harmonogram_us_test`, never the dev DB) and `pnpm e2e` (after `pnpm e2e:up`; rebuild with `pnpm e2e:up` after code changes, the stack runs built images). CI (`.github/workflows/ci.yml`) runs all of them.
@@ -78,6 +80,8 @@ Mailpit inbox for local email (magic links): http://localhost:8025.
 **Auth:** Better Auth (`packages/api/src/auth/better-auth.ts`) with a Drizzle adapter, magic link, Turnstile captcha (production refuses to start without `TURNSTILE_SECRET_KEY`), optional social providers, rate limiting in Postgres (`app_rate_limits`, `consumeRateLimit`), disposable-email and HIBP password checks, and Nodemailer + react-email for mail. Server functions have no locale prefix, so `getLocale()` there returns the base locale: pass the UI locale from the client when a server action needs it (as `registerForEventServer` does).
 
 **Configuration:** the installation time zone is `VITE_APP_TIME_ZONE` for UI, e-mails and cron (default `Europe/Warsaw`; the build-time value wins over the runtime one, `@repo/env/runtime-env`; helpers `formatEventDate/Time/DateTime` in `@repo/ui/time`), the sender is `SMTP_FROM`. `VITE_*` values are inlined at build time (Turbo passes them to builds, the Dockerfile takes them as build args).
+
+**Observability:** each app records request count and duration per normalised route (`@repo/api/observability/metrics`, request middleware in `src/start.ts`) plus Node runtime metrics, served at `/api/metrics` to a bearer `METRICS_TOKEN` (unset: 404). Route labels must never contain ids, tokens or codes (`routeLabel`). `docker compose --profile observability` adds Prometheus and Grafana (`observability/`). The Prometheus client (`@prometheus-io/client`) pulls in `@opentelemetry/api`, aliased to its ESM build in both `vite.config.ts` (its CJS build breaks in the SSR bundle, like `tslib`). Server functions answer app errors with 4xx through the global function middleware; `src/start.ts` is found by name (Start resolves entries inside `src/`).
 
 **Deployment:** Railway, with one service per app (`apps/*/railway.toml`). See the bottom of `.env.example` for the variables each service needs.
 

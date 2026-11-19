@@ -6,7 +6,12 @@ import {
 	joined_toast,
 } from "@repo/i18n/paraglide/messages";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import {
+	createFileRoute,
+	Link,
+	notFound,
+	useNavigate,
+} from "@tanstack/react-router";
 import { lazy, type ReactNode, Suspense, useEffect } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -28,13 +33,24 @@ export const Route = createFileRoute("/events/$eventId")({
 		agenda: z.enum(["list", "calendar"]).optional().catch(undefined),
 	}),
 	loader: async ({ context: { queryClient, user }, params }) => {
-		await queryClient.ensureQueryData(eventDetailsQueryOptions(params.eventId));
+		try {
+			await queryClient.ensureQueryData(
+				eventDetailsQueryOptions(params.eventId),
+			);
+		} catch (error) {
+			// A deleted or unknown event is a 404 page, not a server error.
+			if (error instanceof Error && error.message === "EVENT_NOT_FOUND") {
+				throw notFound();
+			}
+			throw error;
+		}
 		if (user) {
 			await queryClient.ensureQueryData(myRegistrationsQueryOptions);
 		}
 	},
 	component: EventDetailsPage,
 	errorComponent: EventDetailsError,
+	notFoundComponent: EventNotFound,
 });
 
 function PageShell({ children }: { children: ReactNode }) {
@@ -95,6 +111,14 @@ function EventDetailsPage() {
 					<EventDetailsLive {...props} />
 				</Suspense>
 			</ClientOnly>
+		</PageShell>
+	);
+}
+
+function EventNotFound() {
+	return (
+		<PageShell>
+			<p className="text-muted-foreground">{event_details_not_found()}</p>
 		</PageShell>
 	);
 }

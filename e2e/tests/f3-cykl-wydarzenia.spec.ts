@@ -115,6 +115,8 @@ test("[F3] pełny cykl: admin tworzy, uczestnik się zapisuje, wydarzenie się k
 	// Then it disappears from the participant's account and its page says it's gone
 	await open(user, "/pl/account");
 	await expect(user.getByText(toDelete.title)).toHaveCount(0);
+	const gone = await user.request.get(`/pl/events/${toDelete.id}`);
+	expect(gone.status()).toBe(404);
 	await open(user, `/pl/events/${toDelete.id}`);
 	await expect(
 		user.getByText("To wydarzenie nie istnieje lub zostało usunięte."),

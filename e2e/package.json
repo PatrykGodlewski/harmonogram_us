@@ -7,7 +7,8 @@
     "typecheck": "tsc --noEmit",
     "format": "biome check --write .",
     "e2e": "playwright test",
-    "load": "tsx load/run.ts"
+    "load": "tsx load/run.ts",
+    "load:stress": "tsx load/run.ts --stress"
   },
   "dependencies": {
     "@repo/db": "workspace:*",

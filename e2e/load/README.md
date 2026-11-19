@@ -18,6 +18,18 @@ installed on the host.
    seat count equals places − registered, nobody is over capacity and nobody waits while places
    are free.
 
+After the spike the runner waits for the worker to send every queued confirmation e-mail
+(pass: within 60 s).
+
+**Stress** (`pnpm load:stress`, `k6/stress.js`): the steady mix ramped 50 → 100 → 200 → 400
+users; it stops at the step where errors pass 5% or p95 passes 2 s. Informational: the step it
+reached is the result.
+
+**Reports and Prometheus.** Every scenario writes an HTML report (k6 web dashboard) and a JSON
+summary to `load/.run/`. With `pnpm observability:up` running, k6 also streams its metrics to
+Prometheus (remote write), next to the apps' own metrics, and Grafana shows both on the
+"Harmonogram" dashboard (http://localhost:13002 for the e2e stack).
+
 Settings are in `config.ts`; run data and k6 summaries go to `load/.run/` (gitignored).
 Server functions are same-origin RPC (TanStack Start docs), so k6 sends the browser's
 same-origin headers; this is a test of our own app, not a public API.

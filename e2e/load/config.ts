@@ -9,6 +9,8 @@ export const LOAD = {
 	steadyUsers: 100,
 	steadyEvents: 2,
 	steadySeats: 10,
+	/** Stress: users for the stepped ramp that looks for the breaking point (pnpm load:stress). */
+	stressUsers: 400,
 	/** Where the setup writes sessions, payloads and function ids for k6 (gitignored). */
 	runDir: new URL("./.run/", import.meta.url),
 	/** grafana/k6 v2.4.0, pinned like the other images. */
@@ -28,13 +30,17 @@ export type LoadRun = {
 	webUrl: string;
 	functionIds: Record<LoadFunction, string>;
 	spike: { eventId: string; users: { cookie: string; register: string }[] };
-	steady: {
-		eventIds: string[];
-		users: {
-			cookie: string;
-			/** Payloads per steady event, same order as eventIds. */
-			register: string[];
-			unregister: string[];
-		}[];
-	};
+	stress?: LoadUsers;
+	steady: LoadUsers;
+};
+
+/** Signed-in users with request bodies per event (same order as eventIds). */
+export type LoadUsers = {
+	eventIds: string[];
+	users: {
+		cookie: string;
+		/** Payloads per steady event, same order as eventIds. */
+		register: string[];
+		unregister: string[];
+	}[];
 };

@@ -29,9 +29,15 @@ test("[F18] admin widzi program w widoku kalendarza", async ({
 	const a = page.getByRole("button", { name: /Warsztat A/ });
 	const b = page.getByRole("button", { name: /Warsztat B/ });
 	await expect(a).toBeVisible();
-	const [boxA, boxB] = [await a.boundingBox(), await b.boundingBox()];
-	expect(boxA?.y).toBe(boxB?.y);
-	expect(boxA?.x).not.toBe(boxB?.x);
+	await expect(b).toBeVisible();
+	const layout = async () => {
+		const [boxA, boxB] = [await a.boundingBox(), await b.boundingBox()];
+		return {
+			sameRow: boxA !== null && boxA.y === boxB?.y,
+			sideBySide: boxA !== null && boxB !== null && boxA.x !== boxB.x,
+		};
+	};
+	await expect.poll(layout).toEqual({ sameRow: true, sideBySide: true });
 	await expect(a).toContainText("0 / 2");
 
 	// And a block opens the item's edit dialog
