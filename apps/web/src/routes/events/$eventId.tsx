@@ -25,6 +25,7 @@ const staticItemCounts = {
 export const Route = createFileRoute("/events/$eventId")({
 	validateSearch: z.object({
 		joined: z.coerce.number().optional().catch(undefined),
+		agenda: z.enum(["list", "calendar"]).optional().catch(undefined),
 	}),
 	loader: async ({ context: { queryClient, user }, params }) => {
 		await queryClient.ensureQueryData(eventDetailsQueryOptions(params.eventId));

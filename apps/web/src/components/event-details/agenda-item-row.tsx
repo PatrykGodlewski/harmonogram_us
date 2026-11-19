@@ -22,6 +22,8 @@ import { LoginToRegisterButton } from "./login-to-register-button";
 
 type AgendaItemRowProps = {
 	item: AgendaItemData & { parallel: boolean };
+	/** "li" in the agenda list, "div" in the calendar's dialog. */
+	as?: "li" | "div";
 	eventId: string;
 	user: { id: string; email: string } | null;
 	interactive: boolean;
@@ -33,6 +35,7 @@ type AgendaItemRowProps = {
 
 export function AgendaItemRow({
 	item,
+	as: Tag = "li",
 	eventId,
 	user,
 	interactive,
@@ -46,7 +49,7 @@ export function AgendaItemRow({
 		seatCount.seatsRemaining !== null && seatCount.seatsRemaining <= 0;
 
 	return (
-		<li
+		<Tag
 			className={cn(
 				"flex flex-col gap-3 py-4 sm:flex-row sm:items-start sm:justify-between",
 				item.parallel && "ml-3 border-l border-dashed pl-4",
@@ -93,7 +96,7 @@ export function AgendaItemRow({
 					registrations={registrations}
 				/>
 			</div>
-		</li>
+		</Tag>
 	);
 }
 

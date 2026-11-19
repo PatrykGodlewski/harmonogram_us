@@ -46,7 +46,13 @@ export async function createTestEvent(input: {
 	maxSeats?: number;
 	startsInDays?: number;
 	faculty?: string;
-	agenda?: { title: string; maxSeats?: number }[];
+	/** startHour: hours after the event starts (default: the item's index); durationMinutes default 50. */
+	agenda?: {
+		title: string;
+		maxSeats?: number;
+		startHour?: number;
+		durationMinutes?: number;
+	}[];
 }): Promise<{ id: string; title: string; itemIds: string[] }> {
 	const title = input.title ?? `Wydarzenie ${crypto.randomUUID().slice(0, 8)}`;
 	const date = new Date(Date.now() + (input.startsInDays ?? 10) * 86_400_000);
@@ -64,12 +70,16 @@ export async function createTestEvent(input: {
 	}
 	const itemIds: string[] = [];
 	for (const [index, item] of (input.agenda ?? []).entries()) {
-		const startsAt = new Date(date.getTime() + index * 3_600_000);
+		const startsAt = new Date(
+			date.getTime() + (item.startHour ?? index) * 3_600_000,
+		);
 		const created = await createAgendaItem({
 			eventId: event.id,
 			title: item.title,
 			startsAt,
-			endsAt: new Date(startsAt.getTime() + 3_000_000),
+			endsAt: new Date(
+				startsAt.getTime() + (item.durationMinutes ?? 50) * 60_000,
+			),
 			maxSeats: item.maxSeats ?? null,
 		});
 		itemIds.push(created.id);

@@ -52,6 +52,8 @@ export function findOverlaps<T extends AgendaTimed>(
 export type AgendaLaidOut<T> = T & {
 	/** 0-based column among items that run at the same time. */
 	lane: number;
+	/** Columns in this item's block of overlapping items (1 when it runs alone). */
+	lanes: number;
 	/** Minutes since midnight of the item's day, in the layout's time zone. */
 	startMinute: number;
 	endMinute: number;
@@ -63,7 +65,7 @@ export type AgendaDay<T> = {
 	/** Whole hours around the day's items, in minutes since midnight. */
 	startMinute: number;
 	endMinute: number;
-	/** Number of columns the day needs. */
+	/** Most columns any block of overlapping items on the day needs. */
 	lanes: number;
 	items: AgendaLaidOut<T>[];
 };
@@ -104,6 +106,7 @@ export function layoutAgenda<T extends AgendaTimed>(
 		const laid = {
 			...item,
 			lane: 0,
+			lanes: 1,
 			startMinute: start.minute,
 			endMinute: start.minute + durationMinutes,
 		};
@@ -111,19 +114,36 @@ export function layoutAgenda<T extends AgendaTimed>(
 	}
 
 	return [...days].map(([day, dayItems]) => {
-		const laneEnds: number[] = [];
+		// A block is a run of items connected by overlaps; columns are counted per block,
+		// so an item that runs alone keeps the full width.
+		let laneEnds: number[] = [];
+		let block: AgendaLaidOut<T>[] = [];
+		let maxLanes = 1;
+		const closeBlock = () => {
+			for (const member of block) {
+				member.lanes = laneEnds.length;
+			}
+			maxLanes = Math.max(maxLanes, laneEnds.length);
+			laneEnds = [];
+			block = [];
+		};
 		for (const item of dayItems) {
+			if (block.length > 0 && Math.max(...laneEnds) <= item.startMinute) {
+				closeBlock();
+			}
 			const free = laneEnds.findIndex((end) => end <= item.startMinute);
 			item.lane = free === -1 ? laneEnds.length : free;
 			laneEnds[item.lane] = item.endMinute;
+			block.push(item);
 		}
+		closeBlock();
 		return {
 			day,
 			startMinute:
 				Math.floor(Math.min(...dayItems.map((i) => i.startMinute)) / 60) * 60,
 			endMinute:
 				Math.ceil(Math.max(...dayItems.map((i) => i.endMinute)) / 60) * 60,
-			lanes: Math.max(1, laneEnds.length),
+			lanes: maxLanes,
 			items: dayItems,
 		};
 	});

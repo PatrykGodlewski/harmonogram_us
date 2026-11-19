@@ -331,5 +331,8 @@
 	"tickets_show_at_entry": "Pokaż ten kod przy wejściu.",
 	"tickets_back": "Moje konto",
 	"reg_email_ticket": "Twój bilet z kodem QR:",
-	"reg_email_ticket_button": "Pokaż bilet"
+	"reg_email_ticket_button": "Pokaż bilet",
+	"event_details_view_label": "Widok programu",
+	"event_details_view_list": "Lista",
+	"event_details_view_calendar": "Kalendarz"
 }

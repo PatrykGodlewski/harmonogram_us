@@ -80,6 +80,24 @@ describe("layoutAgenda", () => {
 		]);
 	});
 
+	it("items outside a parallel block use the full width", () => {
+		const [day] = layoutAgenda(
+			[
+				item("opening", "2026-11-19T09:00:00Z", "2026-11-19T10:00:00Z"),
+				item("a", "2026-11-19T10:30:00Z", "2026-11-19T12:00:00Z"),
+				item("b", "2026-11-19T10:30:00Z", "2026-11-19T12:00:00Z"),
+				item("closing", "2026-11-19T12:00:00Z", "2026-11-19T12:30:00Z"),
+			],
+			TZ,
+		);
+		expect(day?.items.map((i) => [i.id, i.lanes])).toEqual([
+			["opening", 1],
+			["a", 2],
+			["b", 2],
+			["closing", 1],
+		]);
+	});
+
 	it("an item that starts when the previous ends shares its lane", () => {
 		const [day] = layoutAgenda(
 			[

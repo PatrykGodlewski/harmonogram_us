@@ -331,5 +331,8 @@
 	"tickets_show_at_entry": "Show this code at the entrance.",
 	"tickets_back": "My account",
 	"reg_email_ticket": "Your ticket with a QR code:",
-	"reg_email_ticket_button": "Show ticket"
+	"reg_email_ticket_button": "Show ticket",
+	"event_details_view_label": "Agenda view",
+	"event_details_view_list": "List",
+	"event_details_view_calendar": "Calendar"
 }
