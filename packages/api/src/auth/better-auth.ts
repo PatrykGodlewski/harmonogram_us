@@ -142,9 +142,7 @@ async function assertEmailIsAllowed(email: string): Promise<void> {
 		message:
 			reason === "disposable"
 				? "Disposable email addresses are not allowed."
-				: reason === "invalid"
-					? "Invalid email address."
-					: "Please provide a valid email address.",
+				: "Invalid email address.",
 	});
 }
 
