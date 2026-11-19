@@ -1,0 +1,2 @@
+ALTER TABLE "event_registrations" ADD COLUMN "ticket_code" text DEFAULT replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '') NOT NULL;--> statement-breakpoint
+ALTER TABLE "event_registrations" ADD CONSTRAINT "event_registrations_ticket_code_unique" UNIQUE("ticket_code");

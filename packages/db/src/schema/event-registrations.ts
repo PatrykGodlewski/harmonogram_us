@@ -34,6 +34,13 @@ export const eventRegistrations = pgTable(
 			.default("registered"),
 		/** Language of the registrant's e-mails (the UI language when they registered). */
 		locale: text("locale").$type<"pl" | "en">().notNull().default("pl"),
+		/** Unguessable code shown as the ticket's QR code; never changes for the registration. */
+		ticketCode: text("ticket_code")
+			.notNull()
+			.unique()
+			.default(
+				sql`replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '')`,
+			),
 		/** Insert time (not transaction start), so the waitlist follows the real order of inserts. */
 		createdAt: timestamp("created_at", { withTimezone: true })
 			.notNull()
