@@ -3,10 +3,10 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"test": "playwright test",
 		"lint": "biome check .",
 		"typecheck": "tsc --noEmit",
-		"format": "biome check --write ."
+		"format": "biome check --write .",
+		"e2e": "playwright test"
 	},
 	"dependencies": {
 		"@repo/db": "workspace:*",
