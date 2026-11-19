@@ -1,20 +1,38 @@
 import { agenda_now } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import * as React from "react";
+import { msUntilNextMinute } from "../agenda";
 import { formatEventTime } from "../time";
 
-const TICK_MS = 30_000;
+/** A little past the minute, so a timer that fires early still lands in the new minute. */
+const MINUTE_SLACK_MS = 50;
 
 /**
- * The current time, refreshed every 30 s; null until mounted, so the server render and the
- * first client render agree (server and browser clocks differ).
+ * The current time, updated at every full minute and whenever the tab becomes visible
+ * again (background tabs delay timers). Null until mounted, so the server render and
+ * the first client render agree (server and browser clocks differ).
  */
 export function useNow(): Date | null {
 	const [now, setNow] = React.useState<Date | null>(null);
 	React.useEffect(() => {
-		setNow(new Date());
-		const timer = setInterval(() => setNow(new Date()), TICK_MS);
-		return () => clearInterval(timer);
+		let timer: ReturnType<typeof setTimeout> | undefined;
+		const tick = () => {
+			const current = new Date();
+			setNow(current);
+			clearTimeout(timer);
+			timer = setTimeout(tick, msUntilNextMinute(current) + MINUTE_SLACK_MS);
+		};
+		const handleVisibilityChange = () => {
+			if (document.visibilityState === "visible") {
+				tick();
+			}
+		};
+		tick();
+		document.addEventListener("visibilitychange", handleVisibilityChange);
+		return () => {
+			clearTimeout(timer);
+			document.removeEventListener("visibilitychange", handleVisibilityChange);
+		};
 	}, []);
 	return now;
 }

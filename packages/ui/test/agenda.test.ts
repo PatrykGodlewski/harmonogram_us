@@ -4,6 +4,7 @@ import {
 	layoutAgenda,
 	markParallel,
 	nowListIndex,
+	msUntilNextMinute,
 	nowMinuteOnDay,
 } from "../src/agenda";
 
@@ -196,5 +197,13 @@ describe("now markers", () => {
 		expect(nowListIndex(agenda, new Date("2026-11-19T11:30:00Z"))).toBe(2);
 		expect(nowListIndex(agenda, new Date("2026-11-19T08:00:00Z"))).toBeNull();
 		expect(nowListIndex(agenda, new Date("2026-11-19T12:30:00Z"))).toBeNull();
+	});
+});
+
+describe("msUntilNextMinute", () => {
+	it("is the time left to the next full minute", () => {
+		expect(msUntilNextMinute(new Date("2026-11-19T09:30:05.000Z"))).toBe(55_000);
+		expect(msUntilNextMinute(new Date("2026-11-19T09:30:59.900Z"))).toBe(100);
+		expect(msUntilNextMinute(new Date("2026-11-19T09:31:00.000Z"))).toBe(60_000);
 	});
 });

@@ -46,5 +46,9 @@ export async function signInAsAdmin(
 	await page.getByLabel("Hasło", { exact: true }).fill(password);
 	await waitForCaptcha(page);
 	await page.getByRole("button", { name: "Zaloguj się", exact: true }).click();
-	await page.waitForURL((url) => !url.pathname.endsWith("/login"));
+	// The panel navigates itself after signing in: let that page finish before the test moves on.
+	await page.waitForURL((url) => !url.pathname.endsWith("/login"), {
+		waitUntil: "load",
+	});
+	await page.locator("html[data-hydrated=true]").waitFor();
 }

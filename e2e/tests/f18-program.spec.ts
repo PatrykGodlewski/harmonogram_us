@@ -98,3 +98,31 @@ test("[F18] program pokazuje bieżącą godzinę w liście i w kalendarzu @uczes
 	await page.getByRole("button", { name: "Kalendarz" }).click();
 	await expect(page.getByRole("separator", { name: /^Teraz/ })).toBeVisible();
 });
+
+test("[F18] bieżąca godzina w kalendarzu zmienia się z każdą minutą @uczestnik", async ({
+	page,
+}) => {
+	// Given an event running now, opened 5 s after a full minute
+	const event = await createTestEvent({
+		startsInDays: -30 / (24 * 60),
+		agenda: [{ title: "Trwa teraz", startHour: 0, durationMinutes: 90 }],
+	});
+	const minuteStart = Math.floor(Date.now() / 60_000) * 60_000;
+	await page.clock.install({ time: new Date(minuteStart + 5_000) });
+	await open(page, `/pl/events/${event.id}?agenda=calendar`);
+	const label = (date: Date) =>
+		`Teraz, ${new Intl.DateTimeFormat("pl-PL", { timeZone: "Europe/Warsaw", hour: "2-digit", minute: "2-digit" }).format(date)}`;
+	await expect(
+		page.getByRole("separator", { name: label(new Date(minuteStart)) }),
+	).toBeVisible();
+
+	// When the clock passes the next full minute
+	await page.clock.runFor(55_200);
+
+	// Then the line shows the new minute right away, without a reload
+	await expect(
+		page.getByRole("separator", {
+			name: label(new Date(minuteStart + 60_000)),
+		}),
+	).toBeVisible({ timeout: 1_000 });
+});

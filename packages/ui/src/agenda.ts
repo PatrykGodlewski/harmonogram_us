@@ -185,3 +185,8 @@ export function nowListIndex<T extends AgendaTimed>(
 	}
 	return sorted.filter((item) => ms(item.startsAt) <= time).length;
 }
+
+/** Milliseconds until the next full minute (when a clock showing HH:MM must change). */
+export function msUntilNextMinute(now: Date): number {
+	return 60_000 - (now.getTime() % 60_000);
+}
