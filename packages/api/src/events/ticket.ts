@@ -18,9 +18,12 @@ export const fetchTicketServer = createServerFn({ method: "GET" })
 			getMyTicket(data.registrationId, context.user.id),
 	);
 
-/** The signed-in user's ticket for one of their registrations; null when it isn't theirs. */
+/**
+ * The signed-in user's ticket for one of their registrations; null when it isn't theirs.
+ * Under ["my-registrations"], so a promotion refreshes an open waitlisted ticket too.
+ */
 export const ticketQueryOptions = (registrationId: string) =>
 	queryOptions({
-		queryKey: ["ticket", registrationId] as const,
+		queryKey: ["my-registrations", "ticket", registrationId] as const,
 		queryFn: () => fetchTicketServer({ data: { registrationId } }),
 	});

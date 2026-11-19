@@ -98,6 +98,21 @@ describe("layoutAgenda", () => {
 		]);
 	});
 
+	it("a short item drawn taller than it lasts doesn't share a lane with the next one", () => {
+		const [day] = layoutAgenda(
+			[
+				item("talk", "2026-11-19T09:00:00Z", "2026-11-19T09:15:00Z"),
+				item("next", "2026-11-19T09:15:00Z", "2026-11-19T10:00:00Z"),
+			],
+			TZ,
+			{ minDurationMinutes: 30 },
+		);
+		expect(day?.items.map((i) => [i.id, i.lane, i.lanes])).toEqual([
+			["talk", 0, 2],
+			["next", 1, 2],
+		]);
+	});
+
 	it("an item that starts when the previous ends shares its lane", () => {
 		const [day] = layoutAgenda(
 			[

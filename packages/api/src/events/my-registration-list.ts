@@ -13,9 +13,12 @@ export const fetchMyRegistrationListServer = createServerFn({
 	return user ? listMyRegistrations(user.id) : [];
 });
 
-/** The signed-in user's registrations with event details, for the account page. */
+/**
+ * The signed-in user's registrations with event details, for the account page. The key
+ * sits under ["my-registrations"], so every refresh of the user's registrations covers it.
+ */
 export const myRegistrationListQueryOptions = queryOptions({
-	queryKey: ["my-registration-list"] as const,
+	queryKey: ["my-registrations", "list"] as const,
 	queryFn: () => fetchMyRegistrationListServer(),
 	staleTime: 30_000,
 });

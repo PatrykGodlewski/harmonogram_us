@@ -1,4 +1,5 @@
 import { setPasswordForCurrentSession } from "@repo/api/auth/user";
+import { myRegistrationListQueryOptions } from "@repo/api/events/my-registration-list";
 import { myGroupsQueryOptions } from "@repo/api/groups/queries";
 import {
 	account_field_email,
@@ -71,6 +72,8 @@ export const Route = createFileRoute("/account")({
 	beforeLoad: ({ context }) => {
 		requireAuthenticatedUser(context, { loginRedirect: "/account" });
 	},
+	loader: ({ context: { queryClient } }) =>
+		queryClient.ensureQueryData(myRegistrationListQueryOptions),
 	component: AccountPage,
 });
 

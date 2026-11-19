@@ -3,6 +3,7 @@ import { db } from "@repo/db/client";
 import {
 	registerForAgendaItem,
 	registerForEvent,
+	unregisterFromEvent,
 } from "@repo/db/queries/event-registrations";
 import { events } from "@repo/db/schema/events";
 import { eq } from "drizzle-orm";
@@ -69,4 +70,44 @@ test("[F5] konto pokazuje moje nadchodzące i minione zapisy @uczestnik", async 
 	await expect(
 		upcomingSection.getByRole("listitem").filter({ hasText: upcoming.title }),
 	).toHaveCount(0);
+});
+
+test("[F5] konto pokazuje zapisy od razu, bez pustego stanu @uczestnik", async ({
+	page,
+}, testInfo) => {
+	// Given a user registered for an event
+	const email = uniqueEmail(testInfo);
+	const user = await createTestUser(email);
+	const event = await createTestEvent({ startsInDays: 4 });
+	await registerForEvent(event.id, user.id, "pl");
+	await signInByEmail(page, email);
+	// When the account page is rendered on the server
+	const html = await (await page.request.get("/pl/account")).text();
+	// Then it already lists the registration
+	expect(html).toContain(event.title);
+	expect(html).not.toContain("Nie masz jeszcze żadnych zapisów.");
+});
+
+test("[F5] awans z listy widać na otwartym koncie bez odświeżania @uczestnik", async ({
+	page,
+}, testInfo) => {
+	// Given a user on the waitlist with their account page open
+	const email = uniqueEmail(testInfo);
+	const user = await createTestUser(email);
+	const other = await createTestUser(`other-${email}`);
+	const event = await createTestEvent({ maxSeats: 1 });
+	await registerForEvent(event.id, other.id, "pl");
+	await registerForEvent(event.id, user.id, "pl");
+	await signInByEmail(page, email);
+	await open(page, "/pl/account");
+	const card = page
+		.getByRole("region", { name: "Nadchodzące" })
+		.getByRole("listitem")
+		.filter({ hasText: event.title });
+	await expect(card.getByText("Lista rezerwowa (pozycja 1)")).toBeVisible();
+	// When the other person withdraws
+	await unregisterFromEvent(event.id, other.id);
+	// Then the row shows the place and the ticket without a reload
+	await expect(card.getByText("Zarejestrowano")).toBeVisible();
+	await expect(card.getByRole("link", { name: "Bilet" })).toBeVisible();
 });

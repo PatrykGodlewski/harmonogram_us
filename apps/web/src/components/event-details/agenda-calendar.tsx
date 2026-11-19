@@ -49,7 +49,9 @@ export function AgendaCalendar({
 	renderDetails,
 }: AgendaCalendarProps) {
 	const locale = getLocale();
-	const days = layoutAgenda(items, EVENT_TIME_ZONE);
+	const days = layoutAgenda(items, EVENT_TIME_ZONE, {
+		minDurationMinutes: MIN_BLOCK_PX / PX_PER_MINUTE,
+	});
 	const [selectedId, setSelectedId] = React.useState<string | null>(null);
 	const selected = items.find((item) => item.id === selectedId);
 	const handleOpenChange = (open: boolean) => {

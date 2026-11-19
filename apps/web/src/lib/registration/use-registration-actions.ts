@@ -4,7 +4,6 @@ import {
 	unregisterFromAgendaItemServer,
 	unregisterFromEventServer,
 } from "@repo/api/events/mutations";
-import { myRegistrationListQueryOptions } from "@repo/api/events/my-registration-list";
 import { myRegistrationsQueryOptions } from "@repo/api/events/my-registrations";
 import {
 	eventDetailsQueryOptions,
@@ -123,8 +122,8 @@ export function useRegistrationActions(): RegistrationActions {
 	const queryClient = useQueryClient();
 
 	const refreshKeys = (eventId: string) => [
+		// A prefix: also the account list and open tickets.
 		myRegistrationsQueryOptions.queryKey,
-		myRegistrationListQueryOptions.queryKey,
 		eventDetailsQueryOptions(eventId).queryKey,
 		eventsQueryKeyPrefix,
 	];

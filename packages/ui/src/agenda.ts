@@ -96,7 +96,12 @@ function zonedParts(date: Date, timeZone: string) {
 export function layoutAgenda<T extends AgendaTimed>(
 	items: T[],
 	timeZone: string,
+	/** minDurationMinutes: the shortest an item is drawn; lanes follow the drawn size. */
+	options: { minDurationMinutes?: number } = {},
 ): AgendaDay<T>[] {
+	const minDuration = options.minDurationMinutes ?? 0;
+	const drawnEnd = (item: { startMinute: number; endMinute: number }) =>
+		Math.max(item.endMinute, item.startMinute + minDuration);
 	const days = new Map<string, AgendaLaidOut<T>[]>();
 	for (const item of sortByStart(items)) {
 		const start = zonedParts(new Date(item.startsAt), timeZone);
@@ -133,7 +138,7 @@ export function layoutAgenda<T extends AgendaTimed>(
 			}
 			const free = laneEnds.findIndex((end) => end <= item.startMinute);
 			item.lane = free === -1 ? laneEnds.length : free;
-			laneEnds[item.lane] = item.endMinute;
+			laneEnds[item.lane] = drawnEnd(item);
 			block.push(item);
 		}
 		closeBlock();
@@ -141,8 +146,7 @@ export function layoutAgenda<T extends AgendaTimed>(
 			day,
 			startMinute:
 				Math.floor(Math.min(...dayItems.map((i) => i.startMinute)) / 60) * 60,
-			endMinute:
-				Math.ceil(Math.max(...dayItems.map((i) => i.endMinute)) / 60) * 60,
+			endMinute: Math.ceil(Math.max(...dayItems.map(drawnEnd)) / 60) * 60,
 			lanes: maxLanes,
 			items: dayItems,
 		};

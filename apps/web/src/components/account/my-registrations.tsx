@@ -16,7 +16,7 @@ import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
 import { formatEventDateTime, formatEventTime } from "@repo/ui/time";
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import * as React from "react";
 import { UnregisterEventDialog } from "~/components/event-details/unregister-event-dialog";
@@ -24,7 +24,9 @@ import { useRegistrationActions } from "~/lib/registration/use-registration-acti
 
 /** The user's registrations, upcoming and past, on the account page. */
 export function MyRegistrations() {
-	const { data: registrations = [] } = useQuery(myRegistrationListQueryOptions);
+	const { data: registrations } = useSuspenseQuery(
+		myRegistrationListQueryOptions,
+	);
 	const now = Date.now();
 	const upcoming = registrations.filter(
 		(row) => new Date(row.effectiveEndsAt).getTime() > now,
