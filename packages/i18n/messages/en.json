@@ -329,5 +329,7 @@
 	"tickets_print": "Print",
 	"tickets_holder": "Attendee",
 	"tickets_show_at_entry": "Show this code at the entrance.",
-	"tickets_back": "My account"
+	"tickets_back": "My account",
+	"reg_email_ticket": "Your ticket with a QR code:",
+	"reg_email_ticket_button": "Show ticket"
 }

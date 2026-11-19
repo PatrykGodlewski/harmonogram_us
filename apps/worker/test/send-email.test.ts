@@ -52,6 +52,27 @@ describe("registration e-mails", () => {
 		expect(sent[0]?.to).toBe("reg@x.test");
 		expect(sent[0]?.subject).toContain("Test event");
 		expect(sent[0]?.html).toContain(`/en/events/${eventId}`);
+		expect(sent[0]?.text).toContain(`/en/tickets/${registrationId}`);
+		expect(sent[0]?.html).toContain(`/en/tickets/${registrationId}`);
+	});
+
+	it("a waitlist e-mail has no ticket link", async () => {
+		const { createEvent, createUser, resetDb } = await import("../../../packages/db/test/helpers");
+		const { registerForEvent } = await import("@repo/db/queries/event-registrations");
+		await resetDb();
+		const eventId = await createEvent({ maxSeats: 1 });
+		await registerForEvent(eventId, await createUser(), "pl");
+		let registrationId = "";
+		await registerForEvent(eventId, await createUser("wait@x.test"), "pl", {
+			onChanged: async (_tx, changes) => {
+				registrationId = changes[0]?.registrationId ?? "";
+			},
+		});
+		const { sent, deps } = capture();
+		await handleEmailJob({ kind: "registration", registrationId, change: "waitlisted" }, deps);
+		expect(sent).toHaveLength(1);
+		expect(sent[0]?.text).not.toContain("/tickets/");
+		expect(sent[0]?.html).not.toContain("/tickets/");
 	});
 
 	it("registration job for a withdrawn registration sends nothing", async () => {

@@ -17,6 +17,8 @@ import {
 	reg_email_confirmed_subject,
 	reg_email_promoted_intro,
 	reg_email_promoted_subject,
+	reg_email_ticket,
+	reg_email_ticket_button,
 	reg_email_waitlisted_intro,
 	reg_email_waitlisted_subject,
 	reg_email_withdraw_hint,
@@ -31,6 +33,8 @@ export type RegistrationEmailProps = {
 	/** Already formatted in the installation time zone. */
 	eventDate: string;
 	url: string;
+	/** The registrant's ticket; only for a registration that holds a place. */
+	ticketUrl?: string;
 };
 
 const SUBJECTS = {
@@ -57,7 +61,16 @@ export function registrationEmailText(props: RegistrationEmailProps): {
 	);
 	return {
 		subject: SUBJECTS[props.change]({ event: props.eventTitle }, { locale }),
-		text: `${intro}\n\n${props.url}\n\n${reg_email_withdraw_hint({}, { locale })}`,
+		text: [
+			intro,
+			props.url,
+			props.ticketUrl
+				? `${reg_email_ticket({}, { locale })}\n${props.ticketUrl}`
+				: null,
+			reg_email_withdraw_hint({}, { locale }),
+		]
+			.filter(Boolean)
+			.join("\n\n"),
 	};
 }
 
@@ -106,6 +119,21 @@ export function RegistrationEmail(props: RegistrationEmailProps) {
 						>
 							{reg_email_button({}, { locale })}
 						</Button>
+						{props.ticketUrl ? (
+							<Button
+								href={props.ticketUrl}
+								style={{
+									marginLeft: "8px",
+									border: "1px solid #0f2a56",
+									color: "#0f2a56",
+									borderRadius: "8px",
+									padding: "11px 19px",
+									fontWeight: "700",
+								}}
+							>
+								{reg_email_ticket_button({}, { locale })}
+							</Button>
+						) : null}
 						<Text
 							style={{
 								...text,

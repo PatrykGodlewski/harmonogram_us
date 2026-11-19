@@ -82,3 +82,29 @@ test("[F6] awans z listy wysyła e-mail o awansie", async ({
 		message.links.some((href) => href.endsWith(`/pl/events/${event.id}`)),
 	).toBe(true);
 });
+
+test("[F11] e-mail potwierdzenia linkuje do biletu @uczestnik", async ({
+	page,
+}, testInfo) => {
+	// Given a signed-in user who registers for an event
+	const email = uniqueEmail(testInfo);
+	await createTestUser(email);
+	const event = await createTestEvent({ maxSeats: 3 });
+	await signInByEmail(page, email);
+	await open(page, `/pl/events/${event.id}`);
+	await page
+		.locator("section")
+		.first()
+		.getByRole("button", { name: "Zarejestruj się" })
+		.click();
+	// When they follow the ticket link from the confirmation e-mail
+	const message = await latestMessageTo(email, { subject: "Zapisano" });
+	const ticketLink = message.links.find((href) =>
+		href.includes("/pl/tickets/"),
+	);
+	expect(ticketLink).toBeDefined();
+	await open(page, ticketLink ?? "");
+	// Then the ticket with its QR code opens
+	await expect(page.getByRole("heading", { name: event.title })).toBeVisible();
+	await expect(page.getByRole("img", { name: "Kod QR biletu" })).toBeVisible();
+});

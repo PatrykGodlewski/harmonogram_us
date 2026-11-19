@@ -38,6 +38,7 @@ export async function handleEmailJob(
 			if (!registration || registration.state !== EXPECTED_STATE[job.change]) {
 				return;
 			}
+			const appUrl = `${env.BETTER_AUTH_URL}/${registration.locale}`;
 			const props = {
 				change: job.change,
 				locale: registration.locale,
@@ -46,7 +47,11 @@ export async function handleEmailJob(
 					registration.eventDate,
 					registration.locale,
 				),
-				url: `${env.BETTER_AUTH_URL}/${registration.locale}/events/${registration.eventId}`,
+				url: `${appUrl}/events/${registration.eventId}`,
+				ticketUrl:
+					registration.state === "registered"
+						? `${appUrl}/tickets/${job.registrationId}`
+						: undefined,
 			};
 			const { subject, text } = registrationEmailText(props);
 			await deps.send({

@@ -329,5 +329,7 @@
 	"tickets_print": "Drukuj",
 	"tickets_holder": "Uczestnik",
 	"tickets_show_at_entry": "Pokaż ten kod przy wejściu.",
-	"tickets_back": "Moje konto"
+	"tickets_back": "Moje konto",
+	"reg_email_ticket": "Twój bilet z kodem QR:",
+	"reg_email_ticket_button": "Pokaż bilet"
 }
