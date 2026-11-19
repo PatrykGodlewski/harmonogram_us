@@ -43,6 +43,22 @@ describe("seedDatabase", () => {
 		expect(await verifyPassword({ hash: await credentialHash(user?.id ?? ""), password: PASSWORD })).toBe(true);
 	});
 
+	it("gives every event an agenda that starts with the event and falls on its day", async () => {
+		await seedDatabase({ password: PASSWORD, nodeEnv: "development" });
+		const rows = await db.execute<{ id: string; items: number; same_day: boolean; starts_with_event: boolean }>(sql`
+			SELECT e.id,
+				count(a.id)::int AS items,
+				coalesce(bool_and(a.starts_at::date = e.date::date), true) AS same_day,
+				coalesce(min(a.starts_at) = e.date, false) AS starts_with_event
+			FROM events e LEFT JOIN agenda_items a ON a.event_id = e.id
+			GROUP BY e.id
+		`);
+		for (const row of rows) {
+			expect(row, row.id).toMatchObject({ same_day: true, starts_with_event: true });
+			expect(row.items, row.id).toBeGreaterThanOrEqual(2);
+		}
+	});
+
 	it("refuses to run in production", async () => {
 		await expect(seedDatabase({ password: PASSWORD, nodeEnv: "production" })).rejects.toThrow(
 			"Refusing to seed a production database",

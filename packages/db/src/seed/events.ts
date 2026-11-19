@@ -4,10 +4,12 @@ import { agendaItems } from "../schema/agenda";
 import { events } from "../schema/events";
 import { agendaItemSeeds, eventSeeds } from "./data";
 
-function addDays(date: Date, days: number) {
-	const result = new Date(date);
-	result.setDate(result.getDate() + days);
-	return result;
+/** Seeded events start at 09:00 UTC, `daysFromNow` days from today; their agenda starts with them. */
+function eventStart(now: Date, daysFromNow: number): Date {
+	const start = new Date(now);
+	start.setUTCDate(start.getUTCDate() + daysFromNow);
+	start.setUTCHours(9, 0, 0, 0);
+	return start;
 }
 
 export async function seedEvents() {
@@ -19,7 +21,7 @@ export async function seedEvents() {
 			.values({
 				id: event.id,
 				title: event.title,
-				date: addDays(now, event.daysFromNow),
+				date: eventStart(now, event.daysFromNow),
 				maxSeats: event.maxSeats,
 				typeId: event.typeId,
 				locationId: event.locationId,
@@ -48,9 +50,9 @@ export async function seedAgenda() {
 		if (!event) {
 			continue;
 		}
-		const startsAt = addDays(now, event.daysFromNow);
-		startsAt.setUTCHours(9, 0, 0, 0);
-		startsAt.setTime(startsAt.getTime() + item.startHour * 3_600_000);
+		const startsAt = new Date(
+			eventStart(now, event.daysFromNow).getTime() + item.startHour * 3_600_000,
+		);
 		const endsAt = new Date(startsAt.getTime() + item.durationMinutes * 60_000);
 
 		await db

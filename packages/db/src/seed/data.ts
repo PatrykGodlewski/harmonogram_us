@@ -206,47 +206,197 @@ export type AgendaItemSeed = {
 	requiresRegistration: boolean;
 };
 
+type AgendaOptions = Partial<
+	Pick<AgendaItemSeed, "locationId" | "maxSeats" | "requiresRegistration">
+>;
+
+/** One agenda item; ids are `agenda-<eventId>-<slug>`, start is hours after the event starts. */
+function agendaItem(
+	eventId: string,
+	slug: string,
+	title: string,
+	startHour: number,
+	durationMinutes: number,
+	options: AgendaOptions = {},
+): AgendaItemSeed {
+	const event = eventSeeds.find((seed) => seed.id === eventId);
+	if (!event) {
+		throw new Error(`Agenda seed refers to unknown event ${eventId}`);
+	}
+	return {
+		id: `agenda-${eventId}-${slug}`,
+		eventId,
+		title,
+		startHour,
+		durationMinutes,
+		locationId:
+			options.locationId === undefined ? event.locationId : options.locationId,
+		maxSeats: options.maxSeats ?? null,
+		requiresRegistration: options.requiresRegistration ?? true,
+	};
+}
+
+/** Every event's agenda starts when the event starts (startHour 0). */
 export const agendaItemSeeds: AgendaItemSeed[] = [
-	{
-		id: "agenda-evt-1-opening",
-		eventId: "evt-1",
-		title: "Otwarcie i wprowadzenie",
-		startHour: 0,
-		durationMinutes: 60,
-		locationId: "katowice",
-		maxSeats: null,
-		requiresRegistration: true,
-	},
-	{
-		id: "agenda-evt-1-web",
-		eventId: "evt-1",
-		title: "Warsztat: aplikacje webowe",
-		startHour: 1.5,
-		durationMinutes: 90,
-		locationId: "katowice",
+	// Warsztaty z programowania: parallel workshops with their own limits
+	agendaItem("evt-1", "opening", "Otwarcie i wprowadzenie", 0, 60),
+	agendaItem("evt-1", "web", "Warsztat: aplikacje webowe", 1.5, 90, {
 		maxSeats: 15,
-		requiresRegistration: true,
-	},
-	{
-		id: "agenda-evt-1-robotics",
-		eventId: "evt-1",
-		title: "Warsztat: robotyka",
-		startHour: 2,
-		durationMinutes: 90,
+	}),
+	agendaItem("evt-1", "robotics", "Warsztat: robotyka", 2, 90, {
 		locationId: "chorzow",
 		maxSeats: 10,
-		requiresRegistration: true,
-	},
-	{
-		id: "agenda-evt-1-break",
-		eventId: "evt-1",
-		title: "Przerwa kawowa",
-		startHour: 3.5,
-		durationMinutes: 30,
+	}),
+	agendaItem("evt-1", "break", "Przerwa kawowa", 3.5, 30, {
 		locationId: null,
-		maxSeats: null,
 		requiresRegistration: false,
-	},
+	}),
+
+	agendaItem("evt-2", "lecture", "Wykład: sztuka renesansu na Śląsku", 0, 90),
+	agendaItem("evt-2", "discussion", "Dyskusja z prelegentką", 1.75, 45, {
+		requiresRegistration: false,
+	}),
+
+	// Konferencja naukowa (online): plenary sessions and parallel panels
+	agendaItem("evt-3", "opening", "Otwarcie konferencji", 0, 30, {
+		requiresRegistration: false,
+	}),
+	agendaItem("evt-3", "keynote", "Wykład plenarny: nauka otwarta", 0.5, 60),
+	agendaItem("evt-3", "panel-social", "Panel: nauki społeczne", 2, 90, {
+		maxSeats: 25,
+	}),
+	agendaItem("evt-3", "panel-media", "Panel: media i komunikacja", 2, 90, {
+		maxSeats: 25,
+	}),
+	agendaItem("evt-3", "closing", "Podsumowanie i zamknięcie", 4, 30, {
+		requiresRegistration: false,
+	}),
+
+	agendaItem(
+		FULL_EVENT_ID,
+		"talk",
+		"Referat: modele językowe w badaniach",
+		0,
+		60,
+	),
+	agendaItem(
+		FULL_EVENT_ID,
+		"workshop",
+		"Ćwiczenia z narzędziami AI",
+		1.25,
+		75,
+		{ maxSeats: 2 },
+	),
+
+	// Dzień kariery: open fair with limited workshops
+	agendaItem("evt-career-day", "fair", "Targi pracodawców", 0, 300, {
+		requiresRegistration: false,
+	}),
+	agendaItem("evt-career-day", "cv", "Warsztat: CV i list motywacyjny", 1, 60, {
+		maxSeats: 20,
+	}),
+	agendaItem(
+		"evt-career-day",
+		"interview",
+		"Symulacje rozmów kwalifikacyjnych",
+		2.5,
+		90,
+		{ maxSeats: 12 },
+	),
+	agendaItem("evt-career-day", "linkedin", "Profil zawodowy w sieci", 4, 45, {
+		maxSeats: 30,
+	}),
+
+	agendaItem(
+		"evt-law-lecture",
+		"lecture",
+		"Wykład: sztuczna inteligencja a prawo",
+		0,
+		75,
+	),
+	agendaItem("evt-law-lecture", "qa", "Pytania od słuchaczy", 1.25, 30, {
+		requiresRegistration: false,
+	}),
+
+	agendaItem("evt-theology-meeting", "paper", "Referat członka koła", 0, 45),
+	agendaItem(
+		"evt-theology-meeting",
+		"discussion",
+		"Dyskusja i plany na semestr",
+		0.75,
+		45,
+		{ requiresRegistration: false },
+	),
+
+	agendaItem("evt-arts-exhibition", "vernissage", "Wernisaż", 0, 90, {
+		requiresRegistration: false,
+	}),
+	agendaItem("evt-arts-exhibition", "tour", "Oprowadzanie z kuratorką", 2, 60, {
+		maxSeats: 20,
+	}),
+	agendaItem(
+		"evt-arts-exhibition",
+		"workshop",
+		"Warsztaty grafiki dla gości",
+		3,
+		90,
+		{ maxSeats: 15 },
+	),
+
+	// Konkurs robotyki: stages of the competition
+	agendaItem("evt-robotics-contest", "check-in", "Rejestracja drużyn", 0, 45, {
+		requiresRegistration: false,
+	}),
+	agendaItem("evt-robotics-contest", "qualifying", "Eliminacje", 0.75, 150),
+	agendaItem("evt-robotics-contest", "final", "Finał", 4, 90),
+	agendaItem("evt-robotics-contest", "awards", "Ogłoszenie wyników", 5.5, 30, {
+		requiresRegistration: false,
+	}),
+
+	agendaItem(
+		"evt-graduation",
+		"ceremony",
+		"Uroczyste wręczenie dyplomów",
+		0,
+		120,
+	),
+	agendaItem("evt-graduation", "photos", "Wspólne zdjęcia", 2, 30, {
+		requiresRegistration: false,
+	}),
+	agendaItem(
+		"evt-graduation",
+		"reception",
+		"Poczęstunek dla absolwentów",
+		2.5,
+		90,
+		{ maxSeats: 150 },
+	),
+
+	agendaItem(
+		"evt-past-lecture",
+		"speeches",
+		"Przemówienia władz uczelni",
+		0,
+		45,
+		{ requiresRegistration: false },
+	),
+	agendaItem("evt-past-lecture", "lecture", "Wykład inauguracyjny", 0.75, 60),
+
+	agendaItem(
+		"evt-past-workshop",
+		"structure",
+		"Struktura pracy dyplomowej",
+		0,
+		90,
+	),
+	agendaItem(
+		"evt-past-workshop",
+		"sources",
+		"Praca ze źródłami i przypisami",
+		1.75,
+		90,
+		{ maxSeats: 20 },
+	),
 ];
 
 export type AccountSeed = {
