@@ -80,6 +80,9 @@ export type EventSeed = {
 	facultyId: string;
 };
 
+/** Seeded event that fills up, so the waitlist has people on it. */
+export const FULL_EVENT_ID = "evt-full-seminar";
+
 export const eventSeeds: EventSeed[] = [
 	{
 		id: "evt-1",
@@ -107,6 +110,87 @@ export const eventSeeds: EventSeed[] = [
 		typeId: "conference",
 		locationId: "online",
 		facultyId: "wns",
+	},
+	{
+		id: FULL_EVENT_ID,
+		title: "Seminarium: sztuczna inteligencja w nauce",
+		daysFromNow: 5,
+		maxSeats: 3,
+		typeId: "meeting",
+		locationId: "katowice",
+		facultyId: "wnst",
+	},
+	{
+		id: "evt-career-day",
+		title: "Dzień kariery — spotkania z pracodawcami",
+		daysFromNow: 10,
+		maxSeats: 200,
+		typeId: "special-event",
+		locationId: "katowice",
+		facultyId: "wsne",
+	},
+	{
+		id: "evt-law-lecture",
+		title: "Wykład gościnny: prawo nowych technologii",
+		daysFromNow: 3,
+		maxSeats: 80,
+		typeId: "lecture",
+		locationId: "online",
+		facultyId: "wpia",
+	},
+	{
+		id: "evt-theology-meeting",
+		title: "Spotkanie koła naukowego teologów",
+		daysFromNow: 12,
+		maxSeats: 25,
+		typeId: "meeting",
+		locationId: "katowice",
+		facultyId: "wtl",
+	},
+	{
+		id: "evt-arts-exhibition",
+		title: "Wystawa prac studentów sztuki",
+		daysFromNow: 18,
+		maxSeats: 150,
+		typeId: "exhibition",
+		locationId: "cieszyn",
+		facultyId: "sf",
+	},
+	{
+		id: "evt-robotics-contest",
+		title: "Konkurs robotyki dla szkół średnich",
+		daysFromNow: 25,
+		maxSeats: 60,
+		typeId: "competition",
+		locationId: "chorzow",
+		facultyId: "wnst",
+	},
+	{
+		id: "evt-graduation",
+		title: "Uroczystość wręczenia dyplomów",
+		daysFromNow: 30,
+		maxSeats: 400,
+		typeId: "celebration",
+		locationId: "katowice",
+		facultyId: "wnp",
+	},
+	{
+		id: "evt-past-lecture",
+		title: "Wykład inauguracyjny (archiwum)",
+		daysFromNow: -20,
+		maxSeats: 300,
+		typeId: "lecture",
+		locationId: "katowice",
+		facultyId: "wnp",
+	},
+	{
+		id: "evt-past-workshop",
+		title: "Warsztaty z pisania prac dyplomowych (archiwum)",
+		daysFromNow: -6,
+		maxSeats: 40,
+		typeId: "workshop",
+		locationId: "sosnowiec",
+		facultyId: "wh",
 	},
 ];
 
@@ -165,9 +249,109 @@ export const agendaItemSeeds: AgendaItemSeed[] = [
 	},
 ];
 
-export const adminUserSeed = {
-	id: "00000000-0000-4000-8000-000000000001",
-	email: "admin@harmonogram.local",
-	name: "Admin",
-	password: "Admin123!",
-} as const;
+export type AccountSeed = {
+	email: string;
+	name: string;
+	role: "user" | "admin";
+	/** false: the account signs in only with e-mail links (no password). */
+	withPassword: boolean;
+};
+
+/** Local test accounts; passwords come from SEED_ACCOUNT_PASSWORD (never committed). */
+export const accountSeeds: AccountSeed[] = [
+	{
+		email: "admin@harmonogram.local",
+		name: "Administrator",
+		role: "admin",
+		withPassword: true,
+	},
+	{
+		email: "nauczyciel@harmonogram.local",
+		name: "Anna Nauczycielska",
+		role: "user",
+		withPassword: true,
+	},
+	{
+		email: "student1@harmonogram.local",
+		name: "Jan Kowalski",
+		role: "user",
+		withPassword: true,
+	},
+	{
+		email: "student2@harmonogram.local",
+		name: "Maria Nowak",
+		role: "user",
+		withPassword: true,
+	},
+	{
+		email: "student3@harmonogram.local",
+		name: "Piotr Wiśniewski",
+		role: "user",
+		withPassword: true,
+	},
+	{
+		email: "student4@harmonogram.local",
+		name: "Zofia Wójcik",
+		role: "user",
+		withPassword: true,
+	},
+	{
+		email: "student5@harmonogram.local",
+		name: "Tomasz Kamiński",
+		role: "user",
+		withPassword: true,
+	},
+	{
+		email: "gosc@harmonogram.local",
+		name: "Gość z linkiem",
+		role: "user",
+		withPassword: false,
+	},
+];
+
+export type RegistrationSeed = { eventId: string; emails: string[] };
+
+/** Registered in order: later people on a full event land on the waitlist. */
+export const registrationSeeds: RegistrationSeed[] = [
+	{
+		eventId: FULL_EVENT_ID,
+		emails: [
+			"student1@harmonogram.local",
+			"student2@harmonogram.local",
+			"student3@harmonogram.local",
+			"student4@harmonogram.local",
+			"student5@harmonogram.local",
+		],
+	},
+	{
+		eventId: "evt-2",
+		emails: ["student1@harmonogram.local", "student3@harmonogram.local"],
+	},
+	{
+		eventId: "evt-career-day",
+		emails: [
+			"student2@harmonogram.local",
+			"student4@harmonogram.local",
+			"student5@harmonogram.local",
+		],
+	},
+	{ eventId: "evt-law-lecture", emails: ["student1@harmonogram.local"] },
+];
+
+export type GroupSeed = {
+	eventId: string;
+	ownerEmail: string;
+	name: string;
+	places: number;
+	invite: string[];
+};
+
+export const groupSeeds: GroupSeed[] = [
+	{
+		eventId: "evt-1",
+		ownerEmail: "nauczyciel@harmonogram.local",
+		name: "Klasa 3B",
+		places: 4,
+		invite: ["uczen1@szkola.example", "uczen2@szkola.example"],
+	},
+];

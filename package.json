@@ -31,7 +31,8 @@
     "clean": "turbo clean && rm -rf node_modules",
     "e2e:up": "docker compose -p harmonogram-e2e --env-file .env --env-file e2e/ports.env --profile app up -d --build --wait --remove-orphans && DATABASE_URL=postgresql://postgres:postgres@localhost:15432/harmonogram_us pnpm --filter @repo/db db:migrate",
     "e2e:down": "docker compose -p harmonogram-e2e --env-file .env --env-file e2e/ports.env --profile app down -v",
-    "e2e": "pnpm --filter e2e e2e"
+    "e2e": "pnpm --filter e2e e2e",
+    "db:account": "pnpm --filter @repo/db db:account"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.13",

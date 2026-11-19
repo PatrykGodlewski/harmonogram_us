@@ -22,7 +22,8 @@ pnpm install                 # also compiles Paraglide messages (prepare hook)
 cp .env.example .env         # .env lives at the repo root, shared by all apps
 docker compose up -d         # Postgres (wal_level=logical), Mailpit, Electric
 pnpm db:migrate              # or `pnpm db:push` for a quick schema sync
-pnpm db:seed                 # seed sample data (packages/db/src/seed)
+pnpm db:seed                 # sample events, registrations with a waitlist, a group, and test accounts (password: SEED_ACCOUNT_PASSWORD in .env); idempotent, refuses NODE_ENV=production
+pnpm db:account --email a@b.pl --role admin   # create/update any account; prints a generated password unless --password/--link-only
 
 pnpm dev                     # web (:3000) + admin (:3001) + worker (pg-boss jobs)
 pnpm --filter web dev        # a single app

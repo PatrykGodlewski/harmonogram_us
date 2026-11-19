@@ -1,5 +1,6 @@
 import type { TestInfo } from "@playwright/test";
 import { db } from "@repo/db/client";
+import { ensureAccount } from "@repo/db/queries/accounts";
 import { createAgendaItem } from "@repo/db/queries/agenda-items";
 import { createEvent } from "@repo/db/queries/events";
 import { authUsers } from "@repo/db/schema/better-auth";
@@ -19,12 +20,9 @@ export async function createTestUser(
 	email: string,
 	opts?: { admin?: boolean },
 ): Promise<{ id: string }> {
-	const id = crypto.randomUUID();
-	await db.insert(authUsers).values({
-		id,
-		name: "Test User",
+	const { id } = await ensureAccount({
 		email,
-		emailVerified: true,
+		name: "Test User",
 		role: opts?.admin ? "admin" : "user",
 	});
 	return { id };

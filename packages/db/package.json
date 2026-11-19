@@ -15,7 +15,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx ./src/seed/run.ts",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:account": "tsx ./src/seed/create-account.ts"
   },
   "dependencies": {
     "@repo/env": "workspace:*",

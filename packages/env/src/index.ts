@@ -44,6 +44,9 @@ export const env = createEnv({
 		SMTP_PASSWORD: z.string().optional(),
 		SMTP_FROM: z.string().min(1, "SMTP_FROM must be provided (sender address)"),
 
+		/** Password of the seeded local test accounts (pnpm db:seed); never set in production. */
+		SEED_ACCOUNT_PASSWORD: z.string().min(12).optional(),
+
 		ELECTRIC_URL: z.url().optional().default("http://localhost:5133"),
 		ELECTRIC_SECRET: z.string().optional(),
 	},
