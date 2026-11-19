@@ -33,8 +33,6 @@ export const env = createEnv({
 		BETTER_AUTH_URL: z.url().default("http://localhost:3000"),
 		ADMIN_URL: z.url().default("http://localhost:3001"),
 		TURNSTILE_SECRET_KEY: z.string().optional(),
-		REDIS_URL: z.string().optional(),
-		REDIS_PASSWORD: z.string().optional(),
 		HIBP_MIN_BREACH_COUNT: z.coerce.number().int().positive().default(1),
 
 		GOOGLE_CLIENT_ID: z.string().optional(),

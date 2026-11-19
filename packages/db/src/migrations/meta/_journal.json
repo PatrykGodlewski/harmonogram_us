@@ -71,6 +71,13 @@
       "when": 1795042231169,
       "tag": "0009_group_holds_statement_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795055140339,
+      "tag": "0010_app_rate_limits",
+      "breakpoints": true
     }
   ]
 }

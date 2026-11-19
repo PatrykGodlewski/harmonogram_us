@@ -24,7 +24,7 @@ export async function resetDb(): Promise<void> {
 		TRUNCATE registration_group_member_items, registration_group_members,
 			registration_group_items, registration_groups, agenda_item_registrations, agenda_item_seat_counts, agenda_items,
 			event_registrations, event_seat_counts, events, event_types,
-			event_locations, event_faculties, "user" CASCADE
+			event_locations, event_faculties, app_rate_limits, "user" CASCADE
 	`);
 }
 

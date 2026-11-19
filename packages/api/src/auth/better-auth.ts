@@ -118,7 +118,7 @@ function getBodyValueAsString(
 	return normalizeText(value);
 }
 
-/** Shared Redis limiter, reported as Better Auth's 429. */
+/** Shared limiter; an exhausted limit becomes Better Auth's 429, other errors propagate. */
 async function limitAuth(
 	prefix: string,
 	limit: RateLimit,
@@ -127,8 +127,11 @@ async function limitAuth(
 ): Promise<void> {
 	try {
 		await consumeRateLimit(prefix, limit, key);
-	} catch {
-		throw new APIError("TOO_MANY_REQUESTS", { message });
+	} catch (error) {
+		if (error instanceof Error && error.message === "RATE_LIMITED") {
+			throw new APIError("TOO_MANY_REQUESTS", { message });
+		}
+		throw error;
 	}
 }
 

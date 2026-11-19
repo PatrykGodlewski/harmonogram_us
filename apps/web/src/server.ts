@@ -1,3 +1,11 @@
+import { assertProductionSecurityConfig } from "@repo/api/security/production-config";
+import { env } from "@repo/env";
+
+assertProductionSecurityConfig({
+	nodeEnv: env.NODE_ENV,
+	turnstileSecretKey: env.TURNSTILE_SECRET_KEY,
+});
+
 import { warmUpJobQueue } from "@repo/jobs/client";
 
 // Start the pg-boss producer with the server, not inside the first request's

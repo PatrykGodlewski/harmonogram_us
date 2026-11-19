@@ -1,4 +1,4 @@
-# Development: `docker compose up -d` starts the services the apps need (db, mailpit, redis, electric).
+# Development: `docker compose up -d` starts the services the apps need (db, mailpit, electric).
 # Full stack (production images of web, admin and worker): `docker compose --profile app up -d --build`.
 # The e2e suite runs the full stack as a separate project on other ports: see e2e/README.md.
 
@@ -40,14 +40,6 @@ services:
       - "${SMTP_PORT_HOST:-1025}:1025"
       - "${MAILPIT_PORT:-8025}:8025"
 
-  redis:
-    image: redis:7-alpine
-    restart: unless-stopped
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
-    volumes:
-      - redis_data:/data
-    command: ["redis-server", "--appendonly", "yes"]
 
   electric:
     image: electricsql/electric@sha256:efb6fa43859d67cb8c73439e0c8bc0f7a3daa467500fb06f2a924bcb2070c139
@@ -71,7 +63,6 @@ services:
     env_file: .env
     environment:
       <<: *app-env
-      REDIS_URL: redis://redis:6379
     ports:
       - "${WEB_PORT:-3000}:3000"
     restart: unless-stopped
@@ -79,7 +70,6 @@ services:
       db: { condition: service_healthy }
       electric: { condition: service_started }
       mailpit: { condition: service_started }
-      redis: { condition: service_started }
 
   admin:
     profiles: [app]
@@ -91,14 +81,12 @@ services:
     env_file: .env
     environment:
       <<: *app-env
-      REDIS_URL: redis://redis:6379
     ports:
       - "${ADMIN_PORT:-3001}:3000"
     restart: unless-stopped
     depends_on:
       db: { condition: service_healthy }
       mailpit: { condition: service_started }
-      redis: { condition: service_started }
 
   worker:
     profiles: [app]
@@ -116,4 +104,3 @@ services:
 
 volumes:
   postgres_data:
-  redis_data:
