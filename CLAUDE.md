@@ -9,7 +9,7 @@ A campus event platform where people find events and sign up from their phones. 
 - **Public site** (`apps/web`, port 3000): a simple way to find an event and register. Content is live, so seat counts and event state update without a refresh. This runs on Postgres → ElectricSQL → TanStack DB, across the whole TanStack stack (Start, Router, Query, DB).
 - **Admin panel** (`apps/admin`, port 3001): a modern, mobile-first tool for creating and managing events and their agenda, managing the people registered for each event, and managing lookup data (faculties, rooms, event types). Design admin screens for phones first, then scale up. When planning admin features, use Indico's event-management features as the reference for scope.
 
-Built and tested: registration with capacity and a waitlist with automatic promotion (F5), registration e-mails (F6), group registration by a teacher (F26), per-agenda-item registration (F27).
+Built and tested: registration with capacity and a waitlist with automatic promotion, and "my registrations" on the account page (F5), registration e-mails with a ticket link (F6), a ticket page with a QR code per registration (F11, `ticket_code`; scanning comes with plan 2), the agenda as a list or a calendar grid with parallel sessions side by side (F18, `layoutAgenda` in `@repo/ui/agenda`), group registration by a teacher (F26), per-agenda-item registration (F27).
 
 The UI is in Polish and English. GitHub issues are written in Polish.
 
