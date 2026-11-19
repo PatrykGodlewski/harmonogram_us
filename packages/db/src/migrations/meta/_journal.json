@@ -78,6 +78,13 @@
       "when": 1795055140339,
       "tag": "0010_app_rate_limits",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1795056074060,
+      "tag": "0011_registration_state",
+      "breakpoints": true
     }
   ]
 }

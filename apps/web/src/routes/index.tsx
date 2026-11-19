@@ -1,4 +1,4 @@
-import { ensureMyRegisteredEventIds } from "@repo/api/events/my-registrations";
+import { ensureMyRegistrationStates } from "@repo/api/events/my-registrations";
 import { prefetchEventData } from "@repo/api/events/queries";
 import {
 	eventSearchSchema,
@@ -18,7 +18,7 @@ export const Route = createFileRoute("/")({
 	loader: async ({ context: { queryClient, user }, deps }) => {
 		await prefetchEventData(queryClient, deps);
 		if (user) {
-			await ensureMyRegisteredEventIds(queryClient);
+			await ensureMyRegistrationStates(queryClient);
 		}
 	},
 	component: HomePage,

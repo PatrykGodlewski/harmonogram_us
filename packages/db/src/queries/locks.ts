@@ -72,6 +72,22 @@ export async function lockGroup(
 	return group;
 }
 
+/** Locks the group's event, then the group (global lock order). */
+export async function lockEventAndGroup(
+	tx: TransactionClient,
+	groupId: string,
+): Promise<LockedGroup> {
+	const [peek] = await tx
+		.select({ eventId: registrationGroups.eventId })
+		.from(registrationGroups)
+		.where(eq(registrationGroups.id, groupId));
+	if (!peek) {
+		throw new DomainError("GROUP_NOT_FOUND");
+	}
+	await lockEvent(tx, peek.eventId);
+	return lockGroup(tx, { id: groupId });
+}
+
 /** Locks a member's group, then the member (group before member). Null if the member doesn't exist. */
 export async function lockMemberAndGroup(
 	tx: TransactionClient,

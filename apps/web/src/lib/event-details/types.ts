@@ -17,6 +17,8 @@ export type ItemSeatCountSource = {
 export type EventDetailsRegistrations = {
 	isEventRegistered: boolean;
 	registeredItemIds: ReadonlySet<string>;
+	/** 1-based waitlist position, or null when not waitlisted. */
+	waitlistPosition: number | null;
 	pendingKey: string | null;
 	registerEvent: () => void;
 	unregisterEvent: () => void;

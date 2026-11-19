@@ -299,5 +299,11 @@
 	"ui_sidebar_description": "Navigation on small screens.",
 	"ui_actions": "Actions",
 	"auth_login_link_failed": "Failed to send the login link",
-	"auth_signup_failed": "Failed to sign up"
+	"auth_signup_failed": "Failed to sign up",
+	"events_join_waitlist": "Join the waitlist",
+	"events_waitlisted": "You're on the waitlist (position {position})",
+	"events_leave_waitlist": "Leave the waitlist",
+	"events_join_waitlist_success": "You joined the waitlist",
+	"error_event_waitlisted": "You're on this event's waitlist — you can register for agenda items once a place frees up.",
+	"admin_registrant_waitlisted": "Waitlist"
 }

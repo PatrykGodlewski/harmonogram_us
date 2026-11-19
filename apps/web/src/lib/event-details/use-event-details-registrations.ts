@@ -23,6 +23,9 @@ export function useEventDetailsRegistrations(
 	return {
 		isEventRegistered: (registrations.data?.eventIds ?? []).includes(eventId),
 		registeredItemIds,
+		waitlistPosition:
+			registrations.data?.waitlist.find((entry) => entry.eventId === eventId)
+				?.position ?? null,
 		pendingKey: actions.pendingKey,
 		registerEvent: () => actions.register(eventId),
 		unregisterEvent: () => actions.unregister(eventId),

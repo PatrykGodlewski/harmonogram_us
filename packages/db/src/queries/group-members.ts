@@ -136,10 +136,11 @@ export async function acceptInvitation(
 					),
 				);
 			let eventRegistrationId = existing?.id;
-			if (existing && !existing.groupId) {
+			if (existing) {
+				// A waitlisted student takes the group's place instead.
 				await tx
 					.update(eventRegistrations)
-					.set({ groupId: group.id })
+					.set({ groupId: existing.groupId ?? group.id, state: "registered" })
 					.where(eq(eventRegistrations.id, existing.id));
 			}
 			if (!eventRegistrationId) {

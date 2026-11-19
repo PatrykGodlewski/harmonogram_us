@@ -4,6 +4,7 @@ import {
 	admin_event_registrants_empty,
 	admin_group_badge,
 	admin_group_unnamed,
+	admin_registrant_waitlisted,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { Badge } from "@repo/ui/components/badge";
@@ -36,6 +37,11 @@ export function RegistrantsList({ registrants, agenda }: RegistrantsListProps) {
 						>
 							<div className="flex flex-wrap items-center gap-2">
 								<p className="font-medium break-all">{registrant.email}</p>
+								{registrant.state === "waitlisted" ? (
+									<Badge variant="secondary">
+										{admin_registrant_waitlisted()}
+									</Badge>
+								) : null}
 								{registrant.groupId ? (
 									<Badge variant="outline">
 										{admin_group_badge({

@@ -1,5 +1,6 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
+	check,
 	index,
 	integer,
 	pgTable,
@@ -10,6 +11,9 @@ import {
 import { authUsers } from "./better-auth";
 import { events } from "./events";
 import { registrationGroups } from "./groups";
+
+/** `registered` holds a place; `waitlisted` waits in `created_at` order for one. */
+export type RegistrationState = "registered" | "waitlisted";
 
 export const eventRegistrations = pgTable(
 	"event_registrations",
@@ -24,11 +28,25 @@ export const eventRegistrations = pgTable(
 		groupId: text("group_id").references(() => registrationGroups.id, {
 			onDelete: "set null",
 		}),
+		state: text("state")
+			.$type<RegistrationState>()
+			.notNull()
+			.default("registered"),
+		/** Language of the registrant's e-mails (the UI language when they registered). */
+		locale: text("locale").$type<"pl" | "en">().notNull().default("pl"),
 		createdAt: timestamp("created_at", { withTimezone: true })
 			.notNull()
 			.defaultNow(),
 	},
 	(table) => [
+		check(
+			"event_registrations_state_check",
+			sql`${table.state} IN ('registered', 'waitlisted')`,
+		),
+		check(
+			"event_registrations_locale_check",
+			sql`${table.locale} IN ('pl', 'en')`,
+		),
 		uniqueIndex("event_registrations_event_user_unique").on(
 			table.eventId,
 			table.userId,

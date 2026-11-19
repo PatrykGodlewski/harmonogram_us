@@ -14,7 +14,11 @@ import {
 	GROUP_HOLD_ERRORS,
 	mapConstraintError,
 } from "./domain-errors";
-import { assertEventOpen } from "./event-registrations";
+import {
+	assertEventOpen,
+	promoteAndNotify,
+	type RegistrationHooks,
+} from "./event-registrations";
 import {
 	type ActorOptions,
 	assertGroupAcceptsMembers,
@@ -26,6 +30,7 @@ import { createJoinCode } from "./group-tokens";
 import {
 	type LockedGroup,
 	lockEvent,
+	lockEventAndGroup,
 	lockGroup,
 	lockMemberAndGroup,
 	lockRegistrableItems,
@@ -362,10 +367,11 @@ export async function updateGroup(
 		joinLink?: "enable" | "disable" | "regenerate";
 	},
 	opts?: ActorOptions,
+	hooks?: RegistrationHooks,
 ): Promise<GroupDetails> {
 	try {
 		await db.transaction(async (tx) => {
-			const group = await lockGroup(tx, { id: groupId });
+			const group = await lockEventAndGroup(tx, groupId);
 			assertGroupOwner(group, actorUserId, opts);
 
 			const values: Partial<typeof registrationGroups.$inferInsert> = {
@@ -399,6 +405,9 @@ export async function updateGroup(
 
 			if (patch.itemIds) {
 				await replaceGroupItems(tx, group, patch.itemIds);
+			}
+			if (patch.places !== undefined && patch.places < group.places) {
+				await promoteAndNotify(tx, group.eventId, hooks);
 			}
 		});
 	} catch (error) {
@@ -486,32 +495,47 @@ export async function closeGroup(
 	groupId: string,
 	actorUserId: string,
 	opts?: ActorOptions,
+	hooks?: RegistrationHooks,
 ): Promise<void> {
 	await db.transaction(async (tx) => {
-		const group = await lockGroup(tx, { id: groupId });
+		const group = await lockEventAndGroup(tx, groupId);
 		assertGroupOwner(group, actorUserId, opts);
 		await tx
 			.update(registrationGroups)
 			.set({ status: "closed", updatedAt: new Date() })
 			.where(eq(registrationGroups.id, groupId));
+		await promoteAndNotify(tx, group.eventId, hooks);
 	});
 }
 
 /** Closes open groups whose deadline has passed. Returns how many were closed. */
 export async function closeExpiredGroups(
 	now: Date = new Date(),
+	hooks?: RegistrationHooks,
 ): Promise<number> {
-	const closed = await db
-		.update(registrationGroups)
-		.set({ status: "closed", updatedAt: now })
-		.where(
-			and(
-				eq(registrationGroups.status, "open"),
-				sql`group_deadline(${registrationGroups.eventId}) <= ${now.toISOString()}::timestamptz`,
-			),
-		)
-		.returning({ id: registrationGroups.id });
-	return closed.length;
+	const expired = and(
+		eq(registrationGroups.status, "open"),
+		sql`group_deadline(${registrationGroups.eventId}) <= ${now.toISOString()}::timestamptz`,
+	);
+	const eventIds = await db
+		.selectDistinct({ eventId: registrationGroups.eventId })
+		.from(registrationGroups)
+		.where(expired);
+	let closed = 0;
+	// One transaction per event: lock it, close its expired groups, promote the waitlist.
+	for (const { eventId } of eventIds) {
+		closed += await db.transaction(async (tx) => {
+			await lockEvent(tx, eventId);
+			const rows = await tx
+				.update(registrationGroups)
+				.set({ status: "closed", updatedAt: now })
+				.where(and(expired, eq(registrationGroups.eventId, eventId)))
+				.returning({ id: registrationGroups.id });
+			await promoteAndNotify(tx, eventId, hooks);
+			return rows.length;
+		});
+	}
+	return closed;
 }
 
 function summarySelect() {

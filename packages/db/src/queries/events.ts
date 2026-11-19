@@ -14,7 +14,12 @@ import {
 	DomainError,
 	mapConstraintError,
 } from "./domain-errors";
-import { getEffectiveEventEnd } from "./event-registrations";
+import {
+	getEffectiveEventEnd,
+	promoteAndNotify,
+	type RegistrationHooks,
+} from "./event-registrations";
+import { lockEvent } from "./locks";
 
 export type EventFilters = {
 	search?: string;
@@ -207,10 +212,15 @@ export type UpdateEventInput = {
 	facultyId?: string | null;
 };
 
-export async function updateEvent(input: UpdateEventInput) {
+/** Updates an event; raising the limit promotes waitlisted people into the new places. */
+export async function updateEvent(
+	input: UpdateEventInput,
+	hooks?: RegistrationHooks,
+) {
 	const { id, ...values } = input;
 	try {
 		return await db.transaction(async (tx) => {
+			await lockEvent(tx, id);
 			if (values.maxSeats !== undefined) {
 				const [largest] = await tx
 					.select({ maxSeats: max(agendaItems.maxSeats) })
@@ -225,6 +235,9 @@ export async function updateEvent(input: UpdateEventInput) {
 				.set({ ...values, updatedAt: new Date() })
 				.where(eq(events.id, id))
 				.returning();
+			if (event && values.maxSeats !== undefined) {
+				await promoteAndNotify(tx, id, hooks);
+			}
 			return event ?? null;
 		});
 	} catch (error) {

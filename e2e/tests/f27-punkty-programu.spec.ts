@@ -25,3 +25,31 @@ test("[F27] zapis na punkt programu zapisuje też na wydarzenie @uczestnik", asy
 		page.locator("section").first().getByText("Wolne miejsca: 4 / 5"),
 	).toBeVisible();
 });
+
+test("[F5] osoba z listy rezerwowej nie zapisze się na punkt programu", async ({
+	page,
+}, testInfo) => {
+	// Given a full event with an agenda item and the user on its waitlist
+	const email = uniqueEmail(testInfo);
+	const user = await createTestUser(email);
+	const other = await createTestUser(`other-${email}`);
+	const event = await createTestEvent({
+		maxSeats: 1,
+		agenda: [{ title: "Warsztaty", maxSeats: 1 }],
+	});
+	const { registerForEvent } = await import(
+		"@repo/db/queries/event-registrations"
+	);
+	await registerForEvent(event.id, other.id, "pl");
+	await registerForEvent(event.id, user.id, "pl");
+	// When they try to register for the item
+	await signInByEmail(page, email);
+	await open(page, `/pl/events/${event.id}`);
+	const item = page.getByRole("listitem").filter({ hasText: "Warsztaty" });
+	await item.getByRole("button", { name: "Zarejestruj się" }).click();
+	// Then they are told why and the item keeps its place
+	await expect(
+		page.getByText("Jesteś na liście rezerwowej tego wydarzenia"),
+	).toBeVisible();
+	await expect(item.getByText("Wolne miejsca: 1 / 1")).toBeVisible();
+});

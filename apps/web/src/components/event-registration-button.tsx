@@ -1,9 +1,11 @@
 import {
+	events_join_waitlist,
+	events_leave_waitlist,
 	events_register,
-	events_register_full,
 	events_register_login_required,
 	events_registered,
 	events_unregister,
+	events_waitlisted,
 } from "@repo/i18n/paraglide/messages";
 import { Button } from "@repo/ui/components/button";
 import { Link } from "@tanstack/react-router";
@@ -53,21 +55,33 @@ export function EventRegistrationButton({
 		);
 	}
 
-	if (isFull) {
+	const position = registrations.waitlistPosition(eventId);
+	if (position !== null) {
 		return (
-			<Button size="sm" disabled aria-disabled title={events_register_full()}>
-				{events_register()}
-			</Button>
+			<div className="flex flex-col items-end gap-1">
+				<span className="text-sm text-muted-foreground">
+					{events_waitlisted({ position })}
+				</span>
+				<Button
+					size="sm"
+					variant="outline"
+					disabled={!interactive || isMutating}
+					onClick={() => registrations.unregister(eventId)}
+				>
+					{events_leave_waitlist()}
+				</Button>
+			</div>
 		);
 	}
 
 	return (
 		<Button
 			size="sm"
+			variant={isFull ? "secondary" : "default"}
 			disabled={!interactive || isRegisterPending}
 			onClick={() => registrations.register(eventId)}
 		>
-			{events_register()}
+			{isFull ? events_join_waitlist() : events_register()}
 		</Button>
 	);
 }

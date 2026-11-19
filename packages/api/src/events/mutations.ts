@@ -14,6 +14,8 @@ import { agendaItemIdSchema } from "./schemas";
 
 export const registerForEventInputSchema = z.object({
 	eventId: z.string().min(1),
+	/** UI language, for the registrant's e-mails (server functions have no locale prefix). */
+	locale: z.enum(["pl", "en"]),
 });
 
 export type RegisterForEventInput = z.infer<typeof registerForEventInputSchema>;
@@ -35,7 +37,7 @@ export const registerForEventServer = createServerFn({ method: "POST" })
 		}
 
 		try {
-			return await registerForEvent(data.eventId, session.user.id);
+			return await registerForEvent(data.eventId, session.user.id, data.locale);
 		} catch (error) {
 			if (error instanceof DomainError) {
 				throw new Error(error.code);

@@ -1,10 +1,16 @@
-import type { EventRegistrationActions } from "~/lib/registration/use-event-list-registrations";
+import type {
+	EventRegistrationActions,
+	RegistrationStates,
+} from "~/lib/registration/use-event-list-registrations";
 
+/** Read-only actions for the server-rendered list (before the live list takes over). */
 export function createQueryRegistrationActions(
-	registeredEventIds: Set<string>,
+	states: RegistrationStates,
 ): EventRegistrationActions {
 	return {
-		isRegistered: (eventId) => registeredEventIds.has(eventId),
+		isRegistered: (eventId) => states.get(eventId)?.state === "registered",
+		waitlistPosition: (eventId) =>
+			states.get(eventId)?.waitlistPosition ?? null,
 		isRegisterPending: () => false,
 		isUnregisterPending: () => false,
 		register: () => {},

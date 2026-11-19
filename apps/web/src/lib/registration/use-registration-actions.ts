@@ -5,7 +5,7 @@ import {
 	unregisterFromEventServer,
 } from "@repo/api/events/mutations";
 import {
-	myRegisteredEventIdsQueryOptions,
+	myRegistrationStatesQueryOptions,
 	myRegistrationsQueryOptions,
 } from "@repo/api/events/my-registrations";
 import {
@@ -17,10 +17,12 @@ import { eventSeatCountsCollection } from "@repo/collections/event-seat-counts";
 import {
 	events_item_register_success,
 	events_item_unregister_success,
+	events_join_waitlist_success,
 	events_register_full,
 	events_register_success,
 	events_unregister_success,
 } from "@repo/i18n/paraglide/messages";
+import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { showRegistrationErrorToast } from "~/lib/event-registration/errors";
@@ -51,7 +53,9 @@ function actionKey(action: RegistrationAction): string {
 function runAction(action: RegistrationAction) {
 	switch (action.type) {
 		case "register":
-			return registerForEventServer({ data: { eventId: action.eventId } });
+			return registerForEventServer({
+				data: { eventId: action.eventId, locale: getLocale() },
+			});
 		case "unregister":
 			return unregisterFromEventServer({ data: { eventId: action.eventId } });
 		case "registerItem":
@@ -65,10 +69,15 @@ function runAction(action: RegistrationAction) {
 	}
 }
 
-function successMessage(action: RegistrationAction): string {
+function successMessage(
+	action: RegistrationAction,
+	result: Awaited<ReturnType<typeof runAction>>,
+): string {
 	switch (action.type) {
 		case "register":
-			return events_register_success();
+			return "state" in result && result.state === "waitlisted"
+				? events_join_waitlist_success()
+				: events_register_success();
 		case "unregister":
 			return events_unregister_success();
 		case "registerItem":
@@ -98,7 +107,7 @@ export function useRegistrationActions(): RegistrationActions {
 
 	const refreshKeys = (eventId: string) => [
 		myRegistrationsQueryOptions.queryKey,
-		myRegisteredEventIdsQueryOptions.queryKey,
+		myRegistrationStatesQueryOptions.queryKey,
 		eventDetailsQueryOptions(eventId).queryKey,
 		eventsQueryKeyPrefix,
 	];
@@ -106,7 +115,7 @@ export function useRegistrationActions(): RegistrationActions {
 	const mutation = useMutation({
 		mutationFn: runAction,
 		onSuccess: async (result, action) => {
-			toast.success(successMessage(action));
+			toast.success(successMessage(action, result));
 			const collection =
 				action.type === "registerItem" || action.type === "unregisterItem"
 					? agendaItemSeatCountsCollection

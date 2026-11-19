@@ -23,7 +23,7 @@ describe("event end", () => {
 	it("EVENT_ENDED for event registration after effective end", async () => {
 		const user = await createUser();
 		const past = await createEvent({ date: hoursFromNow(-48) });
-		expect(await rejectionCode(registerForEvent(past, user))).toBe(
+		expect(await rejectionCode(registerForEvent(past, user, "pl"))).toBe(
 			"EVENT_ENDED",
 		);
 
@@ -31,7 +31,7 @@ describe("event end", () => {
 			date: hoursFromNow(-48),
 			endsAt: hoursFromNow(1),
 		});
-		await expect(registerForEvent(extended, user)).resolves.toHaveProperty(
+		await expect(registerForEvent(extended, user, "pl")).resolves.toHaveProperty(
 			"txid",
 		);
 	});
@@ -57,7 +57,7 @@ describe("event end", () => {
 			endsAt: hoursFromNow(3),
 		});
 		await expect(
-			registerForEvent(eventId, await createUser()),
+			registerForEvent(eventId, await createUser(), "pl"),
 		).resolves.toHaveProperty("txid");
 	});
 });
@@ -74,6 +74,7 @@ describe("agenda item registration", () => {
 		expect(await getMyRegistrations(user)).toEqual({
 			eventIds: [eventId],
 			agendaItemIds: [itemId],
+			waitlist: [],
 		});
 		expect((await readItemCount(itemId))?.seatsRemaining).toBe(2);
 		expect((await readEventCount(eventId))?.seatsRemaining).toBe(4);
@@ -103,7 +104,7 @@ describe("agenda item registration", () => {
 	it("item registration rolls back when event full", async () => {
 		const eventId = await createEvent({ maxSeats: 1 });
 		const itemId = await createItem(eventId);
-		await registerForEvent(eventId, await createUser());
+		await registerForEvent(eventId, await createUser(), "pl");
 		const late = await createUser();
 
 		expect(await rejectionCode(registerForAgendaItem(itemId, late))).toBe(
@@ -112,6 +113,7 @@ describe("agenda item registration", () => {
 		expect(await getMyRegistrations(late)).toEqual({
 			eventIds: [],
 			agendaItemIds: [],
+			waitlist: [],
 		});
 	});
 
@@ -163,6 +165,7 @@ describe("agenda item registration", () => {
 		expect(await getMyRegistrations(user)).toEqual({
 			eventIds: [eventId],
 			agendaItemIds: [],
+			waitlist: [],
 		});
 		expect(await rejectionCode(unregisterFromAgendaItem(itemId, user))).toBe(
 			"NOT_REGISTERED",
@@ -199,16 +202,15 @@ describe("concurrency", () => {
 		expect((await readItemCount(itemId))?.seatsRemaining).toBe(0);
 	});
 
-	it("concurrent last event seat", async () => {
+	it("concurrent last event seat: one registered, one waitlisted", async () => {
 		const eventId = await createEvent({ maxSeats: 1 });
 		const [a, b] = [await createUser(), await createUser()];
 
-		const results = await Promise.allSettled([
-			registerForEvent(eventId, a),
-			registerForEvent(eventId, b),
+		const results = await Promise.all([
+			registerForEvent(eventId, a, "pl"),
+			registerForEvent(eventId, b, "pl"),
 		]);
-		expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
-		const rejected = results.find((r) => r.status === "rejected");
-		expect((rejected as PromiseRejectedResult).reason.code).toBe("EVENT_FULL");
+		expect(results.map((r) => r.state).sort()).toEqual(["registered", "waitlisted"]);
+		expect((await readEventCount(eventId))?.seatsRemaining).toBe(0);
 	});
 });

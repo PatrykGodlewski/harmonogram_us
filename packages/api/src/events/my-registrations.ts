@@ -1,30 +1,32 @@
 import {
+	getMyRegistrationStates,
 	getMyRegistrations,
-	getRegisteredEventIdsForUser,
+	type MyRegistrationState,
 } from "@repo/db/queries/event-registrations";
 import type { QueryClient } from "@tanstack/react-query";
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { getCurrentUser } from "../auth/user";
 
-export const fetchMyRegisteredEventIdsServer = createServerFn({
+export const fetchMyRegistrationStatesServer = createServerFn({
 	method: "GET",
-}).handler(async () => {
+}).handler(async (): Promise<MyRegistrationState[]> => {
 	const user = await getCurrentUser();
 	if (!user) return [];
 
-	return getRegisteredEventIdsForUser(user.id);
+	return getMyRegistrationStates(user.id);
 });
 
-export const myRegisteredEventIdsQueryOptions = queryOptions({
-	queryKey: ["my-registered-event-ids"] as const,
-	queryFn: () => fetchMyRegisteredEventIdsServer(),
+/** Per event: registered or waitlisted (with position). */
+export const myRegistrationStatesQueryOptions = queryOptions({
+	queryKey: ["my-registration-states"] as const,
+	queryFn: () => fetchMyRegistrationStatesServer(),
 	staleTime: 30_000,
 });
 
-export function ensureMyRegisteredEventIds(queryClient: QueryClient) {
+export function ensureMyRegistrationStates(queryClient: QueryClient) {
 	return queryClient.ensureQueryData({
-		...myRegisteredEventIdsQueryOptions,
+		...myRegistrationStatesQueryOptions,
 		revalidateIfStale: true,
 	});
 }
@@ -33,7 +35,7 @@ export const fetchMyRegistrationsServer = createServerFn({
 	method: "GET",
 }).handler(async () => {
 	const user = await getCurrentUser();
-	if (!user) return { eventIds: [], agendaItemIds: [] };
+	if (!user) return { eventIds: [], agendaItemIds: [], waitlist: [] };
 
 	return getMyRegistrations(user.id);
 });

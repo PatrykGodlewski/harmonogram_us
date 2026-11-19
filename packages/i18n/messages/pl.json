@@ -299,5 +299,11 @@
 	"ui_sidebar_description": "Nawigacja w widoku telefonu.",
 	"ui_actions": "Akcje",
 	"auth_login_link_failed": "Nie udało się wysłać linku logowania",
-	"auth_signup_failed": "Nie udało się założyć konta"
+	"auth_signup_failed": "Nie udało się założyć konta",
+	"events_join_waitlist": "Zapisz na listę rezerwową",
+	"events_waitlisted": "Jesteś na liście rezerwowej (pozycja {position})",
+	"events_leave_waitlist": "Wypisz się z listy",
+	"events_join_waitlist_success": "Zapisano na listę rezerwową",
+	"error_event_waitlisted": "Jesteś na liście rezerwowej tego wydarzenia — na punkty programu zapiszesz się po zwolnieniu miejsca.",
+	"admin_registrant_waitlisted": "Lista rezerwowa"
 }

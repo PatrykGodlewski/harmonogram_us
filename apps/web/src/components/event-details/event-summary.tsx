@@ -1,10 +1,12 @@
 import {
 	event_details_closed,
 	event_details_places_left,
+	events_join_waitlist,
+	events_leave_waitlist,
 	events_register,
-	events_register_full,
 	events_registered,
 	events_unregister,
+	events_waitlisted,
 	groups_register_group,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
@@ -146,6 +148,25 @@ function EventRegistrationAction({
 		);
 	}
 
+	if (registrations.waitlistPosition !== null) {
+		return (
+			<div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+				<p className="text-sm">
+					{events_waitlisted({ position: registrations.waitlistPosition })}
+				</p>
+				<Button
+					size="sm"
+					variant="outline"
+					className="w-full sm:w-auto"
+					disabled={busy}
+					onClick={registrations.unregisterEvent}
+				>
+					{events_leave_waitlist()}
+				</Button>
+			</div>
+		);
+	}
+
 	if (isClosed) {
 		return <p className="text-muted-foreground">{event_details_closed()}</p>;
 	}
@@ -153,12 +174,12 @@ function EventRegistrationAction({
 	return (
 		<Button
 			size="sm"
+			variant={isFull ? "secondary" : "default"}
 			className="w-full sm:w-auto"
-			disabled={busy || isFull}
-			title={isFull ? events_register_full() : undefined}
+			disabled={busy}
 			onClick={registrations.registerEvent}
 		>
-			{events_register()}
+			{isFull ? events_join_waitlist() : events_register()}
 		</Button>
 	);
 }

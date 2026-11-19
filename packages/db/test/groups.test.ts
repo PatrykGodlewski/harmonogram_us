@@ -114,11 +114,19 @@ describe("createGroup", () => {
 		const { eventId, owner } = await setup(3);
 		await registerForEvent(eventId, await createUser());
 		await registerForEvent(eventId, await createUser());
+		const individual = await createUser();
 		const results = await Promise.allSettled([
 			createGroup({ eventId, ownerUserId: owner, places: 1, itemIds: [], emails: [], joinLinkEnabled: false }),
-			registerForEvent(eventId, await createUser()),
+			registerForEvent(eventId, individual, "pl"),
 		]);
-		expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+		// The last place goes to one of them: the individual joins the waitlist if the group won it.
+		const group = results[0];
+		const registration = results[1];
+		expect(registration?.status).toBe("fulfilled");
+		const state = registration?.status === "fulfilled" ? registration.value.state : null;
+		expect(group?.status === "fulfilled" ? state : "registered").toBe(
+			group?.status === "fulfilled" ? "waitlisted" : "registered",
+		);
 		expect((await readEventCount(eventId))?.seatsRemaining).toBe(0);
 	});
 });
