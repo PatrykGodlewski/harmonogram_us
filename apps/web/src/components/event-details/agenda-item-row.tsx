@@ -130,6 +130,10 @@ function AgendaItemAction({
 	const busy = !interactive || registrations.isBusy;
 	const ref = { id: item.id, title: item.title };
 
+	if (user && registrations.registeredItemIds.has(item.id) && closed) {
+		return <Badge>{events_registered()} ✓</Badge>;
+	}
+
 	if (user && registrations.registeredItemIds.has(item.id)) {
 		return (
 			<div className="flex items-center gap-2">

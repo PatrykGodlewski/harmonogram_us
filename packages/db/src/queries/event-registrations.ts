@@ -340,6 +340,14 @@ export async function unregisterFromAgendaItem(
 	userId: string,
 ): Promise<{ txid: number }> {
 	return db.transaction(async (tx) => {
+		const [item] = await tx
+			.select({ eventId: agendaItems.eventId })
+			.from(agendaItems)
+			.where(eq(agendaItems.id, itemId));
+		if (item) {
+			// After the event, registrations are its attendance record: no withdrawing.
+			await assertEventOpen(tx, item.eventId);
+		}
 		const [deleted] = await tx
 			.delete(agendaItemRegistrations)
 			.where(
@@ -370,6 +378,8 @@ export async function unregisterFromEvent(
 		if (!existingId) {
 			throw new DomainError("NOT_REGISTERED");
 		}
+		// After the event, registrations are its attendance record: no withdrawing.
+		await assertEventOpen(tx, eventId);
 
 		// Item registrations cascade via event_registration_id.
 		await tx

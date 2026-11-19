@@ -117,6 +117,17 @@ function EventRegistrationAction({
 		);
 	}
 
+	if (registrations.isEventRegistered && isClosed) {
+		return (
+			<div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+				<Badge>{events_registered()} ✓</Badge>
+				<p className="text-sm text-muted-foreground">
+					{event_details_closed()}
+				</p>
+			</div>
+		);
+	}
+
 	if (registrations.isEventRegistered) {
 		const unregisterButton = (
 			<Button

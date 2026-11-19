@@ -149,7 +149,7 @@ describe("waitlist order under lock waits", () => {
 });
 
 describe("ended events", () => {
-	it("withdrawing from or raising the limit of an ended event promotes nobody", async () => {
+	it("raising the limit of an ended event promotes nobody (withdrawing is rejected)", async () => {
 		const eventId = await createEvent({ maxSeats: 1 });
 		const [a, w] = await users(2);
 		await registerForEvent(eventId, a ?? "", "pl");
@@ -161,7 +161,7 @@ describe("ended events", () => {
 			.where(eq(events.id, eventId));
 		const { changes, hooks } = collectChanges();
 		await updateEvent({ id: eventId, maxSeats: 2 }, hooks);
-		await unregisterFromEvent(eventId, a ?? "", hooks);
+		expect(await rejectionCode(unregisterFromEvent(eventId, a ?? "", hooks))).toBe("EVENT_ENDED");
 		expect(await stateOf(eventId, w ?? "")).toBe("waitlisted");
 		expect(changes).toEqual([]);
 	});

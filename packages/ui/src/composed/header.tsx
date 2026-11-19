@@ -1,5 +1,6 @@
 import type { AuthenticatedUser } from "@repo/api/auth/user";
 import {
+	account_title,
 	header_login,
 	header_logout,
 	header_signup,
@@ -26,7 +27,7 @@ export function Header({ user }: HeaderProps) {
 					{user ? (
 						<>
 							<Button asChild variant="outline" size="sm" className="w-9 px-0">
-								<Link to="/account" aria-label="Account">
+								<Link to="/account" aria-label={account_title()}>
 									<svg
 										aria-hidden="true"
 										viewBox="0 0 24 24"
