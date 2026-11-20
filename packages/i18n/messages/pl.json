@@ -555,5 +555,8 @@
 	"admin_approval_done": "Zaakceptowano: {approved}, na liście rezerwowej: {waitlisted}",
 	"admin_rejection_done": "Odrzucono: {count}",
 	"csv_status_pending": "Czeka na akceptację",
-	"csv_status_rejected": "Odrzucone"
+	"csv_status_rejected": "Odrzucone",
+	"events_request_success": "Zgłoszenie wysłane — czeka na akceptację organizatora",
+	"admin_bulk_reject_title": "Odrzucić zaznaczone zgłoszenia?",
+	"admin_bulk_reject_body": "Każda osoba dostanie e-mail z odmową. Później możesz ją jeszcze zaakceptować."
 }

@@ -172,7 +172,7 @@ function RegistrationRow({
 						</Link>
 					</Button>
 				) : null}
-				{canWithdraw && !isCancelled ? (
+				{canWithdraw && !isCancelled && row.state !== "rejected" ? (
 					<UnregisterEventDialog onConfirm={handleWithdraw}>
 						<Button
 							size="sm"

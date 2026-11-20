@@ -130,6 +130,10 @@ export async function acceptInvitation(
 						eq(eventRegistrations.userId, userId),
 					),
 				);
+			// A request the organiser has not approved (or declined) is not upgraded by a group.
+			if (existing?.state === "pending" || existing?.state === "rejected") {
+				throw new DomainError("APPROVAL_REQUIRED");
+			}
 			let eventRegistrationId = existing?.id;
 			if (existing) {
 				// A waitlisted student takes the group's place instead.

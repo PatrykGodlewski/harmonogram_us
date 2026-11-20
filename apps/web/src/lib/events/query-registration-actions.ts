@@ -1,7 +1,5 @@
-import {
-	approvalOf,
-	type EventRegistrationActions,
-} from "~/lib/registration/use-event-list-registrations";
+import { approvalOf } from "~/lib/registration/approval";
+import type { EventRegistrationActions } from "~/lib/registration/use-event-list-registrations";
 import type { MyRegistrationsView } from "~/lib/registration/use-my-registrations";
 
 /** Read-only actions for the server-rendered list (before the live list takes over). */

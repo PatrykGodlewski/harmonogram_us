@@ -18,6 +18,7 @@ import {
 	assertEventOpen,
 	promoteAndNotify,
 	type RegistrationHooks,
+	requiresApproval,
 } from "./event-registrations";
 import {
 	type ActorOptions,
@@ -234,6 +235,10 @@ export async function createGroup(
 				throw new DomainError("EVENT_NOT_FOUND");
 			}
 			await assertEventOpen(tx, input.eventId);
+			// Group places would skip the organiser's approval of each person.
+			if (await requiresApproval(tx, input.eventId)) {
+				throw new DomainError("APPROVAL_REQUIRED");
+			}
 			await assertGroupDeadlineOpen(tx, input.eventId);
 			const itemIds = await lockRegistrableItems(
 				tx,

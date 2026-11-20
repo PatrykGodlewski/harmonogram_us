@@ -1,4 +1,4 @@
-import { approvalOf } from "~/lib/registration/use-event-list-registrations";
+import { approvalOf } from "~/lib/registration/approval";
 import { useMyRegistrations } from "~/lib/registration/use-my-registrations";
 import { useRegistrationActions } from "~/lib/registration/use-registration-actions";
 import type { EventDetailsRegistrations } from "./types";

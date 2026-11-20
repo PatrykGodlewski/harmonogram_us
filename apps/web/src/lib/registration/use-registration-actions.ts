@@ -17,6 +17,7 @@ import {
 	events_join_waitlist_success,
 	events_register_full,
 	events_register_success,
+	events_request_success,
 	events_unregister_success,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
@@ -91,7 +92,9 @@ function successMessage(
 ): string {
 	switch (action.type) {
 		case "register":
-			return "state" in result && result.state === "waitlisted"
+			if (!("state" in result)) return events_register_success();
+			if (result.state === "pending") return events_request_success();
+			return result.state === "waitlisted"
 				? events_join_waitlist_success()
 				: events_register_success();
 		case "unregister":

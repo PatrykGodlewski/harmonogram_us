@@ -10,6 +10,8 @@ import {
 	admin_bulk_count,
 	admin_bulk_done,
 	admin_bulk_message,
+	admin_bulk_reject_body,
+	admin_bulk_reject_title,
 	admin_bulk_remove,
 	admin_bulk_remove_confirm,
 	admin_bulk_remove_title,
@@ -111,14 +113,29 @@ export function BulkActionsBar({
 					>
 						{admin_approve()}
 					</Button>
-					<Button
-						size="sm"
-						variant="outline"
-						disabled={busy}
-						onClick={() => approval.reject(selectedIds, onClear)}
-					>
-						{admin_reject()}
-					</Button>
+					<AlertDialog>
+						<AlertDialogTrigger asChild>
+							<Button size="sm" variant="outline" disabled={busy}>
+								{admin_reject()}
+							</Button>
+						</AlertDialogTrigger>
+						<AlertDialogContent>
+							<AlertDialogHeader>
+								<AlertDialogTitle>{admin_bulk_reject_title()}</AlertDialogTitle>
+								<AlertDialogDescription>
+									{admin_bulk_reject_body()}
+								</AlertDialogDescription>
+							</AlertDialogHeader>
+							<AlertDialogFooter>
+								<AlertDialogCancel>{admin_action_cancel()}</AlertDialogCancel>
+								<AlertDialogAction
+									onClick={() => approval.reject(selectedIds, onClear)}
+								>
+									{admin_reject()}
+								</AlertDialogAction>
+							</AlertDialogFooter>
+						</AlertDialogContent>
+					</AlertDialog>
 				</>
 			) : null}
 			<MessageDialog

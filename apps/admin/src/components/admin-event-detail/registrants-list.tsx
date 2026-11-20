@@ -75,6 +75,9 @@ const FILTER_LABELS: Record<StateFilter, () => string> = {
 	rejected: admin_registrants_filter_rejected,
 };
 
+const isRequest = (registrant: EventRegistrant) =>
+	registrant.state === "pending" || registrant.state === "rejected";
+
 /** At the door only people with a place or on the waitlist matter. */
 const isAtDoor = (registrant: EventRegistrant) =>
 	registrant.state === "registered" || registrant.state === "waitlisted";
@@ -281,8 +284,7 @@ export function RegistrantsList({
 									hasRequests={registrants.some(
 										(registrant) =>
 											selected.has(registrant.registrationId) &&
-											(registrant.state === "pending" ||
-												registrant.state === "rejected"),
+											isRequest(registrant),
 									)}
 								/>
 							) : null}
@@ -315,8 +317,6 @@ function RegistrantRow({
 	onChanged,
 	approval,
 }: RegistrantRowProps) {
-	const isRequest =
-		registrant.state === "pending" || registrant.state === "rejected";
 	const attendanceId = useId();
 	const removeMutation = useMutation({
 		mutationFn: () =>
@@ -397,7 +397,7 @@ function RegistrantRow({
 				</div>
 			</div>
 			<div className="flex flex-wrap items-center gap-3 self-start">
-				{canManage && isRequest ? (
+				{canManage && isRequest(registrant) ? (
 					<>
 						<Button
 							size="sm"

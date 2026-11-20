@@ -137,7 +137,10 @@ export function EventSummary({
 					</Link>
 				</p>
 			)}
-			{user && !isCancelled && isBeforeGroupDeadline(event) ? (
+			{user &&
+			!isCancelled &&
+			!event.requiresApproval &&
+			isBeforeGroupDeadline(event) ? (
 				<Button variant="outline" size="sm" className="self-start" asChild>
 					<Link to="/events/$eventId/groups/new" params={{ eventId: event.id }}>
 						{groups_register_group()}

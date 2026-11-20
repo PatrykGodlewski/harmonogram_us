@@ -19,6 +19,13 @@ function ticketQrText(ticketCode: string): string {
 	return `harmonogram-ticket:${ticketCode}`;
 }
 
+/** Why a ticket without a place shows no QR code. */
+const NO_PLACE_MESSAGE = {
+	waitlisted: tickets_waitlisted,
+	pending: events_pending_approval,
+	rejected: events_rejected,
+} as const;
+
 export function TicketCard({ ticket }: { ticket: Ticket }) {
 	const locale = getLocale();
 	const handlePrint = () => window.print();
@@ -53,11 +60,7 @@ export function TicketCard({ ticket }: { ticket: Ticket }) {
 				</>
 			) : (
 				<p className="rounded-md bg-muted p-3 text-sm">
-					{ticket.state === "waitlisted"
-						? tickets_waitlisted()
-						: ticket.state === "pending"
-							? events_pending_approval()
-							: events_rejected()}
+					{NO_PLACE_MESSAGE[ticket.state]()}
 				</p>
 			)}
 		</article>

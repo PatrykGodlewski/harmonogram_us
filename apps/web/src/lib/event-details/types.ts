@@ -1,5 +1,5 @@
 import type { EventDetails } from "@repo/api/events/queries";
-import type { Approval } from "~/lib/registration/use-event-list-registrations";
+import type { Approval } from "~/lib/registration/approval";
 
 export type EventDetailsData = EventDetails;
 export type AgendaItemData = EventDetails["agenda"][number];

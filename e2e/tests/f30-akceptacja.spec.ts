@@ -47,6 +47,7 @@ test("[F30] zapis na wydarzenie z akceptacją czeka @uczestnik", async ({
 	const summary = page.locator("section").first();
 	await summary.getByRole("button", { name: "Poproś o zapis" }).click();
 	await expect(summary.getByText("Czeka na akceptację")).toBeVisible();
+	await expect(page.getByText("Zgłoszenie wysłane")).toBeVisible();
 
 	const message = await latestMessageTo(email, {
 		subject: "Czeka na akceptację",
@@ -110,4 +111,33 @@ test("[F30] organizator akceptuje i odrzuca, uczestnicy dostają e-mail @organiz
 	expect(
 		(await latestMessageTo(bulk, { subject: "Zapisano" })).subject,
 	).toContain(event.title);
+});
+
+test("[F30] odrzucony widzi decyzję i nie może się wypisać @uczestnik", async ({
+	page,
+}, testInfo) => {
+	const email = uniqueEmail(testInfo);
+	const user = await createTestUser(email);
+	const event = await createTestEvent({ requiresApproval: true });
+	const { registerForEvent } = await import(
+		"@repo/db/queries/event-registrations"
+	);
+	await registerForEvent(event.id, user.id, "pl");
+	const { eventRegistrations } = await import(
+		"@repo/db/schema/event-registrations"
+	);
+	await db
+		.update(eventRegistrations)
+		.set({ state: "rejected" })
+		.where(eq(eventRegistrations.userId, user.id));
+	await signInByEmail(page, email);
+
+	await open(page, "/pl/account");
+	const row = page.getByRole("listitem").filter({ hasText: event.title });
+	await expect(row.getByText("Odrzucone")).toBeVisible();
+	await expect(row.getByRole("button", { name: "Wypisz się" })).toBeHidden();
+
+	await open(page, `/pl/events/${event.id}`);
+	await expect(page.getByText("Zgłoszenie odrzucone")).toBeVisible();
+	await expect(page.getByRole("link", { name: "Zapisz grupę" })).toBeHidden();
 });

@@ -262,7 +262,7 @@ async function stateForNewRegistration(
 	return (await seatsRemaining(tx, eventId)) > 0 ? "registered" : "waitlisted";
 }
 
-async function requiresApproval(
+export async function requiresApproval(
 	tx: TransactionClient,
 	eventId: string,
 ): Promise<boolean> {
