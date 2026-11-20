@@ -18,6 +18,7 @@ import {
 	admin_field_seat_limit,
 	admin_field_seat_limit_hint,
 	admin_field_start_time,
+	admin_field_time_required,
 	admin_field_title,
 	admin_save_success,
 } from "@repo/i18n/paraglide/messages";
@@ -53,16 +54,21 @@ const agendaItemFormSchema = z
 		title: z.string().min(1).max(500),
 		description: z.string().max(5000),
 		date: z.string().min(1),
-		startTime: z.string().min(1),
-		endTime: z.string().min(1),
+		startTime: z.string().min(1, { error: () => admin_field_time_required() }),
+		endTime: z.string().min(1, { error: () => admin_field_time_required() }),
 		locationId: z.string(),
 		maxSeats: z.string().regex(/^\d*$/),
 		requiresRegistration: z.boolean(),
 	})
 	.refine(
+		// Zod runs this even when a field above failed: compare only complete times
+		// (an empty time is not a date, and the "required" message covers it).
 		(value) =>
+			!value.date ||
+			!value.startTime ||
+			!value.endTime ||
 			fromEventWallTime(value.date, value.endTime) >
-			fromEventWallTime(value.date, value.startTime),
+				fromEventWallTime(value.date, value.startTime),
 		{ path: ["endTime"], message: admin_error_end_before_start() },
 	);
 
