@@ -19,6 +19,7 @@ import { useState } from "react";
 import { EventFormDialog } from "../event-form-dialog";
 import { CancelEventButton } from "./cancel-event-button";
 import { DuplicateEventDialog } from "./duplicate-event-dialog";
+import { InviteDialog } from "./invite-dialog";
 import { InviteLinkCard } from "./invite-link-card";
 import { MessageDialog } from "./message-dialog";
 import { PublishChecklist } from "./publish-checklist";
@@ -100,6 +101,9 @@ export function EventSummaryCard({ event, onChanged }: EventSummaryCardProps) {
 						) : null}
 						<DuplicateEventDialog eventId={event.id} />
 						<MessageDialog eventId={event.id} />
+						{event.status === "published" ? (
+							<InviteDialog eventId={event.id} />
+						) : null}
 						{event.status === "published" &&
 						new Date(event.effectiveEndsAt).getTime() > Date.now() ? (
 							<CancelEventButton eventId={event.id} onCancelled={onChanged} />

@@ -569,5 +569,19 @@
 	"admin_invite_regenerate": "Zmień link",
 	"admin_invite_regenerate_title": "Zmienić link zaproszenia?",
 	"admin_invite_regenerate_body": "Stary link przestanie działać. Osoby już zapisane nadal zobaczą wydarzenie.",
-	"admin_invite_regenerated": "Nowy link gotowy"
+	"admin_invite_regenerated": "Nowy link gotowy",
+	"admin_invite_open": "Zaproś e-mailem",
+	"admin_invite_title": "Zaproszenia e-mailem",
+	"admin_invite_description": "Każda osoba dostanie e-mail z linkiem do wydarzenia i przyciskiem zapisu. Odpowiedzi trafią do Ciebie.",
+	"admin_invite_emails": "Adresy e-mail",
+	"admin_invite_emails_hint": "Jeden adres w wierszu albo po przecinku, najwyżej {max}.",
+	"admin_invite_note": "Wiadomość (opcjonalnie)",
+	"admin_invite_send": "Wyślij zaproszenia",
+	"admin_invite_sent": "Wysłano zaproszenia: {count}",
+	"admin_invite_invalid": "To nie są adresy e-mail: {list}",
+	"admin_invite_too_many": "Najwyżej {max} adresów naraz.",
+	"admin_invite_count": "Adresów: {count}",
+	"invitation_subject": "Zaproszenie",
+	"invitation_default_body": "Zapraszamy na wydarzenie {event} ({date}). Zapisz się przez link poniżej.",
+	"error_event_not_published": "Najpierw opublikuj wydarzenie."
 }

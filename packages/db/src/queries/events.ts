@@ -342,6 +342,39 @@ export async function regenerateInviteToken(eventId: string): Promise<string> {
 	return token;
 }
 
+export type InvitationEvent = {
+	title: string;
+	date: Date;
+	status: EventStatus;
+	/** Set for invite-only events: the link must carry it. */
+	inviteToken: string | null;
+};
+
+/** What an invitation e-mail needs, read when it is sent (so it carries the current link). */
+export async function getInvitationEvent(
+	eventId: string,
+): Promise<InvitationEvent | null> {
+	const [row] = await db
+		.select({
+			title: events.title,
+			date: events.date,
+			status: events.status,
+			visibility: events.visibility,
+			inviteToken: events.inviteToken,
+		})
+		.from(events)
+		.where(eq(events.id, eventId));
+	if (!row) {
+		return null;
+	}
+	return {
+		title: row.title,
+		date: row.date,
+		status: row.status,
+		inviteToken: row.visibility === "private" ? row.inviteToken : null,
+	};
+}
+
 export type EventAccess = {
 	visibility: EventVisibility;
 	inviteToken: string | null;

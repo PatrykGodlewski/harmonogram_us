@@ -254,3 +254,34 @@ describe("registration e-mails", () => {
 		expect(sent[0]?.text).toContain("Miejsce: Aula → Aula · B105");
 	});
 });
+
+describe("event invitations", () => {
+	it("an invite-only event's invitation carries the current invite link; a draft sends nothing", async () => {
+		const { createEvent, resetDb } = await import("../../../packages/db/test/helpers");
+		const { updateEvent, getEventAccess } = await import("@repo/db/queries/events");
+		const { db } = await import("@repo/db/client");
+		const { events } = await import("@repo/db/schema/events");
+		const { eq } = await import("drizzle-orm");
+		await resetDb();
+		const eventId = await createEvent();
+		await updateEvent({ id: eventId, visibility: "private" });
+		const token = (await getEventAccess(eventId))?.inviteToken;
+		const job = {
+			kind: "event-invitation" as const,
+			to: "guest@x.test",
+			eventId,
+			locale: "pl" as const,
+			replyTo: "org@x.test",
+		};
+		const { sent, deps } = capture();
+		await handleEmailJob(job, deps);
+		expect(sent).toHaveLength(1);
+		expect(sent[0]?.subject).toContain("Zaproszenie");
+		expect(sent[0]?.text).toContain(`/pl/events/${eventId}?invite=${token}`);
+		expect(sent[0]?.replyTo).toBe("org@x.test");
+
+		await db.update(events).set({ status: "draft" }).where(eq(events.id, eventId));
+		await handleEmailJob(job, deps);
+		expect(sent).toHaveLength(1);
+	});
+});

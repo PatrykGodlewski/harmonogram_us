@@ -9,7 +9,12 @@ import { eventMessageEmailText } from "@repo/api/notifications/event-message-ema
 import { registrationEmailText } from "@repo/api/notifications/registration-email";
 import { verificationEmail } from "@repo/api/notifications/verification-email";
 import { getRegistrationForEmail } from "@repo/db/queries/event-registrations";
+import { getInvitationEvent } from "@repo/db/queries/events";
 import { env } from "@repo/env";
+import {
+	invitation_default_body,
+	invitation_subject,
+} from "@repo/i18n/paraglide/messages";
 import type { EmailJob } from "@repo/jobs/queues";
 import { formatEventDateTime } from "@repo/ui/time";
 
@@ -109,6 +114,39 @@ export async function handleEmailJob(
 				subject,
 				text,
 				html: await renderEventChangeEmail(props),
+			});
+			return;
+		}
+		case "event-invitation": {
+			const event = await getInvitationEvent(job.eventId);
+			// Cancelled or unpublished since: an invitation would mislead.
+			if (!event || event.status !== "published") {
+				return;
+			}
+			const { locale } = job;
+			const link = `${env.BETTER_AUTH_URL}/${locale}/events/${job.eventId}`;
+			const props = {
+				locale,
+				eventTitle: event.title,
+				subject: invitation_subject({}, { locale }),
+				body:
+					job.note ??
+					invitation_default_body(
+						{
+							event: event.title,
+							date: formatEventDateTime(event.date, locale),
+						},
+						{ locale },
+					),
+				url: event.inviteToken ? `${link}?invite=${event.inviteToken}` : link,
+			};
+			const { subject, text } = eventMessageEmailText(props);
+			await deps.send({
+				to: job.to,
+				subject,
+				text,
+				html: await renderEventMessageEmail(props),
+				replyTo: job.replyTo,
 			});
 			return;
 		}

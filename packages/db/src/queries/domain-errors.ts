@@ -34,6 +34,7 @@ export const DOMAIN_ERROR_CODES = [
 	"SOLE_ORGANIZER",
 	"LAST_ADMIN",
 	"APPROVAL_REQUIRED",
+	"EVENT_NOT_PUBLISHED",
 ] as const;
 
 export type DomainErrorCode = (typeof DOMAIN_ERROR_CODES)[number];

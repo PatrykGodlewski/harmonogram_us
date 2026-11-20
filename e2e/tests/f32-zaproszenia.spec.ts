@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import { expect, type Page, test } from "@playwright/test";
 import { adminUrl, signInAsAdmin, signInByEmail } from "../fixtures/auth";
 import { createTestEvent, createTestUser, uniqueEmail } from "../fixtures/data";
+import { latestMessageTo } from "../fixtures/mailpit";
 import { open } from "../fixtures/navigation";
 
 async function inviteLink(page: Page): Promise<string> {
@@ -81,4 +82,40 @@ test("[F32] wydarzenie na zaproszenie: lista, link, zapis, zmiana linku @organiz
 	await expect(
 		other.getByRole("heading", { name: event.title, level: 1 }),
 	).toBeVisible();
+});
+
+test("[F32] zaproszenie e-mailem zawiera link @organizator", async ({
+	page,
+}, testInfo) => {
+	const base = uniqueEmail(testInfo);
+	const password = randomBytes(18).toString("base64url");
+	const organizer = await createTestUser(`org-${base}`, {
+		role: "organizer",
+		password,
+	});
+	const event = await createTestEvent({
+		organizerId: organizer.id,
+		visibility: "private",
+	});
+	const [first, second] = [`a-${base}`, `b-${base}`];
+
+	await signInAsAdmin(page, `org-${base}`, password);
+	await open(page, adminUrl(`/pl/events/${event.id}`));
+	await page.getByRole("button", { name: "Zaproś e-mailem" }).click();
+	const dialog = page.getByRole("dialog");
+	await dialog
+		.getByLabel("Adresy e-mail")
+		.fill(`${first}\n${second}, ${first}`);
+	await dialog.getByRole("button", { name: "Wyślij zaproszenia" }).click();
+	await expect(page.getByText("Wysłano zaproszenia: 2")).toBeVisible();
+
+	for (const email of [first, second]) {
+		const message = await latestMessageTo(email, { subject: "Zaproszenie" });
+		expect(message.subject).toContain(event.title);
+		expect(
+			message.links.some((href) =>
+				href.includes(`/events/${event.id}?invite=`),
+			),
+		).toBe(true);
+	}
 });

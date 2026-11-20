@@ -50,6 +50,12 @@ export const EVENT_MESSAGE_LIMIT: RateLimit = {
 	durationSeconds: 60 * 60,
 };
 
+/** Invitations by e-mail: 10 sends (of up to 50 addresses each) per event and per sender per hour. */
+export const EVENT_INVITATION_LIMIT: RateLimit = {
+	points: 10,
+	durationSeconds: 60 * 60,
+};
+
 /** One budget per event and one per sender, so neither can be drained through the other. */
 export function eventMessageRateKeys(
 	eventId: string,

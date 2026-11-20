@@ -57,6 +57,15 @@ export const emailJob = z.discriminatedUnion("kind", [
 		after: z.object({ date: z.iso.datetime(), place: z.string().nullable() }),
 	}),
 	z.object({
+		kind: z.literal("event-invitation"),
+		to: z.email(),
+		eventId: z.string().min(1),
+		locale: z.enum(["pl", "en"]),
+		/** The organiser's own words; a default text when absent. */
+		note: z.string().max(2000).optional(),
+		replyTo: z.email(),
+	}),
+	z.object({
 		kind: z.literal("event-message"),
 		registrationId: z.string().min(1),
 		subject: z.string().min(1).max(200),

@@ -569,5 +569,19 @@
 	"admin_invite_regenerate": "Change link",
 	"admin_invite_regenerate_title": "Change the invite link?",
 	"admin_invite_regenerate_body": "The old link stops working. People already registered still see the event.",
-	"admin_invite_regenerated": "New link ready"
+	"admin_invite_regenerated": "New link ready",
+	"admin_invite_open": "Invite by e-mail",
+	"admin_invite_title": "E-mail invitations",
+	"admin_invite_description": "Each person gets an e-mail with the event link and a sign-up button. Replies come to you.",
+	"admin_invite_emails": "E-mail addresses",
+	"admin_invite_emails_hint": "One address per line or comma-separated, at most {max}.",
+	"admin_invite_note": "Message (optional)",
+	"admin_invite_send": "Send invitations",
+	"admin_invite_sent": "Invitations sent: {count}",
+	"admin_invite_invalid": "These are not e-mail addresses: {list}",
+	"admin_invite_too_many": "At most {max} addresses at once.",
+	"admin_invite_count": "Addresses: {count}",
+	"invitation_subject": "Invitation",
+	"invitation_default_body": "You are invited to {event} ({date}). Sign up through the link below.",
+	"error_event_not_published": "Publish the event first."
 }

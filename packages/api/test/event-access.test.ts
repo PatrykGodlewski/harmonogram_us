@@ -118,6 +118,7 @@ describe("panel server functions check event access", () => {
 		"../src/admin/registrants.ts",
 		"../src/admin/event-message.ts",
 		"../src/admin/check-in.ts",
+		"../src/admin/invitations.ts",
 	];
 	/** Panel-wide reads that are not about one event. */
 	const panelWide = ["fetchAdminEventFilterOptionsServer"];
