@@ -83,6 +83,7 @@ export type EventWithRelations = {
 	reminderHoursBefore: number | null;
 	visibility: EventVisibility;
 	requiresApproval: boolean;
+	certificatesEnabled: boolean;
 	createdAt: Date;
 	updatedAt: Date;
 	typeLabel: string;
@@ -239,6 +240,7 @@ async function queryEvents(
 			reminderHoursBefore: events.reminderHoursBefore,
 			visibility: events.visibility,
 			requiresApproval: events.requiresApproval,
+			certificatesEnabled: events.certificatesEnabled,
 			createdAt: events.createdAt,
 			updatedAt: events.updatedAt,
 			typeLabel: eventTypes.label,
@@ -280,6 +282,7 @@ export type CreateEventInput = {
 	room?: string | null;
 	reminderHoursBefore?: number | null;
 	requiresApproval?: boolean;
+	certificatesEnabled?: boolean;
 	/** Becomes the event's first organizer; null for events only admins manage (seed data). */
 	organizerId: string | null;
 };
@@ -307,6 +310,7 @@ export async function createEvent(input: CreateEventInput) {
 				inviteToken: input.visibility === "private" ? newInviteToken() : null,
 				room: input.room ?? null,
 				requiresApproval: input.requiresApproval ?? false,
+				certificatesEnabled: input.certificatesEnabled ?? false,
 				...(input.reminderHoursBefore !== undefined
 					? { reminderHoursBefore: input.reminderHoursBefore }
 					: {}),
@@ -417,6 +421,7 @@ export type UpdateEventInput = {
 	room?: string | null;
 	reminderHoursBefore?: number | null;
 	requiresApproval?: boolean;
+	certificatesEnabled?: boolean;
 };
 
 /** Updates an event; raising the limit promotes waitlisted people into the new places. */

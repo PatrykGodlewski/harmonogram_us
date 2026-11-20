@@ -33,6 +33,7 @@ const ID =
 const ID_PARENTS = new Set([
 	"events",
 	"tickets",
+	"certificates",
 	"groups",
 	"invite",
 	"join",

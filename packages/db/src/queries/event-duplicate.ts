@@ -59,6 +59,8 @@ export async function duplicateEvent(
 				inviteToken: source.visibility === "private" ? newInviteToken() : null,
 				room: source.room,
 				reminderHoursBefore: source.reminderHoursBefore,
+				requiresApproval: source.requiresApproval,
+				certificatesEnabled: source.certificatesEnabled,
 				status: "draft",
 			})
 			.returning({ id: events.id });

@@ -13,6 +13,8 @@ import {
 	admin_dialog_edit_title,
 	admin_error_generic,
 	admin_field_attendance_mode,
+	admin_field_certificates,
+	admin_field_certificates_hint,
 	admin_field_date,
 	admin_field_description,
 	admin_field_ends_at,
@@ -139,6 +141,7 @@ const EMPTY_VALUES = {
 	attendanceMode: "onsite" as AttendanceMode,
 	visibility: "public" as EventVisibility,
 	requiresApproval: false,
+	certificatesEnabled: false,
 	onlineUrl: "",
 };
 
@@ -161,6 +164,7 @@ function toFormValues(event: EventWithRelations): EventFormValues {
 		attendanceMode: event.attendanceMode,
 		visibility: event.visibility,
 		requiresApproval: event.requiresApproval,
+		certificatesEnabled: event.certificatesEnabled,
 		onlineUrl: event.onlineUrl ?? "",
 	};
 }
@@ -199,6 +203,7 @@ export function EventFormDialog({
 				attendanceMode: z.enum(["onsite", "online", "hybrid"]),
 				visibility: z.enum(VISIBILITIES),
 				requiresApproval: z.boolean(),
+				certificatesEnabled: z.boolean(),
 				onlineUrl: z.union([
 					z.literal(""),
 					z.url({ protocol: /^https$/ }).max(2000),
@@ -231,6 +236,7 @@ export function EventFormDialog({
 				attendanceMode: values.attendanceMode,
 				visibility: values.visibility,
 				requiresApproval: values.requiresApproval,
+				certificatesEnabled: values.certificatesEnabled,
 				onlineUrl:
 					values.attendanceMode === "onsite" || !values.onlineUrl.trim()
 						? null
@@ -674,6 +680,31 @@ export function EventFormDialog({
 								className="text-xs text-muted-foreground"
 							>
 								{admin_field_requires_approval_hint()}
+							</p>
+						</div>
+					</div>
+				)}
+			</form.Field>
+
+			<form.Field name="certificatesEnabled">
+				{(field) => (
+					<div className="flex items-start gap-2">
+						<input
+							id={field.name}
+							type="checkbox"
+							className="mt-0.5 size-4 accent-primary"
+							checked={field.state.value}
+							disabled={saveMutation.isPending}
+							aria-describedby={`${field.name}-hint`}
+							onChange={(event) => field.handleChange(event.target.checked)}
+						/>
+						<div>
+							<Label htmlFor={field.name}>{admin_field_certificates()}</Label>
+							<p
+								id={`${field.name}-hint`}
+								className="text-xs text-muted-foreground"
+							>
+								{admin_field_certificates_hint()}
 							</p>
 						</div>
 					</div>

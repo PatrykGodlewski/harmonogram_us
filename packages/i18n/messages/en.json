@@ -583,5 +583,13 @@
 	"admin_invite_count": "Addresses: {count}",
 	"invitation_subject": "Invitation",
 	"invitation_default_body": "You are invited to {event} ({date}). Sign up through the link below.",
-	"error_event_not_published": "Publish the event first."
+	"error_event_not_published": "Publish the event first.",
+	"certificate_title": "Certificate of attendance",
+	"certificate_intro": "We confirm attendance at the event:",
+	"certificate_person": "Participant",
+	"certificate_date": "Date",
+	"certificate_footer": "Attendance recorded at the entrance. No. {reference}",
+	"certificate_download": "Download certificate",
+	"admin_field_certificates": "Certificates for attendees",
+	"admin_field_certificates_hint": "After the event, attendees can download a PDF confirming attendance and get it by e-mail."
 }

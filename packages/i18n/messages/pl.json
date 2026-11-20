@@ -583,5 +583,13 @@
 	"admin_invite_count": "Adresów: {count}",
 	"invitation_subject": "Zaproszenie",
 	"invitation_default_body": "Zapraszamy na wydarzenie {event} ({date}). Zapisz się przez link poniżej.",
-	"error_event_not_published": "Najpierw opublikuj wydarzenie."
+	"error_event_not_published": "Najpierw opublikuj wydarzenie.",
+	"certificate_title": "Zaświadczenie o udziale",
+	"certificate_intro": "Potwierdzamy obecność na wydarzeniu:",
+	"certificate_person": "Uczestnik",
+	"certificate_date": "Termin",
+	"certificate_footer": "Obecność odnotowana przy wejściu. Nr {reference}",
+	"certificate_download": "Pobierz zaświadczenie",
+	"admin_field_certificates": "Zaświadczenia dla obecnych",
+	"admin_field_certificates_hint": "Po wydarzeniu obecni pobiorą PDF z potwierdzeniem udziału i dostaną go e-mailem."
 }

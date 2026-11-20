@@ -11,6 +11,7 @@ import {
 	account_ticket,
 	account_upcoming,
 	account_waitlisted,
+	certificate_download,
 	event_status_cancelled,
 	events_registered,
 	events_unregister,
@@ -170,6 +171,13 @@ function RegistrationRow({
 						>
 							{account_ticket()}
 						</Link>
+					</Button>
+				) : null}
+				{row.certificateAvailable ? (
+					<Button size="sm" variant="outline" asChild>
+						<a href={`/api/certificates/${row.registrationId}`} download>
+							{certificate_download()}
+						</a>
 					</Button>
 				) : null}
 				{canWithdraw && !isCancelled && row.state !== "rejected" ? (

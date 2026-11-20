@@ -29,6 +29,7 @@
     "read-excel-file": "^9.3.20",
     "seroval": "1.5.1",
     "tsx": "^4.21.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "unpdf": "^2.2.1"
   }
 }

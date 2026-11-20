@@ -118,6 +118,23 @@ describe("duplicateEvent", () => {
 		expect(registrations).toHaveLength(0);
 	});
 
+	it("keeps the approval and certificate settings", async () => {
+		const helpers = await import("./helpers");
+		const sourceId = await helpers.createEvent({ requiresApproval: true });
+		await db
+			.update(events)
+			.set({ certificatesEnabled: true })
+			.where(eq(events.id, sourceId));
+		const actor = await createUser();
+		const copy = await duplicateEvent({
+			eventId: sourceId,
+			date: new Date(Date.now() + 30 * 86_400_000),
+			actorId: actor,
+		});
+		const [row] = await db.select().from(events).where(eq(events.id, copy.id));
+		expect(row).toMatchObject({ requiresApproval: true, certificatesEnabled: true });
+	});
+
 	it("a missing source is 'event not found'", async () => {
 		const actor = await createUser();
 		await expect(
