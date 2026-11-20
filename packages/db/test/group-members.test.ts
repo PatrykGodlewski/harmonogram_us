@@ -209,3 +209,12 @@ describe("groups and registration approval", () => {
 		expect(await rejectionCode(acceptInvitation(token, kid))).toBe("APPROVAL_REQUIRED");
 	});
 });
+
+describe("groups made before approval was switched on", () => {
+	it("a new member without a registration waits for approval instead of getting in", async () => {
+		const { token, eventId } = await groupWithInvite();
+		await db.update(events).set({ requiresApproval: true }).where(eq(events.id, eventId));
+		const kid = await createUser("kid@x.test");
+		expect(await rejectionCode(acceptInvitation(token, kid))).toBe("APPROVAL_REQUIRED");
+	});
+});

@@ -28,6 +28,9 @@ test("[F19] punkt programu z prelegentem i linkiem jest na stronie wydarzenia @o
 	await dialog.getByLabel("Afiliacja prelegenta 1").fill("Instytut Fizyki");
 	await dialog.getByRole("button", { name: "Dodaj materiał" }).click();
 	await dialog.getByLabel("Nazwa materiału 1").fill("Slajdy");
+	// A name without an address is not dropped silently
+	await dialog.getByRole("button", { name: "Zapisz" }).click();
+	await expect(dialog.getByText("Podaj adres materiału.")).toBeVisible();
 	await dialog
 		.getByLabel("Adres materiału 1")
 		.fill("https://example.test/slajdy.pdf");

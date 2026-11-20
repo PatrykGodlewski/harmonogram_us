@@ -55,6 +55,12 @@ const REPEAT_LABELS: Record<Repeat, () => string> = {
 
 const MAX_COPIES = 12;
 
+/** The typed number of copies within 2–12 (an empty or invalid field counts as 2). */
+function toCopyCount(text: string): number {
+	const value = Number.parseInt(text, 10);
+	return Number.isNaN(value) ? 2 : Math.min(Math.max(value, 2), MAX_COPIES);
+}
+
 /** Copies the event to a new date, or as a weekly/monthly series (drafts), and opens the first copy. */
 export function DuplicateEventDialog({ eventId }: { eventId: string }) {
 	const dateId = useId();
@@ -66,10 +72,11 @@ export function DuplicateEventDialog({ eventId }: { eventId: string }) {
 	const [open, setOpen] = useState(false);
 	const [dateTime, setDateTime] = useState("");
 	const [repeat, setRepeat] = useState<Repeat>("once");
-	const [count, setCount] = useState(4);
+	// Text while typing; read as a number (2–12) only for the label and the request.
+	const [countText, setCountText] = useState("4");
 	const [copyAgenda, setCopyAgenda] = useState(true);
 	const [copyOrganizers, setCopyOrganizers] = useState(true);
-	const copies = repeat === "once" ? 1 : count;
+	const copies = repeat === "once" ? 1 : toCopyCount(countText);
 
 	const duplicateMutation = useMutation({
 		mutationFn: (date: Date) =>
@@ -153,15 +160,9 @@ export function DuplicateEventDialog({ eventId }: { eventId: string }) {
 									min={2}
 									max={MAX_COPIES}
 									required
-									value={count}
-									onChange={(event) =>
-										setCount(
-											Math.min(
-												Math.max(Number(event.target.value) || 1, 1),
-												MAX_COPIES,
-											),
-										)
-									}
+									value={countText}
+									onChange={(event) => setCountText(event.target.value)}
+									onBlur={() => setCountText(String(toCopyCount(countText)))}
 								/>
 							</div>
 						)}

@@ -617,5 +617,7 @@
 	"admin_material_remove": "Usuń materiał {n}",
 	"admin_material_url_invalid": "Podaj adres zaczynający się od https://",
 	"agenda_speakers": "Prowadzący",
-	"agenda_materials": "Materiały"
+	"agenda_materials": "Materiały",
+	"admin_material_url_required": "Podaj adres materiału.",
+	"admin_speaker_name_required": "Podaj imię i nazwisko prelegenta."
 }

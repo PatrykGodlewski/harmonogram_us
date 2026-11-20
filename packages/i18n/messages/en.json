@@ -617,5 +617,7 @@
 	"admin_material_remove": "Remove material {n}",
 	"admin_material_url_invalid": "Enter an address starting with https://",
 	"agenda_speakers": "Speakers",
-	"agenda_materials": "Materials"
+	"agenda_materials": "Materials",
+	"admin_material_url_required": "Enter the material's address.",
+	"admin_speaker_name_required": "Enter the speaker's name."
 }

@@ -66,8 +66,9 @@ export function AgendaItemRow({
 				<p className="font-medium">{item.title}</p>
 				{item.speakers.length > 0 ? (
 					<ul aria-label={agenda_speakers()} className="text-sm">
-						{item.speakers.map((speaker) => (
-							<li key={`${speaker.name}|${speaker.affiliation ?? ""}`}>
+						{item.speakers.map((speaker, index) => (
+							// biome-ignore lint/suspicious/noArrayIndexKey: a static list that may repeat a name
+							<li key={index}>
 								<span className="font-medium">{speaker.name}</span>
 								{speaker.affiliation ? (
 									<span className="text-muted-foreground">
@@ -87,8 +88,9 @@ export function AgendaItemRow({
 						aria-label={agenda_materials()}
 						className="flex flex-wrap gap-x-3 gap-y-1 text-sm"
 					>
-						{item.materials.map((material) => (
-							<li key={material.url}>
+						{item.materials.map((material, index) => (
+							// biome-ignore lint/suspicious/noArrayIndexKey: a static list that may repeat a link
+							<li key={index}>
 								<a
 									href={material.url}
 									target="_blank"

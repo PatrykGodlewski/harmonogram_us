@@ -108,7 +108,8 @@ test("[F12] obecny pobiera zaświadczenie, nieobecny nie @uczestnik", async ({
 	).toHaveCount(0);
 });
 
-test("[F12] po wydarzeniu obecni dostają e-mail z zaświadczeniem", async ({}, testInfo) => {
+test("[F12] po wydarzeniu obecni dostają e-mail z zaświadczeniem", async () => {
+	const testInfo = test.info();
 	const base = uniqueEmail(testInfo);
 	const present = await createTestUser(`present-${base}`);
 	const absent = await createTestUser(`absent-${base}`);

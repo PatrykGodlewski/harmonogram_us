@@ -44,7 +44,14 @@ test("[F31] co tydzień, 4 razy daje cztery szkice @organizator", async ({
 	await dialog.getByLabel("Nowy termin").fill(`${warsawDate(7)}T18:00`);
 	await dialog.getByRole("combobox", { name: "Powtarzaj" }).click();
 	await page.getByRole("option", { name: "Co tydzień" }).click();
-	await dialog.getByLabel("Ile razy").fill("4");
+	// Typing into the field replaces the number (no jump to the maximum)
+	const count = dialog.getByLabel("Ile razy");
+	await count.press("Backspace");
+	await count.pressSequentially("6");
+	await expect(
+		dialog.getByRole("button", { name: "Utwórz kopie (6)" }),
+	).toBeVisible();
+	await count.fill("4");
 	await dialog.getByLabel("Program").uncheck();
 	await dialog.getByRole("button", { name: "Utwórz kopie (4)" }).click();
 	await expect(page.getByText("Utworzono szkiców: 4")).toBeVisible();

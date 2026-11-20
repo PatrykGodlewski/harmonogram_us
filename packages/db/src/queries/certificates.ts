@@ -54,6 +54,8 @@ export async function getCertificate(
 		: null;
 }
 
+/** Attendees per run; the next run (15 minutes later) takes the rest. */
+const CLAIM_BATCH = 500;
 /** Events that ended longer ago than this send no "certificate ready" e-mail (switched on late). */
 const SEND_WINDOW_DAYS = 30;
 
@@ -81,6 +83,7 @@ export async function queueReadyCertificates(
 					AND ${certificateAvailableSql(sql`r`, sql`e`, sql`${at}::timestamptz`)}
 					AND ${effectiveEventEndSql(sql`e`)} > ${at}::timestamptz - make_interval(days => ${SEND_WINDOW_DAYS})
 				ORDER BY r.created_at
+				LIMIT ${CLAIM_BATCH}
 				FOR UPDATE OF r SKIP LOCKED
 			)
 			RETURNING id`);

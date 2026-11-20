@@ -70,8 +70,9 @@ export async function handleEmailJob(
 					registration.locale,
 				),
 				// The certificate is on the account page (sign-in first, then the download).
+				// Certificates are on the account page; a declined person may no longer open an invite-only event.
 				url:
-					job.change === "certificate"
+					job.change === "certificate" || job.change === "rejected"
 						? `${appUrl}/account`
 						: `${appUrl}/events/${registration.eventId}`,
 				ticketUrl:

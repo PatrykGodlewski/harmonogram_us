@@ -25,11 +25,13 @@ import {
 	admin_material_remove,
 	admin_material_url,
 	admin_material_url_invalid,
+	admin_material_url_required,
 	admin_materials,
 	admin_save_success,
 	admin_speaker_add,
 	admin_speaker_affiliation,
 	admin_speaker_name,
+	admin_speaker_name_required,
 	admin_speaker_remove,
 	admin_speakers,
 } from "@repo/i18n/paraglide/messages";
@@ -74,21 +76,35 @@ const agendaItemFormSchema = z
 		maxSeats: z.string().regex(/^\d*$/),
 		requiresRegistration: z.boolean(),
 		speakers: z.array(
-			z.object({ name: z.string().max(200), affiliation: z.string().max(200) }),
+			z
+				.object({ name: z.string().max(200), affiliation: z.string().max(200) })
+				// A filled row needs a name; it is never dropped silently.
+				.refine(
+					(speaker) => speaker.name.trim() || !speaker.affiliation.trim(),
+					{
+						path: ["name"],
+						message: admin_speaker_name_required(),
+					},
+				),
 		),
 		materials: z.array(
-			z.object({
-				label: z.string().max(200),
-				url: z.union([
-					z.literal(""),
-					z
-						.url({
-							protocol: /^https?$/,
-							error: () => admin_material_url_invalid(),
-						})
-						.max(2000),
-				]),
-			}),
+			z
+				.object({
+					label: z.string().max(200),
+					url: z.union([
+						z.literal(""),
+						z
+							.url({
+								protocol: /^https?$/,
+								error: () => admin_material_url_invalid(),
+							})
+							.max(2000),
+					]),
+				})
+				.refine((material) => material.url || !material.label.trim(), {
+					path: ["url"],
+					message: admin_material_url_required(),
+				}),
 		),
 	})
 	.refine(

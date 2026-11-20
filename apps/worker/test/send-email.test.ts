@@ -285,3 +285,25 @@ describe("event invitations", () => {
 		expect(sent).toHaveLength(1);
 	});
 });
+
+describe("declined requests", () => {
+	it("link to the account, since a declined person may no longer open an invite-only event", async () => {
+		const { createEvent, createUser, resetDb } = await import("../../../packages/db/test/helpers");
+		const { registerForEvent } = await import("@repo/db/queries/event-registrations");
+		const { rejectRegistrations } = await import("@repo/db/queries/registration-approval");
+		await resetDb();
+		const eventId = await createEvent({ requiresApproval: true });
+		const userId = await createUser("declined@x.test");
+		await registerForEvent(eventId, userId, "pl");
+		let registrationId = "";
+		const { db } = await import("@repo/db/client");
+		const { eventRegistrations } = await import("@repo/db/schema/event-registrations");
+		const [row] = await db.select({ id: eventRegistrations.id }).from(eventRegistrations);
+		registrationId = row?.id ?? "";
+		await rejectRegistrations(eventId, [registrationId]);
+		const { sent, deps } = capture();
+		await handleEmailJob({ kind: "registration", registrationId, change: "rejected" }, deps);
+		expect(sent[0]?.text).toContain("/pl/account");
+		expect(sent[0]?.text).not.toContain(`/events/${eventId}`);
+	});
+});

@@ -8,7 +8,7 @@ Read before changing capacity, registration, waitlists, groups, Electric shapes 
 
 Refresh functions must first lock the count row, then recount in a separate statement (migration `0006`). Under READ COMMITTED, a single UPDATE that waits for the lock recounts using a stale snapshot. Regression coverage: `packages/db/test/concurrency.test.ts`.
 
-Only `registered` registrations take a place; `waitlisted` registrations wait in `created_at` order. Groups also hold places through the count triggers. Every operation freeing capacity (withdrawal, higher limit, smaller/closed/expired group) must promote from the waitlist in the same transaction with the event row locked; preserve the existing promotion/notification helper (`promoteFromWaitlist` / the current notifying wrapper).
+Only `registered` registrations take a place; `waitlisted` registrations wait in `created_at` order. On events with `requires_approval`, self-registration creates `pending` (no place); `approveRegistrations` takes the event lock and gives free places to requests in request (`created_at`) order, the rest become `waitlisted`; `rejectRegistrations` sets `rejected` (kept, so withdrawing cannot re-ask; it can still be approved later). Organiser-added people, groups and agenda items never bypass approval: organisers skip it (`byOrganizer`), groups are refused on approval events, agenda items need an approved registration (`APPROVAL_REQUIRED`). Groups also hold places through the count triggers. Every operation freeing capacity (withdrawal, higher limit, smaller/closed/expired group) must promote from the waitlist in the same transaction with the event row locked; preserve the existing promotion/notification helper (`promoteFromWaitlist` / the current notifying wrapper).
 
 Global row-lock order:
 
@@ -21,6 +21,8 @@ Global row-lock order:
 Foreign-key insertion takes a key-share lock on the parent: lock parents first. Mutations return the Postgres transaction ID via `queries/txid.ts` for live-sync confirmation.
 
 Only `published` events take registrations or promote from the waitlist (`assertEventOpen`: drafts are `EVENT_NOT_FOUND`, cancelled ones `EVENT_CANCELLED`); a cancelled event can't be edited. Organiser add/remove (`addRegistrantByEmail`, `removeRegistrant`) follow the same rules and share `withdraw()` with self-service. Attendance is `event_registrations.checked_in_at`, set by `checkInByTicketCode` (first scan wins; a re-scan reports the original time) or the manual switch.
+
+Invite-only events (`visibility = 'private'`, CHECK: `invite_token` not null) are never listed or in feeds; `canOpenEvent` (`packages/api/src/events/access.ts`) opens them for the current invite link, a non-declined registration, or organisers, and is checked by the event page, registration, agenda-item registration, group creation and the single-event ICS.
 
 ## Electric → TanStack DB → UI
 
@@ -42,6 +44,7 @@ Local plain HTTP has Chrome's six-connections-per-origin limit across tabs. Ever
 - `group-invitations`: policy `short`, `singletonKey = memberId`, at most one queued send per member. Only invitation-token hashes are stored; the email job issues a fresh token when sending.
 - `event-reminders`: every five minutes, one statement claims due events (`queueDueReminders`) and queues reminder e-mails (registered people only).
 - `prune-old-registrations`: daily, deletes registrations and groups of events that ended more than `REGISTRATION_RETENTION_DAYS` ago.
+- `certificate-emails`: every 15 minutes; `queueReadyCertificates` claims attendees (registered + checked in, published ended event with `certificates_enabled`, ended within 30 days) whose `certificate_emailed_at` is null, with `FOR UPDATE SKIP LOCKED`, and queues `registration`/`certificate` e-mails in the same transaction (late check-ins are picked up on a later run).
 - `close-expired-groups`: every five minutes; closing groups releases held seats through triggers and promotes waitlisted registrations.
 
 **Enqueue jobs inside the same Drizzle transaction as the data, never after commit.** Example: `enqueueInvitationEmails(jobs, { tx })`, using pg-boss `fromDrizzle`; DB group functions take `onInvited(tx, refs)` hooks.
