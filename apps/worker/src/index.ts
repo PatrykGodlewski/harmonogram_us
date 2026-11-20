@@ -1,14 +1,18 @@
 import { pruneRateLimits } from "@repo/db/queries/rate-limits";
+import { pruneOldRegistrations } from "@repo/db/queries/retention";
+import { env } from "@repo/env";
 import { getBoss } from "@repo/jobs/client";
 import {
 	CLOSE_EXPIRED_GROUPS_CRON,
 	emailJob,
 	groupInvitationEmailPayload,
 	JOBS_TIME_ZONE,
+	PRUNE_OLD_REGISTRATIONS_CRON,
 	PRUNE_RATE_LIMITS_CRON,
 	QUEUE_CLOSE_EXPIRED_GROUPS,
 	QUEUE_EMAILS,
 	QUEUE_GROUP_INVITATION_EMAIL,
+	QUEUE_PRUNE_OLD_REGISTRATIONS,
 	QUEUE_PRUNE_RATE_LIMITS,
 } from "@repo/jobs/queues";
 import { closeExpired } from "./handlers/close-expired";
@@ -57,6 +61,21 @@ await boss.work(QUEUE_PRUNE_RATE_LIMITS, async () => {
 await boss.schedule(QUEUE_PRUNE_RATE_LIMITS, PRUNE_RATE_LIMITS_CRON, null, {
 	tz: JOBS_TIME_ZONE,
 });
+
+await boss.work(QUEUE_PRUNE_OLD_REGISTRATIONS, async () => {
+	const { deleted } = await pruneOldRegistrations(
+		new Date(),
+		env.REGISTRATION_RETENTION_DAYS,
+	);
+	console.log(`[worker] deleted ${deleted} registration(s) past retention`);
+});
+
+await boss.schedule(
+	QUEUE_PRUNE_OLD_REGISTRATIONS,
+	PRUNE_OLD_REGISTRATIONS_CRON,
+	null,
+	{ tz: JOBS_TIME_ZONE },
+);
 
 console.log("[worker] worker started");
 

@@ -459,5 +459,13 @@
 	"publish_checklist_ready": "Wszystko gotowe. Po publikacji wydarzenie zobaczą uczestnicy.",
 	"publish_checklist_fix_first": "Uzupełnij pozycje oznaczone „Brakuje”.",
 	"publish_checklist_saved": "Zapisano.",
-	"admin_events_search": "Szukaj wydarzenia"
+	"admin_events_search": "Szukaj wydarzenia",
+	"privacy_title": "Informacja o danych osobowych",
+	"privacy_notice_short": "Zapisując się, przekazujesz organizatorowi imię, nazwisko i e-mail. Po zakończeniu okresu przechowywania usuwamy je automatycznie.",
+	"privacy_link": "Informacja o danych osobowych",
+	"privacy_who": "Administratorem danych jest uczelnia prowadząca serwis. Dostęp do danych zapisu mają organizatorzy wydarzenia.",
+	"privacy_what": "Przetwarzamy imię, nazwisko, adres e-mail, zapisy na wydarzenia i punkty programu oraz obecność, aby zorganizować wydarzenie i wysyłać o nim wiadomości.",
+	"privacy_retention": "Dane zapisów przechowujemy przez {days} dni od zakończenia wydarzenia, potem usuwamy je automatycznie.",
+	"privacy_rights": "Na stronie konta możesz pobrać swoje dane albo usunąć konto razem z zapisami.",
+	"privacy_back": "Wróć do wydarzeń"
 }

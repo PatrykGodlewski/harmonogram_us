@@ -11,6 +11,8 @@ import {
 	events_unregister,
 	events_waitlisted,
 	groups_register_group,
+	privacy_link,
+	privacy_notice_short,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { Badge } from "@repo/ui/components/badge";
@@ -107,6 +109,14 @@ export function EventSummary({
 					registrations={registrations}
 				/>
 			</div>
+			{isClosed ? null : (
+				<p className="text-xs text-muted-foreground">
+					{privacy_notice_short()}{" "}
+					<Link to="/privacy" className="underline underline-offset-2">
+						{privacy_link()}
+					</Link>
+				</p>
+			)}
 			{user && !isCancelled && isBeforeGroupDeadline(event) ? (
 				<Button variant="outline" size="sm" className="self-start" asChild>
 					<Link to="/events/$eventId/groups/new" params={{ eventId: event.id }}>

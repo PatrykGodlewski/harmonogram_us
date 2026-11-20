@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AccountRouteImport } from './routes/account'
@@ -29,6 +30,11 @@ import { Route as EventsEventIdGroupsNewRouteImport } from './routes/events/$eve
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LogoutRoute = LogoutRouteImport.update({
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
+  '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/api/metrics': typeof ApiMetricsRoute
   '/events/$eventId': typeof EventsEventIdRoute
@@ -133,6 +140,7 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
+  '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/api/metrics': typeof ApiMetricsRoute
   '/events/$eventId': typeof EventsEventIdRoute
@@ -152,6 +160,7 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
+  '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/api/metrics': typeof ApiMetricsRoute
   '/events/$eventId': typeof EventsEventIdRoute
@@ -172,6 +181,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/login'
     | '/logout'
+    | '/privacy'
     | '/signup'
     | '/api/metrics'
     | '/events/$eventId'
@@ -190,6 +200,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/login'
     | '/logout'
+    | '/privacy'
     | '/signup'
     | '/api/metrics'
     | '/events/$eventId'
@@ -208,6 +219,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/login'
     | '/logout'
+    | '/privacy'
     | '/signup'
     | '/api/metrics'
     | '/events/$eventId'
@@ -227,6 +239,7 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   LoginRoute: typeof LoginRoute
   LogoutRoute: typeof LogoutRoute
+  PrivacyRoute: typeof PrivacyRoute
   SignupRoute: typeof SignupRoute
   ApiMetricsRoute: typeof ApiMetricsRoute
   EventsEventIdRoute: typeof EventsEventIdRoute
@@ -248,6 +261,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/logout': {
@@ -363,6 +383,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRoute,
   LoginRoute: LoginRoute,
   LogoutRoute: LogoutRoute,
+  PrivacyRoute: PrivacyRoute,
   SignupRoute: SignupRoute,
   ApiMetricsRoute: ApiMetricsRoute,
   EventsEventIdRoute: EventsEventIdRoute,

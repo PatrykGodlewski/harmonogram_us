@@ -9,6 +9,9 @@ export const QUEUE_PRUNE_RATE_LIMITS = "prune-rate-limits";
 export const PRUNE_RATE_LIMITS_CRON = "15 3 * * *";
 /** Transactional e-mails (verification, registration), retried on failure. */
 export const QUEUE_EMAILS = "emails";
+/** Daily deletion of registrations past the retention period (GDPR). */
+export const QUEUE_PRUNE_OLD_REGISTRATIONS = "prune-old-registrations";
+export const PRUNE_OLD_REGISTRATIONS_CRON = "30 3 * * *";
 
 /** Every 5 minutes, in the installation time zone. */
 export const CLOSE_EXPIRED_GROUPS_CRON = "*/5 * * * *";
@@ -52,4 +55,5 @@ export const QUEUES = [
 	{ name: QUEUE_CLOSE_EXPIRED_GROUPS, policy: "standard" },
 	{ name: QUEUE_EMAILS, policy: "standard" },
 	{ name: QUEUE_PRUNE_RATE_LIMITS, policy: "standard" },
+	{ name: QUEUE_PRUNE_OLD_REGISTRATIONS, policy: "standard" },
 ] as const;

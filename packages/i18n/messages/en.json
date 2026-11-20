@@ -459,5 +459,13 @@
 	"publish_checklist_ready": "All set. Once published, participants can see the event.",
 	"publish_checklist_fix_first": "Fill in the items marked “Missing”.",
 	"publish_checklist_saved": "Saved.",
-	"admin_events_search": "Search events"
+	"admin_events_search": "Search events",
+	"privacy_title": "Personal data notice",
+	"privacy_notice_short": "By registering, you share your name and e-mail with the organizer. We delete them automatically after the retention period.",
+	"privacy_link": "Personal data notice",
+	"privacy_who": "The university running this service controls the data. The event's organizers can see registration data.",
+	"privacy_what": "We process your name, e-mail address, registrations for events and agenda items, and attendance to organize the event and send messages about it.",
+	"privacy_retention": "We keep registration data for {days} days after the event ends, then delete it automatically.",
+	"privacy_rights": "On your account page you can download your data or delete your account with its registrations.",
+	"privacy_back": "Back to events"
 }

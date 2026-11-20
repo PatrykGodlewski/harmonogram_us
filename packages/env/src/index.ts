@@ -34,6 +34,12 @@ export const env = createEnv({
 		ADMIN_URL: z.url().default("http://localhost:3001"),
 		TURNSTILE_SECRET_KEY: z.string().optional(),
 		HIBP_MIN_BREACH_COUNT: z.coerce.number().int().positive().default(1),
+		/** Days after an event ends before its registrations are deleted (GDPR). */
+		REGISTRATION_RETENTION_DAYS: z.coerce
+			.number()
+			.int()
+			.positive()
+			.default(365),
 
 		GOOGLE_CLIENT_ID: z.string().optional(),
 		GOOGLE_CLIENT_SECRET: z.string().optional(),
