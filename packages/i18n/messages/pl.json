@@ -445,5 +445,6 @@
 	"event_room": "sala {room}",
 	"admin_publish_missing_place": "Aby opublikować, wybierz miejsce albo wpisz salę.",
 	"admin_publish_missing_link": "Aby opublikować, dodaj link online.",
-	"admin_publish_missing_both": "Aby opublikować, podaj miejsce lub salę i link online."
+	"admin_publish_missing_both": "Aby opublikować, podaj miejsce lub salę i link online.",
+	"admin_event_edit": "Edytuj wydarzenie"
 }

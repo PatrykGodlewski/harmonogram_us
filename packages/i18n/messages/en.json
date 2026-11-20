@@ -445,5 +445,6 @@
 	"event_room": "room {room}",
 	"admin_publish_missing_place": "To publish, pick a place or type a room.",
 	"admin_publish_missing_link": "To publish, add an online link.",
-	"admin_publish_missing_both": "To publish, add a place or room and an online link."
+	"admin_publish_missing_both": "To publish, add a place or room and an online link.",
+	"admin_event_edit": "Edit event"
 }

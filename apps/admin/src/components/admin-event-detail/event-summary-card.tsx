@@ -3,6 +3,7 @@ import type { AdminEventDetails } from "@repo/api/admin/queries";
 import {
 	admin_error_generic,
 	admin_event_back,
+	admin_event_edit,
 	admin_event_places,
 	admin_event_publish,
 	admin_event_published,
@@ -21,8 +22,10 @@ import { AttendanceModeBadge } from "@repo/ui/composed/events/attendance-mode-ba
 import { formatEventDateTime } from "@repo/ui/time";
 import { useMutation } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { toast } from "sonner";
 import { formatMutationError } from "~/lib/format-mutation-error";
+import { EventFormDialog } from "../event-form-dialog";
 import { CancelEventButton } from "./cancel-event-button";
 import { DuplicateEventDialog } from "./duplicate-event-dialog";
 import { MessageDialog } from "./message-dialog";
@@ -42,6 +45,7 @@ export function EventSummaryCard({ event, onChanged }: EventSummaryCardProps) {
 	const locale = getLocale();
 	const registered = event.maxSeats - event.seatsRemaining;
 	const missing = event.missingForPublish;
+	const [editOpen, setEditOpen] = useState(false);
 	const publishMutation = useMutation({
 		mutationFn: () => publishAdminEventServer({ data: { id: event.id } }),
 		onSuccess: async () => {
@@ -103,6 +107,11 @@ export function EventSummaryCard({ event, onChanged }: EventSummaryCardProps) {
 				</div>
 			) : null}
 			<div className="flex flex-wrap gap-2">
+				{event.status !== "cancelled" ? (
+					<Button variant="outline" onClick={() => setEditOpen(true)}>
+						{admin_event_edit()}
+					</Button>
+				) : null}
 				<DuplicateEventDialog eventId={event.id} />
 				<MessageDialog eventId={event.id} />
 				{event.status === "published" ? (
@@ -122,6 +131,12 @@ export function EventSummaryCard({ event, onChanged }: EventSummaryCardProps) {
 					{event.description}
 				</p>
 			) : null}
+			<EventFormDialog
+				open={editOpen}
+				onOpenChange={setEditOpen}
+				event={event}
+				onSaved={onChanged}
+			/>
 		</section>
 	);
 }

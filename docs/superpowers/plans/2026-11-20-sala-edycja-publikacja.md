@@ -31,17 +31,17 @@
 - `events.room text` (null), `EventWithRelations.room: string | null`, `CreateEventInput/UpdateEventInput.room?: string | null`.
 - `missingForPublish(event: { attendanceMode; locationId; room; onlineUrl }): ("place" | "link")[]` w `queries/events.ts`; `publishEvent` rzuca `EVENT_INCOMPLETE`, gdy lista nie jest pusta.
 
-- [ ] Vitest (najpierw): sala `"B105"` bez miejsca pozwala opublikować wydarzenie na miejscu; sala `"   "` nie; online bez sali i z linkiem przechodzi; hybrydowe z salą bez linku zwraca `["link"]`; duplikat ma `room: "B105"`. Patrz, jak pada.
-- [ ] e2e (najpierw) `[F3] sala wpisana ręcznie wystarcza do publikacji @organizator`: organizator tworzy wydarzenie na miejscu z salą „B105”, publikuje; strona publiczna pokazuje „sala B105”.
-- [ ] Implementacja, testy zielone, commit `feat: free-text room for events`.
+- [x] Vitest (najpierw): sala `"B105"` bez miejsca pozwala opublikować wydarzenie na miejscu; sala `"   "` nie; online bez sali i z linkiem przechodzi; hybrydowe z salą bez linku zwraca `["link"]`; duplikat ma `room: "B105"`. Patrz, jak pada.
+- [x] e2e (najpierw) `[F3] sala wpisana ręcznie wystarcza do publikacji @organizator`: organizator tworzy wydarzenie na miejscu z salą „B105”, publikuje; strona publiczna pokazuje „sala B105”.
+- [x] Implementacja, testy zielone, commit `feat: free-text room for events`.
 
 ### Task 2: Jaśniejsza publikacja
 
 **Pliki:** `apps/admin/src/components/admin-event-detail/event-summary-card.tsx`, messages. Test: `e2e/tests/f3-szkic-i-publikacja.spec.ts` (istniejący test zmienia oczekiwanie).
 
-- [ ] e2e (najpierw): przy szkicu online bez linku karta pokazuje „Aby opublikować, dodaj link online.”, a „Opublikuj” jest nieaktywny; po dodaniu linku przycisk działa.
-- [ ] Implementacja: karta liczy `missingForPublish` z danych wydarzenia (funkcja z Task 1, importowana jako czysty helper bez dostępu do bazy — przenieś ją do `packages/db/src/queries/event-completeness.ts`, żeby UI nie importował klienta bazy).
-- [ ] Testy zielone, commit `feat(admin): say what's missing before publishing`.
+- [x] e2e (najpierw): przy szkicu online bez linku karta pokazuje „Aby opublikować, dodaj link online.”, a „Opublikuj” jest nieaktywny; po dodaniu linku przycisk działa.
+- [x] Implementacja: karta liczy `missingForPublish` z danych wydarzenia (funkcja z Task 1, importowana jako czysty helper bez dostępu do bazy — przenieś ją do `packages/db/src/queries/event-completeness.ts`, żeby UI nie importował klienta bazy).
+- [x] Testy zielone, commit `feat(admin): say what's missing before publishing`.
 
 ### Task 3: Edycja ze strony wydarzenia
 
@@ -49,5 +49,14 @@
 
 **Interfejsy:** `EventFormDialog({ open, onOpenChange, event: EventWithRelations | null, onSaved: () => Promise<unknown> })`.
 
-- [ ] e2e (najpierw) `[F3] organizator edytuje wydarzenie ze strony wydarzenia @organizator`: „Edytuj” w karcie, zmiana tytułu i sali, zapis; nagłówek i sala w karcie się zmieniają.
-- [ ] Implementacja, pełne e2e, commit `feat(admin): edit an event from its page`.
+- [x] e2e (najpierw) `[F3] organizator edytuje wydarzenie ze strony wydarzenia @organizator`: „Edytuj” w karcie, zmiana tytułu i sali, zapis; nagłówek i sala w karcie się zmieniają.
+- [x] Implementacja, pełne e2e, commit `feat(admin): edit an event from its page`.
+
+## Verification summary
+
+- Verified 2026-11-20 on `next`. Scope: all three parts of the design (room, publish hint, edit from the event page).
+- Evidence: `e2e/tests/f3-szkic-i-publikacja.spec.ts` ("[F3] sala wpisana ręcznie wystarcza do publikacji", draft test now checks the hint and the disabled button), `e2e/tests/f3-edycja.spec.ts`; Vitest `packages/db/test/event-status.test.ts` (room counts as place, blank doesn't, missing list per format), `event-duplicate.test.ts` (room copied).
+- Final checks: `pnpm typecheck`, `pnpm lint`, `pnpm test` green; `pnpm e2e` 73/73.
+- Decisions: what's missing is computed on the server (`missingForPublish` in `@repo/db/queries/event-completeness`, returned with the admin event details as `missingForPublish`) because `apps/admin` doesn't depend on `@repo/db`; the event form moved to `apps/admin/src/components/event-form-dialog.tsx` and resets with one `form.reset(values)`.
+- Review: self-review (small change).
+- Status: complete.
