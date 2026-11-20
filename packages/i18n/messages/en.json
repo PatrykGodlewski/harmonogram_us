@@ -385,5 +385,6 @@
 	"admin_event_duplicate_title": "Duplicate event",
 	"admin_event_duplicate_body": "The copy gets the same details, agenda and organizers, without registrations. It starts as a draft.",
 	"admin_event_duplicate_date": "New date",
-	"admin_event_duplicated": "Event copy created."
+	"admin_event_duplicated": "Event copy created.",
+	"admin_field_signed_in_only": "Signed-in users only"
 }

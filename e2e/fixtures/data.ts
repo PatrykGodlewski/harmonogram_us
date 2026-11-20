@@ -7,6 +7,7 @@ import { eventFaculties, eventTypes } from "@repo/db/schema/event-lookups";
 import {
 	type AttendanceMode,
 	type EventStatus,
+	type EventVisibility,
 	events,
 } from "@repo/db/schema/events";
 import { type AccountRole, ensureAccount } from "@repo/db/seed/accounts";
@@ -57,6 +58,7 @@ export async function createTestEvent(input: {
 	status?: EventStatus;
 	attendanceMode?: AttendanceMode;
 	onlineUrl?: string;
+	visibility?: EventVisibility;
 	/** Makes this user the event's organizer (default: none, only admins manage it). */
 	organizerId?: string;
 	/** startHour: hours after the event starts (default: the item's index); durationMinutes default 50. */
@@ -80,6 +82,7 @@ export async function createTestEvent(input: {
 		organizerId: input.organizerId ?? null,
 		attendanceMode: input.attendanceMode,
 		onlineUrl: input.onlineUrl ?? null,
+		visibility: input.visibility,
 	});
 	if (!event) {
 		throw new Error("createEvent returned nothing");

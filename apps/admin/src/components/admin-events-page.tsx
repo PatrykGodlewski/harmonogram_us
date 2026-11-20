@@ -35,6 +35,7 @@ import {
 	admin_field_max_seats,
 	admin_field_none,
 	admin_field_online_url,
+	admin_field_signed_in_only,
 	admin_field_status,
 	admin_field_title,
 	admin_field_type,
@@ -121,6 +122,7 @@ export function AdminEventsPage({
 				locationId: z.string(),
 				facultyId: z.string(),
 				attendanceMode: z.enum(["onsite", "online", "hybrid"]),
+				signedInOnly: z.boolean(),
 				onlineUrl: z.union([
 					z.literal(""),
 					z.url({ protocol: /^https$/ }).max(2000),
@@ -162,6 +164,9 @@ export function AdminEventsPage({
 				locationId: values.locationId === NONE_VALUE ? null : values.locationId,
 				facultyId: values.facultyId === NONE_VALUE ? null : values.facultyId,
 				attendanceMode: values.attendanceMode,
+				visibility: values.signedInOnly
+					? ("authenticated" as const)
+					: ("public" as const),
 				onlineUrl:
 					values.attendanceMode === "onsite" || !values.onlineUrl.trim()
 						? null
@@ -210,6 +215,7 @@ export function AdminEventsPage({
 			locationId: NONE_VALUE,
 			facultyId: NONE_VALUE,
 			attendanceMode: "onsite" as AttendanceMode,
+			signedInOnly: false,
 			onlineUrl: "",
 		},
 		validators: {
@@ -260,6 +266,7 @@ export function AdminEventsPage({
 		form.setFieldValue("facultyId", row.facultyId ?? NONE_VALUE);
 		form.setFieldValue("attendanceMode", row.attendanceMode);
 		form.setFieldValue("onlineUrl", row.onlineUrl ?? "");
+		form.setFieldValue("signedInOnly", row.visibility === "authenticated");
 		setDialogOpen(true);
 	};
 
@@ -630,6 +637,22 @@ export function AdminEventsPage({
 						)
 					}
 				</form.Subscribe>
+
+				<form.Field name="signedInOnly">
+					{(field) => (
+						<div className="flex items-center gap-2">
+							<input
+								id={field.name}
+								type="checkbox"
+								className="size-4 accent-primary"
+								checked={field.state.value}
+								disabled={saveMutation.isPending}
+								onChange={(event) => field.handleChange(event.target.checked)}
+							/>
+							<Label htmlFor={field.name}>{admin_field_signed_in_only()}</Label>
+						</div>
+					)}
+				</form.Field>
 
 				<form.Field name="facultyId">
 					{(field) => (

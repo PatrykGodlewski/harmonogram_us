@@ -40,15 +40,15 @@ async function draft(values: Partial<typeof events.$inferInsert> = {}) {
 describe("event status", () => {
 	it("a new event is a draft", async () => {
 		const id = await draft();
-		expect((await getEventById(id, "manage"))?.status).toBe("draft");
+		expect((await getEventById(id, { kind: "manage" }))?.status).toBe("draft");
 	});
 
 	it("the public list and page skip drafts; the panel sees them", async () => {
 		const id = await draft();
-		const page = await getEventPage({ audience: "public" }, 20);
+		const page = await getEventPage({ audience: { kind: "public", signedIn: false } }, 20);
 		expect(page.events.map((e) => e.id)).not.toContain(id);
-		expect(await getEventById(id, "public")).toBeNull();
-		expect(await getEventById(id, "manage")).not.toBeNull();
+		expect(await getEventById(id, { kind: "public", signedIn: false })).toBeNull();
+		expect(await getEventById(id, { kind: "manage" })).not.toBeNull();
 	});
 
 	it("registering for a draft is 'event not found'", async () => {
@@ -108,7 +108,7 @@ describe("event status", () => {
 		const published = await publishEvent(id);
 		expect(published.status).toBe("published");
 		expect(published.publishedAt).toBeInstanceOf(Date);
-		const page = await getEventPage({ audience: "public" }, 20);
+		const page = await getEventPage({ audience: { kind: "public", signedIn: false } }, 20);
 		expect(page.events.map((e) => e.id)).toContain(id);
 		await expect(publishEvent(id)).rejects.toMatchObject({
 			code: "EVENT_NOT_DRAFT",
@@ -121,10 +121,10 @@ describe("event status", () => {
 			attendanceMode: "online",
 			onlineUrl: "https://meet.example.test/secret",
 		});
-		const page = await getEventPage({ audience: "public" }, 20);
+		const page = await getEventPage({ audience: { kind: "public", signedIn: false } }, 20);
 		expect(page.events.find((e) => e.id === id)?.onlineUrl).toBeNull();
-		expect((await getEventById(id, "public"))?.onlineUrl).toBeNull();
-		expect((await getEventById(id, "manage"))?.onlineUrl).toBe(
+		expect((await getEventById(id, { kind: "public", signedIn: false }))?.onlineUrl).toBeNull();
+		expect((await getEventById(id, { kind: "manage" }))?.onlineUrl).toBe(
 			"https://meet.example.test/secret",
 		);
 		expect(await getEventOnlineUrl(id)).toBe("https://meet.example.test/secret");

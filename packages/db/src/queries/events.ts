@@ -14,6 +14,7 @@ import {
 import {
 	type AttendanceMode,
 	type EventStatus,
+	type EventVisibility,
 	events,
 } from "../schema/events";
 import { registrationGroups } from "../schema/groups";
@@ -33,8 +34,13 @@ import {
 import { lockEvent } from "./locks";
 import { getCurrentTxId } from "./txid";
 
-/** Who is looking: the public site never sees drafts; the panel sees everything. */
-export type EventAudience = "public" | "manage";
+/**
+ * Who is looking: the public site never sees drafts (nor signed-in-only events
+ * when nobody is signed in); the panel sees everything.
+ */
+export type EventAudience =
+	| { kind: "public"; signedIn: boolean }
+	| { kind: "manage" };
 
 export type EventFilters = {
 	audience: EventAudience;
@@ -64,6 +70,7 @@ export type EventWithRelations = {
 	cancelledAt: Date | null;
 	onlineUrl: string | null;
 	attendanceMode: AttendanceMode;
+	visibility: EventVisibility;
 	createdAt: Date;
 	updatedAt: Date;
 	typeLabel: string;
@@ -141,8 +148,11 @@ async function queryEvents(
 ): Promise<EventWithRelations[]> {
 	const conditions = [];
 
-	if (filters.audience === "public") {
+	if (filters.audience.kind === "public") {
 		conditions.push(ne(events.status, "draft"));
+		if (!filters.audience.signedIn) {
+			conditions.push(eq(events.visibility, "public"));
+		}
 	}
 
 	if (eventId) {
@@ -195,10 +205,11 @@ async function queryEvents(
 			cancelledAt: events.cancelledAt,
 			// The meeting link is for registered people only: never on the public site's reads.
 			onlineUrl:
-				filters.audience === "public"
+				filters.audience.kind === "public"
 					? sql<string | null>`null`
 					: events.onlineUrl,
 			attendanceMode: events.attendanceMode,
+			visibility: events.visibility,
 			createdAt: events.createdAt,
 			updatedAt: events.updatedAt,
 			typeLabel: eventTypes.label,
@@ -236,6 +247,7 @@ export type CreateEventInput = {
 	facultyId?: string | null;
 	onlineUrl?: string | null;
 	attendanceMode?: AttendanceMode;
+	visibility?: EventVisibility;
 	/** Becomes the event's first organizer; null for events only admins manage (seed data). */
 	organizerId: string | null;
 };
@@ -259,6 +271,7 @@ export async function createEvent(input: CreateEventInput) {
 				facultyId: input.facultyId ?? null,
 				onlineUrl: input.onlineUrl ?? null,
 				attendanceMode: input.attendanceMode ?? "onsite",
+				visibility: input.visibility ?? "public",
 			})
 			.returning();
 		if (event && input.organizerId) {
@@ -283,6 +296,7 @@ export type UpdateEventInput = {
 	facultyId?: string | null;
 	onlineUrl?: string | null;
 	attendanceMode?: AttendanceMode;
+	visibility?: EventVisibility;
 };
 
 /** Updates an event; raising the limit promotes waitlisted people into the new places. */
@@ -400,7 +414,10 @@ export async function publishEvent(
 			.set({ status: "published", publishedAt: now, updatedAt: now })
 			.where(eq(events.id, eventId));
 	});
-	const [published] = await queryEvents({ audience: "manage" }, eventId);
+	const [published] = await queryEvents(
+		{ audience: { kind: "manage" } },
+		eventId,
+	);
 	if (!published) {
 		throw new DomainError("EVENT_NOT_FOUND");
 	}

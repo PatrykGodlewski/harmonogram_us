@@ -385,5 +385,6 @@
 	"admin_event_duplicate_title": "Duplikuj wydarzenie",
 	"admin_event_duplicate_body": "Kopia dostanie te same dane, program i organizatorów, bez zapisów. Powstanie jako szkic.",
 	"admin_event_duplicate_date": "Nowy termin",
-	"admin_event_duplicated": "Utworzono kopię wydarzenia."
+	"admin_event_duplicated": "Utworzono kopię wydarzenia.",
+	"admin_field_signed_in_only": "Tylko dla zalogowanych"
 }

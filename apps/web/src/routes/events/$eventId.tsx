@@ -10,6 +10,7 @@ import {
 	createFileRoute,
 	Link,
 	notFound,
+	redirect,
 	useNavigate,
 } from "@tanstack/react-router";
 import { lazy, type ReactNode, Suspense, useEffect } from "react";
@@ -41,6 +42,13 @@ export const Route = createFileRoute("/events/$eventId")({
 			// A deleted or unknown event is a 404 page, not a server error.
 			if (error instanceof Error && error.message === "EVENT_NOT_FOUND") {
 				throw notFound();
+			}
+			// A signed-in-only event: sign in, then come back here.
+			if (error instanceof Error && error.message === "UNAUTHORIZED") {
+				throw redirect({
+					to: "/login",
+					search: { redirect: `/events/${params.eventId}` },
+				});
 			}
 			throw error;
 		}

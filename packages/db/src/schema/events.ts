@@ -5,6 +5,8 @@ import { eventFaculties, eventLocations, eventTypes } from "./event-lookups";
 /** `draft` is visible only in the panel; `cancelled` keeps its registrations as history. */
 export type EventStatus = "draft" | "published" | "cancelled";
 export type AttendanceMode = "onsite" | "online" | "hybrid";
+/** `authenticated` events are listed and shown only to signed-in people. */
+export type EventVisibility = "public" | "authenticated";
 
 export const events = pgTable(
 	"events",
@@ -33,6 +35,10 @@ export const events = pgTable(
 			.$type<AttendanceMode>()
 			.notNull()
 			.default("onsite"),
+		visibility: text("visibility")
+			.$type<EventVisibility>()
+			.notNull()
+			.default("public"),
 		createdAt: timestamp("created_at", {
 			withTimezone: true,
 		})
@@ -48,6 +54,10 @@ export const events = pgTable(
 		check(
 			"events_status_check",
 			sql`${table.status} IN ('draft', 'published', 'cancelled')`,
+		),
+		check(
+			"events_visibility_check",
+			sql`${table.visibility} IN ('public', 'authenticated')`,
 		),
 		check(
 			"events_attendance_mode_check",

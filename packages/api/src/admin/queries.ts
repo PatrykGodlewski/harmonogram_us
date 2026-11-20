@@ -38,7 +38,7 @@ export const fetchAdminEventsServer = panelQueryFn
 	.handler(async ({ data, context }) => {
 		const managed = await listManagedEventIds(context.user);
 		return getEvents({
-			audience: "manage",
+			audience: { kind: "manage" },
 			sortOrder: data.sortOrder,
 			...(managed === "all" ? {} : { ids: managed }),
 		});
@@ -92,7 +92,7 @@ export const fetchAdminEventDetailsServer = panelQueryFn
 	.inputValidator((input: unknown) => adminEventIdSchema.parse(input))
 	.handler(async ({ data, context }) => {
 		await assertCanManageEvent(context.user, data.eventId);
-		const event = await getEventById(data.eventId, "manage");
+		const event = await getEventById(data.eventId, { kind: "manage" });
 		if (!event) {
 			throw appError("NOT_FOUND");
 		}

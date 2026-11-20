@@ -25,9 +25,16 @@ export const eventFilterOptionsQueryOptions = queryOptions({
 
 export const fetchEventsServer = createServerFn({ method: "GET" })
 	.inputValidator((input: unknown) => eventFiltersSchema.parse(input))
-	.handler(async ({ data: { limit, ...filters } }) =>
-		getEventPage({ ...filters, audience: "public" }, limit),
-	);
+	.handler(async ({ data: { limit, ...filters } }) => {
+		const session = await getCurrentSession();
+		return getEventPage(
+			{
+				...filters,
+				audience: { kind: "public", signedIn: Boolean(session?.user) },
+			},
+			limit,
+		);
+	});
 
 /** Prefix of every event-list query, whatever the filters (for invalidation). */
 export const eventsQueryKeyPrefix = ["events"] as const;
@@ -55,12 +62,23 @@ export type { EventDetails } from "@repo/db/queries/events";
 export const fetchEventDetailsServer = createServerFn({ method: "GET" })
 	.inputValidator((input: unknown) => eventIdSchema.parse(input))
 	.handler(async ({ data }) => {
-		const event = await getEventById(data.eventId, "public");
+		const session = await getCurrentSession();
+		const signedIn = Boolean(session?.user);
+		const event = await getEventById(data.eventId, {
+			kind: "public",
+			signedIn,
+		});
 		if (!event) {
+			// A signed-in-only event asks an anonymous visitor to sign in (the page redirects).
+			if (
+				!signedIn &&
+				(await getEventById(data.eventId, { kind: "public", signedIn: true }))
+			) {
+				throw appError("UNAUTHORIZED");
+			}
 			throw appError("EVENT_NOT_FOUND");
 		}
 		// The public read never carries the meeting link; registered people get it here.
-		const session = await getCurrentSession();
 		if (
 			event.attendanceMode !== "onsite" &&
 			session?.user &&
