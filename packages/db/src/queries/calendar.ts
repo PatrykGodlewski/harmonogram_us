@@ -1,4 +1,4 @@
-import { and, asc, eq, gte, inArray, ne, sql } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, ne, notInArray, sql } from "drizzle-orm";
 import { db } from "../client";
 import { authUsers } from "../schema/better-auth";
 import { eventLocations } from "../schema/event-lookups";
@@ -81,16 +81,23 @@ export async function listPublicCalendarEntries(
 	return rows.map(toEntry);
 }
 
-/** One event for "add to calendar"; signed-in-only events need a signed-in visitor. */
+/**
+ * One event for "add to calendar"; signed-in-only events need a signed-in
+ * visitor, invite-only ones a caller that has checked access (`includePrivate`).
+ */
 export async function getCalendarEntry(
 	eventId: string,
-	signedIn: boolean,
+	viewer: { signedIn: boolean; includePrivate: boolean },
 ): Promise<CalendarEntry | null> {
+	const hidden = [
+		...(viewer.signedIn ? [] : ["authenticated" as const]),
+		...(viewer.includePrivate ? [] : ["private" as const]),
+	];
 	const [row] = await selectEntries().where(
 		and(
 			eq(events.id, eventId),
 			ne(events.status, "draft"),
-			signedIn ? undefined : eq(events.visibility, "public"),
+			hidden.length > 0 ? notInArray(events.visibility, hidden) : undefined,
 		),
 	);
 	return row ? toEntry(row) : null;

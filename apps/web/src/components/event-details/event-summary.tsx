@@ -25,7 +25,7 @@ import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
 import { AttendanceModeBadge } from "@repo/ui/composed/events/attendance-mode-badge";
 import { formatEventDateTime } from "@repo/ui/time";
-import { Link } from "@tanstack/react-router";
+import { Link, useSearch } from "@tanstack/react-router";
 import type {
 	EventDetailsData,
 	EventDetailsRegistrations,
@@ -54,6 +54,10 @@ export function EventSummary({
 	registrations,
 }: EventSummaryProps) {
 	const locale = getLocale();
+	const invite = useSearch({
+		strict: false,
+		select: (search) => search.invite,
+	});
 
 	return (
 		<section className="flex flex-col gap-4">
@@ -91,7 +95,13 @@ export function EventSummary({
 
 			<div className="flex flex-wrap gap-2">
 				<Button asChild variant="outline" size="sm">
-					<a href={`/api/calendar/event/${event.id}?lang=${locale}`} download>
+					<a
+						href={`/api/calendar/event/${event.id}?${new URLSearchParams({
+							lang: locale,
+							...(invite ? { invite } : {}),
+						})}`}
+						download
+					>
 						{calendar_add()}
 					</a>
 				</Button>

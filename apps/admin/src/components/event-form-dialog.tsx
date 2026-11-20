@@ -31,15 +31,19 @@ import {
 	admin_field_requires_approval_hint,
 	admin_field_room,
 	admin_field_room_hint,
-	admin_field_signed_in_only,
 	admin_field_title,
 	admin_field_type,
+	admin_field_visibility,
 	admin_nav_events,
 	admin_reminder_1h,
 	admin_reminder_24h,
 	admin_reminder_48h,
 	admin_reminder_off,
 	admin_save_success,
+	admin_visibility_authenticated,
+	admin_visibility_private,
+	admin_visibility_private_hint,
+	admin_visibility_public,
 	attendance_mode_hybrid,
 	attendance_mode_online,
 	attendance_mode_onsite,
@@ -75,6 +79,7 @@ const NONE_VALUE = "__none__";
 const DEFAULT_MAX_SEATS = 50;
 
 type AttendanceMode = EventWithRelations["attendanceMode"];
+type EventVisibility = EventWithRelations["visibility"];
 
 const ATTENDANCE_MODE_LABELS: Record<AttendanceMode, () => string> = {
 	onsite: attendance_mode_onsite,
@@ -91,6 +96,14 @@ function parseDateTimeLocal(value: string) {
 	const [date = "", time = "00:00"] = value.split("T");
 	return fromEventWallTime(date, time);
 }
+
+const VISIBILITIES = ["public", "authenticated", "private"] as const;
+
+const VISIBILITY_LABELS: Record<EventVisibility, () => string> = {
+	public: admin_visibility_public,
+	authenticated: admin_visibility_authenticated,
+	private: admin_visibility_private,
+};
 
 /** Reminder options offered in the form ("off" switches reminders off). */
 const REMINDER_CHOICES = ["off", "1", "24", "48"] as const;
@@ -124,7 +137,7 @@ const EMPTY_VALUES = {
 	reminder: "24" as ReminderChoice,
 	facultyId: NONE_VALUE,
 	attendanceMode: "onsite" as AttendanceMode,
-	signedInOnly: false,
+	visibility: "public" as EventVisibility,
 	requiresApproval: false,
 	onlineUrl: "",
 };
@@ -146,7 +159,7 @@ function toFormValues(event: EventWithRelations): EventFormValues {
 		reminder: toReminderChoice(event.reminderHoursBefore),
 		facultyId: event.facultyId ?? NONE_VALUE,
 		attendanceMode: event.attendanceMode,
-		signedInOnly: event.visibility === "authenticated",
+		visibility: event.visibility,
 		requiresApproval: event.requiresApproval,
 		onlineUrl: event.onlineUrl ?? "",
 	};
@@ -184,7 +197,7 @@ export function EventFormDialog({
 				reminder: z.enum(REMINDER_CHOICES),
 				facultyId: z.string(),
 				attendanceMode: z.enum(["onsite", "online", "hybrid"]),
-				signedInOnly: z.boolean(),
+				visibility: z.enum(VISIBILITIES),
 				requiresApproval: z.boolean(),
 				onlineUrl: z.union([
 					z.literal(""),
@@ -216,9 +229,7 @@ export function EventFormDialog({
 					values.reminder === "off" ? null : Number(values.reminder),
 				facultyId: values.facultyId === NONE_VALUE ? null : values.facultyId,
 				attendanceMode: values.attendanceMode,
-				visibility: values.signedInOnly
-					? ("authenticated" as const)
-					: ("public" as const),
+				visibility: values.visibility,
 				requiresApproval: values.requiresApproval,
 				onlineUrl:
 					values.attendanceMode === "onsite" || !values.onlineUrl.trim()
@@ -611,18 +622,33 @@ export function EventFormDialog({
 				)}
 			</form.Field>
 
-			<form.Field name="signedInOnly">
+			<form.Field name="visibility">
 				{(field) => (
-					<div className="flex items-center gap-2">
-						<input
-							id={field.name}
-							type="checkbox"
-							className="size-4 accent-primary"
-							checked={field.state.value}
+					<div>
+						<Label htmlFor={field.name}>{admin_field_visibility()}</Label>
+						<Select
+							value={field.state.value}
+							onValueChange={(value) =>
+								field.handleChange(value as EventVisibility)
+							}
 							disabled={saveMutation.isPending}
-							onChange={(event) => field.handleChange(event.target.checked)}
-						/>
-						<Label htmlFor={field.name}>{admin_field_signed_in_only()}</Label>
+						>
+							<SelectTrigger id={field.name} className="mt-1 w-full">
+								<SelectValue />
+							</SelectTrigger>
+							<SelectContent>
+								{VISIBILITIES.map((visibility) => (
+									<SelectItem key={visibility} value={visibility}>
+										{VISIBILITY_LABELS[visibility]()}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+						{field.state.value === "private" ? (
+							<p className="mt-1 text-xs text-muted-foreground">
+								{admin_visibility_private_hint()}
+							</p>
+						) : null}
 					</div>
 				)}
 			</form.Field>

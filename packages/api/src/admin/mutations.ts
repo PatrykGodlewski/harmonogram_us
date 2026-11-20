@@ -9,6 +9,7 @@ import {
 	createEvent,
 	deleteEvent,
 	publishEvent,
+	regenerateInviteToken,
 	updateEvent,
 } from "@repo/db/queries/events";
 import {
@@ -213,4 +214,12 @@ export const deleteAdminAgendaItemServer = panelActionFn
 			throw appError("NOT_FOUND");
 		}
 		return item;
+	});
+
+/** A new invite link for an invite-only event; the old one stops working. */
+export const regenerateInviteServer = panelActionFn
+	.inputValidator((input: unknown) => eventIdActionSchema.parse(input))
+	.handler(async ({ data, context }) => {
+		await assertCanManageEvent(context.user, data.id);
+		return withDomainErrors(() => regenerateInviteToken(data.id));
 	});

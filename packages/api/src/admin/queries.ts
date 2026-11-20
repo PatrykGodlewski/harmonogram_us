@@ -5,6 +5,7 @@ import {
 } from "@repo/db/queries/event-organizers";
 import { getEventRegistrants } from "@repo/db/queries/event-registrations";
 import {
+	getEventAccess,
 	getEventById,
 	getEventFilterOptions,
 	getEventPage,
@@ -130,14 +131,19 @@ export const fetchAdminEventDetailsServer = panelQueryFn
 		if (!event) {
 			throw appError("NOT_FOUND");
 		}
+		const canManage = await canManageEvent(context.user, data.eventId);
+		// The invite secret only for those who manage an invite-only event.
+		const inviteToken =
+			canManage && event.visibility === "private"
+				? ((await getEventAccess(data.eventId))?.inviteToken ?? null)
+				: null;
 		// What a draft still needs before publishing, so the panel can say so up front.
 		return {
 			...event,
 			missingForPublish: missingForPublish(event),
+			inviteToken,
 			// A check-in helper gets a door view: scanner and attendance only.
-			access: (await canManageEvent(context.user, data.eventId))
-				? ("manage" as const)
-				: ("checkin" as const),
+			access: canManage ? ("manage" as const) : ("checkin" as const),
 		};
 	});
 

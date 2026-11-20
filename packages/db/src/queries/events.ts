@@ -39,10 +39,11 @@ import { getCurrentTxId } from "./txid";
 
 /**
  * Who is looking: the public site never sees drafts (nor signed-in-only events
- * when nobody is signed in); the panel sees everything.
+ * when nobody is signed in, nor invite-only ones unless the caller has checked
+ * access: `includePrivate`); the panel sees everything.
  */
 export type EventAudience =
-	| { kind: "public"; signedIn: boolean }
+	| { kind: "public"; signedIn: boolean; includePrivate?: boolean }
 	| { kind: "manage" };
 
 export type EventFilters = {
@@ -156,7 +157,13 @@ async function queryEvents(
 	if (filters.audience.kind === "public") {
 		conditions.push(ne(events.status, "draft"));
 		if (!filters.audience.signedIn) {
-			conditions.push(eq(events.visibility, "public"));
+			conditions.push(
+				filters.audience.includePrivate
+					? ne(events.visibility, "authenticated")
+					: eq(events.visibility, "public"),
+			);
+		} else if (!filters.audience.includePrivate) {
+			conditions.push(ne(events.visibility, "private"));
 		}
 	}
 
@@ -297,6 +304,7 @@ export async function createEvent(input: CreateEventInput) {
 				onlineUrl: input.onlineUrl ?? null,
 				attendanceMode: input.attendanceMode ?? "onsite",
 				visibility: input.visibility ?? "public",
+				inviteToken: input.visibility === "private" ? newInviteToken() : null,
 				room: input.room ?? null,
 				requiresApproval: input.requiresApproval ?? false,
 				...(input.reminderHoursBefore !== undefined
@@ -311,6 +319,52 @@ export async function createEvent(input: CreateEventInput) {
 		}
 		return event;
 	});
+}
+
+/** An unguessable invite-link secret (256 bits, hex). */
+function newInviteToken(): string {
+	return Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString(
+		"hex",
+	);
+}
+
+/** Replaces the invite link of an event; the old link stops working. */
+export async function regenerateInviteToken(eventId: string): Promise<string> {
+	const token = newInviteToken();
+	const [row] = await db
+		.update(events)
+		.set({ inviteToken: token, updatedAt: new Date() })
+		.where(eq(events.id, eventId))
+		.returning({ id: events.id });
+	if (!row) {
+		throw new DomainError("EVENT_NOT_FOUND");
+	}
+	return token;
+}
+
+export type EventAccess = {
+	visibility: EventVisibility;
+	inviteToken: string | null;
+	/** The user holds a registration of any state (always false without a user). */
+	hasRegistration: boolean;
+};
+
+/** What decides who may open an event (server-side only: carries the invite secret). */
+export async function getEventAccess(
+	eventId: string,
+	userId?: string,
+): Promise<EventAccess | null> {
+	const [row] = await db
+		.select({
+			visibility: events.visibility,
+			inviteToken: events.inviteToken,
+			hasRegistration: userId
+				? sql<boolean>`exists (select 1 from event_registrations r where r.event_id = "events"."id" and r.user_id = ${userId})`
+				: sql<boolean>`false`,
+		})
+		.from(events)
+		.where(eq(events.id, eventId));
+	return row ?? null;
 }
 
 export type UpdateEventInput = {
@@ -373,6 +427,12 @@ export async function updateEvent(
 				.update(events)
 				.set({
 					...values,
+					// Made invite-only: it needs a link (an existing one stays valid).
+					...(values.visibility === "private"
+						? {
+								inviteToken: sql`coalesce(${events.inviteToken}, ${newInviteToken()})`,
+							}
+						: {}),
 					...(rearmReminder ? { reminderSentAt: null } : {}),
 					updatedAt: new Date(),
 				})

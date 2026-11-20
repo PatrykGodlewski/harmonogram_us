@@ -12,8 +12,12 @@ import { eventFaculties, eventLocations, eventTypes } from "./event-lookups";
 /** `draft` is visible only in the panel; `cancelled` keeps its registrations as history. */
 export type EventStatus = "draft" | "published" | "cancelled";
 export type AttendanceMode = "onsite" | "online" | "hybrid";
-/** `authenticated` events are listed and shown only to signed-in people. */
-export type EventVisibility = "public" | "authenticated";
+/**
+ * `authenticated` events are listed and shown only to signed-in people;
+ * `private` ones are never listed and open only with the invite link (or to
+ * their organisers and registrants).
+ */
+export type EventVisibility = "public" | "authenticated" | "private";
 
 export const events = pgTable(
 	"events",
@@ -53,6 +57,8 @@ export const events = pgTable(
 			.$type<EventVisibility>()
 			.notNull()
 			.default("public"),
+		/** Secret of the invite link of a `private` event; a new one revokes the old link. */
+		inviteToken: text("invite_token").unique(),
 		createdAt: timestamp("created_at", {
 			withTimezone: true,
 		})
@@ -71,7 +77,7 @@ export const events = pgTable(
 		),
 		check(
 			"events_visibility_check",
-			sql`${table.visibility} IN ('public', 'authenticated')`,
+			sql`${table.visibility} IN ('public', 'authenticated', 'private')`,
 		),
 		check(
 			"events_attendance_mode_check",

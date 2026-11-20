@@ -27,6 +27,7 @@ import {
 	useMutationState,
 	useQueryClient,
 } from "@tanstack/react-query";
+import { useSearch } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { showRegistrationErrorToast } from "~/lib/event-registration/errors";
 
@@ -67,17 +68,18 @@ function pendingKeyOf(mutation: Mutation<unknown, Error, unknown>): string {
 	return keyOf(mutation.state.variables as RegistrationAction);
 }
 
-function runAction(action: RegistrationAction) {
+/** `invite`: the invite-link secret of the page the action comes from, if any. */
+function runAction(action: RegistrationAction, invite: string | undefined) {
 	switch (action.type) {
 		case "register":
 			return registerForEventServer({
-				data: { eventId: action.eventId, locale: getLocale() },
+				data: { eventId: action.eventId, locale: getLocale(), invite },
 			});
 		case "unregister":
 			return unregisterFromEventServer({ data: { eventId: action.eventId } });
 		case "registerItem":
 			return registerForAgendaItemServer({
-				data: { agendaItemId: action.item.id, locale: getLocale() },
+				data: { agendaItemId: action.item.id, locale: getLocale(), invite },
 			});
 		case "unregisterItem":
 			return unregisterFromAgendaItemServer({
@@ -123,6 +125,10 @@ function isSyncUnconfirmed(error: unknown): boolean {
  */
 export function useRegistrationActions(): RegistrationActions {
 	const queryClient = useQueryClient();
+	const invite = useSearch({
+		strict: false,
+		select: (search) => search.invite,
+	});
 
 	const refreshKeys = (eventId: string) => [
 		// A prefix: also the account list and open tickets.
@@ -134,7 +140,7 @@ export function useRegistrationActions(): RegistrationActions {
 	/** Runs one action end to end; errors are shown here, so the mutation itself never fails. */
 	const execute = async (action: RegistrationAction) => {
 		try {
-			const result = await runAction(action);
+			const result = await runAction(action, invite);
 			toast.success(successMessage(action, result));
 			const collection =
 				action.type === "registerItem" || action.type === "unregisterItem"

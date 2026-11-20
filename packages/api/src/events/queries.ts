@@ -10,8 +10,9 @@ import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { getCurrentSession } from "../auth/user";
 import { appError } from "../errors";
+import { canOpenEvent } from "./access";
 import type { EventFiltersParams } from "./schemas";
-import { eventFiltersSchema, eventIdSchema } from "./schemas";
+import { eventFiltersSchema, eventPageSchema } from "./schemas";
 
 export const fetchFilterOptionsServer = createServerFn({
 	method: "GET",
@@ -60,14 +61,21 @@ export async function prefetchEventData(
 export type { EventDetails } from "@repo/db/queries/events";
 
 export const fetchEventDetailsServer = createServerFn({ method: "GET" })
-	.inputValidator((input: unknown) => eventIdSchema.parse(input))
+	.inputValidator((input: unknown) => eventPageSchema.parse(input))
 	.handler(async ({ data }) => {
 		const session = await getCurrentSession();
 		const signedIn = Boolean(session?.user);
+		// An invite-only event without access looks like an unknown one.
+		if (
+			!(await canOpenEvent(data.eventId, session?.user.id ?? null, data.invite))
+		) {
+			throw appError("EVENT_NOT_FOUND");
+		}
 		// Load as if signed in, then decide: a signed-in-only event asks an anonymous visitor to sign in.
 		const event = await getEventById(data.eventId, {
 			kind: "public",
 			signedIn: true,
+			includePrivate: true,
 		});
 		if (!event) {
 			throw appError("EVENT_NOT_FOUND");
@@ -86,9 +94,13 @@ export const fetchEventDetailsServer = createServerFn({ method: "GET" })
 		return event;
 	});
 
-export const eventDetailsQueryOptions = (eventId: string) =>
+/** `invite`: the secret of an invite link, for an invite-only event. */
+export const eventDetailsQueryOptions = (eventId: string, invite?: string) =>
 	queryOptions({
-		queryKey: ["event-details", eventId] as const,
-		queryFn: () => fetchEventDetailsServer({ data: { eventId } }),
+		// ["event-details", eventId] stays a prefix, so invalidating it covers both.
+		queryKey: invite
+			? (["event-details", eventId, { invite }] as const)
+			: (["event-details", eventId] as const),
+		queryFn: () => fetchEventDetailsServer({ data: { eventId, invite } }),
 		staleTime: 30_000,
 	});

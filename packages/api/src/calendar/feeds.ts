@@ -16,6 +16,7 @@ import {
 	type Locale,
 } from "@repo/i18n/paraglide/runtime";
 import { getCurrentSession } from "../auth/user";
+import { canOpenEvent } from "../events/access";
 import { type IcsEvent, toIcs } from "./ics";
 
 /** The language of the links: from `?lang=` (the page the link was on), else the base locale. */
@@ -74,16 +75,21 @@ export async function publicCalendarResponse(
 export async function eventCalendarResponse(
 	eventId: string,
 	locale: Locale,
+	invite: string | undefined,
 ): Promise<Response> {
 	const session = await getCurrentSession();
-	const entry = await getCalendarEntry(eventId, Boolean(session?.user));
+	const userId = session?.user.id ?? null;
+	const entry = await getCalendarEntry(eventId, {
+		signedIn: userId !== null,
+		includePrivate: await canOpenEvent(eventId, userId, invite),
+	});
 	if (!entry) {
 		return new Response("Not found", { status: 404 });
 	}
 	return calendarResponse(toIcs([toIcsEvent(entry, locale)], entry.title), {
 		filename: "wydarzenie.ics",
-		// A signed-in visitor may get signed-in-only events: keep those out of shared caches.
-		personal: Boolean(session?.user),
+		// Signed-in-only and invite-only events stay out of shared caches.
+		personal: userId !== null || invite !== undefined,
 	});
 }
 

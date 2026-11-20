@@ -38,12 +38,20 @@ export const Route = createFileRoute("/events/$eventId")({
 	validateSearch: z.object({
 		joined: z.coerce.number().optional().catch(undefined),
 		agenda: z.enum(["list", "calendar"]).optional().catch(undefined),
+		/** The secret of an invite link (invite-only events). */
+		invite: z.string().max(128).optional().catch(undefined),
 	}),
-	loader: async ({ context: { queryClient, user }, params, location }) => {
+	loaderDeps: ({ search }) => ({ invite: search.invite }),
+	loader: async ({
+		context: { queryClient, user },
+		params,
+		location,
+		deps,
+	}) => {
 		let event: EventDetails;
 		try {
 			event = await queryClient.ensureQueryData(
-				eventDetailsQueryOptions(params.eventId),
+				eventDetailsQueryOptions(params.eventId, deps.invite),
 			);
 		} catch (error) {
 			// A deleted or unknown event is a 404 page, not a server error.
@@ -107,15 +115,17 @@ function PageShell({ children }: { children: ReactNode }) {
 function EventDetailsPage() {
 	const { eventId } = Route.useParams();
 	const { user } = Route.useRouteContext();
-	const { data: event } = useSuspenseQuery(eventDetailsQueryOptions(eventId));
-	const { joined } = Route.useSearch();
+	const { joined, invite } = Route.useSearch();
+	const { data: event } = useSuspenseQuery(
+		eventDetailsQueryOptions(eventId, invite),
+	);
 	const navigate = useNavigate();
 	useEffect(() => {
 		if (joined) {
 			toast.success(joined_toast());
-			void navigate({ to: ".", search: {}, replace: true });
+			void navigate({ to: ".", search: { invite }, replace: true });
 		}
-	}, [joined, navigate]);
+	}, [joined, invite, navigate]);
 	const registrations = useEventDetailsRegistrations(eventId, user?.id);
 
 	const props = {

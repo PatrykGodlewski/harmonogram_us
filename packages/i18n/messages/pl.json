@@ -386,7 +386,6 @@
 	"admin_event_duplicate_body": "Kopia dostanie te same dane, program i organizatorów, bez zapisów. Powstanie jako szkic.",
 	"admin_event_duplicate_date": "Nowy termin",
 	"admin_event_duplicated": "Utworzono kopię wydarzenia.",
-	"admin_field_signed_in_only": "Tylko dla zalogowanych",
 	"csv_header_name": "Imię i nazwisko",
 	"csv_header_email": "E-mail",
 	"csv_header_status": "Status",
@@ -558,5 +557,17 @@
 	"csv_status_rejected": "Odrzucone",
 	"events_request_success": "Zgłoszenie wysłane — czeka na akceptację organizatora",
 	"admin_bulk_reject_title": "Odrzucić zaznaczone zgłoszenia?",
-	"admin_bulk_reject_body": "Każda osoba dostanie e-mail z odmową. Później możesz ją jeszcze zaakceptować."
+	"admin_bulk_reject_body": "Każda osoba dostanie e-mail z odmową. Później możesz ją jeszcze zaakceptować.",
+	"admin_field_visibility": "Kto widzi wydarzenie",
+	"admin_visibility_public": "Wszyscy",
+	"admin_visibility_authenticated": "Tylko zalogowani",
+	"admin_visibility_private": "Tylko z zaproszeniem",
+	"admin_visibility_private_hint": "Nie ma go na liście ani w kalendarzach. Wejdą osoby z linkiem zaproszenia, zapisani i organizatorzy.",
+	"admin_invite_link": "Link zaproszenia",
+	"admin_invite_copy": "Kopiuj",
+	"admin_invite_copied": "Skopiowano link",
+	"admin_invite_regenerate": "Zmień link",
+	"admin_invite_regenerate_title": "Zmienić link zaproszenia?",
+	"admin_invite_regenerate_body": "Stary link przestanie działać. Osoby już zapisane nadal zobaczą wydarzenie.",
+	"admin_invite_regenerated": "Nowy link gotowy"
 }

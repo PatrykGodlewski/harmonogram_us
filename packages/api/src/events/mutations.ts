@@ -1,3 +1,4 @@
+import { getAgendaItemEventId } from "@repo/db/queries/agenda-items";
 import { DomainError } from "@repo/db/queries/domain-errors";
 import {
 	registerForAgendaItem,
@@ -11,15 +12,18 @@ import { authMiddleware } from "../auth/middleware";
 import { getCurrentSession } from "../auth/user";
 import { appError, withDomainErrors } from "../errors";
 import { registrationEmailHooks } from "../notifications/registration-hooks";
-import { agendaItemIdSchema } from "./schemas";
+import { canOpenEvent } from "./access";
+import { agendaItemIdSchema, inviteSchema } from "./schemas";
 
 /** `locale` is the UI language for the confirmation e-mail (server functions have no locale prefix). */
 const registerForAgendaItemSchema = agendaItemIdSchema.extend({
 	locale: z.enum(["pl", "en"]),
+	invite: inviteSchema,
 });
 
 export const registerForEventInputSchema = z.object({
 	eventId: z.string().min(1),
+	invite: inviteSchema,
 	/** UI language, for the registrant's e-mails (server functions have no locale prefix). */
 	locale: z.enum(["pl", "en"]),
 });
@@ -40,6 +44,9 @@ export const registerForEventServer = createServerFn({ method: "POST" })
 		const session = await getCurrentSession();
 		if (!session?.user) {
 			throw appError("UNAUTHORIZED");
+		}
+		if (!(await canOpenEvent(data.eventId, session.user.id, data.invite))) {
+			throw appError("EVENT_NOT_FOUND");
 		}
 
 		try {
@@ -85,16 +92,23 @@ const protectedActionFn = createServerFn({ method: "POST" }).middleware([
 
 export const registerForAgendaItemServer = protectedActionFn
 	.inputValidator(registerForAgendaItemSchema)
-	.handler(async ({ data, context }) =>
-		withDomainErrors(() =>
+	.handler(async ({ data, context }) => {
+		const eventId = await getAgendaItemEventId(data.agendaItemId);
+		if (
+			!eventId ||
+			!(await canOpenEvent(eventId, context.user.id, data.invite))
+		) {
+			throw appError("ITEM_NOT_FOUND");
+		}
+		return withDomainErrors(() =>
 			registerForAgendaItem(
 				data.agendaItemId,
 				context.user.id,
 				data.locale,
 				registrationEmailHooks,
 			),
-		),
-	);
+		);
+	});
 
 export const unregisterFromAgendaItemServer = protectedActionFn
 	.inputValidator(agendaItemIdSchema)

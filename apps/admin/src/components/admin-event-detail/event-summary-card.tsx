@@ -19,6 +19,7 @@ import { useState } from "react";
 import { EventFormDialog } from "../event-form-dialog";
 import { CancelEventButton } from "./cancel-event-button";
 import { DuplicateEventDialog } from "./duplicate-event-dialog";
+import { InviteLinkCard } from "./invite-link-card";
 import { MessageDialog } from "./message-dialog";
 import { PublishChecklist } from "./publish-checklist";
 
@@ -72,6 +73,13 @@ export function EventSummaryCard({ event, onChanged }: EventSummaryCardProps) {
 			<p className="tabular-nums">
 				{admin_event_places({ registered, max: event.maxSeats })}
 			</p>
+			{event.inviteToken ? (
+				<InviteLinkCard
+					eventId={event.id}
+					inviteToken={event.inviteToken}
+					onChanged={onChanged}
+				/>
+			) : null}
 			{canManage && event.status === "draft" ? (
 				<PublishChecklist event={event} onChanged={onChanged} />
 			) : null}

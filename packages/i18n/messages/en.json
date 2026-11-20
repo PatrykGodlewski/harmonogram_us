@@ -386,7 +386,6 @@
 	"admin_event_duplicate_body": "The copy gets the same details, agenda and organizers, without registrations. It starts as a draft.",
 	"admin_event_duplicate_date": "New date",
 	"admin_event_duplicated": "Event copy created.",
-	"admin_field_signed_in_only": "Signed-in users only",
 	"csv_header_name": "Name",
 	"csv_header_email": "E-mail",
 	"csv_header_status": "Status",
@@ -558,5 +557,17 @@
 	"csv_status_rejected": "Declined",
 	"events_request_success": "Request sent — waiting for the organiser's approval",
 	"admin_bulk_reject_title": "Decline the selected requests?",
-	"admin_bulk_reject_body": "Each person gets an e-mail saying so. You can still approve them later."
+	"admin_bulk_reject_body": "Each person gets an e-mail saying so. You can still approve them later.",
+	"admin_field_visibility": "Who can see the event",
+	"admin_visibility_public": "Everyone",
+	"admin_visibility_authenticated": "Signed-in people only",
+	"admin_visibility_private": "Invite only",
+	"admin_visibility_private_hint": "Not on the list or in calendars. People with the invite link, registrants and organisers can open it.",
+	"admin_invite_link": "Invite link",
+	"admin_invite_copy": "Copy",
+	"admin_invite_copied": "Link copied",
+	"admin_invite_regenerate": "Change link",
+	"admin_invite_regenerate_title": "Change the invite link?",
+	"admin_invite_regenerate_body": "The old link stops working. People already registered still see the event.",
+	"admin_invite_regenerated": "New link ready"
 }

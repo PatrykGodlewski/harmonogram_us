@@ -66,7 +66,10 @@ const onlineUrlSchema = z
 	.nullable()
 	.optional();
 const attendanceModeSchema = z.enum(["onsite", "online", "hybrid"]);
-const visibilitySchema = z.enum(["public", "authenticated"]);
+const visibilitySchema = z.enum(["public", "authenticated", "private"]);
+
+/** The secret of an invite link (`?invite=`), as the URL carries it. */
+export const inviteSchema = z.string().min(1).max(128).optional();
 /** The reminder choices the form offers (hours before the start); null switches it off. */
 const reminderHoursSchema = z
 	.union([z.literal(1), z.literal(24), z.literal(48)])
@@ -136,6 +139,8 @@ export type EventFilterOptions = {
 };
 
 export const eventIdSchema = z.object({ eventId: z.string().min(1) });
+
+export const eventPageSchema = eventIdSchema.extend({ invite: inviteSchema });
 
 export const agendaItemIdSchema = z.object({ agendaItemId: z.string().min(1) });
 
