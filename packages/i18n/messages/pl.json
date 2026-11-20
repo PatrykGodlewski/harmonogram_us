@@ -410,5 +410,18 @@
 	"admin_registrants_remove_body": "Zapis zostanie usunięty, a miejsce dostanie pierwsza osoba z listy rezerwowej.",
 	"admin_registrants_removed": "Usunięto zapis.",
 	"admin_registrants_csv": "Pobierz CSV",
-	"admin_registrants_no_match": "Nikt nie pasuje do wyszukiwania."
+	"admin_registrants_no_match": "Nikt nie pasuje do wyszukiwania.",
+	"event_message_subject": "[{event}] {subject}",
+	"event_message_footer": "Wiadomość od organizatora wydarzenia {event}. Odpowiedz na tego e-maila, aby napisać do organizatora.",
+	"admin_message_open": "Wyślij wiadomość",
+	"admin_message_title": "Wiadomość do zapisanych",
+	"admin_message_body_hint": "Odpowiedzi trafią na twój adres e-mail.",
+	"admin_message_audience": "Do kogo",
+	"admin_message_audience_registered": "Zarejestrowani",
+	"admin_message_audience_waitlisted": "Lista rezerwowa",
+	"admin_message_audience_all": "Wszyscy",
+	"admin_message_subject": "Temat",
+	"admin_message_body": "Treść",
+	"admin_message_send": "Wyślij",
+	"admin_message_sent": "Wysłano do {count} osób."
 }

@@ -410,5 +410,18 @@
 	"admin_registrants_remove_body": "The registration is removed and the first person on the waitlist gets the place.",
 	"admin_registrants_removed": "Registration removed.",
 	"admin_registrants_csv": "Download CSV",
-	"admin_registrants_no_match": "No one matches the search."
+	"admin_registrants_no_match": "No one matches the search.",
+	"event_message_subject": "[{event}] {subject}",
+	"event_message_footer": "A message from the organizer of {event}. Reply to this e-mail to write to the organizer.",
+	"admin_message_open": "Send a message",
+	"admin_message_title": "Message to registrants",
+	"admin_message_body_hint": "Replies go to your e-mail address.",
+	"admin_message_audience": "To",
+	"admin_message_audience_registered": "Registered",
+	"admin_message_audience_waitlisted": "Waitlist",
+	"admin_message_audience_all": "Everyone",
+	"admin_message_subject": "Subject",
+	"admin_message_body": "Message",
+	"admin_message_send": "Send",
+	"admin_message_sent": "Sent to {count} people."
 }

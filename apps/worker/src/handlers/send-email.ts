@@ -1,7 +1,9 @@
 import {
+	renderEventMessageEmail,
 	renderRegistrationEmail,
 	sendTransactionalEmail,
 } from "@repo/api/notifications/email";
+import { eventMessageEmailText } from "@repo/api/notifications/event-message-email";
 import { registrationEmailText } from "@repo/api/notifications/registration-email";
 import { verificationEmail } from "@repo/api/notifications/verification-email";
 import { getRegistrationForEmail } from "@repo/db/queries/event-registrations";
@@ -66,6 +68,29 @@ export async function handleEmailJob(
 				subject,
 				text,
 				html: await renderRegistrationEmail(props),
+			});
+			return;
+		}
+		case "event-message": {
+			const registration = await getRegistrationForEmail(job.registrationId);
+			// Withdrawn before the job ran: nothing to send.
+			if (!registration) {
+				return;
+			}
+			const props = {
+				locale: registration.locale,
+				eventTitle: registration.eventTitle,
+				subject: job.subject,
+				body: job.body,
+				url: `${env.BETTER_AUTH_URL}/${registration.locale}/events/${registration.eventId}`,
+			};
+			const { subject, text } = eventMessageEmailText(props);
+			await deps.send({
+				to: registration.email,
+				subject,
+				text,
+				html: await renderEventMessageEmail(props),
+				replyTo: job.replyTo,
 			});
 			return;
 		}

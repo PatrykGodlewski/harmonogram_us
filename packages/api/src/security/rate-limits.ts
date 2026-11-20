@@ -43,3 +43,9 @@ export const MAGIC_LINK_LIMIT: RateLimit = {
 	durationSeconds: FIFTEEN_MINUTES,
 	blockDurationSeconds: FIFTEEN_MINUTES,
 };
+
+/** Organizer messages: at most 5 per event per hour (each one e-mails everyone registered). */
+export const EVENT_MESSAGE_LIMIT: RateLimit = {
+	points: 5,
+	durationSeconds: 60 * 60,
+};

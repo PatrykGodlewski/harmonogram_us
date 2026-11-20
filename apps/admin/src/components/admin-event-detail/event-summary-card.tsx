@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { formatMutationError } from "~/lib/format-mutation-error";
 import { CancelEventButton } from "./cancel-event-button";
 import { DuplicateEventDialog } from "./duplicate-event-dialog";
+import { MessageDialog } from "./message-dialog";
 
 type EventSummaryCardProps = {
 	event: EventDetails;
@@ -83,6 +84,7 @@ export function EventSummaryCard({ event, onChanged }: EventSummaryCardProps) {
 			) : null}
 			<div className="flex flex-wrap gap-2">
 				<DuplicateEventDialog eventId={event.id} />
+				<MessageDialog eventId={event.id} />
 				{event.status === "published" &&
 				new Date(event.effectiveEndsAt).getTime() > Date.now() ? (
 					<CancelEventButton eventId={event.id} onCancelled={onChanged} />

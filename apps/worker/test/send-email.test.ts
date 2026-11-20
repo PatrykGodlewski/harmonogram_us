@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { handleEmailJob } from "../src/handlers/send-email";
 
-type Sent = { to: string; subject: string; text: string; html?: string };
+type Sent = {
+	to: string;
+	subject: string;
+	text: string;
+	html?: string;
+	replyTo?: string;
+};
 
 function capture() {
 	const sent: Sent[] = [];
@@ -150,5 +156,37 @@ describe("registration e-mails", () => {
 		const { sent, deps } = capture();
 		await handleEmailJob({ kind: "registration", registrationId, change: "cancelled" }, deps);
 		expect(sent).toHaveLength(0);
+	});
+
+	it("an organizer message goes out as plain text with the organizer as reply-to", async () => {
+		const { createEvent, createUser, resetDb } = await import("../../../packages/db/test/helpers");
+		const { registerForEvent } = await import("@repo/db/queries/event-registrations");
+		await resetDb();
+		const eventId = await createEvent();
+		let registrationId = "";
+		await registerForEvent(eventId, await createUser("guest@x.test"), "pl", {
+			onChanged: async (_tx, changes) => {
+				registrationId = changes[0]?.registrationId ?? "";
+			},
+		});
+		const { sent, deps } = capture();
+		await handleEmailJob(
+			{
+				kind: "event-message",
+				registrationId,
+				subject: "Zmiana sali",
+				body: "Spotykamy się w <b>auli</b>.\n\nDo zobaczenia!",
+				replyTo: "org@x.test",
+			},
+			deps,
+		);
+		expect(sent).toHaveLength(1);
+		expect(sent[0]?.to).toBe("guest@x.test");
+		expect(sent[0]?.subject).toBe("[Test event] Zmiana sali");
+		expect(sent[0]?.replyTo).toBe("org@x.test");
+		expect(sent[0]?.text).toContain("Spotykamy się w <b>auli</b>.");
+		expect(sent[0]?.text).toContain(`/pl/events/${eventId}`);
+		expect(sent[0]?.html).toContain("&lt;b&gt;auli&lt;/b&gt;");
+		expect(sent[0]?.html).not.toContain("<b>auli</b>");
 	});
 });
