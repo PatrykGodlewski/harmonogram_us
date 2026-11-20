@@ -33,6 +33,9 @@ export const events = pgTable(
 		onlineUrl: text("online_url"),
 		/** A typed room ("B105"), next to the place picked from the list. */
 		room: text("room"),
+		/** Hours before the start when registrants get a reminder; null switches it off. */
+		reminderHoursBefore: integer("reminder_hours_before").default(24),
+		reminderSentAt: timestamp("reminder_sent_at", { withTimezone: true }),
 		attendanceMode: text("attendance_mode")
 			.$type<AttendanceMode>()
 			.notNull()

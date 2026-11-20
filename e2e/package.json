@@ -11,6 +11,7 @@
     "load:stress": "tsx load/run.ts --stress"
   },
   "dependencies": {
+    "@repo/api": "workspace:*",
     "@repo/db": "workspace:*",
     "drizzle-orm": "^0.45.2"
   },

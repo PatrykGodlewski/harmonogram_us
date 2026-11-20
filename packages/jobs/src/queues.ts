@@ -12,6 +12,9 @@ export const QUEUE_EMAILS = "emails";
 /** Daily deletion of registrations past the retention period (GDPR). */
 export const QUEUE_PRUNE_OLD_REGISTRATIONS = "prune-old-registrations";
 export const PRUNE_OLD_REGISTRATIONS_CRON = "30 3 * * *";
+/** Reminders before events, checked every 5 minutes. */
+export const QUEUE_EVENT_REMINDERS = "event-reminders";
+export const EVENT_REMINDERS_CRON = "*/5 * * * *";
 
 /** Every 5 minutes, in the installation time zone. */
 export const CLOSE_EXPIRED_GROUPS_CRON = "*/5 * * * *";
@@ -37,7 +40,13 @@ export const emailJob = z.discriminatedUnion("kind", [
 	z.object({
 		kind: z.literal("registration"),
 		registrationId: z.string().min(1),
-		change: z.enum(["confirmed", "waitlisted", "promoted", "cancelled"]),
+		change: z.enum([
+			"confirmed",
+			"waitlisted",
+			"promoted",
+			"cancelled",
+			"reminder",
+		]),
 	}),
 	z.object({
 		kind: z.literal("event-message"),
@@ -56,4 +65,5 @@ export const QUEUES = [
 	{ name: QUEUE_EMAILS, policy: "standard" },
 	{ name: QUEUE_PRUNE_RATE_LIMITS, policy: "standard" },
 	{ name: QUEUE_PRUNE_OLD_REGISTRATIONS, policy: "standard" },
+	{ name: QUEUE_EVENT_REMINDERS, policy: "standard" },
 ] as const;

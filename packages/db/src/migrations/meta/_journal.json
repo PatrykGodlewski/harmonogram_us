@@ -134,6 +134,13 @@
       "when": 1795171448623,
       "tag": "0018_event_room",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1795176484555,
+      "tag": "0019_event_reminders",
+      "breakpoints": true
     }
   ]
 }

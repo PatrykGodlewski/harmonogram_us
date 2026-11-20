@@ -56,6 +56,7 @@ export async function duplicateEvent(
 				attendanceMode: source.attendanceMode,
 				visibility: source.visibility,
 				room: source.room,
+				reminderHoursBefore: source.reminderHoursBefore,
 				status: "draft",
 			})
 			.returning({ id: events.id });

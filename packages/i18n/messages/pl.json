@@ -476,5 +476,12 @@
 	"account_data_delete_body": "Wypiszemy cię z nadchodzących wydarzeń (miejsca dostaną osoby z listy rezerwowej), zamkniemy twoje grupy i usuniemy konto. Tego nie da się cofnąć.",
 	"account_data_delete_confirm_label": "Wpisz swój e-mail, aby potwierdzić",
 	"account_data_delete_submit": "Usuń konto na zawsze",
-	"account_data_deleted": "Konto zostało usunięte."
+	"account_data_deleted": "Konto zostało usunięte.",
+	"reg_email_reminder_subject": "Przypomnienie: {event}",
+	"reg_email_reminder_intro": "Przypominamy: {event} zaczyna się {date}. Do zobaczenia!",
+	"admin_field_reminder": "Przypomnienie dla zapisanych",
+	"admin_reminder_off": "Bez przypomnienia",
+	"admin_reminder_1h": "1 godzinę przed",
+	"admin_reminder_24h": "Dzień przed",
+	"admin_reminder_48h": "Dwa dni przed"
 }

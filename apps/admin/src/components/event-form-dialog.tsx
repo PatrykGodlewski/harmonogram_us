@@ -26,12 +26,17 @@ import {
 	admin_field_max_seats,
 	admin_field_none,
 	admin_field_online_url,
+	admin_field_reminder,
 	admin_field_room,
 	admin_field_room_hint,
 	admin_field_signed_in_only,
 	admin_field_title,
 	admin_field_type,
 	admin_nav_events,
+	admin_reminder_1h,
+	admin_reminder_24h,
+	admin_reminder_48h,
+	admin_reminder_off,
 	admin_save_success,
 	attendance_mode_hybrid,
 	attendance_mode_online,
@@ -85,6 +90,24 @@ function parseDateTimeLocal(value: string) {
 	return fromEventWallTime(date, time);
 }
 
+/** Reminder options offered in the form ("off" switches reminders off). */
+const REMINDER_CHOICES = ["off", "1", "24", "48"] as const;
+type ReminderChoice = (typeof REMINDER_CHOICES)[number];
+const REMINDER_LABELS: Record<ReminderChoice, () => string> = {
+	off: admin_reminder_off,
+	"1": admin_reminder_1h,
+	"24": admin_reminder_24h,
+	"48": admin_reminder_48h,
+};
+
+function toReminderChoice(hours: number | null): ReminderChoice {
+	if (hours === null) return "off";
+	const choice = String(hours);
+	return (REMINDER_CHOICES as readonly string[]).includes(choice)
+		? (choice as ReminderChoice)
+		: "24";
+}
+
 const EMPTY_VALUES = {
 	id: "",
 	title: "",
@@ -96,6 +119,7 @@ const EMPTY_VALUES = {
 	typeId: "",
 	locationId: NONE_VALUE,
 	room: "",
+	reminder: "24" as ReminderChoice,
 	facultyId: NONE_VALUE,
 	attendanceMode: "onsite" as AttendanceMode,
 	signedInOnly: false,
@@ -116,6 +140,7 @@ function toFormValues(event: EventWithRelations): EventFormValues {
 		typeId: event.typeId,
 		locationId: event.locationId ?? NONE_VALUE,
 		room: event.room ?? "",
+		reminder: toReminderChoice(event.reminderHoursBefore),
 		facultyId: event.facultyId ?? NONE_VALUE,
 		attendanceMode: event.attendanceMode,
 		signedInOnly: event.visibility === "authenticated",
@@ -152,6 +177,7 @@ export function EventFormDialog({
 				typeId: z.string().min(1),
 				locationId: z.string(),
 				room: z.string().max(100),
+				reminder: z.enum(REMINDER_CHOICES),
 				facultyId: z.string(),
 				attendanceMode: z.enum(["onsite", "online", "hybrid"]),
 				signedInOnly: z.boolean(),
@@ -181,6 +207,8 @@ export function EventFormDialog({
 				typeId: values.typeId,
 				locationId: values.locationId === NONE_VALUE ? null : values.locationId,
 				room: values.room.trim() || null,
+				reminderHoursBefore:
+					values.reminder === "off" ? null : Number(values.reminder),
 				facultyId: values.facultyId === NONE_VALUE ? null : values.facultyId,
 				attendanceMode: values.attendanceMode,
 				visibility: values.signedInOnly
@@ -550,6 +578,32 @@ export function EventFormDialog({
 					)
 				}
 			</form.Subscribe>
+
+			<form.Field name="reminder">
+				{(field) => (
+					<div>
+						<Label htmlFor={field.name}>{admin_field_reminder()}</Label>
+						<Select
+							value={field.state.value}
+							onValueChange={(value) =>
+								field.handleChange(value as ReminderChoice)
+							}
+							disabled={saveMutation.isPending}
+						>
+							<SelectTrigger id={field.name} className="mt-1 w-full">
+								<SelectValue />
+							</SelectTrigger>
+							<SelectContent>
+								{REMINDER_CHOICES.map((choice) => (
+									<SelectItem key={choice} value={choice}>
+										{REMINDER_LABELS[choice]()}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
+				)}
+			</form.Field>
 
 			<form.Field name="signedInOnly">
 				{(field) => (

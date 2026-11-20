@@ -19,6 +19,8 @@ import {
 	reg_email_confirmed_subject,
 	reg_email_promoted_intro,
 	reg_email_promoted_subject,
+	reg_email_reminder_intro,
+	reg_email_reminder_subject,
 	reg_email_ticket,
 	reg_email_ticket_button,
 	reg_email_waitlisted_intro,
@@ -30,7 +32,8 @@ export type RegistrationEmailChange =
 	| "confirmed"
 	| "waitlisted"
 	| "promoted"
-	| "cancelled";
+	| "cancelled"
+	| "reminder";
 
 export type RegistrationEmailProps = {
 	change: RegistrationEmailChange;
@@ -48,6 +51,7 @@ const SUBJECTS = {
 	waitlisted: reg_email_waitlisted_subject,
 	promoted: reg_email_promoted_subject,
 	cancelled: reg_email_cancelled_subject,
+	reminder: reg_email_reminder_subject,
 } as const;
 
 const INTROS = {
@@ -55,6 +59,7 @@ const INTROS = {
 	waitlisted: reg_email_waitlisted_intro,
 	promoted: reg_email_promoted_intro,
 	cancelled: reg_email_cancelled_intro,
+	reminder: reg_email_reminder_intro,
 } as const;
 
 /** Subject and plain-text body; the HTML version is RegistrationEmail. */

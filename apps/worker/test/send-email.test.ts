@@ -207,4 +207,23 @@ describe("registration e-mails", () => {
 		await handleEmailJob({ kind: "registration", registrationId, change: "confirmed" }, deps);
 		expect(sent).toHaveLength(0);
 	});
+
+	it("a reminder names the event, its time and links to the ticket", async () => {
+		const { createEvent, createUser, resetDb } = await import("../../../packages/db/test/helpers");
+		const { registerForEvent } = await import("@repo/db/queries/event-registrations");
+		await resetDb();
+		const eventId = await createEvent();
+		let registrationId = "";
+		await registerForEvent(eventId, await createUser("soon@x.test"), "pl", {
+			onChanged: async (_tx, changes) => {
+				registrationId = changes[0]?.registrationId ?? "";
+			},
+		});
+		const { sent, deps } = capture();
+		await handleEmailJob({ kind: "registration", registrationId, change: "reminder" }, deps);
+		expect(sent).toHaveLength(1);
+		expect(sent[0]?.subject).toBe("Przypomnienie: Test event");
+		expect(sent[0]?.text).toContain(`/pl/events/${eventId}`);
+		expect(sent[0]?.text).toContain(`/pl/tickets/${registrationId}`);
+	});
 });

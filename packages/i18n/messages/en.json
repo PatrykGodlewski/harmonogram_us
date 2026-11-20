@@ -476,5 +476,12 @@
 	"account_data_delete_body": "We'll withdraw you from upcoming events (waitlisted people get the places), close your groups and delete the account. This can't be undone.",
 	"account_data_delete_confirm_label": "Type your e-mail to confirm",
 	"account_data_delete_submit": "Delete account for good",
-	"account_data_deleted": "Your account has been deleted."
+	"account_data_deleted": "Your account has been deleted.",
+	"reg_email_reminder_subject": "Reminder: {event}",
+	"reg_email_reminder_intro": "A reminder: {event} starts {date}. See you there!",
+	"admin_field_reminder": "Reminder for registrants",
+	"admin_reminder_off": "No reminder",
+	"admin_reminder_1h": "1 hour before",
+	"admin_reminder_24h": "A day before",
+	"admin_reminder_48h": "Two days before"
 }

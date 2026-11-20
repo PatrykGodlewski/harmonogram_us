@@ -81,6 +81,7 @@ export const createEventSchema = z.object({
 	attendanceMode: attendanceModeSchema.optional(),
 	visibility: visibilitySchema.optional(),
 	room: roomSchema,
+	reminderHoursBefore: z.number().int().min(1).max(168).nullable().optional(),
 });
 
 export type CreateEventParams = z.infer<typeof createEventSchema>;
@@ -100,6 +101,7 @@ export const updateEventSchema = z.object({
 	attendanceMode: attendanceModeSchema.optional(),
 	visibility: visibilitySchema.optional(),
 	room: roomSchema,
+	reminderHoursBefore: z.number().int().min(1).max(168).nullable().optional(),
 });
 
 export type UpdateEventParams = z.infer<typeof updateEventSchema>;

@@ -1,9 +1,11 @@
+import { queueDueReminderEmails } from "@repo/api/notifications/reminders";
 import { pruneRateLimits } from "@repo/db/queries/rate-limits";
 import { pruneOldRegistrations } from "@repo/db/queries/retention";
 import { env } from "@repo/env";
 import { getBoss } from "@repo/jobs/client";
 import {
 	CLOSE_EXPIRED_GROUPS_CRON,
+	EVENT_REMINDERS_CRON,
 	emailJob,
 	groupInvitationEmailPayload,
 	JOBS_TIME_ZONE,
@@ -11,6 +13,7 @@ import {
 	PRUNE_RATE_LIMITS_CRON,
 	QUEUE_CLOSE_EXPIRED_GROUPS,
 	QUEUE_EMAILS,
+	QUEUE_EVENT_REMINDERS,
 	QUEUE_GROUP_INVITATION_EMAIL,
 	QUEUE_PRUNE_OLD_REGISTRATIONS,
 	QUEUE_PRUNE_RATE_LIMITS,
@@ -76,6 +79,17 @@ await boss.schedule(
 	null,
 	{ tz: JOBS_TIME_ZONE },
 );
+
+await boss.work(QUEUE_EVENT_REMINDERS, async () => {
+	const { events } = await queueDueReminderEmails(new Date());
+	if (events > 0) {
+		console.log(`[worker] queued reminders for ${events} event(s)`);
+	}
+});
+
+await boss.schedule(QUEUE_EVENT_REMINDERS, EVENT_REMINDERS_CRON, null, {
+	tz: JOBS_TIME_ZONE,
+});
 
 console.log("[worker] worker started");
 

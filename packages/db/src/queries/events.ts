@@ -72,6 +72,7 @@ export type EventWithRelations = {
 	onlineUrl: string | null;
 	attendanceMode: AttendanceMode;
 	room: string | null;
+	reminderHoursBefore: number | null;
 	visibility: EventVisibility;
 	createdAt: Date;
 	updatedAt: Date;
@@ -206,6 +207,7 @@ async function queryEvents(
 					: events.onlineUrl,
 			attendanceMode: events.attendanceMode,
 			room: events.room,
+			reminderHoursBefore: events.reminderHoursBefore,
 			visibility: events.visibility,
 			createdAt: events.createdAt,
 			updatedAt: events.updatedAt,
@@ -246,6 +248,7 @@ export type CreateEventInput = {
 	attendanceMode?: AttendanceMode;
 	visibility?: EventVisibility;
 	room?: string | null;
+	reminderHoursBefore?: number | null;
 	/** Becomes the event's first organizer; null for events only admins manage (seed data). */
 	organizerId: string | null;
 };
@@ -271,6 +274,9 @@ export async function createEvent(input: CreateEventInput) {
 				attendanceMode: input.attendanceMode ?? "onsite",
 				visibility: input.visibility ?? "public",
 				room: input.room ?? null,
+				...(input.reminderHoursBefore !== undefined
+					? { reminderHoursBefore: input.reminderHoursBefore }
+					: {}),
 			})
 			.returning();
 		if (event && input.organizerId) {
@@ -297,6 +303,7 @@ export type UpdateEventInput = {
 	attendanceMode?: AttendanceMode;
 	visibility?: EventVisibility;
 	room?: string | null;
+	reminderHoursBefore?: number | null;
 };
 
 /** Updates an event; raising the limit promotes waitlisted people into the new places. */

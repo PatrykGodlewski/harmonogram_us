@@ -23,6 +23,7 @@ const EXPECTED_STATE = {
 	promoted: "registered",
 	waitlisted: "waitlisted",
 	cancelled: null,
+	reminder: "registered",
 } as const;
 
 /** Sends one queued e-mail. Errors propagate so pg-boss retries the job. */

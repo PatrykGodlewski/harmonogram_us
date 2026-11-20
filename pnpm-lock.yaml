@@ -308,6 +308,9 @@ importers:
 
   e2e:
     dependencies:
+      '@repo/api':
+        specifier: workspace:*
+        version: link:../packages/api
       '@repo/db':
         specifier: workspace:*
         version: link:../packages/db
