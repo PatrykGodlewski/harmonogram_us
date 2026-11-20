@@ -90,24 +90,28 @@ function AdminEventDetailPage() {
 		return null;
 	}
 
+	const canManage = event.access === "manage";
 	return (
 		<div className="grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
 			<div className="flex flex-col gap-8">
 				<EventSummaryCard event={event} onChanged={handleChanged} />
-				<AgendaEditor
-					eventId={event.id}
-					eventDate={new Date(event.date)}
-					agenda={event.agenda}
-					locations={filterOptions?.locations ?? []}
-					onChanged={handleChanged}
-					view={view}
-					onViewChange={handleViewChange}
-				/>
+				{canManage ? (
+					<AgendaEditor
+						eventId={event.id}
+						eventDate={new Date(event.date)}
+						agenda={event.agenda}
+						locations={filterOptions?.locations ?? []}
+						onChanged={handleChanged}
+						view={view}
+						onViewChange={handleViewChange}
+					/>
+				) : null}
 			</div>
 			<div className="flex flex-col gap-8">
-				<OrganizersCard eventId={event.id} />
-				<GroupsList groups={groups} />
+				{canManage ? <OrganizersCard eventId={event.id} /> : null}
+				{canManage ? <GroupsList groups={groups} /> : null}
 				<RegistrantsList
+					mode={canManage ? "manage" : "checkin"}
 					eventId={event.id}
 					eventTitle={event.title}
 					registrants={registrants}

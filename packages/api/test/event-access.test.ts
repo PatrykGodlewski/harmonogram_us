@@ -8,6 +8,7 @@ import { authUsers } from "@repo/db/schema/better-auth";
 import { events } from "@repo/db/schema/events";
 import { createEvent, createUser, resetDb } from "../../db/test/helpers";
 import {
+	assertCanCheckIn,
 	assertCanCreateEvents,
 	assertCanDeleteEvent,
 	assertCanManageAgendaItem,
@@ -82,6 +83,19 @@ describe("event access", () => {
 		await expect(assertCanDeleteEvent(owner, eventId)).resolves.toBeUndefined();
 	});
 
+	it("a check-in helper may check people in but not manage the event", async () => {
+		const helper = await user("user");
+		const eventId = await createEvent();
+		await db
+			.insert(eventOrganizers)
+			.values({ eventId, userId: helper.id, role: "checkin" });
+
+		await expect(assertCanCheckIn(helper, eventId)).resolves.toBeUndefined();
+		await expect(assertCanManageEvent(helper, eventId)).rejects.toThrow(
+			"FORBIDDEN",
+		);
+	});
+
 	it("only organizers and admins create events", async () => {
 		await expect(
 			assertCanCreateEvents(await user("organizer")),
@@ -108,7 +122,7 @@ describe("panel server functions check event access", () => {
 	/** Panel-wide reads that are not about one event. */
 	const panelWide = ["fetchAdminEventFilterOptionsServer"];
 	const checks =
-		/assertCanManageEvent|assertCanManageAgendaItem|assertCanCreateEvents|assertCanDeleteEvent|listManagedEventIds/;
+		/assertCanManageEvent|assertCanCheckIn|assertCanManageAgendaItem|assertCanCreateEvents|assertCanDeleteEvent|listManagedEventIds/;
 
 	for (const file of files) {
 		const source = readFileSync(new URL(file, import.meta.url), "utf8");
@@ -133,5 +147,16 @@ describe("panel server functions check event access", () => {
 			"utf8",
 		);
 		expect(source).toMatch(/= panelActionFn/);
+	});
+});
+
+describe("check-in functions use the check-in permission", () => {
+	const source = readFileSync(
+		new URL("../src/admin/check-in.ts", import.meta.url),
+		"utf8",
+	);
+	it("checkInServer and setCheckedInServer let helpers through", () => {
+		expect(source.match(/assertCanCheckIn/g)?.length).toBeGreaterThanOrEqual(2);
+		expect(source).not.toMatch(/assertCanManageEvent/);
 	});
 });

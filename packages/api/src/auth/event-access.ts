@@ -1,5 +1,6 @@
 import { getAgendaItemEventId } from "@repo/db/queries/agenda-items";
 import {
+	canCheckIn,
 	canCreateEvents,
 	canManageEvent,
 } from "@repo/db/queries/event-organizers";
@@ -13,6 +14,16 @@ export async function assertCanManageEvent(
 	eventId: string,
 ): Promise<void> {
 	if (!(await canManageEvent(user, eventId))) {
+		throw appError("FORBIDDEN");
+	}
+}
+
+/** Throws FORBIDDEN unless the user may scan tickets and mark attendance (managers and helpers). */
+export async function assertCanCheckIn(
+	user: AuthenticatedUser,
+	eventId: string,
+): Promise<void> {
+	if (!(await canCheckIn(user, eventId))) {
 		throw appError("FORBIDDEN");
 	}
 }

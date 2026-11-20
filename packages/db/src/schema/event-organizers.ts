@@ -1,5 +1,6 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
+	check,
 	index,
 	pgTable,
 	primaryKey,
@@ -8,6 +9,8 @@ import {
 } from "drizzle-orm/pg-core";
 import { authUsers } from "./better-auth";
 import { events } from "./events";
+
+export type EventOrganizerRole = "manager" | "checkin";
 
 /** Who manages an event (besides admins). The creator is added on creation. */
 export const eventOrganizers = pgTable(
@@ -19,6 +22,8 @@ export const eventOrganizers = pgTable(
 		userId: text("user_id")
 			.notNull()
 			.references(() => authUsers.id, { onDelete: "cascade" }),
+		/** `manager` runs the event; `checkin` may only scan tickets and mark attendance. */
+		role: text("role").$type<EventOrganizerRole>().notNull().default("manager"),
 		createdAt: timestamp("created_at", { withTimezone: true })
 			.notNull()
 			.defaultNow(),
@@ -26,6 +31,10 @@ export const eventOrganizers = pgTable(
 	(table) => [
 		primaryKey({ columns: [table.eventId, table.userId] }),
 		index("event_organizers_user_id_idx").on(table.userId),
+		check(
+			"event_organizers_role_check",
+			sql`${table.role} IN ('manager', 'checkin')`,
+		),
 	],
 );
 

@@ -10,21 +10,40 @@ import {
 	admin_organizers_added,
 	admin_organizers_email,
 	admin_organizers_remove,
+	admin_organizers_role,
 	admin_organizers_title,
+	admin_role_checkin,
+	admin_role_manager,
 } from "@repo/i18n/paraglide/messages";
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
 import { Label } from "@repo/ui/components/label";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@repo/ui/components/select";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type FormEvent, useId, useState } from "react";
 import { toast } from "sonner";
 import { formatMutationError } from "~/lib/format-mutation-error";
 
+type OrganizerRole = "manager" | "checkin";
+
+const ROLE_LABELS: Record<OrganizerRole, () => string> = {
+	manager: admin_role_manager,
+	checkin: admin_role_checkin,
+};
+
 export function OrganizersCard({ eventId }: { eventId: string }) {
 	const headingId = useId();
 	const inputId = useId();
 	const queryClient = useQueryClient();
+	const roleId = useId();
 	const [email, setEmail] = useState("");
+	const [role, setRole] = useState<OrganizerRole>("manager");
 	const options = eventOrganizersQueryOptions(eventId);
 	const { data: organizers = [] } = useQuery(options);
 
@@ -35,7 +54,7 @@ export function OrganizersCard({ eventId }: { eventId: string }) {
 
 	const addMutation = useMutation({
 		mutationFn: (value: string) =>
-			addEventOrganizerServer({ data: { eventId, email: value } }),
+			addEventOrganizerServer({ data: { eventId, email: value, role } }),
 		onSuccess: async () => {
 			setEmail("");
 			toast.success(admin_organizers_added());
@@ -71,7 +90,9 @@ export function OrganizersCard({ eventId }: { eventId: string }) {
 					>
 						<div className="min-w-0">
 							<p className="font-medium break-all">{organizer.email}</p>
-							<p className="text-sm text-muted-foreground">{organizer.name}</p>
+							<p className="text-sm text-muted-foreground">
+								{organizer.name} · {ROLE_LABELS[organizer.role]()}
+							</p>
 						</div>
 						<Button
 							variant="outline"
@@ -87,6 +108,24 @@ export function OrganizersCard({ eventId }: { eventId: string }) {
 			</ul>
 			<form onSubmit={handleSubmit} className="flex flex-col gap-2">
 				<Label htmlFor={inputId}>{admin_organizers_email()}</Label>
+				<div className="flex flex-col gap-1">
+					<Label htmlFor={roleId}>{admin_organizers_role()}</Label>
+					<Select
+						value={role}
+						onValueChange={(value) => setRole(value as OrganizerRole)}
+					>
+						<SelectTrigger id={roleId} className="w-full sm:w-56">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							{(Object.keys(ROLE_LABELS) as OrganizerRole[]).map((key) => (
+								<SelectItem key={key} value={key}>
+									{ROLE_LABELS[key]()}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+				</div>
 				<div className="flex gap-2">
 					<Input
 						id={inputId}

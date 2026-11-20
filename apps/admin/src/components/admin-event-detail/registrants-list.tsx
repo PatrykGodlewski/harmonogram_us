@@ -69,6 +69,8 @@ type RegistrantsListProps = {
 	eventTitle: string;
 	registrants: EventRegistrant[];
 	agenda: AgendaItem[];
+	/** "checkin": a helper at the door marks attendance; nothing else changes. */
+	mode: "manage" | "checkin";
 	onChanged: () => Promise<unknown>;
 };
 
@@ -77,8 +79,10 @@ export function RegistrantsList({
 	eventTitle,
 	registrants,
 	agenda,
+	mode,
 	onChanged,
 }: RegistrantsListProps) {
+	const canManage = mode === "manage";
 	const headingId = useId();
 	const searchId = useId();
 	const filterId = useId();
@@ -142,12 +146,16 @@ export function RegistrantsList({
 					</p>
 				</div>
 				<div className="flex flex-wrap gap-2">
-					<AddRegistrantDialog eventId={eventId} onAdded={onChanged} />
-					<RegistrantExports
-						eventTitle={eventTitle}
-						registrants={registrants}
-						agenda={agenda}
-					/>
+					{canManage ? (
+						<AddRegistrantDialog eventId={eventId} onAdded={onChanged} />
+					) : null}
+					{canManage ? (
+						<RegistrantExports
+							eventTitle={eventTitle}
+							registrants={registrants}
+							agenda={agenda}
+						/>
+					) : null}
 				</div>
 			</div>
 			{registrants.length === 0 ? (
@@ -191,18 +199,20 @@ export function RegistrantsList({
 						</p>
 					) : (
 						<>
-							<div className="flex items-center gap-2 px-1">
-								<input
-									id={selectAllId}
-									type="checkbox"
-									className="size-5 accent-primary"
-									checked={allVisibleSelected}
-									onChange={(event) =>
-										handleSelectAllVisible(event.target.checked)
-									}
-								/>
-								<Label htmlFor={selectAllId}>{admin_bulk_select_all()}</Label>
-							</div>
+							{canManage ? (
+								<div className="flex items-center gap-2 px-1">
+									<input
+										id={selectAllId}
+										type="checkbox"
+										className="size-5 accent-primary"
+										checked={allVisibleSelected}
+										onChange={(event) =>
+											handleSelectAllVisible(event.target.checked)
+										}
+									/>
+									<Label htmlFor={selectAllId}>{admin_bulk_select_all()}</Label>
+								</div>
+							) : null}
 							<ul className="divide-y rounded-lg border">
 								{visible.map((registrant) => (
 									<RegistrantRow
@@ -214,11 +224,12 @@ export function RegistrantsList({
 										onSelectedChange={(isSelected) =>
 											handleSelect(registrant.registrationId, isSelected)
 										}
+										canManage={canManage}
 										onChanged={onChanged}
 									/>
 								))}
 							</ul>
-							{selectedIds.length > 0 ? (
+							{canManage && selectedIds.length > 0 ? (
 								<BulkActionsBar
 									eventId={eventId}
 									selectedIds={selectedIds}
@@ -240,6 +251,7 @@ type RegistrantRowProps = {
 	titleById: Map<string, string>;
 	selected: boolean;
 	onSelectedChange: (selected: boolean) => void;
+	canManage: boolean;
 	onChanged: () => Promise<unknown>;
 };
 
@@ -249,6 +261,7 @@ function RegistrantRow({
 	titleById,
 	selected,
 	onSelectedChange,
+	canManage,
 	onChanged,
 }: RegistrantRowProps) {
 	const attendanceId = useId();
@@ -286,13 +299,15 @@ function RegistrantRow({
 	return (
 		<li className="flex flex-col gap-2 p-3 sm:flex-row sm:items-start sm:justify-between">
 			<div className="flex min-w-0 gap-3">
-				<input
-					type="checkbox"
-					className="mt-1 size-5 shrink-0 accent-primary"
-					aria-label={admin_bulk_select({ email: registrant.email })}
-					checked={selected}
-					onChange={(event) => onSelectedChange(event.target.checked)}
-				/>
+				{canManage ? (
+					<input
+						type="checkbox"
+						className="mt-1 size-5 shrink-0 accent-primary"
+						aria-label={admin_bulk_select({ email: registrant.email })}
+						checked={selected}
+						onChange={(event) => onSelectedChange(event.target.checked)}
+					/>
+				) : null}
 				<div className="flex min-w-0 flex-col gap-1">
 					<div className="flex flex-wrap items-center gap-2">
 						<p className="font-medium break-all">{registrant.email}</p>
@@ -336,33 +351,35 @@ function RegistrantRow({
 						<Label htmlFor={attendanceId}>{admin_attendance()}</Label>
 					</div>
 				) : null}
-				<AlertDialog>
-					<AlertDialogTrigger asChild>
-						<Button
-							size="sm"
-							variant="outline"
-							disabled={removeMutation.isPending}
-						>
-							{admin_registrants_remove()}
-						</Button>
-					</AlertDialogTrigger>
-					<AlertDialogContent>
-						<AlertDialogHeader>
-							<AlertDialogTitle>
-								{admin_registrants_remove_title({ email: registrant.email })}
-							</AlertDialogTitle>
-							<AlertDialogDescription>
-								{admin_registrants_remove_body()}
-							</AlertDialogDescription>
-						</AlertDialogHeader>
-						<AlertDialogFooter>
-							<AlertDialogCancel>{admin_action_cancel()}</AlertDialogCancel>
-							<AlertDialogAction onClick={() => removeMutation.mutate()}>
+				{canManage ? (
+					<AlertDialog>
+						<AlertDialogTrigger asChild>
+							<Button
+								size="sm"
+								variant="outline"
+								disabled={removeMutation.isPending}
+							>
 								{admin_registrants_remove()}
-							</AlertDialogAction>
-						</AlertDialogFooter>
-					</AlertDialogContent>
-				</AlertDialog>
+							</Button>
+						</AlertDialogTrigger>
+						<AlertDialogContent>
+							<AlertDialogHeader>
+								<AlertDialogTitle>
+									{admin_registrants_remove_title({ email: registrant.email })}
+								</AlertDialogTitle>
+								<AlertDialogDescription>
+									{admin_registrants_remove_body()}
+								</AlertDialogDescription>
+							</AlertDialogHeader>
+							<AlertDialogFooter>
+								<AlertDialogCancel>{admin_action_cancel()}</AlertDialogCancel>
+								<AlertDialogAction onClick={() => removeMutation.mutate()}>
+									{admin_registrants_remove()}
+								</AlertDialogAction>
+							</AlertDialogFooter>
+						</AlertDialogContent>
+					</AlertDialog>
+				) : null}
 			</div>
 		</li>
 	);

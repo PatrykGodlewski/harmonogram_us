@@ -41,6 +41,8 @@ import { EventFormDialog } from "./event-form-dialog";
 /** Waits this long after typing before searching. */
 const SEARCH_DELAY_MS = 300;
 
+type AdminEventRow = EventWithRelations & { canManage: boolean };
+
 export function AdminEventsPage({
 	canCreateEvents,
 }: {
@@ -49,7 +51,7 @@ export function AdminEventsPage({
 }) {
 	const queryClient = useQueryClient();
 	const [dialogOpen, setDialogOpen] = useState(false);
-	const [editingRow, setEditingRow] = useState<EventWithRelations | null>(null);
+	const [editingRow, setEditingRow] = useState<AdminEventRow | null>(null);
 
 	const searchId = useId();
 	const [limit, setLimit] = useState(ADMIN_EVENT_PAGE_SIZE);
@@ -93,12 +95,12 @@ export function AdminEventsPage({
 		setDialogOpen(true);
 	};
 
-	const openEditDialog = (row: EventWithRelations) => {
+	const openEditDialog = (row: AdminEventRow) => {
 		setEditingRow(row);
 		setDialogOpen(true);
 	};
 
-	const handleDelete = (row: EventWithRelations) => {
+	const handleDelete = (row: AdminEventRow) => {
 		if (window.confirm(admin_delete_confirm())) {
 			deleteMutation.mutate(row.id);
 		}
@@ -124,6 +126,7 @@ export function AdminEventsPage({
 				onAdd={canCreateEvents ? openCreateDialog : undefined}
 				onEdit={openEditDialog}
 				onDelete={handleDelete}
+				canModifyRow={(row) => row.canManage}
 				columns={[
 					{
 						key: "title",

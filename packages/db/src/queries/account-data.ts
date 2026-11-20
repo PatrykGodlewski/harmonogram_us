@@ -173,10 +173,10 @@ async function assertCanLeave(userId: string): Promise<void> {
 	}
 	const orphaned = await db.execute<{ id: string }>(sql`
 		SELECT e.id FROM events e
-		JOIN event_organizers mine ON mine.event_id = e.id AND mine.user_id = ${userId}
+		JOIN event_organizers mine ON mine.event_id = e.id AND mine.user_id = ${userId} AND mine.role = 'manager'
 		WHERE e.status <> 'cancelled'
 			AND ${effectiveEventEndSql(sql`e`)} > now()
-			AND (SELECT count(*) FROM event_organizers o WHERE o.event_id = e.id) = 1
+			AND (SELECT count(*) FROM event_organizers o WHERE o.event_id = e.id AND o.role = 'manager') = 1
 		LIMIT 1`);
 	if (orphaned.length > 0) {
 		throw new DomainError("SOLE_ORGANIZER");

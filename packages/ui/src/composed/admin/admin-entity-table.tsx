@@ -31,6 +31,8 @@ export interface AdminEntityTableProps<T> {
 	onAdd?: () => void;
 	onEdit?: (row: T) => void;
 	onDelete?: (row: T) => void;
+	/** Rows the user may not change show no edit/delete actions (default: all rows). */
+	canModifyRow?: (row: T) => boolean;
 	isLoading?: boolean;
 }
 
@@ -43,6 +45,7 @@ export function AdminEntityTable<T>({
 	onAdd,
 	onEdit,
 	onDelete,
+	canModifyRow = () => true,
 	isLoading = false,
 }: AdminEntityTableProps<T>) {
 	const showActions = Boolean(onEdit || onDelete);
@@ -105,7 +108,7 @@ export function AdminEntityTable<T>({
 									{showActions ? (
 										<TableCell className="text-right">
 											<div className="flex justify-end gap-2">
-												{onEdit ? (
+												{onEdit && canModifyRow(row) ? (
 													<Button
 														type="button"
 														variant="outline"
@@ -115,7 +118,7 @@ export function AdminEntityTable<T>({
 														{admin_action_edit()}
 													</Button>
 												) : null}
-												{onDelete ? (
+												{onDelete && canModifyRow(row) ? (
 													<Button
 														type="button"
 														variant="destructive"

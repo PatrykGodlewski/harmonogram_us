@@ -127,4 +127,16 @@ describe("event organizers", () => {
 			),
 		).rejects.toThrow();
 	});
+
+	it("a check-in helper sees the event in the panel but does not manage it", async () => {
+		const creator = await createUser();
+		const helper = await createUser("helper@e2e.test");
+		const eventId = await newEvent(creator);
+		const added = await addEventOrganizer(eventId, "helper@e2e.test", "checkin");
+		expect(added.role).toBe("checkin");
+		expect(await canManageEvent(await as(helper), eventId)).toBe(false);
+		expect(await hasPanelAccess(await as(helper))).toBe(true);
+		expect(await listManagedEventIds(await as(helper))).toEqual([eventId]);
+		expect(await listManagedEventIds(await as(helper), "manager")).toEqual([]);
+	});
 });

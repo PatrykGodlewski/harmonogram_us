@@ -1,5 +1,8 @@
 import { missingForPublish } from "@repo/db/queries/event-completeness";
-import { listManagedEventIds } from "@repo/db/queries/event-organizers";
+import {
+	canManageEvent,
+	listManagedEventIds,
+} from "@repo/db/queries/event-organizers";
 import { getEventRegistrants } from "@repo/db/queries/event-registrations";
 import {
 	getEventById,
@@ -15,7 +18,7 @@ import {
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { adminMiddleware } from "../auth/admin-middleware";
-import { assertCanManageEvent } from "../auth/event-access";
+import { assertCanCheckIn, assertCanManageEvent } from "../auth/event-access";
 import { panelQueryFn } from "../auth/panel-middleware";
 import { appError } from "../errors";
 import {
@@ -42,9 +45,12 @@ const adminQueryFn = createServerFn({ method: "GET" }).middleware([
 export const fetchAdminEventsServer = panelQueryFn
 	.inputValidator((input: unknown) => adminEventsQuerySchema.parse(input))
 	.handler(async ({ data, context }) => {
-		const managed = await listManagedEventIds(context.user);
+		const [managed, managerOf] = await Promise.all([
+			listManagedEventIds(context.user),
+			listManagedEventIds(context.user, "manager"),
+		]);
 		// A page, not everything: an installation collects thousands of events.
-		return getEventPage(
+		const page = await getEventPage(
 			{
 				audience: { kind: "manage" },
 				sortOrder: data.sortOrder,
@@ -53,6 +59,14 @@ export const fetchAdminEventsServer = panelQueryFn
 			},
 			data.limit,
 		);
+		// Helpers see their events but can't edit them: the list hides those actions.
+		return {
+			...page,
+			events: page.events.map((event) => ({
+				...event,
+				canManage: managerOf === "all" || managerOf.includes(event.id),
+			})),
+		};
 	});
 
 export const adminEventsQueryOptions = (
@@ -111,13 +125,20 @@ export const adminEventFilterOptionsQueryOptions = queryOptions({
 export const fetchAdminEventDetailsServer = panelQueryFn
 	.inputValidator((input: unknown) => adminEventIdSchema.parse(input))
 	.handler(async ({ data, context }) => {
-		await assertCanManageEvent(context.user, data.eventId);
+		await assertCanCheckIn(context.user, data.eventId);
 		const event = await getEventById(data.eventId, { kind: "manage" });
 		if (!event) {
 			throw appError("NOT_FOUND");
 		}
 		// What a draft still needs before publishing, so the panel can say so up front.
-		return { ...event, missingForPublish: missingForPublish(event) };
+		return {
+			...event,
+			missingForPublish: missingForPublish(event),
+			// A check-in helper gets a door view: scanner and attendance only.
+			access: (await canManageEvent(context.user, data.eventId))
+				? ("manage" as const)
+				: ("checkin" as const),
+		};
 	});
 
 export const adminEventDetailsQueryOptions = (eventId: string) =>
@@ -129,7 +150,7 @@ export const adminEventDetailsQueryOptions = (eventId: string) =>
 export const fetchAdminEventRegistrantsServer = panelQueryFn
 	.inputValidator((input: unknown) => adminEventIdSchema.parse(input))
 	.handler(async ({ data, context }) => {
-		await assertCanManageEvent(context.user, data.eventId);
+		await assertCanCheckIn(context.user, data.eventId);
 		return getEventRegistrants(data.eventId);
 	});
 

@@ -15,6 +15,7 @@ export type { EventOrganizer } from "@repo/db/queries/event-organizers";
 const addOrganizerSchema = z.object({
 	eventId: z.string().min(1),
 	email: z.email().max(320),
+	role: z.enum(["manager", "checkin"]).default("manager"),
 });
 
 const removeOrganizerSchema = z.object({
@@ -39,7 +40,9 @@ export const addEventOrganizerServer = panelActionFn
 	.inputValidator((input: unknown) => addOrganizerSchema.parse(input))
 	.handler(async ({ data, context }) => {
 		await assertCanManageEvent(context.user, data.eventId);
-		return withDomainErrors(() => addEventOrganizer(data.eventId, data.email));
+		return withDomainErrors(() =>
+			addEventOrganizer(data.eventId, data.email, data.role),
+		);
 	});
 
 export const removeEventOrganizerServer = panelActionFn

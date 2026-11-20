@@ -524,5 +524,8 @@
 	"admin_bulk_clear": "Clear",
 	"admin_bulk_done": "Done: {count}.",
 	"admin_message_selected": "Recipients: selected ({count})",
-	"admin_registrants_xlsx": "Download XLSX"
+	"admin_registrants_xlsx": "Download XLSX",
+	"admin_organizers_role": "Role",
+	"admin_role_manager": "Co-organizer",
+	"admin_role_checkin": "Check-in helper"
 }

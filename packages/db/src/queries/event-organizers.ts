@@ -1,7 +1,10 @@
-import { and, asc, count, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { db } from "../client";
 import { authUsers } from "../schema/better-auth";
-import { eventOrganizers } from "../schema/event-organizers";
+import {
+	type EventOrganizerRole,
+	eventOrganizers,
+} from "../schema/event-organizers";
 import { DomainError, mapConstraintError } from "./domain-errors";
 import { lockEvent } from "./locks";
 import type { UserRole } from "./roles";
@@ -11,6 +14,7 @@ export type EventOrganizer = {
 	userId: string;
 	email: string;
 	name: string;
+	role: EventOrganizerRole;
 	addedAt: Date;
 };
 
@@ -22,10 +26,26 @@ export function canCreateEvents(role: UserRole): boolean {
 	return role === "organizer" || role === "admin";
 }
 
-/** Admins manage every event; everyone else only the events they organize. */
+/** Admins manage every event; everyone else only the events they run as a manager. */
 export async function canManageEvent(
 	user: PanelUser,
 	eventId: string,
+): Promise<boolean> {
+	return hasEventRole(user, eventId, "manager");
+}
+
+/** Scanning tickets and marking attendance: managers and check-in helpers (and admins). */
+export async function canCheckIn(
+	user: PanelUser,
+	eventId: string,
+): Promise<boolean> {
+	return hasEventRole(user, eventId, null);
+}
+
+async function hasEventRole(
+	user: PanelUser,
+	eventId: string,
+	role: EventOrganizerRole | null,
 ): Promise<boolean> {
 	if (user.role === "admin") {
 		return true;
@@ -37,6 +57,7 @@ export async function canManageEvent(
 			and(
 				eq(eventOrganizers.eventId, eventId),
 				eq(eventOrganizers.userId, user.id),
+				role ? eq(eventOrganizers.role, role) : undefined,
 			),
 		)
 		.limit(1);
@@ -56,9 +77,10 @@ export async function hasPanelAccess(user: PanelUser): Promise<boolean> {
 	return Boolean(row);
 }
 
-/** The ids of the events the user manages, or "all" for admins. */
+/** The ids of the events the user organizes (any role, or only one), or "all" for admins. */
 export async function listManagedEventIds(
 	user: PanelUser,
+	role?: EventOrganizerRole,
 ): Promise<string[] | "all"> {
 	if (user.role === "admin") {
 		return "all";
@@ -66,7 +88,12 @@ export async function listManagedEventIds(
 	const rows = await db
 		.select({ eventId: eventOrganizers.eventId })
 		.from(eventOrganizers)
-		.where(eq(eventOrganizers.userId, user.id));
+		.where(
+			and(
+				eq(eventOrganizers.userId, user.id),
+				role ? eq(eventOrganizers.role, role) : undefined,
+			),
+		);
 	return rows.map((row) => row.eventId);
 }
 
@@ -78,6 +105,7 @@ export async function listEventOrganizers(
 			userId: eventOrganizers.userId,
 			email: authUsers.email,
 			name: authUsers.name,
+			role: eventOrganizers.role,
 			addedAt: eventOrganizers.createdAt,
 		})
 		.from(eventOrganizers)
@@ -90,6 +118,7 @@ export async function listEventOrganizers(
 export async function addEventOrganizer(
 	eventId: string,
 	email: string,
+	role: EventOrganizerRole = "manager",
 ): Promise<EventOrganizer> {
 	const user = await findAccountByEmail(email);
 	if (!user) {
@@ -98,12 +127,13 @@ export async function addEventOrganizer(
 	try {
 		const [row] = await db
 			.insert(eventOrganizers)
-			.values({ eventId, userId: user.id })
+			.values({ eventId, userId: user.id, role })
 			.returning({ addedAt: eventOrganizers.createdAt });
 		return {
 			userId: user.id,
 			email: user.email,
 			name: user.name,
+			role,
 			addedAt: row?.addedAt ?? new Date(),
 		};
 	} catch (error) {
@@ -111,18 +141,26 @@ export async function addEventOrganizer(
 	}
 }
 
-/** Removes an organizer; an event always keeps at least one. */
+/** Removes an organizer or helper; an event always keeps at least one manager. */
 export async function removeEventOrganizer(
 	eventId: string,
 	userId: string,
 ): Promise<void> {
 	await db.transaction(async (tx) => {
 		await lockEvent(tx, eventId);
-		const [row] = await tx
-			.select({ n: count() })
+		const managers = await tx
+			.select({ userId: eventOrganizers.userId })
 			.from(eventOrganizers)
-			.where(eq(eventOrganizers.eventId, eventId));
-		if ((row?.n ?? 0) <= 1) {
+			.where(
+				and(
+					eq(eventOrganizers.eventId, eventId),
+					eq(eventOrganizers.role, "manager"),
+				),
+			);
+		if (
+			managers.length <= 1 &&
+			managers.some((manager) => manager.userId === userId)
+		) {
 			throw new DomainError("LAST_ORGANIZER");
 		}
 		await tx

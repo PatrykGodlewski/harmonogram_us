@@ -5,7 +5,7 @@ import {
 	removeRegistrants,
 } from "@repo/db/queries/event-registrations";
 import { z } from "zod";
-import { assertCanManageEvent } from "../auth/event-access";
+import { assertCanCheckIn, assertCanManageEvent } from "../auth/event-access";
 import { panelActionFn } from "../auth/panel-middleware";
 import { withDomainErrors } from "../errors";
 import { registrationEmailHooks } from "../notifications/registration-hooks";
@@ -73,7 +73,7 @@ export const setCheckedInManyServer = panelActionFn
 		bulkSchema.extend({ checkedIn: z.boolean() }).parse(input),
 	)
 	.handler(async ({ data, context }) => {
-		await assertCanManageEvent(context.user, data.eventId);
+		await assertCanCheckIn(context.user, data.eventId);
 		return withDomainErrors(() =>
 			setCheckedInMany(data.eventId, data.registrationIds, data.checkedIn),
 		);

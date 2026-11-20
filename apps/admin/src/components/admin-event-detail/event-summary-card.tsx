@@ -30,6 +30,8 @@ export function EventSummaryCard({ event, onChanged }: EventSummaryCardProps) {
 	const locale = getLocale();
 	const registered = event.maxSeats - event.seatsRemaining;
 	const [editOpen, setEditOpen] = useState(false);
+	// A check-in helper sees the event and the scanner, nothing that changes it.
+	const canManage = event.access === "manage";
 
 	return (
 		<section className="flex flex-col gap-3">
@@ -66,17 +68,10 @@ export function EventSummaryCard({ event, onChanged }: EventSummaryCardProps) {
 			<p className="tabular-nums">
 				{admin_event_places({ registered, max: event.maxSeats })}
 			</p>
-			{event.status === "draft" ? (
+			{canManage && event.status === "draft" ? (
 				<PublishChecklist event={event} onChanged={onChanged} />
 			) : null}
 			<div className="flex flex-wrap gap-2">
-				{event.status !== "cancelled" ? (
-					<Button variant="outline" onClick={() => setEditOpen(true)}>
-						{admin_event_edit()}
-					</Button>
-				) : null}
-				<DuplicateEventDialog eventId={event.id} />
-				<MessageDialog eventId={event.id} />
 				{event.status === "published" ? (
 					<Button variant="outline" asChild>
 						<Link to="/events/$eventId/scan" params={{ eventId: event.id }}>
@@ -84,9 +79,20 @@ export function EventSummaryCard({ event, onChanged }: EventSummaryCardProps) {
 						</Link>
 					</Button>
 				) : null}
-				{event.status === "published" &&
-				new Date(event.effectiveEndsAt).getTime() > Date.now() ? (
-					<CancelEventButton eventId={event.id} onCancelled={onChanged} />
+				{canManage ? (
+					<>
+						{event.status !== "cancelled" ? (
+							<Button variant="outline" onClick={() => setEditOpen(true)}>
+								{admin_event_edit()}
+							</Button>
+						) : null}
+						<DuplicateEventDialog eventId={event.id} />
+						<MessageDialog eventId={event.id} />
+						{event.status === "published" &&
+						new Date(event.effectiveEndsAt).getTime() > Date.now() ? (
+							<CancelEventButton eventId={event.id} onCancelled={onChanged} />
+						) : null}
+					</>
 				) : null}
 			</div>
 			{event.description ? (
@@ -94,12 +100,14 @@ export function EventSummaryCard({ event, onChanged }: EventSummaryCardProps) {
 					{event.description}
 				</p>
 			) : null}
-			<EventFormDialog
-				open={editOpen}
-				onOpenChange={setEditOpen}
-				event={event}
-				onSaved={onChanged}
-			/>
+			{canManage ? (
+				<EventFormDialog
+					open={editOpen}
+					onOpenChange={setEditOpen}
+					event={event}
+					onSaved={onChanged}
+				/>
+			) : null}
 		</section>
 	);
 }
