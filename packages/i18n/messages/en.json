@@ -543,5 +543,17 @@
 	"reg_email_rejected_intro": "The organiser did not approve your request for {event} ({date}).",
 	"admin_field_requires_approval": "Registrations need approval",
 	"admin_field_requires_approval_hint": "Requests wait until you approve or decline them.",
-	"admin_summary_requires_approval": "Registrations with approval"
+	"admin_summary_requires_approval": "Registrations with approval",
+	"admin_approval_waiting": "Waiting for approval: {count}",
+	"admin_approval_show": "Show requests",
+	"admin_approve": "Approve",
+	"admin_reject": "Decline",
+	"admin_registrant_pending": "Waiting",
+	"admin_registrant_rejected": "Declined",
+	"admin_registrants_filter_pending": "Waiting",
+	"admin_registrants_filter_rejected": "Declined",
+	"admin_approval_done": "Approved: {approved}, on the waitlist: {waitlisted}",
+	"admin_rejection_done": "Declined: {count}",
+	"csv_status_pending": "Waiting for approval",
+	"csv_status_rejected": "Declined"
 }

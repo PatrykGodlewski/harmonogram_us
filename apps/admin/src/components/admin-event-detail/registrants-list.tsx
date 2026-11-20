@@ -3,6 +3,9 @@ import type { AgendaItem, EventRegistrant } from "@repo/api/admin/queries";
 import { removeRegistrantServer } from "@repo/api/admin/registrants";
 import {
 	admin_action_cancel,
+	admin_approval_show,
+	admin_approval_waiting,
+	admin_approve,
 	admin_attendance,
 	admin_attendance_count,
 	admin_bulk_select,
@@ -12,10 +15,14 @@ import {
 	admin_event_registrants_empty,
 	admin_group_badge,
 	admin_group_unnamed,
+	admin_registrant_pending,
+	admin_registrant_rejected,
 	admin_registrant_waitlisted,
 	admin_registrants_filter,
 	admin_registrants_filter_all,
+	admin_registrants_filter_pending,
 	admin_registrants_filter_registered,
+	admin_registrants_filter_rejected,
 	admin_registrants_filter_waitlisted,
 	admin_registrants_no_match,
 	admin_registrants_remove,
@@ -23,6 +30,7 @@ import {
 	admin_registrants_remove_title,
 	admin_registrants_removed,
 	admin_registrants_search,
+	admin_reject,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import {
@@ -55,14 +63,21 @@ import { formatMutationError } from "~/lib/format-mutation-error";
 import { AddRegistrantDialog } from "./add-registrant-dialog";
 import { BulkActionsBar } from "./bulk-actions-bar";
 import { RegistrantExports } from "./registrant-exports";
+import { useApprovalActions } from "./use-approval-actions";
 
-type StateFilter = "all" | "registered" | "waitlisted";
+type StateFilter = "all" | EventRegistrant["state"];
 
 const FILTER_LABELS: Record<StateFilter, () => string> = {
 	all: admin_registrants_filter_all,
 	registered: admin_registrants_filter_registered,
 	waitlisted: admin_registrants_filter_waitlisted,
+	pending: admin_registrants_filter_pending,
+	rejected: admin_registrants_filter_rejected,
 };
+
+/** At the door only people with a place or on the waitlist matter. */
+const isAtDoor = (registrant: EventRegistrant) =>
+	registrant.state === "registered" || registrant.state === "waitlisted";
 
 type RegistrantsListProps = {
 	eventId: string;
@@ -77,12 +92,19 @@ type RegistrantsListProps = {
 export function RegistrantsList({
 	eventId,
 	eventTitle,
-	registrants,
+	registrants: allRegistrants,
 	agenda,
 	mode,
 	onChanged,
 }: RegistrantsListProps) {
 	const canManage = mode === "manage";
+	const registrants = canManage
+		? allRegistrants
+		: allRegistrants.filter(isAtDoor);
+	const approval = useApprovalActions(eventId, onChanged);
+	const pendingCount = registrants.filter(
+		(registrant) => registrant.state === "pending",
+	).length;
 	const headingId = useId();
 	const searchId = useId();
 	const filterId = useId();
@@ -158,6 +180,25 @@ export function RegistrantsList({
 					) : null}
 				</div>
 			</div>
+			{canManage && pendingCount > 0 ? (
+				<div
+					role="status"
+					className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm dark:border-amber-700 dark:bg-amber-950"
+				>
+					<p className="font-medium">
+						{admin_approval_waiting({ count: pendingCount })}
+					</p>
+					{stateFilter === "pending" ? null : (
+						<Button
+							size="sm"
+							variant="outline"
+							onClick={() => setStateFilter("pending")}
+						>
+							{admin_approval_show()}
+						</Button>
+					)}
+				</div>
+			) : null}
 			{registrants.length === 0 ? (
 				<p className="text-sm text-muted-foreground">
 					{admin_event_registrants_empty()}
@@ -226,6 +267,7 @@ export function RegistrantsList({
 										}
 										canManage={canManage}
 										onChanged={onChanged}
+										approval={approval}
 									/>
 								))}
 							</ul>
@@ -235,6 +277,13 @@ export function RegistrantsList({
 									selectedIds={selectedIds}
 									onDone={onChanged}
 									onClear={() => setSelected(new Set())}
+									approval={approval}
+									hasRequests={registrants.some(
+										(registrant) =>
+											selected.has(registrant.registrationId) &&
+											(registrant.state === "pending" ||
+												registrant.state === "rejected"),
+									)}
 								/>
 							) : null}
 						</>
@@ -253,6 +302,7 @@ type RegistrantRowProps = {
 	onSelectedChange: (selected: boolean) => void;
 	canManage: boolean;
 	onChanged: () => Promise<unknown>;
+	approval: ReturnType<typeof useApprovalActions>;
 };
 
 function RegistrantRow({
@@ -263,7 +313,10 @@ function RegistrantRow({
 	onSelectedChange,
 	canManage,
 	onChanged,
+	approval,
 }: RegistrantRowProps) {
+	const isRequest =
+		registrant.state === "pending" || registrant.state === "rejected";
 	const attendanceId = useId();
 	const removeMutation = useMutation({
 		mutationFn: () =>
@@ -314,6 +367,12 @@ function RegistrantRow({
 						{registrant.state === "waitlisted" ? (
 							<Badge variant="secondary">{admin_registrant_waitlisted()}</Badge>
 						) : null}
+						{registrant.state === "pending" ? (
+							<Badge>{admin_registrant_pending()}</Badge>
+						) : null}
+						{registrant.state === "rejected" ? (
+							<Badge variant="outline">{admin_registrant_rejected()}</Badge>
+						) : null}
 						{registrant.groupId ? (
 							<Badge variant="outline">
 								{admin_group_badge({
@@ -337,7 +396,28 @@ function RegistrantRow({
 					) : null}
 				</div>
 			</div>
-			<div className="flex items-center gap-3 self-start">
+			<div className="flex flex-wrap items-center gap-3 self-start">
+				{canManage && isRequest ? (
+					<>
+						<Button
+							size="sm"
+							disabled={approval.isBusy}
+							onClick={() => approval.approve([registrant.registrationId])}
+						>
+							{admin_approve()}
+						</Button>
+						{registrant.state === "pending" ? (
+							<Button
+								size="sm"
+								variant="outline"
+								disabled={approval.isBusy}
+								onClick={() => approval.reject([registrant.registrationId])}
+							>
+								{admin_reject()}
+							</Button>
+						) : null}
+					</>
+				) : null}
 				{registrant.state === "registered" ? (
 					<div className="flex items-center gap-2">
 						<input

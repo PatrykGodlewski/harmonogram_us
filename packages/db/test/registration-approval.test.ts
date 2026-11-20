@@ -94,3 +94,69 @@ describe("who hears about a cancelled event", () => {
 		expect(changes).toHaveLength(1);
 	});
 });
+
+describe("approving and rejecting", () => {
+	it("approval fills free places in request order, the rest go to the waitlist", async () => {
+		const { approveRegistrations } = await import(
+			"../src/queries/registration-approval"
+		);
+		const eventId = await createEvent({ maxSeats: 1, requiresApproval: true });
+		const [first, second] = [await createUser(), await createUser()];
+		await registerForEvent(eventId, first, "pl");
+		await registerForEvent(eventId, second, "pl");
+		const ids = await registrationIds(eventId);
+		const { hooks, changes } = collectChanges();
+		const result = await approveRegistrations(eventId, ids, hooks);
+		expect(result).toMatchObject({ approved: 1, waitlisted: 1 });
+		expect(await stateOf(eventId, first)).toBe("registered");
+		expect(await stateOf(eventId, second)).toBe("waitlisted");
+		expect(changes.map((c) => c.change).sort()).toEqual([
+			"confirmed",
+			"waitlisted",
+		]);
+		expect((await readEventCount(eventId))?.seatsRemaining).toBe(0);
+	});
+
+	it("rejection changes only pending requests and tells them", async () => {
+		const { rejectRegistrations } = await import(
+			"../src/queries/registration-approval"
+		);
+		const eventId = await createEvent({ requiresApproval: true });
+		const [pending, added] = [await createUser(), await createUser()];
+		await registerForEvent(eventId, pending, "pl");
+		await registerForEvent(eventId, added, "pl", undefined, {
+			byOrganizer: true,
+		});
+		const { hooks, changes } = collectChanges();
+		const result = await rejectRegistrations(
+			eventId,
+			await registrationIds(eventId),
+			hooks,
+		);
+		expect(result.rejected).toBe(1);
+		expect(await stateOf(eventId, pending)).toBe("rejected");
+		expect(await stateOf(eventId, added)).toBe("registered");
+		expect(changes.map((c) => c.change)).toEqual(["rejected"]);
+	});
+
+	it("a rejected request can still be approved later", async () => {
+		const { approveRegistrations, rejectRegistrations } = await import(
+			"../src/queries/registration-approval"
+		);
+		const eventId = await createEvent({ requiresApproval: true });
+		const user = await createUser();
+		await registerForEvent(eventId, user, "pl");
+		const ids = await registrationIds(eventId);
+		await rejectRegistrations(eventId, ids);
+		await approveRegistrations(eventId, ids);
+		expect(await stateOf(eventId, user)).toBe("registered");
+	});
+});
+
+async function registrationIds(eventId: string): Promise<string[]> {
+	const rows = await db
+		.select({ id: eventRegistrations.id })
+		.from(eventRegistrations)
+		.where(eq(eventRegistrations.eventId, eventId));
+	return rows.map((row) => row.id);
+}

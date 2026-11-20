@@ -543,5 +543,17 @@
 	"reg_email_rejected_intro": "Organizator nie zaakceptował Twojego zgłoszenia na {event} ({date}).",
 	"admin_field_requires_approval": "Zapisy wymagają akceptacji",
 	"admin_field_requires_approval_hint": "Zgłoszenia czekają, aż je zaakceptujesz albo odrzucisz.",
-	"admin_summary_requires_approval": "Zapisy z akceptacją"
+	"admin_summary_requires_approval": "Zapisy z akceptacją",
+	"admin_approval_waiting": "Czekają na akceptację: {count}",
+	"admin_approval_show": "Pokaż zgłoszenia",
+	"admin_approve": "Akceptuj",
+	"admin_reject": "Odrzuć",
+	"admin_registrant_pending": "Czeka",
+	"admin_registrant_rejected": "Odrzucone",
+	"admin_registrants_filter_pending": "Czekają",
+	"admin_registrants_filter_rejected": "Odrzucone",
+	"admin_approval_done": "Zaakceptowano: {approved}, na liście rezerwowej: {waitlisted}",
+	"admin_rejection_done": "Odrzucono: {count}",
+	"csv_status_pending": "Czeka na akceptację",
+	"csv_status_rejected": "Odrzucone"
 }

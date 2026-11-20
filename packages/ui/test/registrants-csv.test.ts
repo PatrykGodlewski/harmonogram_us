@@ -43,6 +43,19 @@ describe("toRegistrantsCsv", () => {
 		expect(lines[2]).toContain('"Lista rezerwowa"');
 	});
 
+	it("names approval states", () => {
+		const csv = toRegistrantsCsv(
+			[
+				{ ...base, state: "pending" },
+				{ ...base, registrationId: "r2", state: "rejected" },
+			],
+			[],
+			"pl",
+		);
+		expect(csv).toContain('"Czeka na akceptację"');
+		expect(csv).toContain('"Odrzucone"');
+	});
+
 	it("marks attendance", () => {
 		const csv = toRegistrantsCsv([{ ...base, checkedInAt: new Date() }], [], "pl");
 		expect(csv.slice(1).split("\r\n")[1]?.endsWith(';"tak"')).toBe(true);

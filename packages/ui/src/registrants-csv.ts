@@ -8,13 +8,22 @@ import {
 	csv_header_registered_at,
 	csv_header_status,
 	csv_no,
+	csv_status_pending,
 	csv_status_registered,
+	csv_status_rejected,
 	csv_status_waitlisted,
 	csv_yes,
 } from "@repo/i18n/paraglide/messages";
 import { formatEventDateTime } from "./time";
 
 type Locale = "pl" | "en";
+
+const STATUS_LABELS = {
+	registered: csv_status_registered,
+	waitlisted: csv_status_waitlisted,
+	pending: csv_status_pending,
+	rejected: csv_status_rejected,
+} as const satisfies Record<EventRegistrant["state"], unknown>;
 
 /** A spreadsheet runs these as formulas (CSV injection), also after leading spaces; `|` is DDE. */
 const FORMULA_START = /^\s*[=+\-@|]|^[\t\r\n]/;
@@ -47,9 +56,7 @@ export function registrantRows(
 	const rows = registrants.map((registrant) => [
 		registrant.name ?? "",
 		registrant.email,
-		registrant.state === "registered"
-			? csv_status_registered({}, options)
-			: csv_status_waitlisted({}, options),
+		STATUS_LABELS[registrant.state]({}, options),
 		formatEventDateTime(registrant.registeredAt, locale),
 		registrant.groupName ?? "",
 		registrant.agendaItemIds

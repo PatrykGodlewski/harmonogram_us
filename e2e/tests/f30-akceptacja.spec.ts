@@ -58,3 +58,56 @@ test("[F30] zapis na wydarzenie z akceptacją czeka @uczestnik", async ({
 		summary.getByRole("button", { name: "Poproś o zapis" }),
 	).toBeVisible();
 });
+
+test("[F30] organizator akceptuje i odrzuca, uczestnicy dostają e-mail @organizator", async ({
+	page,
+}, testInfo) => {
+	const base = uniqueEmail(testInfo);
+	const password = randomBytes(18).toString("base64url");
+	const organizer = await createTestUser(`org-${base}`, {
+		role: "organizer",
+		password,
+	});
+	const event = await createTestEvent({
+		organizerId: organizer.id,
+		requiresApproval: true,
+	});
+	const people = [`a-${base}`, `b-${base}`, `c-${base}`];
+	const { registerForEvent } = await import(
+		"@repo/db/queries/event-registrations"
+	);
+	for (const email of people) {
+		const user = await createTestUser(email);
+		await registerForEvent(event.id, user.id, "pl");
+	}
+	const [approved, rejected, bulk] = people as [string, string, string];
+
+	await signInAsAdmin(page, `org-${base}`, password);
+	await open(page, adminUrl(`/pl/events/${event.id}`));
+	await expect(page.getByText("Czekają na akceptację: 3")).toBeVisible();
+
+	const row = (email: string) =>
+		page.getByRole("listitem").filter({ hasText: email });
+	await row(approved).getByRole("button", { name: "Akceptuj" }).click();
+	await expect(row(approved).getByText("Czeka")).toBeHidden();
+	await row(rejected).getByRole("button", { name: "Odrzuć" }).click();
+	await expect(row(rejected).getByText("Odrzucone")).toBeVisible();
+
+	await page.getByRole("checkbox", { name: `Zaznacz ${bulk}` }).check();
+	await page
+		.getByRole("toolbar")
+		.getByRole("button", { name: "Akceptuj" })
+		.click();
+	await expect(page.getByText(/Czekają na akceptację/)).toBeHidden();
+
+	expect(
+		(await latestMessageTo(approved, { subject: "Zapisano" })).subject,
+	).toContain(event.title);
+	expect(
+		(await latestMessageTo(rejected, { subject: "Zgłoszenie odrzucone" }))
+			.subject,
+	).toContain(event.title);
+	expect(
+		(await latestMessageTo(bulk, { subject: "Zapisano" })).subject,
+	).toContain(event.title);
+});

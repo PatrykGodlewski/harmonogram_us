@@ -4,6 +4,7 @@ import {
 } from "@repo/api/admin/registrants";
 import {
 	admin_action_cancel,
+	admin_approve,
 	admin_bulk_checkin,
 	admin_bulk_clear,
 	admin_bulk_count,
@@ -15,6 +16,7 @@ import {
 	admin_bulk_toolbar,
 	admin_error_generic,
 	admin_registrants_remove_body,
+	admin_reject,
 } from "@repo/i18n/paraglide/messages";
 import {
 	AlertDialog,
@@ -32,12 +34,16 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { formatMutationError } from "~/lib/format-mutation-error";
 import { MessageDialog } from "./message-dialog";
+import type { useApprovalActions } from "./use-approval-actions";
 
 type BulkActionsBarProps = {
 	eventId: string;
 	selectedIds: string[];
 	onDone: () => Promise<unknown>;
 	onClear: () => void;
+	approval: ReturnType<typeof useApprovalActions>;
+	/** Some selected people wait for approval (or were declined). */
+	hasRequests: boolean;
 };
 
 /**
@@ -49,6 +55,8 @@ export function BulkActionsBar({
 	selectedIds,
 	onDone,
 	onClear,
+	approval,
+	hasRequests,
 }: BulkActionsBarProps) {
 	const handleError = (error: unknown) =>
 		toast.error(formatMutationError(error, admin_error_generic));
@@ -74,7 +82,8 @@ export function BulkActionsBar({
 		onSuccess: ({ removed }) => finish(removed),
 		onError: handleError,
 	});
-	const busy = checkInMutation.isPending || removeMutation.isPending;
+	const busy =
+		checkInMutation.isPending || removeMutation.isPending || approval.isBusy;
 
 	return (
 		<div
@@ -92,6 +101,26 @@ export function BulkActionsBar({
 			>
 				{admin_bulk_checkin()}
 			</Button>
+			{hasRequests ? (
+				<>
+					<Button
+						size="sm"
+						variant="outline"
+						disabled={busy}
+						onClick={() => approval.approve(selectedIds, onClear)}
+					>
+						{admin_approve()}
+					</Button>
+					<Button
+						size="sm"
+						variant="outline"
+						disabled={busy}
+						onClick={() => approval.reject(selectedIds, onClear)}
+					>
+						{admin_reject()}
+					</Button>
+				</>
+			) : null}
 			<MessageDialog
 				eventId={eventId}
 				registrationIds={selectedIds}

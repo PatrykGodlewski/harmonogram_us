@@ -4,6 +4,10 @@ import {
 	removeRegistrant,
 	removeRegistrants,
 } from "@repo/db/queries/event-registrations";
+import {
+	approveRegistrations,
+	rejectRegistrations,
+} from "@repo/db/queries/registration-approval";
 import { z } from "zod";
 import { assertCanCheckIn, assertCanManageEvent } from "../auth/event-access";
 import { panelActionFn } from "../auth/panel-middleware";
@@ -76,5 +80,32 @@ export const setCheckedInManyServer = panelActionFn
 		await assertCanCheckIn(context.user, data.eventId);
 		return withDomainErrors(() =>
 			setCheckedInMany(data.eventId, data.registrationIds, data.checkedIn),
+		);
+	});
+
+/** Approves requests: free places first, then the waitlist (oldest request first). */
+export const approveRegistrationsServer = panelActionFn
+	.inputValidator((input: unknown) => bulkSchema.parse(input))
+	.handler(async ({ data, context }) => {
+		await assertCanManageEvent(context.user, data.eventId);
+		return withDomainErrors(() =>
+			approveRegistrations(
+				data.eventId,
+				data.registrationIds,
+				registrationEmailHooks,
+			),
+		);
+	});
+
+export const rejectRegistrationsServer = panelActionFn
+	.inputValidator((input: unknown) => bulkSchema.parse(input))
+	.handler(async ({ data, context }) => {
+		await assertCanManageEvent(context.user, data.eventId);
+		return withDomainErrors(() =>
+			rejectRegistrations(
+				data.eventId,
+				data.registrationIds,
+				registrationEmailHooks,
+			),
 		);
 	});
