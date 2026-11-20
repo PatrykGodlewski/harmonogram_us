@@ -20,7 +20,8 @@
     "./time": "./src/time.ts",
     "./agenda": "./src/agenda.ts",
     "./tailwind": "./tailwind.css",
-    "./app-errors": "./src/app-errors.ts"
+    "./app-errors": "./src/app-errors.ts",
+    "./registrants-csv": "./src/registrants-csv.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",

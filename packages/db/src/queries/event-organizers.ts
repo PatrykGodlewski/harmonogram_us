@@ -1,10 +1,11 @@
-import { and, asc, count, eq, sql } from "drizzle-orm";
+import { and, asc, count, eq } from "drizzle-orm";
 import { db } from "../client";
 import { authUsers } from "../schema/better-auth";
 import { eventOrganizers } from "../schema/event-organizers";
 import { DomainError, mapConstraintError } from "./domain-errors";
 import { lockEvent } from "./locks";
 import type { UserRole } from "./roles";
+import { findAccountByEmail } from "./users";
 
 export type EventOrganizer = {
 	userId: string;
@@ -90,10 +91,7 @@ export async function addEventOrganizer(
 	eventId: string,
 	email: string,
 ): Promise<EventOrganizer> {
-	const [user] = await db
-		.select({ id: authUsers.id, email: authUsers.email, name: authUsers.name })
-		.from(authUsers)
-		.where(eq(sql`lower(${authUsers.email})`, email.trim().toLowerCase()));
+	const user = await findAccountByEmail(email);
 	if (!user) {
 		throw new DomainError("USER_NOT_FOUND");
 	}

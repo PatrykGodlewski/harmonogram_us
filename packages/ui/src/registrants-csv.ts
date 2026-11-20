@@ -1,0 +1,60 @@
+import type { EventRegistrant } from "@repo/db/queries/event-registrations";
+import {
+	csv_header_email,
+	csv_header_group,
+	csv_header_items,
+	csv_header_name,
+	csv_header_registered_at,
+	csv_header_status,
+	csv_status_registered,
+	csv_status_waitlisted,
+} from "@repo/i18n/paraglide/messages";
+import { formatEventDateTime } from "./time";
+
+type Locale = "pl" | "en";
+
+/** A spreadsheet runs cells starting with these as formulas (CSV injection). */
+const FORMULA_START = /^[=+\-@\t\r]/;
+
+function cell(value: string): string {
+	const safe = FORMULA_START.test(value) ? `'${value}` : value;
+	return `"${safe.replaceAll('"', '""')}"`;
+}
+
+/**
+ * The registrant list as CSV for spreadsheets: a UTF-8 BOM (so Excel reads
+ * Polish letters), `;` separators, CRLF line ends, dates in the installation
+ * time zone.
+ */
+export function toRegistrantsCsv(
+	registrants: EventRegistrant[],
+	agenda: { id: string; title: string }[],
+	locale: Locale,
+): string {
+	const options = { locale };
+	const titleById = new Map(agenda.map((item) => [item.id, item.title]));
+	const header = [
+		csv_header_name({}, options),
+		csv_header_email({}, options),
+		csv_header_status({}, options),
+		csv_header_registered_at({}, options),
+		csv_header_group({}, options),
+		csv_header_items({}, options),
+	];
+	const rows = registrants.map((registrant) => [
+		registrant.name ?? "",
+		registrant.email,
+		registrant.state === "registered"
+			? csv_status_registered({}, options)
+			: csv_status_waitlisted({}, options),
+		formatEventDateTime(registrant.registeredAt, locale),
+		registrant.groupName ?? "",
+		registrant.agendaItemIds
+			.map((id) => titleById.get(id))
+			.filter(Boolean)
+			.join(", "),
+	]);
+	return `﻿${[header, ...rows]
+		.map((row) => row.map(cell).join(";"))
+		.join("\r\n")}`;
+}

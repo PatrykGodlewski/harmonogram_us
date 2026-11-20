@@ -88,7 +88,13 @@ function AdminEventDetailPage() {
 			<div className="flex flex-col gap-8">
 				<OrganizersCard eventId={event.id} />
 				<GroupsList groups={groups} />
-				<RegistrantsList registrants={registrants} agenda={event.agenda} />
+				<RegistrantsList
+					eventId={event.id}
+					eventTitle={event.title}
+					registrants={registrants}
+					agenda={event.agenda}
+					onChanged={handleChanged}
+				/>
 			</div>
 		</div>
 	);

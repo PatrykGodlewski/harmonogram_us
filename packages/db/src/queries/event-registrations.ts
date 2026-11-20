@@ -16,6 +16,7 @@ import {
 } from "./domain-errors";
 import { lockEvent } from "./locks";
 import { getCurrentTxId } from "./txid";
+import { findAccountByEmail } from "./users";
 
 /**
  * SQL for an event's effective end (same rule as getEffectiveEventEnd), for queries that
@@ -394,20 +395,65 @@ export async function unregisterFromEvent(
 	return db.transaction(async (tx) => {
 		await lockEvent(tx, eventId);
 		const existingId = await findEventRegistrationId(tx, eventId, userId);
-		if (!existingId) {
-			throw new DomainError("NOT_REGISTERED");
-		}
-		// After the event, registrations are its attendance record: no withdrawing.
-		await assertEventOpen(tx, eventId);
-
-		// Item registrations cascade via event_registration_id.
-		await tx
-			.delete(eventRegistrations)
-			.where(eq(eventRegistrations.id, existingId));
-		await promoteAndNotify(tx, eventId, hooks);
-
-		return { txid: await getCurrentTxId(tx) };
+		return withdraw(tx, eventId, existingId, hooks);
 	});
+}
+
+/**
+ * Removes a registration (its item registrations cascade) and promotes the
+ * waitlist. Call with the event row locked. After the event, registrations are
+ * its attendance record: no withdrawing.
+ */
+async function withdraw(
+	tx: TransactionClient,
+	eventId: string,
+	registrationId: string | null,
+	hooks?: RegistrationHooks,
+): Promise<{ txid: number }> {
+	if (!registrationId) {
+		throw new DomainError("NOT_REGISTERED");
+	}
+	await assertEventOpen(tx, eventId);
+	await tx
+		.delete(eventRegistrations)
+		.where(eq(eventRegistrations.id, registrationId));
+	await promoteAndNotify(tx, eventId, hooks);
+	return { txid: await getCurrentTxId(tx) };
+}
+
+/** An organizer removes someone from the event (same rules as withdrawing). */
+export async function removeRegistrant(
+	eventId: string,
+	registrationId: string,
+	hooks?: RegistrationHooks,
+): Promise<{ txid: number }> {
+	return db.transaction(async (tx) => {
+		await lockEvent(tx, eventId);
+		const [row] = await tx
+			.select({ id: eventRegistrations.id })
+			.from(eventRegistrations)
+			.where(
+				and(
+					eq(eventRegistrations.id, registrationId),
+					eq(eventRegistrations.eventId, eventId),
+				),
+			);
+		return withdraw(tx, eventId, row?.id ?? null, hooks);
+	});
+}
+
+/** An organizer adds an existing account by e-mail; the same rules as registering (waitlist when full). */
+export async function addRegistrantByEmail(
+	eventId: string,
+	email: string,
+	locale: "pl" | "en",
+	hooks?: RegistrationHooks,
+): Promise<{ state: RegistrationState; txid: number }> {
+	const user = await findAccountByEmail(email);
+	if (!user) {
+		throw new DomainError("USER_NOT_FOUND");
+	}
+	return registerForEvent(eventId, user.id, locale, hooks);
 }
 
 type MyRegistrationState = {

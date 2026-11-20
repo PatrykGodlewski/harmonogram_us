@@ -101,6 +101,7 @@ describe("panel server functions check event access", () => {
 		"../src/admin/mutations.ts",
 		"../src/admin/queries.ts",
 		"../src/admin/organizers.ts",
+		"../src/admin/registrants.ts",
 	];
 	/** Panel-wide reads that are not about one event. */
 	const panelWide = ["fetchAdminEventFilterOptionsServer"];

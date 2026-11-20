@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "../client";
 import { authUsers } from "../schema/better-auth";
 
@@ -26,4 +26,15 @@ export async function createUser(email: string, _password: string) {
 		})
 		.returning();
 	return user;
+}
+
+/** An account by e-mail, ignoring case and surrounding spaces (what people type). */
+export async function findAccountByEmail(
+	email: string,
+): Promise<{ id: string; email: string; name: string } | null> {
+	const [user] = await db
+		.select({ id: authUsers.id, email: authUsers.email, name: authUsers.name })
+		.from(authUsers)
+		.where(eq(sql`lower(${authUsers.email})`, email.trim().toLowerCase()));
+	return user ?? null;
 }
