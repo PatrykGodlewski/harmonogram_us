@@ -25,10 +25,15 @@ async function createEventInAdmin(page: Page, title: string) {
 	await dialog.getByLabel("Maks. miejsc").fill("2");
 	await dialog.getByRole("combobox", { name: "Typ" }).click();
 	await page.getByRole("option", { name: "Seminarium" }).click();
+	await dialog.getByRole("combobox", { name: "Forma" }).click();
+	await page.getByRole("option", { name: "Online" }).click();
+	await dialog.getByLabel("Link online").fill("https://meet.example.test/cykl");
 	await dialog.getByRole("button", { name: "Zapisz" }).click();
 	await expect(dialog).toBeHidden();
 	await page.getByRole("link", { name: title }).click();
 	await page.waitForURL(/\/events\/[^/]+$/);
+	await page.getByRole("button", { name: "Opublikuj" }).click();
+	await expect(page.getByText("Szkic", { exact: true })).toHaveCount(0);
 	return page.url().split("/").at(-1) ?? "";
 }
 

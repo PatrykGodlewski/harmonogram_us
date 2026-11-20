@@ -356,5 +356,19 @@
 	"admin_role_organizer": "Organizator",
 	"admin_role_admin": "Administrator",
 	"admin_users_role_saved": "Zapisano rolę.",
-	"admin_users_you": "(ty)"
+	"admin_users_you": "(ty)",
+	"admin_error_event_incomplete": "Uzupełnij miejsce albo link online, zanim opublikujesz wydarzenie.",
+	"admin_error_event_not_draft": "To wydarzenie jest już opublikowane.",
+	"admin_field_attendance_mode": "Forma",
+	"admin_field_online_url": "Link online",
+	"attendance_mode_onsite": "Na miejscu",
+	"attendance_mode_online": "Online",
+	"attendance_mode_hybrid": "Hybrydowo",
+	"admin_event_status_draft": "Szkic",
+	"admin_event_publish": "Opublikuj",
+	"admin_event_published": "Wydarzenie jest opublikowane.",
+	"admin_field_status": "Stan",
+	"admin_event_status_published": "Opublikowane",
+	"event_join_online": "Dołącz online",
+	"event_status_cancelled": "Odwołane"
 }

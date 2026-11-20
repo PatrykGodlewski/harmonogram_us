@@ -1,6 +1,7 @@
 import {
 	event_details_closed,
 	event_details_places_left,
+	event_join_online,
 	events_join_waitlist,
 	events_leave_waitlist,
 	events_register,
@@ -19,6 +20,7 @@ import type {
 	EventDetailsRegistrations,
 } from "~/lib/event-details/types";
 import type { EventSeatCount } from "~/lib/events/types";
+import { AttendanceModeBadge } from "../attendance-mode-badge";
 import { LoginToRegisterButton } from "./login-to-register-button";
 import { UnregisterEventDialog } from "./unregister-event-dialog";
 
@@ -49,6 +51,7 @@ export function EventSummary({
 					{formatEventDateTime(event.date, locale)}
 				</p>
 				<div className="flex flex-wrap gap-2">
+					<AttendanceModeBadge mode={event.attendanceMode} />
 					<Badge variant="secondary">{event.typeLabel}</Badge>
 					{event.facultyLabel ? (
 						<Badge variant="outline">{event.facultyLabel}</Badge>
@@ -61,6 +64,16 @@ export function EventSummary({
 
 			{event.description ? (
 				<p className="max-w-prose whitespace-pre-line">{event.description}</p>
+			) : null}
+
+			{event.onlineUrl ? (
+				<div>
+					<Button asChild variant="outline">
+						<a href={event.onlineUrl} target="_blank" rel="noopener noreferrer">
+							{event_join_online()}
+						</a>
+					</Button>
+				</div>
 			) : null}
 
 			<div className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">

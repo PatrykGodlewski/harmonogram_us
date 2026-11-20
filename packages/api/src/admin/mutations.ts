@@ -3,7 +3,12 @@ import {
 	deleteAgendaItem,
 	updateAgendaItem,
 } from "@repo/db/queries/agenda-items";
-import { createEvent, deleteEvent, updateEvent } from "@repo/db/queries/events";
+import {
+	createEvent,
+	deleteEvent,
+	publishEvent,
+	updateEvent,
+} from "@repo/db/queries/events";
 import {
 	createEventFaculty,
 	createEventLocation,
@@ -68,6 +73,13 @@ export const deleteAdminEventServer = panelActionFn
 			throw appError("NOT_FOUND");
 		}
 		return event;
+	});
+
+export const publishAdminEventServer = panelActionFn
+	.inputValidator((input: unknown) => deleteByIdSchema.parse(input))
+	.handler(async ({ data, context }) => {
+		await assertCanManageEvent(context.user, data.id);
+		return withDomainErrors(() => publishEvent(data.id));
 	});
 
 export const createAdminEventTypeServer = adminActionFn

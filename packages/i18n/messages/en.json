@@ -356,5 +356,19 @@
 	"admin_role_organizer": "Organizer",
 	"admin_role_admin": "Admin",
 	"admin_users_role_saved": "Role saved.",
-	"admin_users_you": "(you)"
+	"admin_users_you": "(you)",
+	"admin_error_event_incomplete": "Add a place or an online link before publishing the event.",
+	"admin_error_event_not_draft": "This event is already published.",
+	"admin_field_attendance_mode": "Format",
+	"admin_field_online_url": "Online link",
+	"attendance_mode_onsite": "On site",
+	"attendance_mode_online": "Online",
+	"attendance_mode_hybrid": "Hybrid",
+	"admin_event_status_draft": "Draft",
+	"admin_event_publish": "Publish",
+	"admin_event_published": "The event is published.",
+	"admin_field_status": "Status",
+	"admin_event_status_published": "Published",
+	"event_join_online": "Join online",
+	"event_status_cancelled": "Cancelled"
 }

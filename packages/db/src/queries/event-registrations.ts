@@ -64,7 +64,15 @@ export async function hasEventEnded(
 	return end !== null && end.getTime() <= Date.now();
 }
 
+/** Registration actions need a public event that hasn't ended (a draft is "not found"). */
 export async function assertEventOpen(tx: TransactionClient, eventId: string) {
+	const [event] = await tx
+		.select({ status: events.status })
+		.from(events)
+		.where(eq(events.id, eventId));
+	if (!event || event.status === "draft") {
+		throw new DomainError("EVENT_NOT_FOUND");
+	}
 	if (await hasEventEnded(tx, eventId)) {
 		throw new DomainError("EVENT_ENDED");
 	}

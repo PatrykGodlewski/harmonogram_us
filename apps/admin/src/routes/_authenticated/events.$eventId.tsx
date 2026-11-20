@@ -74,7 +74,7 @@ function AdminEventDetailPage() {
 	return (
 		<div className="grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
 			<div className="flex flex-col gap-8">
-				<EventSummaryCard event={event} />
+				<EventSummaryCard event={event} onChanged={handleChanged} />
 				<AgendaEditor
 					eventId={event.id}
 					eventDate={new Date(event.date)}

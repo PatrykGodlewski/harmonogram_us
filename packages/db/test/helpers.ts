@@ -57,6 +57,7 @@ export async function createEvent(opts?: {
 			endsAt: opts?.endsAt ?? null,
 			maxSeats: opts?.maxSeats ?? 10,
 			typeId: TEST_TYPE_ID,
+			status: "published",
 		})
 		.returning({ id: events.id });
 	if (!event) throw new Error("event insert failed");

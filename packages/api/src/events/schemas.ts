@@ -49,6 +49,14 @@ export function toEventFiltersParams(search: EventSearch): EventFiltersParams {
 
 const descriptionSchema = z.string().max(5000).nullable().optional();
 
+/** Meeting links must be https (they are shown as clickable links). */
+const onlineUrlSchema = z
+	.url({ protocol: /^https$/ })
+	.max(2000)
+	.nullable()
+	.optional();
+const attendanceModeSchema = z.enum(["onsite", "online", "hybrid"]);
+
 export const createEventSchema = z.object({
 	id: optionalIdSchema,
 	title: z.string().min(1).max(500),
@@ -60,6 +68,8 @@ export const createEventSchema = z.object({
 	typeId: z.string().min(1),
 	locationId: z.string().min(1).nullable().optional(),
 	facultyId: z.string().min(1).nullable().optional(),
+	onlineUrl: onlineUrlSchema,
+	attendanceMode: attendanceModeSchema.optional(),
 });
 
 export type CreateEventParams = z.infer<typeof createEventSchema>;
@@ -75,6 +85,8 @@ export const updateEventSchema = z.object({
 	typeId: z.string().min(1).optional(),
 	locationId: z.string().min(1).nullable().optional(),
 	facultyId: z.string().min(1).nullable().optional(),
+	onlineUrl: onlineUrlSchema,
+	attendanceMode: attendanceModeSchema.optional(),
 });
 
 export type UpdateEventParams = z.infer<typeof updateEventSchema>;

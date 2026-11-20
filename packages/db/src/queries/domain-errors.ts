@@ -25,6 +25,8 @@ export const DOMAIN_ERROR_CODES = [
 	"USER_NOT_FOUND",
 	"ALREADY_ORGANIZER",
 	"LAST_ORGANIZER",
+	"EVENT_INCOMPLETE",
+	"EVENT_NOT_DRAFT",
 ] as const;
 
 export type DomainErrorCode = (typeof DOMAIN_ERROR_CODES)[number];

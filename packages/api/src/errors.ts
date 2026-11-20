@@ -18,6 +18,7 @@ const STATUS: Partial<Record<AppErrorCode, number>> = {
 	END_BEFORE_START: 400,
 	ITEM_LIMIT_ABOVE_EVENT: 400,
 	MAX_SEATS_BELOW_REGISTERED: 400,
+	EVENT_INCOMPLETE: 400,
 };
 
 /** A client-facing error: the code travels as the message, `status` becomes the HTTP status. */

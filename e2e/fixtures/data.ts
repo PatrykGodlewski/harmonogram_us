@@ -4,7 +4,13 @@ import { createAgendaItem } from "@repo/db/queries/agenda-items";
 import { createEvent } from "@repo/db/queries/events";
 import { authUsers } from "@repo/db/schema/better-auth";
 import { eventFaculties, eventTypes } from "@repo/db/schema/event-lookups";
+import {
+	type AttendanceMode,
+	type EventStatus,
+	events,
+} from "@repo/db/schema/events";
 import { type AccountRole, ensureAccount } from "@repo/db/seed/accounts";
+import { eq } from "drizzle-orm";
 
 /** A unique address per test, so tests never share mailboxes or accounts. */
 export function uniqueEmail(testInfo: TestInfo): string {
@@ -47,6 +53,10 @@ export async function createTestEvent(input: {
 	maxSeats?: number;
 	startsInDays?: number;
 	faculty?: string;
+	/** Default "published": tests about the public site need a public event. */
+	status?: EventStatus;
+	attendanceMode?: AttendanceMode;
+	onlineUrl?: string;
 	/** Makes this user the event's organizer (default: none, only admins manage it). */
 	organizerId?: string;
 	/** startHour: hours after the event starts (default: the item's index); durationMinutes default 50. */
@@ -68,9 +78,18 @@ export async function createTestEvent(input: {
 			? await lookup(eventFaculties, input.faculty)
 			: null,
 		organizerId: input.organizerId ?? null,
+		attendanceMode: input.attendanceMode,
+		onlineUrl: input.onlineUrl ?? null,
 	});
 	if (!event) {
 		throw new Error("createEvent returned nothing");
+	}
+	const status = input.status ?? "published";
+	if (status !== "draft") {
+		await db
+			.update(events)
+			.set({ status, publishedAt: new Date() })
+			.where(eq(events.id, event.id));
 	}
 	const itemIds: string[] = [];
 	for (const [index, item] of (input.agenda ?? []).entries()) {

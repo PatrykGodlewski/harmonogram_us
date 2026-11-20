@@ -26,6 +26,8 @@ export async function seedEvents() {
 				typeId: event.typeId,
 				locationId: event.locationId,
 				facultyId: event.facultyId,
+				status: "published",
+				publishedAt: now,
 			})
 			.onConflictDoUpdate({
 				target: events.id,

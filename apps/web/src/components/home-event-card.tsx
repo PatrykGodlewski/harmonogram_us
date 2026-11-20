@@ -16,6 +16,7 @@ import type {
 	HomeEventListEvent,
 } from "~/lib/events/types";
 import type { EventRegistrationActions } from "~/lib/registration/use-event-list-registrations";
+import { AttendanceModeBadge } from "./attendance-mode-badge";
 
 type HomeEventCardProps = {
 	event: HomeEventListEvent;
@@ -70,6 +71,7 @@ export function HomeEventCard({
 			</CardHeader>
 			<CardContent>
 				<div className="flex flex-wrap gap-2">
+					<AttendanceModeBadge mode={event.attendanceMode} />
 					<Badge variant="secondary">{event.typeLabel}</Badge>
 					{event.locationLabel ? (
 						<Badge variant="outline">{event.locationLabel}</Badge>

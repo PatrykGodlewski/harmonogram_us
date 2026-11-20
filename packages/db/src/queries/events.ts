@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, ilike, inArray, max, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, inArray, max, ne, sql } from "drizzle-orm";
 import { db } from "../client";
 import { agendaItems } from "../schema/agenda";
 import {
@@ -8,7 +8,11 @@ import {
 } from "../schema/event-lookups";
 import { eventOrganizers } from "../schema/event-organizers";
 import { eventSeatCounts } from "../schema/event-registrations";
-import { events } from "../schema/events";
+import {
+	type AttendanceMode,
+	type EventStatus,
+	events,
+} from "../schema/events";
 import { type AgendaItem, listAgendaItems } from "./agenda-items";
 import {
 	CAPACITY_EDIT_ERRORS,
@@ -22,7 +26,11 @@ import {
 } from "./event-registrations";
 import { lockEvent } from "./locks";
 
+/** Who is looking: the public site never sees drafts; the panel sees everything. */
+export type EventAudience = "public" | "manage";
+
 export type EventFilters = {
+	audience: EventAudience;
 	/** Only these events (the panel list of an organizer). */
 	ids?: string[];
 	search?: string;
@@ -44,6 +52,11 @@ export type EventWithRelations = {
 	typeId: string;
 	locationId: string | null;
 	facultyId: string | null;
+	status: EventStatus;
+	publishedAt: Date | null;
+	cancelledAt: Date | null;
+	onlineUrl: string | null;
+	attendanceMode: AttendanceMode;
 	createdAt: Date;
 	updatedAt: Date;
 	typeLabel: string;
@@ -98,7 +111,7 @@ export async function getEventFilterOptions(): Promise<EventFilterOptions> {
 }
 
 export async function getEvents(
-	filters?: EventFilters,
+	filters: EventFilters,
 ): Promise<EventWithRelations[]> {
 	return queryEvents(filters);
 }
@@ -115,11 +128,15 @@ export async function getEventPage(
 }
 
 async function queryEvents(
-	filters?: EventFilters,
+	filters: EventFilters,
 	eventId?: string,
 	limit?: number,
 ): Promise<EventWithRelations[]> {
 	const conditions = [];
+
+	if (filters.audience === "public") {
+		conditions.push(ne(events.status, "draft"));
+	}
 
 	if (eventId) {
 		conditions.push(eq(events.id, eventId));
@@ -166,6 +183,11 @@ async function queryEvents(
 			typeId: events.typeId,
 			locationId: events.locationId,
 			facultyId: events.facultyId,
+			status: events.status,
+			publishedAt: events.publishedAt,
+			cancelledAt: events.cancelledAt,
+			onlineUrl: events.onlineUrl,
+			attendanceMode: events.attendanceMode,
 			createdAt: events.createdAt,
 			updatedAt: events.updatedAt,
 			typeLabel: eventTypes.label,
@@ -201,6 +223,8 @@ export type CreateEventInput = {
 	typeId: string;
 	locationId?: string | null;
 	facultyId?: string | null;
+	onlineUrl?: string | null;
+	attendanceMode?: AttendanceMode;
 	/** Becomes the event's first organizer; null for events only admins manage (seed data). */
 	organizerId: string | null;
 };
@@ -222,6 +246,8 @@ export async function createEvent(input: CreateEventInput) {
 				typeId: input.typeId,
 				locationId: input.locationId ?? null,
 				facultyId: input.facultyId ?? null,
+				onlineUrl: input.onlineUrl ?? null,
+				attendanceMode: input.attendanceMode ?? "onsite",
 			})
 			.returning();
 		if (event && input.organizerId) {
@@ -244,6 +270,8 @@ export type UpdateEventInput = {
 	typeId?: string;
 	locationId?: string | null;
 	facultyId?: string | null;
+	onlineUrl?: string | null;
+	attendanceMode?: AttendanceMode;
 };
 
 /** Updates an event; raising the limit promotes waitlisted people into the new places. */
@@ -292,9 +320,12 @@ export type EventDetails = EventWithRelations & {
 	agenda: AgendaItem[];
 };
 
-export async function getEventById(id: string): Promise<EventDetails | null> {
+export async function getEventById(
+	id: string,
+	audience: EventAudience,
+): Promise<EventDetails | null> {
 	const [[event], agenda, effectiveEndsAt] = await Promise.all([
-		queryEvents(undefined, id),
+		queryEvents({ audience }, id),
 		listAgendaItems(id),
 		getEffectiveEventEnd(db, id),
 	]);
@@ -307,4 +338,56 @@ export async function getEventById(id: string): Promise<EventDetails | null> {
 		effectiveEndsAt:
 			effectiveEndsAt ?? new Date(event.date.getTime() + 86_400_000),
 	};
+}
+
+/** Whether an event has what its form needs to be public: a place, a link, or both (hybrid). */
+function isComplete(event: {
+	attendanceMode: AttendanceMode;
+	locationId: string | null;
+	onlineUrl: string | null;
+}): boolean {
+	const hasPlace = event.locationId !== null;
+	const hasLink = Boolean(event.onlineUrl);
+	if (event.attendanceMode === "online") return hasLink;
+	if (event.attendanceMode === "hybrid") return hasPlace && hasLink;
+	return hasPlace;
+}
+
+/** Makes a draft public. EVENT_INCOMPLETE without a place or link; EVENT_NOT_DRAFT if already public. */
+export async function publishEvent(
+	eventId: string,
+): Promise<EventWithRelations> {
+	await db.transaction(async (tx) => {
+		if (!(await lockEvent(tx, eventId))) {
+			throw new DomainError("EVENT_NOT_FOUND");
+		}
+		const [event] = await tx
+			.select({
+				status: events.status,
+				attendanceMode: events.attendanceMode,
+				locationId: events.locationId,
+				onlineUrl: events.onlineUrl,
+			})
+			.from(events)
+			.where(eq(events.id, eventId));
+		if (!event) {
+			throw new DomainError("EVENT_NOT_FOUND");
+		}
+		if (event.status !== "draft") {
+			throw new DomainError("EVENT_NOT_DRAFT");
+		}
+		if (!isComplete(event)) {
+			throw new DomainError("EVENT_INCOMPLETE");
+		}
+		const now = new Date();
+		await tx
+			.update(events)
+			.set({ status: "published", publishedAt: now, updatedAt: now })
+			.where(eq(events.id, eventId));
+	});
+	const [published] = await queryEvents({ audience: "manage" }, eventId);
+	if (!published) {
+		throw new DomainError("EVENT_NOT_FOUND");
+	}
+	return published;
 }

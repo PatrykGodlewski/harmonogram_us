@@ -4,6 +4,8 @@ import {
 } from "@repo/db/queries/domain-errors";
 import {
 	admin_error_end_before_start,
+	admin_error_event_incomplete,
+	admin_error_event_not_draft,
 	admin_error_forbidden,
 	admin_error_item_limit_above_event,
 	admin_error_max_seats_below_registered,
@@ -63,6 +65,8 @@ const APP_ERROR_MESSAGES: Record<AppErrorCode, () => string> = {
 	USER_NOT_FOUND: error_user_not_found,
 	ALREADY_ORGANIZER: error_already_organizer,
 	LAST_ORGANIZER: error_last_organizer,
+	EVENT_INCOMPLETE: admin_error_event_incomplete,
+	EVENT_NOT_DRAFT: admin_error_event_not_draft,
 	UNAUTHORIZED: events_register_login_required,
 	FORBIDDEN: admin_error_forbidden,
 	NOT_FOUND: admin_error_not_found,

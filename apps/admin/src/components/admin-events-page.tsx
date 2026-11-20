@@ -17,8 +17,11 @@ import {
 	admin_dialog_add_title,
 	admin_dialog_edit_title,
 	admin_error_generic,
+	admin_event_status_draft,
+	admin_event_status_published,
 	admin_events_description,
 	admin_events_title,
+	admin_field_attendance_mode,
 	admin_field_date,
 	admin_field_description,
 	admin_field_ends_at,
@@ -31,12 +34,19 @@ import {
 	admin_field_location,
 	admin_field_max_seats,
 	admin_field_none,
+	admin_field_online_url,
+	admin_field_status,
 	admin_field_title,
 	admin_field_type,
 	admin_nav_events,
 	admin_save_success,
+	attendance_mode_hybrid,
+	attendance_mode_online,
+	attendance_mode_onsite,
+	event_status_cancelled,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
+import { Badge } from "@repo/ui/components/badge";
 import { FormMessage } from "@repo/ui/components/form-message";
 import { Input } from "@repo/ui/components/input";
 import { Label } from "@repo/ui/components/label";
@@ -59,13 +69,23 @@ import {
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { formatFieldError } from "../lib/format-field-error";
 import { formatMutationError } from "../lib/format-mutation-error";
 
 const NONE_VALUE = "__none__";
+/** Places a new event offers until the organizer changes it. */
+const DEFAULT_MAX_SEATS = 50;
+
+type AttendanceMode = EventWithRelations["attendanceMode"];
+
+const ATTENDANCE_MODE_LABELS: Record<AttendanceMode, () => string> = {
+	onsite: attendance_mode_onsite,
+	online: attendance_mode_online,
+	hybrid: attendance_mode_hybrid,
+};
 
 /** `datetime-local` value in Warsaw time (event times are always Polish time). */
 function formatDateTimeLocal(value: Date) {
@@ -100,6 +120,11 @@ export function AdminEventsPage({
 				typeId: z.string().min(1),
 				locationId: z.string(),
 				facultyId: z.string(),
+				attendanceMode: z.enum(["onsite", "online", "hybrid"]),
+				onlineUrl: z.union([
+					z.literal(""),
+					z.url({ protocol: /^https$/ }).max(2000),
+				]),
 			}),
 		[],
 	);
@@ -136,6 +161,11 @@ export function AdminEventsPage({
 				typeId: values.typeId,
 				locationId: values.locationId === NONE_VALUE ? null : values.locationId,
 				facultyId: values.facultyId === NONE_VALUE ? null : values.facultyId,
+				attendanceMode: values.attendanceMode,
+				onlineUrl:
+					values.attendanceMode === "onsite" || !values.onlineUrl.trim()
+						? null
+						: values.onlineUrl.trim(),
 			};
 
 			if (editingRow) {
@@ -174,11 +204,13 @@ export function AdminEventsPage({
 			description: "",
 			date: "",
 			endsAt: "",
-			maxSeats: 0,
+			maxSeats: DEFAULT_MAX_SEATS,
 			groupDeadlineHours: 48,
 			typeId: "",
 			locationId: NONE_VALUE,
 			facultyId: NONE_VALUE,
+			attendanceMode: "onsite" as AttendanceMode,
+			onlineUrl: "",
 		},
 		validators: {
 			onSubmit: eventSchema,
@@ -188,9 +220,26 @@ export function AdminEventsPage({
 		},
 	});
 
+	const firstTypeId = filterOptions?.types[0]?.id;
+	// Sensible default: the first type, so a new event needs only a title, a date and a place or link.
+	// The options may arrive after the dialog opened.
+	useEffect(() => {
+		if (
+			dialogOpen &&
+			!editingRow &&
+			firstTypeId &&
+			!form.getFieldValue("typeId")
+		) {
+			form.setFieldValue("typeId", firstTypeId);
+		}
+	}, [dialogOpen, editingRow, firstTypeId, form]);
+
 	const openCreateDialog = () => {
 		setEditingRow(null);
 		form.reset();
+		if (firstTypeId) {
+			form.setFieldValue("typeId", firstTypeId);
+		}
 		setDialogOpen(true);
 	};
 
@@ -209,6 +258,8 @@ export function AdminEventsPage({
 		form.setFieldValue("typeId", row.typeId);
 		form.setFieldValue("locationId", row.locationId ?? NONE_VALUE);
 		form.setFieldValue("facultyId", row.facultyId ?? NONE_VALUE);
+		form.setFieldValue("attendanceMode", row.attendanceMode);
+		form.setFieldValue("onlineUrl", row.onlineUrl ?? "");
 		setDialogOpen(true);
 	};
 
@@ -242,6 +293,18 @@ export function AdminEventsPage({
 								{row.title}
 							</Link>
 						),
+					},
+					{
+						key: "status",
+						header: admin_field_status(),
+						cell: (row) =>
+							row.status === "draft" ? (
+								<Badge variant="secondary">{admin_event_status_draft()}</Badge>
+							) : row.status === "cancelled" ? (
+								<Badge variant="destructive">{event_status_cancelled()}</Badge>
+							) : (
+								admin_event_status_published()
+							),
 					},
 					{
 						key: "date",
@@ -503,6 +566,70 @@ export function AdminEventsPage({
 						</div>
 					)}
 				</form.Field>
+
+				<form.Field name="attendanceMode">
+					{(field) => (
+						<div>
+							<Label htmlFor={field.name}>
+								{admin_field_attendance_mode()}
+							</Label>
+							<Select
+								value={field.state.value}
+								onValueChange={(value) =>
+									field.handleChange(value as AttendanceMode)
+								}
+								disabled={saveMutation.isPending}
+							>
+								<SelectTrigger id={field.name} className="mt-1 w-full">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									{(
+										Object.keys(ATTENDANCE_MODE_LABELS) as AttendanceMode[]
+									).map((mode) => (
+										<SelectItem key={mode} value={mode}>
+											{ATTENDANCE_MODE_LABELS[mode]()}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
+					)}
+				</form.Field>
+
+				<form.Subscribe selector={(state) => state.values.attendanceMode}>
+					{(mode) =>
+						mode === "onsite" ? null : (
+							<form.Field name="onlineUrl">
+								{(field) => (
+									<div>
+										<Label htmlFor={field.name}>
+											{admin_field_online_url()}
+										</Label>
+										<Input
+											id={field.name}
+											type="url"
+											inputMode="url"
+											placeholder="https://"
+											className="mt-1"
+											disabled={saveMutation.isPending}
+											value={field.state.value}
+											onBlur={field.handleBlur}
+											onChange={(event) =>
+												field.handleChange(event.target.value)
+											}
+										/>
+										{field.state.meta.errors.length > 0 ? (
+											<FormMessage>
+												{formatFieldError(field.state.meta.errors[0])}
+											</FormMessage>
+										) : null}
+									</div>
+								)}
+							</form.Field>
+						)
+					}
+				</form.Subscribe>
 
 				<form.Field name="facultyId">
 					{(field) => (
