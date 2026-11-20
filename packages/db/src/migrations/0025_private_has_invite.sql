@@ -1,0 +1,1 @@
+ALTER TABLE "events" ADD CONSTRAINT "events_private_has_invite_check" CHECK ("events"."visibility" <> 'private' OR "events"."invite_token" IS NOT NULL);

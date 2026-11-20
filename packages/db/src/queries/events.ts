@@ -322,7 +322,7 @@ export async function createEvent(input: CreateEventInput) {
 }
 
 /** An unguessable invite-link secret (256 bits, hex). */
-function newInviteToken(): string {
+export function newInviteToken(): string {
 	return Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString(
 		"hex",
 	);
@@ -378,7 +378,7 @@ export async function getInvitationEvent(
 export type EventAccess = {
 	visibility: EventVisibility;
 	inviteToken: string | null;
-	/** The user holds a registration of any state (always false without a user). */
+	/** The user holds a registration that was not declined (always false without a user). */
 	hasRegistration: boolean;
 };
 
@@ -392,7 +392,7 @@ export async function getEventAccess(
 			visibility: events.visibility,
 			inviteToken: events.inviteToken,
 			hasRegistration: userId
-				? sql<boolean>`exists (select 1 from event_registrations r where r.event_id = "events"."id" and r.user_id = ${userId})`
+				? sql<boolean>`exists (select 1 from event_registrations r where r.event_id = "events"."id" and r.user_id = ${userId} and r.state <> 'rejected')`
 				: sql<boolean>`false`,
 		})
 		.from(events)
@@ -460,12 +460,14 @@ export async function updateEvent(
 				.update(events)
 				.set({
 					...values,
-					// Made invite-only: it needs a link (an existing one stays valid).
+					// Invite-only needs a link (an existing one stays valid); leaving it revokes the link.
 					...(values.visibility === "private"
 						? {
 								inviteToken: sql`coalesce(${events.inviteToken}, ${newInviteToken()})`,
 							}
-						: {}),
+						: values.visibility !== undefined
+							? { inviteToken: null }
+							: {}),
 					...(rearmReminder ? { reminderSentAt: null } : {}),
 					updatedAt: new Date(),
 				})

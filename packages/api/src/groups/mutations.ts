@@ -13,7 +13,8 @@ import { enqueueInvitationEmails } from "@repo/jobs/client";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeaders } from "@tanstack/react-start/server";
 import { authMiddleware } from "../auth/middleware";
-import { withDomainErrors } from "../errors";
+import { appError, withDomainErrors } from "../errors";
+import { canOpenEvent } from "../events/access";
 import { registrationEmailHooks } from "../notifications/registration-hooks";
 import { getClientIp } from "../security/client-ip";
 import { assertEmailsAllowed } from "../security/email-policy";
@@ -52,7 +53,10 @@ function invitationHooks(): InvitationHooks {
 
 export const createGroupServer = protectedActionFn
 	.inputValidator(createGroupSchema)
-	.handler(async ({ data, context }) => {
+	.handler(async ({ data: { invite, ...data }, context }) => {
+		if (!(await canOpenEvent(data.eventId, context.user.id, invite))) {
+			throw appError("EVENT_NOT_FOUND");
+		}
 		await assertEmailsAllowed(data.emails);
 		const result = await withDomainErrors(() =>
 			createGroup({ ...data, ownerUserId: context.user.id }, invitationHooks()),

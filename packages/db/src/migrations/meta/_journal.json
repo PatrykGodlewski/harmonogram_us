@@ -169,6 +169,20 @@
       "when": 1795213247540,
       "tag": "0023_invite_only",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1795215345549,
+      "tag": "0024_certificates",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1795215428639,
+      "tag": "0025_private_has_invite",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,6 @@
 import { MAX_INVITATIONS } from "@repo/api/admin/invitation-limits";
 import { sendEventInvitationsServer } from "@repo/api/admin/invitations";
+import { parseEmailList } from "@repo/api/groups/parse-email-list";
 import {
 	admin_action_cancel,
 	admin_error_generic,
@@ -28,7 +29,6 @@ import {
 } from "@repo/ui/components/dialog";
 import { Label } from "@repo/ui/components/label";
 import { Textarea } from "@repo/ui/components/textarea";
-import { parseEmailList } from "@repo/ui/email-list";
 import { useMutation } from "@tanstack/react-query";
 import { type FormEvent, useId, useState } from "react";
 import { toast } from "sonner";

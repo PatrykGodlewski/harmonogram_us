@@ -152,7 +152,11 @@ export function EventSummary({
 			!event.requiresApproval &&
 			isBeforeGroupDeadline(event) ? (
 				<Button variant="outline" size="sm" className="self-start" asChild>
-					<Link to="/events/$eventId/groups/new" params={{ eventId: event.id }}>
+					<Link
+						to="/events/$eventId/groups/new"
+						params={{ eventId: event.id }}
+						search={{ invite }}
+					>
 						{groups_register_group()}
 					</Link>
 				</Button>

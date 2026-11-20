@@ -6,6 +6,7 @@ import { agendaItems } from "../schema/agenda";
 import { eventOrganizers } from "../schema/event-organizers";
 import { events } from "../schema/events";
 import { DomainError } from "./domain-errors";
+import { newInviteToken } from "./events";
 
 export type DuplicateEventInput = {
 	eventId: string;
@@ -55,6 +56,7 @@ export async function duplicateEvent(
 				onlineUrl: source.onlineUrl,
 				attendanceMode: source.attendanceMode,
 				visibility: source.visibility,
+				inviteToken: source.visibility === "private" ? newInviteToken() : null,
 				room: source.room,
 				reminderHoursBefore: source.reminderHoursBefore,
 				status: "draft",

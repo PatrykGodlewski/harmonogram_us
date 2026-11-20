@@ -65,3 +65,44 @@ describe("invite-only events", () => {
 		expect(row?.inviteToken).toBeTruthy();
 	});
 });
+
+describe("invite links stay consistent", () => {
+	it("a duplicated invite-only event gets its own link", async () => {
+		const { duplicateEvent } = await import("../src/queries/event-duplicate");
+		const id = await privateEvent();
+		const actor = await createUser();
+		const copy = await duplicateEvent({
+			eventId: id,
+			date: new Date(Date.now() + 20 * 86_400_000),
+			actorId: actor,
+		});
+		const token = (await getEventAccess(copy.id))?.inviteToken;
+		expect(token).toBeTruthy();
+		expect(token).not.toBe((await getEventAccess(id))?.inviteToken);
+	});
+
+	it("leaving invite-only drops the link, so going back makes a new one", async () => {
+		const id = await privateEvent();
+		const first = (await getEventAccess(id))?.inviteToken;
+		await updateEvent({ id, visibility: "public" });
+		expect((await getEventAccess(id))?.inviteToken).toBeNull();
+		await updateEvent({ id, visibility: "private" });
+		expect((await getEventAccess(id))?.inviteToken).not.toBe(first);
+	});
+
+	it("an invite-only event cannot exist without a link", async () => {
+		const id = await privateEvent();
+		await expect(
+			db.update(events).set({ inviteToken: null }).where(eq(events.id, id)),
+		).rejects.toThrow();
+	});
+
+	it("a declined request does not open the event", async () => {
+		const { eventRegistrations } = await import("../src/schema/event-registrations");
+		const id = await privateEvent();
+		const user = await createUser();
+		await registerForEvent(id, user, "pl");
+		await db.update(eventRegistrations).set({ state: "rejected" }).where(eq(eventRegistrations.userId, user));
+		expect((await getEventAccess(id, user))?.hasRegistration).toBe(false);
+	});
+});

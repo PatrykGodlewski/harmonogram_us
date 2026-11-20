@@ -1,6 +1,13 @@
+import { timingSafeEqual } from "node:crypto";
 import { canManageEvent } from "@repo/db/queries/event-organizers";
 import { getEventAccess } from "@repo/db/queries/events";
 import { getUserRole } from "@repo/db/queries/roles";
+
+function sameSecret(given: string, expected: string): boolean {
+	const a = Buffer.from(given);
+	const b = Buffer.from(expected);
+	return a.length === b.length && timingSafeEqual(a, b);
+}
 
 /**
  * Whether the viewer may open an event that is invite-only: with its current
@@ -20,7 +27,7 @@ export async function canOpenEvent(
 	if (access.visibility !== "private" || access.hasRegistration) {
 		return true;
 	}
-	if (invite && access.inviteToken && invite === access.inviteToken) {
+	if (invite && access.inviteToken && sameSecret(invite, access.inviteToken)) {
 		return true;
 	}
 	if (!userId) {

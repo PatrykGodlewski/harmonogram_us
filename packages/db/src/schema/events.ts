@@ -47,6 +47,14 @@ export const events = pgTable(
 		/** Hours before the start when registrants get a reminder; null switches it off. */
 		reminderHoursBefore: integer("reminder_hours_before").default(24),
 		reminderSentAt: timestamp("reminder_sent_at", { withTimezone: true }),
+		/** Attendees get a certificate of attendance after the event. */
+		certificatesEnabled: boolean("certificates_enabled")
+			.notNull()
+			.default(false),
+		/** When the "your certificate is ready" e-mails were queued (once per event). */
+		certificatesSentAt: timestamp("certificates_sent_at", {
+			withTimezone: true,
+		}),
 		/** Registrations wait as `pending` until an organiser approves them. */
 		requiresApproval: boolean("requires_approval").notNull().default(false),
 		attendanceMode: text("attendance_mode")
@@ -78,6 +86,10 @@ export const events = pgTable(
 		check(
 			"events_visibility_check",
 			sql`${table.visibility} IN ('public', 'authenticated', 'private')`,
+		),
+		check(
+			"events_private_has_invite_check",
+			sql`${table.visibility} <> 'private' OR ${table.inviteToken} IS NOT NULL`,
 		),
 		check(
 			"events_attendance_mode_check",

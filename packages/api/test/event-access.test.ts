@@ -161,3 +161,16 @@ describe("check-in functions use the check-in permission", () => {
 		expect(source).not.toMatch(/assertCanManageEvent/);
 	});
 });
+
+describe("invite-only events are checked wherever someone joins", () => {
+	it("creating a group checks access to the event", () => {
+		const source = readFileSync(
+			new URL("../src/groups/mutations.ts", import.meta.url),
+			"utf8",
+		);
+		const block = source.slice(source.indexOf("export const createGroupServer"));
+		expect(block.slice(0, block.indexOf("export const", 10))).toMatch(
+			/canOpenEvent\(/,
+		);
+	});
+});

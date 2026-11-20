@@ -28,21 +28,32 @@ import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { EmailListField } from "~/components/groups/email-list-field";
 
 export const Route = createFileRoute("/events/$eventId_/groups/new")({
 	beforeLoad: ({ context, location }) => {
 		requireAuthenticatedUser(context, { loginRedirect: location.href });
 	},
-	loader: ({ context: { queryClient }, params }) =>
-		queryClient.ensureQueryData(eventDetailsQueryOptions(params.eventId)),
+	validateSearch: z.object({
+		/** The invite-link secret of an invite-only event. */
+		invite: z.string().max(128).optional().catch(undefined),
+	}),
+	loaderDeps: ({ search }) => ({ invite: search.invite }),
+	loader: ({ context: { queryClient }, params, deps }) =>
+		queryClient.ensureQueryData(
+			eventDetailsQueryOptions(params.eventId, deps.invite),
+		),
 	component: NewGroupPage,
 });
 
 function NewGroupPage() {
 	const { eventId } = Route.useParams();
 	const navigate = useNavigate();
-	const { data: event } = useSuspenseQuery(eventDetailsQueryOptions(eventId));
+	const { invite } = Route.useSearch();
+	const { data: event } = useSuspenseQuery(
+		eventDetailsQueryOptions(eventId, invite),
+	);
 	const registrable = event.agenda.filter((item) => item.requiresRegistration);
 	const locale = getLocale();
 
@@ -65,6 +76,7 @@ function NewGroupPage() {
 					name: name.trim() || null,
 					emails: parsed.valid,
 					joinLinkEnabled,
+					invite,
 				},
 			}),
 		onSuccess: ({ groupId }) => {
