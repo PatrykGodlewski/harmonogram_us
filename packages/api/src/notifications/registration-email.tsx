@@ -15,6 +15,8 @@ import {
 	reg_email_button,
 	reg_email_cancelled_intro,
 	reg_email_cancelled_subject,
+	reg_email_certificate_intro,
+	reg_email_certificate_subject,
 	reg_email_confirmed_intro,
 	reg_email_confirmed_subject,
 	reg_email_pending_intro,
@@ -39,7 +41,8 @@ export type RegistrationEmailChange =
 	| "cancelled"
 	| "reminder"
 	| "pending"
-	| "rejected";
+	| "rejected"
+	| "certificate";
 
 export type RegistrationEmailProps = {
 	change: RegistrationEmailChange;
@@ -60,6 +63,7 @@ const SUBJECTS = {
 	reminder: reg_email_reminder_subject,
 	pending: reg_email_pending_subject,
 	rejected: reg_email_rejected_subject,
+	certificate: reg_email_certificate_subject,
 } as const;
 
 const INTROS = {
@@ -70,11 +74,14 @@ const INTROS = {
 	reminder: reg_email_reminder_intro,
 	pending: reg_email_pending_intro,
 	rejected: reg_email_rejected_intro,
+	certificate: reg_email_certificate_intro,
 } as const;
 
-/** Nothing to withdraw from once the event is cancelled or the request declined. */
+/** Nothing to withdraw from once the event is cancelled, the request declined, or the event over. */
 function hasWithdrawHint(change: RegistrationEmailChange): boolean {
-	return change !== "cancelled" && change !== "rejected";
+	return (
+		change !== "cancelled" && change !== "rejected" && change !== "certificate"
+	);
 }
 
 /** Subject and plain-text body; the HTML version is RegistrationEmail. */

@@ -8,6 +8,7 @@ import { and, eq } from "drizzle-orm";
 import { extractText } from "unpdf";
 import { adminUrl, signInAsAdmin, signInByEmail } from "../fixtures/auth";
 import { createTestEvent, createTestUser, uniqueEmail } from "../fixtures/data";
+import { latestMessageTo } from "../fixtures/mailpit";
 import { open } from "../fixtures/navigation";
 
 test("[F12] organizator włącza zaświadczenia @organizator", async ({
@@ -105,4 +106,43 @@ test("[F12] obecny pobiera zaświadczenie, nieobecny nie @uczestnik", async ({
 	await expect(
 		other.getByRole("link", { name: "Pobierz zaświadczenie" }),
 	).toHaveCount(0);
+});
+
+test("[F12] po wydarzeniu obecni dostają e-mail z zaświadczeniem", async ({}, testInfo) => {
+	const base = uniqueEmail(testInfo);
+	const present = await createTestUser(`present-${base}`);
+	const absent = await createTestUser(`absent-${base}`);
+	const event = await createTestEvent({});
+	await registerForEvent(event.id, present.id, "pl");
+	await registerForEvent(event.id, absent.id, "pl");
+	await db
+		.update(eventRegistrations)
+		.set({ checkedInAt: new Date() })
+		.where(eq(eventRegistrations.userId, present.id));
+	const start = new Date(Date.now() - 5 * 3_600_000);
+	await db
+		.update(events)
+		.set({
+			certificatesEnabled: true,
+			date: start,
+			endsAt: new Date(start.getTime() + 2 * 3_600_000),
+		})
+		.where(eq(events.id, event.id));
+
+	const { queueReadyCertificateEmails } = await import(
+		"@repo/api/notifications/certificates"
+	);
+	await queueReadyCertificateEmails(new Date());
+
+	const message = await latestMessageTo(`present-${base}`, {
+		subject: "Zaświadczenie",
+	});
+	expect(message.subject).toContain(event.title);
+	expect(message.links.some((href) => href.endsWith("/pl/account"))).toBe(true);
+	const response = await fetch(
+		`${process.env.E2E_MAILPIT_URL ?? "http://localhost:18025"}/api/v1/search?query=${encodeURIComponent(`to:"absent-${base}" subject:"Zaświadczenie"`)}`,
+	);
+	expect(
+		((await response.json()) as { messages: unknown[] }).messages,
+	).toHaveLength(0);
 });

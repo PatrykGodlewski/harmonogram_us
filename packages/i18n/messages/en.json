@@ -591,5 +591,7 @@
 	"certificate_footer": "Attendance recorded at the entrance. No. {reference}",
 	"certificate_download": "Download certificate",
 	"admin_field_certificates": "Certificates for attendees",
-	"admin_field_certificates_hint": "After the event, attendees can download a PDF confirming attendance and get it by e-mail."
+	"admin_field_certificates_hint": "After the event, attendees can download a PDF confirming attendance and get it by e-mail.",
+	"reg_email_certificate_subject": "Certificate: {event}",
+	"reg_email_certificate_intro": "Thank you for attending {event} ({date}). Download your certificate of attendance from your account — it stays there as long as we keep the registration data."
 }

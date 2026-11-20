@@ -58,3 +58,31 @@ describe("certificates", () => {
 		expect(await getCertificate(off.registrationId, off.userId)).toBeNull();
 	});
 });
+
+describe("certificate e-mails", () => {
+	it("are queued once per ended event, for attendees only", async () => {
+		const { queueReadyCertificates } = await import("../src/queries/certificates");
+		const present = await attended({ present: true });
+		const absent = await attended({ present: false });
+		const calls: { eventId: string; ids: string[] }[] = [];
+		const collect = async (_tx: unknown, ids: string[], eventId: string) => {
+			calls.push({ eventId, ids });
+		};
+		await queueReadyCertificates(new Date(), collect);
+		expect(calls).toEqual([{ eventId: present.eventId, ids: [present.registrationId] }]);
+		expect(calls.some((call) => call.eventId === absent.eventId)).toBe(false);
+		await queueReadyCertificates(new Date(), collect);
+		expect(calls).toHaveLength(1);
+	});
+
+	it("wait for the end and for the switch", async () => {
+		const { queueReadyCertificates } = await import("../src/queries/certificates");
+		await attended({ present: true, ended: false });
+		await attended({ present: true, enabled: false });
+		const calls: string[] = [];
+		await queueReadyCertificates(new Date(), async (_tx, _ids, eventId) => {
+			calls.push(eventId);
+		});
+		expect(calls).toEqual([]);
+	});
+});

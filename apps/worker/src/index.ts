@@ -1,9 +1,11 @@
+import { queueReadyCertificateEmails } from "@repo/api/notifications/certificates";
 import { queueDueReminderEmails } from "@repo/api/notifications/reminders";
 import { pruneRateLimits } from "@repo/db/queries/rate-limits";
 import { pruneOldRegistrations } from "@repo/db/queries/retention";
 import { env } from "@repo/env";
 import { getBoss } from "@repo/jobs/client";
 import {
+	CERTIFICATE_EMAILS_CRON,
 	CLOSE_EXPIRED_GROUPS_CRON,
 	EVENT_REMINDERS_CRON,
 	emailJob,
@@ -11,6 +13,7 @@ import {
 	JOBS_TIME_ZONE,
 	PRUNE_OLD_REGISTRATIONS_CRON,
 	PRUNE_RATE_LIMITS_CRON,
+	QUEUE_CERTIFICATE_EMAILS,
 	QUEUE_CLOSE_EXPIRED_GROUPS,
 	QUEUE_EMAILS,
 	QUEUE_EVENT_REMINDERS,
@@ -88,6 +91,17 @@ await boss.work(QUEUE_EVENT_REMINDERS, async () => {
 });
 
 await boss.schedule(QUEUE_EVENT_REMINDERS, EVENT_REMINDERS_CRON, null, {
+	tz: JOBS_TIME_ZONE,
+});
+
+await boss.work(QUEUE_CERTIFICATE_EMAILS, async () => {
+	const { events } = await queueReadyCertificateEmails(new Date());
+	if (events > 0) {
+		console.log(`[worker] queued certificates for ${events} event(s)`);
+	}
+});
+
+await boss.schedule(QUEUE_CERTIFICATE_EMAILS, CERTIFICATE_EMAILS_CRON, null, {
 	tz: JOBS_TIME_ZONE,
 });
 

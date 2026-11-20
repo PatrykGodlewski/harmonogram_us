@@ -33,6 +33,7 @@ const EXPECTED_STATE = {
 	reminder: "registered",
 	pending: "pending",
 	rejected: "rejected",
+	certificate: "registered",
 } as const;
 
 /** Sends one queued e-mail. Errors propagate so pg-boss retries the job. */
@@ -68,9 +69,15 @@ export async function handleEmailJob(
 					registration.eventDate,
 					registration.locale,
 				),
-				url: `${appUrl}/events/${registration.eventId}`,
+				// The certificate is on the account page (sign-in first, then the download).
+				url:
+					job.change === "certificate"
+						? `${appUrl}/account`
+						: `${appUrl}/events/${registration.eventId}`,
 				ticketUrl:
-					registration.state === "registered" && job.change !== "cancelled"
+					registration.state === "registered" &&
+					job.change !== "cancelled" &&
+					job.change !== "certificate"
 						? `${appUrl}/tickets/${job.registrationId}`
 						: undefined,
 			};

@@ -591,5 +591,7 @@
 	"certificate_footer": "Obecność odnotowana przy wejściu. Nr {reference}",
 	"certificate_download": "Pobierz zaświadczenie",
 	"admin_field_certificates": "Zaświadczenia dla obecnych",
-	"admin_field_certificates_hint": "Po wydarzeniu obecni pobiorą PDF z potwierdzeniem udziału i dostaną go e-mailem."
+	"admin_field_certificates_hint": "Po wydarzeniu obecni pobiorą PDF z potwierdzeniem udziału i dostaną go e-mailem.",
+	"reg_email_certificate_subject": "Zaświadczenie: {event}",
+	"reg_email_certificate_intro": "Dziękujemy za udział w wydarzeniu {event} ({date}). Zaświadczenie o udziale pobierzesz na swoim koncie — będzie tam, dopóki przechowujemy dane zapisu."
 }
