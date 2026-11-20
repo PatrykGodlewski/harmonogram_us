@@ -7,6 +7,10 @@ import { env } from "@repo/env";
 import { baseLocale, type Locale } from "@repo/i18n/paraglide/runtime";
 import nodemailer from "nodemailer";
 import {
+	EventChangeEmail,
+	type EventChangeEmailProps,
+} from "./event-change-email";
+import {
 	EventMessageEmail,
 	type EventMessageEmailProps,
 } from "./event-message-email";
@@ -71,4 +75,8 @@ export async function renderRegistrationEmail(props: RegistrationEmailProps) {
 
 export async function renderEventMessageEmail(props: EventMessageEmailProps) {
 	return render(<EventMessageEmail {...props} />);
+}
+
+export async function renderEventChangeEmail(props: EventChangeEmailProps) {
+	return render(<EventChangeEmail {...props} />);
 }

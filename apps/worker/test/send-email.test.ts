@@ -226,4 +226,31 @@ describe("registration e-mails", () => {
 		expect(sent[0]?.text).toContain(`/pl/events/${eventId}`);
 		expect(sent[0]?.text).toContain(`/pl/tickets/${registrationId}`);
 	});
+
+	it("a change e-mail shows the old and the new date and place", async () => {
+		const { createEvent, createUser, resetDb } = await import("../../../packages/db/test/helpers");
+		const { registerForEvent } = await import("@repo/db/queries/event-registrations");
+		await resetDb();
+		const eventId = await createEvent();
+		let registrationId = "";
+		await registerForEvent(eventId, await createUser("moved@x.test"), "pl", {
+			onChanged: async (_tx, changes) => {
+				registrationId = changes[0]?.registrationId ?? "";
+			},
+		});
+		const { sent, deps } = capture();
+		await handleEmailJob(
+			{
+				kind: "event-changed",
+				registrationId,
+				before: { date: "2026-12-01T09:00:00.000Z", place: "Aula" },
+				after: { date: "2026-12-02T15:30:00.000Z", place: "Aula · B105" },
+			},
+			deps,
+		);
+		expect(sent).toHaveLength(1);
+		expect(sent[0]?.subject).toBe("Zmiana: Test event");
+		expect(sent[0]?.text).toMatch(/Termin: .*10:00 → .*16:30/);
+		expect(sent[0]?.text).toContain("Miejsce: Aula → Aula · B105");
+	});
 });

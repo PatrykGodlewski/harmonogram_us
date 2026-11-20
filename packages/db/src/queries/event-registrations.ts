@@ -87,11 +87,27 @@ export type RegistrationChange = {
 	change: "confirmed" | "waitlisted" | "promoted" | "cancelled";
 };
 
+/** Where and when an event takes place, as people read it ("Aula · B105"). */
+export type EventWhenWhere = { date: Date; place: string | null };
+
+/** A published event's date or place changed: who to tell, and what it was and is. */
+export type EventChangeNotice = {
+	eventId: string;
+	registrationIds: string[];
+	before: EventWhenWhere;
+	after: EventWhenWhere;
+};
+
 /** Called inside the transaction with every registration whose state was set or changed. */
 export type RegistrationHooks = {
 	onChanged(
 		tx: TransactionClient,
 		changes: RegistrationChange[],
+	): Promise<void>;
+	/** A published event moved in time or place (registered and waitlisted people). */
+	onEventChanged?(
+		tx: TransactionClient,
+		notice: EventChangeNotice,
 	): Promise<void>;
 };
 

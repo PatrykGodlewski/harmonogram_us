@@ -49,6 +49,12 @@ export const emailJob = z.discriminatedUnion("kind", [
 		]),
 	}),
 	z.object({
+		kind: z.literal("event-changed"),
+		registrationId: z.string().min(1),
+		before: z.object({ date: z.iso.datetime(), place: z.string().nullable() }),
+		after: z.object({ date: z.iso.datetime(), place: z.string().nullable() }),
+	}),
+	z.object({
 		kind: z.literal("event-message"),
 		registrationId: z.string().min(1),
 		subject: z.string().min(1).max(200),

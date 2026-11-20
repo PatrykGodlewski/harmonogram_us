@@ -1,8 +1,10 @@
 import {
+	renderEventChangeEmail,
 	renderEventMessageEmail,
 	renderRegistrationEmail,
 	sendTransactionalEmail,
 } from "@repo/api/notifications/email";
+import { eventChangeEmailText } from "@repo/api/notifications/event-change-email";
 import { eventMessageEmailText } from "@repo/api/notifications/event-message-email";
 import { registrationEmailText } from "@repo/api/notifications/registration-email";
 import { verificationEmail } from "@repo/api/notifications/verification-email";
@@ -71,6 +73,40 @@ export async function handleEmailJob(
 				subject,
 				text,
 				html: await renderRegistrationEmail(props),
+			});
+			return;
+		}
+		case "event-changed": {
+			const registration = await getRegistrationForEmail(job.registrationId);
+			// Withdrawn before the job ran, or the event was cancelled since: nothing to tell.
+			if (!registration || registration.eventStatus !== "published") {
+				return;
+			}
+			const { locale } = registration;
+			const format = (iso: string) =>
+				formatEventDateTime(new Date(iso), locale);
+			const props = {
+				locale,
+				eventTitle: registration.eventTitle,
+				date:
+					job.before.date === job.after.date
+						? null
+						: {
+								before: format(job.before.date),
+								after: format(job.after.date),
+							},
+				place:
+					job.before.place === job.after.place
+						? null
+						: { before: job.before.place, after: job.after.place },
+				url: `${env.BETTER_AUTH_URL}/${locale}/events/${registration.eventId}`,
+			};
+			const { subject, text } = eventChangeEmailText(props);
+			await deps.send({
+				to: registration.email,
+				subject,
+				text,
+				html: await renderEventChangeEmail(props),
 			});
 			return;
 		}

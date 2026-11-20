@@ -1,5 +1,5 @@
 import { and, asc, desc, eq, ilike, inArray, max, ne, sql } from "drizzle-orm";
-import { db } from "../client";
+import { db, type TransactionClient } from "../client";
 import { agendaItems } from "../schema/agenda";
 import {
 	eventFaculties,
@@ -26,6 +26,7 @@ import {
 } from "./domain-errors";
 import { missingForPublish } from "./event-completeness";
 import {
+	type EventWhenWhere,
 	getEffectiveEventEnd,
 	hasEventEnded,
 	notify,
@@ -328,13 +329,49 @@ export async function updateEvent(
 					throw new DomainError("ITEM_LIMIT_ABOVE_EVENT");
 				}
 			}
+			const before = await readWhenWhere(tx, id);
+			const dateMoved =
+				values.date !== undefined &&
+				before !== null &&
+				values.date.getTime() !== before.date.getTime();
 			const [event] = await tx
 				.update(events)
-				.set({ ...values, updatedAt: new Date() })
+				.set({
+					...values,
+					// A new date gets a new reminder.
+					...(dateMoved ? { reminderSentAt: null } : {}),
+					updatedAt: new Date(),
+				})
 				.where(eq(events.id, id))
 				.returning();
 			if (event && values.maxSeats !== undefined) {
 				await promoteAndNotify(tx, id, hooks);
+			}
+			if (
+				event &&
+				before &&
+				locked?.status === "published" &&
+				hooks?.onEventChanged
+			) {
+				const after = await readWhenWhere(tx, id);
+				if (
+					after &&
+					(after.date.getTime() !== before.date.getTime() ||
+						after.place !== before.place)
+				) {
+					const people = await tx
+						.select({ id: eventRegistrations.id })
+						.from(eventRegistrations)
+						.where(eq(eventRegistrations.eventId, id));
+					if (people.length > 0) {
+						await hooks.onEventChanged(tx, {
+							eventId: id,
+							registrationIds: people.map((row) => row.id),
+							before,
+							after,
+						});
+					}
+				}
 			}
 			return event ?? null;
 		});
@@ -493,4 +530,25 @@ export async function getEventStatus(
 		.from(events)
 		.where(eq(events.id, eventId));
 	return row?.status ?? null;
+}
+
+/** An event's date and readable place ("Aula · B105"), read inside a transaction. */
+async function readWhenWhere(
+	tx: TransactionClient,
+	eventId: string,
+): Promise<EventWhenWhere | null> {
+	const [row] = await tx
+		.select({
+			date: events.date,
+			location: eventLocations.label,
+			room: events.room,
+		})
+		.from(events)
+		.leftJoin(eventLocations, eq(eventLocations.id, events.locationId))
+		.where(eq(events.id, eventId));
+	if (!row) {
+		return null;
+	}
+	const place = [row.location, row.room].filter(Boolean).join(" · ");
+	return { date: row.date, place: place || null };
 }

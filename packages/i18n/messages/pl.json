@@ -483,5 +483,10 @@
 	"admin_reminder_off": "Bez przypomnienia",
 	"admin_reminder_1h": "1 godzinę przed",
 	"admin_reminder_24h": "Dzień przed",
-	"admin_reminder_48h": "Dwa dni przed"
+	"admin_reminder_48h": "Dwa dni przed",
+	"event_change_subject": "Zmiana: {event}",
+	"event_change_intro": "Zmieniły się szczegóły wydarzenia {event}, na które jesteś zapisany.",
+	"event_change_date": "Termin: {before} → {after}",
+	"event_change_place": "Miejsce: {before} → {after}",
+	"event_change_no_place": "(brak)"
 }
