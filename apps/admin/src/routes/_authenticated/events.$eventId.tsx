@@ -1,3 +1,4 @@
+import { eventOrganizersQueryOptions } from "@repo/api/admin/organizers";
 import {
 	adminEventDetailsQueryOptions,
 	adminEventFilterOptionsQueryOptions,
@@ -23,6 +24,24 @@ export const Route = createFileRoute("/_authenticated/events/$eventId")({
 	validateSearch: z.object({
 		agenda: z.enum(["list", "calendar"]).optional().catch(undefined),
 	}),
+	// Fetched on the server with the page. A failure (e.g. no access) is left to
+	// the page, which shows it in place of the event.
+	loader: ({ context: { queryClient }, params: { eventId } }) => {
+		const settle = (load: Promise<unknown>) => load.catch(() => undefined);
+		return Promise.all([
+			settle(
+				queryClient.ensureQueryData(adminEventDetailsQueryOptions(eventId)),
+			),
+			settle(
+				queryClient.ensureQueryData(adminEventRegistrantsQueryOptions(eventId)),
+			),
+			settle(
+				queryClient.ensureQueryData(adminEventGroupsQueryOptions(eventId)),
+			),
+			settle(queryClient.ensureQueryData(eventOrganizersQueryOptions(eventId))),
+			settle(queryClient.ensureQueryData(adminEventFilterOptionsQueryOptions)),
+		]);
+	},
 	component: AdminEventDetailPage,
 });
 

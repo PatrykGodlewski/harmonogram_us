@@ -458,5 +458,6 @@
 	"publish_checklist_change": "Change",
 	"publish_checklist_ready": "All set. Once published, participants can see the event.",
 	"publish_checklist_fix_first": "Fill in the items marked “Missing”.",
-	"publish_checklist_saved": "Saved."
+	"publish_checklist_saved": "Saved.",
+	"admin_events_search": "Search events"
 }

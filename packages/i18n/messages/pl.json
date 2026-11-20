@@ -458,5 +458,6 @@
 	"publish_checklist_change": "Zmień",
 	"publish_checklist_ready": "Wszystko gotowe. Po publikacji wydarzenie zobaczą uczestnicy.",
 	"publish_checklist_fix_first": "Uzupełnij pozycje oznaczone „Brakuje”.",
-	"publish_checklist_saved": "Zapisano."
+	"publish_checklist_saved": "Zapisano.",
+	"admin_events_search": "Szukaj wydarzenia"
 }

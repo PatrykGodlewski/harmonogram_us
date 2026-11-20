@@ -31,7 +31,7 @@ test("[F3] szkic nie jest publiczny, publikacja go pokazuje @organizator", async
 	await page.getByRole("option", { name: "Online" }).click();
 	await dialog.getByRole("button", { name: "Zapisz" }).click();
 	await expect(dialog).toBeHidden();
-	await page.getByRole("link", { name: title }).click();
+	await page.waitForURL(/\/events\/[^/]+$/);
 	await page.waitForURL(/\/events\/[^/]+$/);
 	const eventId = page.url().split("/").at(-1) ?? "";
 	await expect(page.getByText("Szkic", { exact: true })).toBeVisible();
@@ -115,7 +115,7 @@ test("[F3] sala wpisana ręcznie wystarcza do publikacji @organizator", async ({
 	await dialog.getByLabel("Sala / pokój").fill("B105");
 	await dialog.getByRole("button", { name: "Zapisz" }).click();
 	await expect(dialog).toBeHidden();
-	await page.getByRole("link", { name: title }).click();
+	await page.waitForURL(/\/events\/[^/]+$/);
 	await page.getByRole("button", { name: "Opublikuj" }).click();
 	await expect(page.getByText("Szkic", { exact: true })).toHaveCount(0);
 	const eventId = page.url().split("/").at(-1) ?? "";

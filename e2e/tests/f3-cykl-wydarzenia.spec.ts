@@ -30,7 +30,7 @@ async function createEventInAdmin(page: Page, title: string) {
 	await dialog.getByLabel("Link online").fill("https://meet.example.test/cykl");
 	await dialog.getByRole("button", { name: "Zapisz" }).click();
 	await expect(dialog).toBeHidden();
-	await page.getByRole("link", { name: title }).click();
+	await page.waitForURL(/\/events\/[^/]+$/);
 	await page.waitForURL(/\/events\/[^/]+$/);
 	await page.getByRole("button", { name: "Opublikuj" }).click();
 	await expect(page.getByText("Szkic", { exact: true })).toHaveCount(0);
@@ -107,6 +107,7 @@ test("[F3] pełny cykl: admin tworzy, uczestnik się zapisuje, wydarzenie się k
 
 	// When the admin deletes another event the participant registered for
 	await open(page, adminUrl("/pl/events"));
+	await page.getByLabel("Szukaj wydarzenia").fill(toDelete.title);
 	page.once("dialog", (dialog) => void dialog.accept());
 	await page
 		.getByRole("row")

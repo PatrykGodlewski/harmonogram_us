@@ -45,7 +45,7 @@ test("[F2] organizator tworzy wydarzenie, dodaje współorganizatora, obcy nie m
 	await a.getByRole("option").first().click();
 	await dialog.getByRole("button", { name: "Zapisz" }).click();
 	await expect(dialog).toBeHidden();
-	await a.getByRole("link", { name: title }).click();
+	await a.waitForURL(/\/events\/[^/]+$/);
 	await a.waitForURL(/\/events\/[^/]+$/);
 	const eventPath = new URL(a.url()).pathname;
 	const organizers = a.getByRole("region", { name: "Organizatorzy" });

@@ -41,7 +41,7 @@ import {
 } from "@repo/ui/time";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { formatFieldError } from "../../lib/format-field-error";
@@ -155,10 +155,14 @@ export function AgendaItemDialog({
 		},
 	});
 
+	// Start from the item only when the dialog opens: a background refetch
+	// re-renders the page (and passes a new eventDate) while someone is typing.
+	const wasOpen = useRef(false);
 	useEffect(() => {
-		if (open) {
+		if (open && !wasOpen.current) {
 			form.reset(toFormValues(item, eventDate));
 		}
+		wasOpen.current = open;
 	}, [open, item, eventDate, form]);
 
 	const disabled = saveMutation.isPending;

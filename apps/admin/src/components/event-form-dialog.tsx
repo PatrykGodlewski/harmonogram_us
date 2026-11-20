@@ -56,7 +56,8 @@ import {
 } from "@repo/ui/time";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { formatFieldError } from "../lib/format-field-error";
@@ -137,6 +138,7 @@ export function EventFormDialog({
 	event,
 	onSaved,
 }: EventFormDialogProps) {
+	const navigate = useNavigate();
 	const eventSchema = useMemo(
 		() =>
 			z.object({
@@ -195,18 +197,30 @@ export function EventFormDialog({
 			}
 			return createAdminEventServer({ data: payload });
 		},
-		onSuccess: async () => {
+		onSuccess: async (saved) => {
 			await onSaved();
 			onOpenChange(false);
 			toast.success(admin_save_success());
+			// A new event opens on its own page, where the publish checklist waits.
+			if (!event && saved) {
+				await navigate({
+					to: "/events/$eventId",
+					params: { eventId: saved.id },
+				});
+			}
 		},
 		onError: (error) => {
 			toast.error(formatMutationError(error, admin_error_generic));
 		},
 	});
 
+	// The form's defaults are the event itself: TanStack Form re-applies them while untouched.
+	const defaultValues = useMemo(
+		() => (event ? toFormValues(event) : EMPTY_VALUES),
+		[event],
+	);
 	const form = useForm({
-		defaultValues: EMPTY_VALUES,
+		defaultValues,
 		validators: {
 			onSubmit: eventSchema,
 		},
@@ -218,11 +232,15 @@ export function EventFormDialog({
 	const firstTypeId = filterOptions?.types[0]?.id;
 	// Each opening starts from the event (or an empty form); a new event gets the
 	// first type, so it needs only a title, a date and a place or link.
+	// Only when the dialog opens: a background refetch hands over a new event
+	// object while someone is editing, and must not wipe their changes.
+	const wasOpen = useRef(false);
 	useEffect(() => {
-		if (open) {
-			form.reset(event ? toFormValues(event) : EMPTY_VALUES);
+		if (open && !wasOpen.current) {
+			form.reset(defaultValues);
 		}
-	}, [open, event, form]);
+		wasOpen.current = open;
+	}, [open, defaultValues, form]);
 	// The type options may arrive after the dialog opened.
 	useEffect(() => {
 		if (open && !event && firstTypeId && !form.getFieldValue("typeId")) {

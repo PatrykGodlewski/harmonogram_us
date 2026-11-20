@@ -1,3 +1,4 @@
+import { searchUsersQueryOptions } from "@repo/api/admin/users";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { AdminUsersPage } from "~/components/admin-users-page";
@@ -6,6 +7,9 @@ export const Route = createFileRoute("/_authenticated/users")({
 	validateSearch: z.object({
 		q: z.string().max(200).optional().catch(undefined),
 	}),
+	loaderDeps: ({ search }) => ({ q: search.q ?? "" }),
+	loader: ({ context: { queryClient }, deps }) =>
+		queryClient.ensureQueryData(searchUsersQueryOptions(deps.q)),
 	component: AdminUsersRoute,
 });
 

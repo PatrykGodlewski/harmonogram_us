@@ -4,7 +4,7 @@ import { getEventRegistrants } from "@repo/db/queries/event-registrations";
 import {
 	getEventById,
 	getEventFilterOptions,
-	getEvents,
+	getEventPage,
 } from "@repo/db/queries/events";
 import { listGroupsForEvent } from "@repo/db/queries/groups";
 import {
@@ -12,13 +12,17 @@ import {
 	getEventLocations,
 	getEventTypes,
 } from "@repo/db/queries/lookups";
-import { queryOptions } from "@tanstack/react-query";
+import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { adminMiddleware } from "../auth/admin-middleware";
 import { assertCanManageEvent } from "../auth/event-access";
 import { panelQueryFn } from "../auth/panel-middleware";
 import { appError } from "../errors";
-import { adminEventIdSchema, adminEventsQuerySchema } from "./schemas";
+import {
+	ADMIN_EVENT_PAGE_SIZE,
+	adminEventIdSchema,
+	adminEventsQuerySchema,
+} from "./schemas";
 
 export type { AgendaItem } from "@repo/db/queries/agenda-items";
 export type { EventRegistrant } from "@repo/db/queries/event-registrations";
@@ -39,17 +43,31 @@ export const fetchAdminEventsServer = panelQueryFn
 	.inputValidator((input: unknown) => adminEventsQuerySchema.parse(input))
 	.handler(async ({ data, context }) => {
 		const managed = await listManagedEventIds(context.user);
-		return getEvents({
-			audience: { kind: "manage" },
-			sortOrder: data.sortOrder,
-			...(managed === "all" ? {} : { ids: managed }),
-		});
+		// A page, not everything: an installation collects thousands of events.
+		return getEventPage(
+			{
+				audience: { kind: "manage" },
+				sortOrder: data.sortOrder,
+				...(data.search ? { search: data.search } : {}),
+				...(managed === "all" ? {} : { ids: managed }),
+			},
+			data.limit,
+		);
 	});
 
-export const adminEventsQueryOptions = (sortOrder: "asc" | "desc" = "desc") =>
+export const adminEventsQueryOptions = (
+	limit: number = ADMIN_EVENT_PAGE_SIZE,
+	search = "",
+	sortOrder: "asc" | "desc" = "desc",
+) =>
 	queryOptions({
-		queryKey: ["admin", "events", sortOrder] as const,
-		queryFn: () => fetchAdminEventsServer({ data: { sortOrder } }),
+		queryKey: ["admin", "events", sortOrder, limit, search] as const,
+		queryFn: () =>
+			fetchAdminEventsServer({
+				data: { sortOrder, limit, ...(search ? { search } : {}) },
+			}),
+		// Keep the rows on screen while "show more" loads the longer page.
+		placeholderData: keepPreviousData,
 	});
 
 export const fetchAdminEventTypesServer = adminQueryFn.handler(async () =>

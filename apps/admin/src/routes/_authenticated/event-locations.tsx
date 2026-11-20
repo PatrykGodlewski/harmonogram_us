@@ -16,6 +16,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AdminLookupPage } from "~/components/admin-lookup-page";
 
 export const Route = createFileRoute("/_authenticated/event-locations")({
+	loader: ({ context: { queryClient } }) =>
+		queryClient.ensureQueryData(adminEventLocationsQueryOptions),
 	component: AdminEventLocationsPage,
 });
 

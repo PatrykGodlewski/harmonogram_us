@@ -126,12 +126,6 @@ export async function getEventFilterOptions(): Promise<EventFilterOptions> {
 	return { types, locations, faculties };
 }
 
-export async function getEvents(
-	filters: EventFilters,
-): Promise<EventWithRelations[]> {
-	return queryEvents(filters);
-}
-
 export type EventPage = { events: EventWithRelations[]; hasMore: boolean };
 
 /** The first `limit` events matching the filters, and whether there are more (the public list). */

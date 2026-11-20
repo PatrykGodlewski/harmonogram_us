@@ -30,8 +30,19 @@ export const eventIdActionSchema = z.object({
 	id: z.string().min(1),
 });
 
+/** Events per "show more" step in the panel list, and the most one request may ask for. */
+export const ADMIN_EVENT_PAGE_SIZE = 50;
+export const ADMIN_EVENT_PAGE_MAX = 500;
+
 export const adminEventsQuerySchema = z.object({
 	sortOrder: z.enum(["asc", "desc"]).default("desc"),
+	limit: z
+		.number()
+		.int()
+		.min(1)
+		.max(ADMIN_EVENT_PAGE_MAX)
+		.default(ADMIN_EVENT_PAGE_SIZE),
+	search: z.string().trim().max(200).optional(),
 });
 
 export type AdminEventsQuery = z.infer<typeof adminEventsQuerySchema>;
