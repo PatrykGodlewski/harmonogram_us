@@ -19,6 +19,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { formatMutationError } from "~/lib/format-mutation-error";
+import { CancelEventButton } from "./cancel-event-button";
 
 type EventSummaryCardProps = {
 	event: EventDetails;
@@ -83,6 +84,12 @@ export function EventSummaryCard({ event, onChanged }: EventSummaryCardProps) {
 					>
 						{admin_event_publish()}
 					</Button>
+				</div>
+			) : null}
+			{event.status === "published" &&
+			new Date(event.effectiveEndsAt).getTime() > Date.now() ? (
+				<div>
+					<CancelEventButton eventId={event.id} onCancelled={onChanged} />
 				</div>
 			) : null}
 			{event.description ? (

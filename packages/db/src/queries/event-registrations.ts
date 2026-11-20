@@ -7,7 +7,7 @@ import {
 	eventSeatCounts,
 	type RegistrationState,
 } from "../schema/event-registrations";
-import { events } from "../schema/events";
+import { type EventStatus, events } from "../schema/events";
 import { registrationGroups } from "../schema/groups";
 import {
 	DomainError,
@@ -64,7 +64,7 @@ export async function hasEventEnded(
 	return end !== null && end.getTime() <= Date.now();
 }
 
-/** Registration actions need a public event that hasn't ended (a draft is "not found"). */
+/** Registration actions need a published event that hasn't ended (a draft is "not found"). */
 export async function assertEventOpen(tx: TransactionClient, eventId: string) {
 	const [event] = await tx
 		.select({ status: events.status })
@@ -73,6 +73,9 @@ export async function assertEventOpen(tx: TransactionClient, eventId: string) {
 	if (!event || event.status === "draft") {
 		throw new DomainError("EVENT_NOT_FOUND");
 	}
+	if (event.status === "cancelled") {
+		throw new DomainError("EVENT_CANCELLED");
+	}
 	if (await hasEventEnded(tx, eventId)) {
 		throw new DomainError("EVENT_ENDED");
 	}
@@ -80,7 +83,7 @@ export async function assertEventOpen(tx: TransactionClient, eventId: string) {
 
 export type RegistrationChange = {
 	registrationId: string;
-	change: "confirmed" | "waitlisted" | "promoted";
+	change: "confirmed" | "waitlisted" | "promoted" | "cancelled";
 };
 
 /** Called inside the transaction with every registration whose state was set or changed. */
@@ -457,6 +460,7 @@ export type RegistrationForEmail = {
 	eventId: string;
 	eventTitle: string;
 	eventDate: Date;
+	eventStatus: EventStatus;
 };
 
 /** What a registration e-mail needs; null when the registration no longer exists. */
@@ -471,6 +475,7 @@ export async function getRegistrationForEmail(
 			eventId: events.id,
 			eventTitle: events.title,
 			eventDate: events.date,
+			eventStatus: events.status,
 		})
 		.from(eventRegistrations)
 		.innerJoin(authUsers, eq(authUsers.id, eventRegistrations.userId))

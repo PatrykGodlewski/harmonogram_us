@@ -34,7 +34,7 @@ export const emailJob = z.discriminatedUnion("kind", [
 	z.object({
 		kind: z.literal("registration"),
 		registrationId: z.string().min(1),
-		change: z.enum(["confirmed", "waitlisted", "promoted"]),
+		change: z.enum(["confirmed", "waitlisted", "promoted", "cancelled"]),
 	}),
 ]);
 

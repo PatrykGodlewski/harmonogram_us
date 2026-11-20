@@ -43,6 +43,17 @@ describe("proxyShape", () => {
 		expect(upstream?.searchParams.get("secret")).toBe("s3cret");
 	});
 
+	it("sends the shape's own row filter; a client filter is ignored", async () => {
+		const { calls, fetchImpl } = fakeElectric();
+		await proxyShape(
+			new Request("http://app.test/x?offset=-1&where=1%3D1"),
+			shapes.cancelledEvents,
+			{ ...config, fetchImpl },
+		);
+		expect(calls[0]?.searchParams.get("table")).toBe("events");
+		expect(calls[0]?.searchParams.get("where")).toBe("status = 'cancelled'");
+	});
+
 	it("omits the secret when none is configured", async () => {
 		const { calls, fetchImpl } = fakeElectric();
 		await proxyShape(

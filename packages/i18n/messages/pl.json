@@ -370,5 +370,15 @@
 	"admin_field_status": "Stan",
 	"admin_event_status_published": "Opublikowane",
 	"event_join_online": "Dołącz online",
-	"event_status_cancelled": "Odwołane"
+	"event_status_cancelled": "Odwołane",
+	"reg_email_cancelled_subject": "Odwołano: {event}",
+	"reg_email_cancelled_intro": "Wydarzenie {event} ({date}) zostało odwołane. Przepraszamy za kłopot.",
+	"event_cancelled_closed": "To wydarzenie zostało odwołane, zapisy są zamknięte.",
+	"event_cancelled_banner": "Wydarzenie odwołane",
+	"admin_error_event_already_cancelled": "To wydarzenie jest już odwołane.",
+	"admin_event_cancel": "Odwołaj wydarzenie",
+	"admin_event_cancel_title": "Odwołać wydarzenie?",
+	"admin_event_cancel_body": "Zapisy zostaną zamknięte, a wszyscy zapisani i osoby z listy rezerwowej dostaną e-mail. Tego nie da się cofnąć.",
+	"admin_event_cancel_keep": "Nie odwołuj",
+	"admin_event_cancelled_toast": "Wydarzenie zostało odwołane."
 }

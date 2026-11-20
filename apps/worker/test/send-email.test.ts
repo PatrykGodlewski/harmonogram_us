@@ -109,4 +109,46 @@ describe("registration e-mails", () => {
 		await handleEmailJob({ kind: "registration", registrationId: waitlistedId, change: "promoted" }, deps);
 		expect(sent.map((m) => m.to)).toEqual(["waiting@x.test"]);
 	});
+
+	it("a cancellation e-mail goes to registered and waitlisted people, without a ticket", async () => {
+		const { createEvent, createUser, resetDb } = await import("../../../packages/db/test/helpers");
+		const { registerForEvent } = await import("@repo/db/queries/event-registrations");
+		const { cancelEvent } = await import("@repo/db/queries/events");
+		await resetDb();
+		const eventId = await createEvent({ maxSeats: 1 });
+		await registerForEvent(eventId, await createUser("x@x.test"), "pl");
+		await registerForEvent(eventId, await createUser("y@x.test"), "en");
+		const ids: string[] = [];
+		await cancelEvent(eventId, {
+			onChanged: async (_tx, changes) => {
+				ids.push(...changes.map((c) => c.registrationId));
+			},
+		});
+		const { sent, deps } = capture();
+		for (const registrationId of ids) {
+			await handleEmailJob({ kind: "registration", registrationId, change: "cancelled" }, deps);
+		}
+		expect(sent.map((m) => m.to).sort()).toEqual(["x@x.test", "y@x.test"]);
+		const pl = sent.find((m) => m.to === "x@x.test");
+		expect(pl?.subject).toBe("Odwołano: Test event");
+		expect(pl?.text).toContain(`/pl/events/${eventId}`);
+		expect(pl?.text).not.toContain("/tickets/");
+		expect(sent.find((m) => m.to === "y@x.test")?.subject).toBe("Cancelled: Test event");
+	});
+
+	it("a cancellation job for an event that is not cancelled sends nothing", async () => {
+		const { createEvent, createUser, resetDb } = await import("../../../packages/db/test/helpers");
+		const { registerForEvent } = await import("@repo/db/queries/event-registrations");
+		await resetDb();
+		const eventId = await createEvent();
+		let registrationId = "";
+		await registerForEvent(eventId, await createUser(), "pl", {
+			onChanged: async (_tx, changes) => {
+				registrationId = changes[0]?.registrationId ?? "";
+			},
+		});
+		const { sent, deps } = capture();
+		await handleEmailJob({ kind: "registration", registrationId, change: "cancelled" }, deps);
+		expect(sent).toHaveLength(0);
+	});
 });

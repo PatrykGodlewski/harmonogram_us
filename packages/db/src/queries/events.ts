@@ -7,12 +7,16 @@ import {
 	eventTypes,
 } from "../schema/event-lookups";
 import { eventOrganizers } from "../schema/event-organizers";
-import { eventSeatCounts } from "../schema/event-registrations";
+import {
+	eventRegistrations,
+	eventSeatCounts,
+} from "../schema/event-registrations";
 import {
 	type AttendanceMode,
 	type EventStatus,
 	events,
 } from "../schema/events";
+import { registrationGroups } from "../schema/groups";
 import { type AgendaItem, listAgendaItems } from "./agenda-items";
 import {
 	CAPACITY_EDIT_ERRORS,
@@ -21,10 +25,13 @@ import {
 } from "./domain-errors";
 import {
 	getEffectiveEventEnd,
+	hasEventEnded,
+	notify,
 	promoteAndNotify,
 	type RegistrationHooks,
 } from "./event-registrations";
 import { lockEvent } from "./locks";
+import { getCurrentTxId } from "./txid";
 
 /** Who is looking: the public site never sees drafts; the panel sees everything. */
 export type EventAudience = "public" | "manage";
@@ -390,4 +397,59 @@ export async function publishEvent(
 		throw new DomainError("EVENT_NOT_FOUND");
 	}
 	return published;
+}
+
+/**
+ * Cancels a published event: registration closes, open groups close, and every
+ * registered or waitlisted person is reported (for the cancellation e-mail).
+ * Registrations stay as the event's history. Irreversible.
+ */
+export async function cancelEvent(
+	eventId: string,
+	hooks?: RegistrationHooks,
+): Promise<{ txid: number }> {
+	return db.transaction(async (tx) => {
+		if (!(await lockEvent(tx, eventId))) {
+			throw new DomainError("EVENT_NOT_FOUND");
+		}
+		const [event] = await tx
+			.select({ status: events.status })
+			.from(events)
+			.where(eq(events.id, eventId));
+		if (!event || event.status === "draft") {
+			throw new DomainError("EVENT_NOT_FOUND");
+		}
+		if (event.status === "cancelled") {
+			throw new DomainError("EVENT_ALREADY_CANCELLED");
+		}
+		if (await hasEventEnded(tx, eventId)) {
+			throw new DomainError("EVENT_ENDED");
+		}
+		const now = new Date();
+		await tx
+			.update(events)
+			.set({ status: "cancelled", cancelledAt: now, updatedAt: now })
+			.where(eq(events.id, eventId));
+		// Lock order: the event row is held, groups come next.
+		await tx
+			.update(registrationGroups)
+			.set({ status: "closed", updatedAt: now })
+			.where(
+				and(
+					eq(registrationGroups.eventId, eventId),
+					eq(registrationGroups.status, "open"),
+				),
+			);
+		const people = await tx
+			.select({ id: eventRegistrations.id })
+			.from(eventRegistrations)
+			.where(eq(eventRegistrations.eventId, eventId))
+			.orderBy(asc(eventRegistrations.createdAt), asc(eventRegistrations.id));
+		await notify(
+			tx,
+			hooks,
+			people.map((row) => ({ registrationId: row.id, change: "cancelled" })),
+		);
+		return { txid: await getCurrentTxId(tx) };
+	});
 }

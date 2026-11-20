@@ -15,10 +15,12 @@ export const defaultSendEmailDeps: SendEmailDeps = {
 	send: sendTransactionalEmail,
 };
 
+/** The state a registration must still be in for its e-mail to make sense (null: any). */
 const EXPECTED_STATE = {
 	confirmed: "registered",
 	promoted: "registered",
 	waitlisted: "waitlisted",
+	cancelled: null,
 } as const;
 
 /** Sends one queued e-mail. Errors propagate so pg-boss retries the job. */
@@ -35,7 +37,12 @@ export async function handleEmailJob(
 		case "registration": {
 			const registration = await getRegistrationForEmail(job.registrationId);
 			// Withdrawn, or changed again before the job ran: nothing to tell.
-			if (!registration || registration.state !== EXPECTED_STATE[job.change]) {
+			const expected = EXPECTED_STATE[job.change];
+			if (
+				!registration ||
+				(expected !== null && registration.state !== expected) ||
+				(job.change === "cancelled" && registration.eventStatus !== "cancelled")
+			) {
 				return;
 			}
 			const appUrl = `${env.BETTER_AUTH_URL}/${registration.locale}`;
@@ -49,7 +56,7 @@ export async function handleEmailJob(
 				),
 				url: `${appUrl}/events/${registration.eventId}`,
 				ticketUrl:
-					registration.state === "registered"
+					registration.state === "registered" && job.change !== "cancelled"
 						? `${appUrl}/tickets/${job.registrationId}`
 						: undefined,
 			};

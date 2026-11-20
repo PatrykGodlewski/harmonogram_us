@@ -7,6 +7,8 @@ export type ShapeDefinition = {
 	path: `/api/electric/${string}`;
 	table: string;
 	columns: readonly string[];
+	/** Row filter the server applies; clients can't choose or change it. */
+	where?: string;
 };
 
 export const shapes = {
@@ -26,5 +28,12 @@ export const shapes = {
 			"registered_count",
 			"updated_at",
 		],
+	},
+	/** Cancelled events only: pages flip to "cancelled" live. Drafts never leave the server. */
+	cancelledEvents: {
+		path: "/api/electric/cancelled-events",
+		table: "events",
+		columns: ["id", "status", "cancelled_at"],
+		where: "status = 'cancelled'",
 	},
 } as const satisfies Record<string, ShapeDefinition>;

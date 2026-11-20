@@ -96,6 +96,7 @@ function EventDetailsPage() {
 						{...props}
 						interactive={false}
 						itemCounts={staticItemCounts}
+						isCancelled={event.status === "cancelled"}
 					/>
 				}
 			>
@@ -105,6 +106,7 @@ function EventDetailsPage() {
 							{...props}
 							interactive={false}
 							itemCounts={staticItemCounts}
+							isCancelled={event.status === "cancelled"}
 						/>
 					}
 				>

@@ -8,6 +8,7 @@
     "./local-notes": "./src/local-notes.ts",
     "./event-seat-counts": "./src/event-seat-counts.ts",
     "./agenda-item-seat-counts": "./src/agenda-item-seat-counts.ts",
+    "./cancelled-events": "./src/cancelled-events.ts",
     "./shapes": "./src/shapes.ts",
     "./electric-proxy": "./src/electric-proxy.ts"
   },

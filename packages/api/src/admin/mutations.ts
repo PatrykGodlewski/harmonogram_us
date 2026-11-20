@@ -4,6 +4,7 @@ import {
 	updateAgendaItem,
 } from "@repo/db/queries/agenda-items";
 import {
+	cancelEvent,
 	createEvent,
 	deleteEvent,
 	publishEvent,
@@ -80,6 +81,13 @@ export const publishAdminEventServer = panelActionFn
 	.handler(async ({ data, context }) => {
 		await assertCanManageEvent(context.user, data.id);
 		return withDomainErrors(() => publishEvent(data.id));
+	});
+
+export const cancelAdminEventServer = panelActionFn
+	.inputValidator((input: unknown) => deleteByIdSchema.parse(input))
+	.handler(async ({ data, context }) => {
+		await assertCanManageEvent(context.user, data.id);
+		return withDomainErrors(() => cancelEvent(data.id, registrationEmailHooks));
 	});
 
 export const createAdminEventTypeServer = adminActionFn

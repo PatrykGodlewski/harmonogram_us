@@ -1,4 +1,5 @@
 import {
+	event_cancelled_banner,
 	event_details_closed,
 	event_details_places_left,
 	event_join_online,
@@ -29,6 +30,7 @@ type EventSummaryProps = {
 	user: { id: string; email: string } | null;
 	interactive: boolean;
 	isClosed: boolean;
+	isCancelled: boolean;
 	seatCount: EventSeatCount;
 	registrations: EventDetailsRegistrations;
 };
@@ -38,6 +40,7 @@ export function EventSummary({
 	user,
 	interactive,
 	isClosed,
+	isCancelled,
 	seatCount,
 	registrations,
 }: EventSummaryProps) {
@@ -45,6 +48,14 @@ export function EventSummary({
 
 	return (
 		<section className="flex flex-col gap-4">
+			{isCancelled ? (
+				<div
+					role="status"
+					className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 font-medium text-destructive"
+				>
+					{event_cancelled_banner()}
+				</div>
+			) : null}
 			<div className="flex flex-col gap-2">
 				<h1 className="text-2xl font-semibold tracking-tight">{event.title}</h1>
 				<p className="text-muted-foreground">
@@ -92,7 +103,7 @@ export function EventSummary({
 					registrations={registrations}
 				/>
 			</div>
-			{user && isBeforeGroupDeadline(event) ? (
+			{user && !isCancelled && isBeforeGroupDeadline(event) ? (
 				<Button variant="outline" size="sm" className="self-start" asChild>
 					<Link to="/events/$eventId/groups/new" params={{ eventId: event.id }}>
 						{groups_register_group()}

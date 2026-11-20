@@ -27,6 +27,8 @@ export const DOMAIN_ERROR_CODES = [
 	"LAST_ORGANIZER",
 	"EVENT_INCOMPLETE",
 	"EVENT_NOT_DRAFT",
+	"EVENT_CANCELLED",
+	"EVENT_ALREADY_CANCELLED",
 ] as const;
 
 export type DomainErrorCode = (typeof DOMAIN_ERROR_CODES)[number];

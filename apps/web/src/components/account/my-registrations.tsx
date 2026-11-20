@@ -9,6 +9,7 @@ import {
 	account_ticket,
 	account_upcoming,
 	account_waitlisted,
+	event_status_cancelled,
 	events_registered,
 	events_unregister,
 } from "@repo/i18n/paraglide/messages";
@@ -112,6 +113,7 @@ function RegistrationRow({
 	const locale = getLocale();
 	const actions = useRegistrationActions();
 	const handleWithdraw = () => actions.unregister(row.eventId);
+	const isCancelled = row.eventStatus === "cancelled";
 
 	return (
 		<li className="flex flex-col gap-3 py-3 sm:flex-row sm:items-start sm:justify-between">
@@ -121,7 +123,10 @@ function RegistrationRow({
 					{formatEventDateTime(row.date, locale)}
 					{row.locationLabel ? ` · ${row.locationLabel}` : ""}
 				</p>
-				<div>
+				<div className="flex flex-wrap gap-2">
+					{isCancelled ? (
+						<Badge variant="destructive">{event_status_cancelled()}</Badge>
+					) : null}
 					<Badge variant={row.state === "registered" ? "default" : "secondary"}>
 						{row.state === "registered"
 							? events_registered()
@@ -144,7 +149,7 @@ function RegistrationRow({
 						{account_open_event()}
 					</Link>
 				</Button>
-				{row.state === "registered" ? (
+				{row.state === "registered" && !isCancelled ? (
 					<Button size="sm" variant="outline" asChild>
 						<Link
 							to="/tickets/$registrationId"
@@ -154,7 +159,7 @@ function RegistrationRow({
 						</Link>
 					</Button>
 				) : null}
-				{canWithdraw ? (
+				{canWithdraw && !isCancelled ? (
 					<UnregisterEventDialog onConfirm={handleWithdraw}>
 						<Button
 							size="sm"

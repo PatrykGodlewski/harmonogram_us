@@ -30,6 +30,9 @@ export async function proxyShape(
 
 	upstream.searchParams.set("table", shape.table);
 	upstream.searchParams.set("columns", shape.columns.join(","));
+	if ("where" in shape && shape.where) {
+		upstream.searchParams.set("where", shape.where);
+	}
 	if (secret) {
 		upstream.searchParams.set("secret", secret);
 	}

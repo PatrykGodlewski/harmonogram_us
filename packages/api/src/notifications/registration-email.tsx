@@ -13,6 +13,8 @@ import {
 } from "@react-email/components";
 import {
 	reg_email_button,
+	reg_email_cancelled_intro,
+	reg_email_cancelled_subject,
 	reg_email_confirmed_intro,
 	reg_email_confirmed_subject,
 	reg_email_promoted_intro,
@@ -24,7 +26,11 @@ import {
 	reg_email_withdraw_hint,
 } from "@repo/i18n/paraglide/messages";
 
-export type RegistrationEmailChange = "confirmed" | "waitlisted" | "promoted";
+export type RegistrationEmailChange =
+	| "confirmed"
+	| "waitlisted"
+	| "promoted"
+	| "cancelled";
 
 export type RegistrationEmailProps = {
 	change: RegistrationEmailChange;
@@ -41,12 +47,14 @@ const SUBJECTS = {
 	confirmed: reg_email_confirmed_subject,
 	waitlisted: reg_email_waitlisted_subject,
 	promoted: reg_email_promoted_subject,
+	cancelled: reg_email_cancelled_subject,
 } as const;
 
 const INTROS = {
 	confirmed: reg_email_confirmed_intro,
 	waitlisted: reg_email_waitlisted_intro,
 	promoted: reg_email_promoted_intro,
+	cancelled: reg_email_cancelled_intro,
 } as const;
 
 /** Subject and plain-text body; the HTML version is RegistrationEmail. */
@@ -67,7 +75,9 @@ export function registrationEmailText(props: RegistrationEmailProps): {
 			props.ticketUrl
 				? `${reg_email_ticket({}, { locale })}\n${props.ticketUrl}`
 				: null,
-			reg_email_withdraw_hint({}, { locale }),
+			props.change === "cancelled"
+				? null
+				: reg_email_withdraw_hint({}, { locale }),
 		]
 			.filter(Boolean)
 			.join("\n\n"),
@@ -134,16 +144,18 @@ export function RegistrationEmail(props: RegistrationEmailProps) {
 								{reg_email_ticket_button({}, { locale })}
 							</Button>
 						) : null}
-						<Text
-							style={{
-								...text,
-								marginTop: "16px",
-								fontSize: "13px",
-								color: "#4b5563",
-							}}
-						>
-							{reg_email_withdraw_hint({}, { locale })}
-						</Text>
+						{props.change === "cancelled" ? null : (
+							<Text
+								style={{
+									...text,
+									marginTop: "16px",
+									fontSize: "13px",
+									color: "#4b5563",
+								}}
+							>
+								{reg_email_withdraw_hint({}, { locale })}
+							</Text>
+						)}
 					</Section>
 				</Container>
 			</Body>

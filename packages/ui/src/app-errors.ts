@@ -4,6 +4,7 @@ import {
 } from "@repo/db/queries/domain-errors";
 import {
 	admin_error_end_before_start,
+	admin_error_event_already_cancelled,
 	admin_error_event_incomplete,
 	admin_error_event_not_draft,
 	admin_error_forbidden,
@@ -26,6 +27,7 @@ import {
 	error_not_group_owner,
 	error_rate_limited,
 	error_user_not_found,
+	event_cancelled_closed,
 	event_details_not_found,
 	events_event_ended,
 	events_item_ended,
@@ -67,6 +69,8 @@ const APP_ERROR_MESSAGES: Record<AppErrorCode, () => string> = {
 	LAST_ORGANIZER: error_last_organizer,
 	EVENT_INCOMPLETE: admin_error_event_incomplete,
 	EVENT_NOT_DRAFT: admin_error_event_not_draft,
+	EVENT_CANCELLED: event_cancelled_closed,
+	EVENT_ALREADY_CANCELLED: admin_error_event_already_cancelled,
 	UNAUTHORIZED: events_register_login_required,
 	FORBIDDEN: admin_error_forbidden,
 	NOT_FOUND: admin_error_not_found,
