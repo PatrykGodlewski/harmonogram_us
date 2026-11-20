@@ -1,3 +1,4 @@
+import { listManagedEventIds } from "@repo/db/queries/event-organizers";
 import { getEventRegistrants } from "@repo/db/queries/event-registrations";
 import {
 	getEventById,
@@ -13,6 +14,8 @@ import {
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { adminMiddleware } from "../auth/admin-middleware";
+import { assertCanManageEvent } from "../auth/event-access";
+import { panelQueryFn } from "../auth/panel-middleware";
 import { appError } from "../errors";
 import { adminEventIdSchema, adminEventsQuerySchema } from "./schemas";
 
@@ -30,9 +33,15 @@ const adminQueryFn = createServerFn({ method: "GET" }).middleware([
 	adminMiddleware,
 ]);
 
-export const fetchAdminEventsServer = adminQueryFn
+export const fetchAdminEventsServer = panelQueryFn
 	.inputValidator((input: unknown) => adminEventsQuerySchema.parse(input))
-	.handler(async ({ data }) => getEvents({ sortOrder: data.sortOrder }));
+	.handler(async ({ data, context }) => {
+		const managed = await listManagedEventIds(context.user.id);
+		return getEvents({
+			sortOrder: data.sortOrder,
+			...(managed === "all" ? {} : { ids: managed }),
+		});
+	});
 
 export const adminEventsQueryOptions = (sortOrder: "asc" | "desc" = "desc") =>
 	queryOptions({
@@ -67,7 +76,8 @@ export const adminEventFacultiesQueryOptions = queryOptions({
 	queryFn: () => fetchAdminEventFacultiesServer(),
 });
 
-export const fetchAdminEventFilterOptionsServer = adminQueryFn.handler(
+/** Lookup options for the event form: every panel user needs them. */
+export const fetchAdminEventFilterOptionsServer = panelQueryFn.handler(
 	async () => getEventFilterOptions(),
 );
 
@@ -77,9 +87,10 @@ export const adminEventFilterOptionsQueryOptions = queryOptions({
 	staleTime: 60_000,
 });
 
-export const fetchAdminEventDetailsServer = adminQueryFn
+export const fetchAdminEventDetailsServer = panelQueryFn
 	.inputValidator((input: unknown) => adminEventIdSchema.parse(input))
-	.handler(async ({ data }) => {
+	.handler(async ({ data, context }) => {
+		await assertCanManageEvent(context.user, data.eventId);
 		const event = await getEventById(data.eventId);
 		if (!event) {
 			throw appError("NOT_FOUND");
@@ -93,9 +104,12 @@ export const adminEventDetailsQueryOptions = (eventId: string) =>
 		queryFn: () => fetchAdminEventDetailsServer({ data: { eventId } }),
 	});
 
-export const fetchAdminEventRegistrantsServer = adminQueryFn
+export const fetchAdminEventRegistrantsServer = panelQueryFn
 	.inputValidator((input: unknown) => adminEventIdSchema.parse(input))
-	.handler(async ({ data }) => getEventRegistrants(data.eventId));
+	.handler(async ({ data, context }) => {
+		await assertCanManageEvent(context.user, data.eventId);
+		return getEventRegistrants(data.eventId);
+	});
 
 export const adminEventRegistrantsQueryOptions = (eventId: string) =>
 	queryOptions({
@@ -103,9 +117,12 @@ export const adminEventRegistrantsQueryOptions = (eventId: string) =>
 		queryFn: () => fetchAdminEventRegistrantsServer({ data: { eventId } }),
 	});
 
-export const fetchAdminEventGroupsServer = adminQueryFn
+export const fetchAdminEventGroupsServer = panelQueryFn
 	.inputValidator((input: unknown) => adminEventIdSchema.parse(input))
-	.handler(async ({ data }) => listGroupsForEvent(data.eventId));
+	.handler(async ({ data, context }) => {
+		await assertCanManageEvent(context.user, data.eventId);
+		return listGroupsForEvent(data.eventId);
+	});
 
 export const adminEventGroupsQueryOptions = (eventId: string) =>
 	queryOptions({

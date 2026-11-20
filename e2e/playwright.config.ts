@@ -24,7 +24,7 @@ export default defineConfig({
 		},
 		{
 			name: "telefon",
-			grep: /@uczestnik/,
+			grep: /@uczestnik|@organizator/,
 			use: {
 				...devices["Desktop Chrome"],
 				viewport: { width: 360, height: 800 },

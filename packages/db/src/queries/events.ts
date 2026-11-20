@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, ilike, max } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, inArray, max, sql } from "drizzle-orm";
 import { db } from "../client";
 import { agendaItems } from "../schema/agenda";
 import {
@@ -23,6 +23,8 @@ import {
 import { lockEvent } from "./locks";
 
 export type EventFilters = {
+	/** Only these events (the panel list of an organizer). */
+	ids?: string[];
 	search?: string;
 	sortOrder?: "asc" | "desc";
 	locationFilter?: string;
@@ -121,6 +123,12 @@ async function queryEvents(
 
 	if (eventId) {
 		conditions.push(eq(events.id, eventId));
+	}
+
+	if (filters?.ids) {
+		conditions.push(
+			filters.ids.length > 0 ? inArray(events.id, filters.ids) : sql`false`,
+		);
 	}
 
 	if (filters?.search) {

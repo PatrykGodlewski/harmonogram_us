@@ -4,13 +4,18 @@ import {
 	adminEventGroupsQueryOptions,
 	adminEventRegistrantsQueryOptions,
 } from "@repo/api/admin/queries";
-import { admin_error_generic } from "@repo/i18n/paraglide/messages";
+import {
+	admin_error_generic,
+	admin_event_forbidden,
+} from "@repo/i18n/paraglide/messages";
+import { getAppErrorCode } from "@repo/ui/app-errors";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { AgendaEditor } from "~/components/admin-event-detail/agenda-editor";
 import { EventSummaryCard } from "~/components/admin-event-detail/event-summary-card";
 import { GroupsList } from "~/components/admin-event-detail/groups-list";
+import { OrganizersCard } from "~/components/admin-event-detail/organizers-card";
 import { RegistrantsList } from "~/components/admin-event-detail/registrants-list";
 import { formatMutationError } from "~/lib/format-mutation-error";
 
@@ -50,6 +55,11 @@ function AdminEventDetailPage() {
 			queryClient.invalidateQueries({ queryKey: ["admin", "events"] }),
 		]);
 
+	if (error && getAppErrorCode(error) === "FORBIDDEN") {
+		return (
+			<p className="p-4 text-muted-foreground">{admin_event_forbidden()}</p>
+		);
+	}
 	if (error) {
 		return (
 			<p className="p-4 text-muted-foreground">
@@ -76,6 +86,7 @@ function AdminEventDetailPage() {
 				/>
 			</div>
 			<div className="flex flex-col gap-8">
+				<OrganizersCard eventId={event.id} />
 				<GroupsList groups={groups} />
 				<RegistrantsList registrants={registrants} agenda={event.agenda} />
 			</div>

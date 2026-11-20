@@ -77,7 +77,12 @@ function parseDateTimeLocal(value: string) {
 	return fromEventWallTime(date, time);
 }
 
-export function AdminEventsPage() {
+export function AdminEventsPage({
+	canCreateEvents,
+}: {
+	/** Organizers and admins add events; co-organizers only edit theirs. */
+	canCreateEvents: boolean;
+}) {
 	const queryClient = useQueryClient();
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [editingRow, setEditingRow] = useState<EventWithRelations | null>(null);
@@ -221,7 +226,7 @@ export function AdminEventsPage() {
 				isLoading={isLoading}
 				rows={rows}
 				rowKey={(row) => row.id}
-				onAdd={openCreateDialog}
+				onAdd={canCreateEvents ? openCreateDialog : undefined}
 				onEdit={openEditDialog}
 				onDelete={handleDelete}
 				columns={[

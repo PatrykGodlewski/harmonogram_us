@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as ApiMetricsRouteImport } from './routes/api/metrics'
+import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 import { Route as AuthenticatedEventTypesRouteImport } from './routes/_authenticated/event-types'
 import { Route as AuthenticatedEventLocationsRouteImport } from './routes/_authenticated/event-locations'
 import { Route as AuthenticatedEventFacultiesRouteImport } from './routes/_authenticated/event-faculties'
@@ -44,6 +45,11 @@ const ApiMetricsRoute = ApiMetricsRouteImport.update({
   id: '/api/metrics',
   path: '/api/metrics',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedEventTypesRoute = AuthenticatedEventTypesRouteImport.update({
   id: '/event-types',
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/event-faculties': typeof AuthenticatedEventFacultiesRoute
   '/event-locations': typeof AuthenticatedEventLocationsRoute
   '/event-types': typeof AuthenticatedEventTypesRoute
+  '/users': typeof AuthenticatedUsersRoute
   '/api/metrics': typeof ApiMetricsRoute
   '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -98,6 +105,7 @@ export interface FileRoutesByTo {
   '/event-faculties': typeof AuthenticatedEventFacultiesRoute
   '/event-locations': typeof AuthenticatedEventLocationsRoute
   '/event-types': typeof AuthenticatedEventTypesRoute
+  '/users': typeof AuthenticatedUsersRoute
   '/api/metrics': typeof ApiMetricsRoute
   '/': typeof AuthenticatedIndexRoute
   '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/_authenticated/event-faculties': typeof AuthenticatedEventFacultiesRoute
   '/_authenticated/event-locations': typeof AuthenticatedEventLocationsRoute
   '/_authenticated/event-types': typeof AuthenticatedEventTypesRoute
+  '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/api/metrics': typeof ApiMetricsRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/events/$eventId': typeof AuthenticatedEventsEventIdRoute
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/event-faculties'
     | '/event-locations'
     | '/event-types'
+    | '/users'
     | '/api/metrics'
     | '/events/$eventId'
     | '/api/auth/$'
@@ -138,6 +148,7 @@ export interface FileRouteTypes {
     | '/event-faculties'
     | '/event-locations'
     | '/event-types'
+    | '/users'
     | '/api/metrics'
     | '/'
     | '/events/$eventId'
@@ -151,6 +162,7 @@ export interface FileRouteTypes {
     | '/_authenticated/event-faculties'
     | '/_authenticated/event-locations'
     | '/_authenticated/event-types'
+    | '/_authenticated/users'
     | '/api/metrics'
     | '/_authenticated/'
     | '/_authenticated/events/$eventId'
@@ -203,6 +215,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMetricsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/users': {
+      id: '/_authenticated/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof AuthenticatedUsersRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/event-types': {
       id: '/_authenticated/event-types'
       path: '/event-types'
@@ -252,6 +271,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedEventFacultiesRoute: typeof AuthenticatedEventFacultiesRoute
   AuthenticatedEventLocationsRoute: typeof AuthenticatedEventLocationsRoute
   AuthenticatedEventTypesRoute: typeof AuthenticatedEventTypesRoute
+  AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedEventsEventIdRoute: typeof AuthenticatedEventsEventIdRoute
   AuthenticatedEventsIndexRoute: typeof AuthenticatedEventsIndexRoute
@@ -261,6 +281,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedEventFacultiesRoute: AuthenticatedEventFacultiesRoute,
   AuthenticatedEventLocationsRoute: AuthenticatedEventLocationsRoute,
   AuthenticatedEventTypesRoute: AuthenticatedEventTypesRoute,
+  AuthenticatedUsersRoute: AuthenticatedUsersRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedEventsEventIdRoute: AuthenticatedEventsEventIdRoute,
   AuthenticatedEventsIndexRoute: AuthenticatedEventsIndexRoute,

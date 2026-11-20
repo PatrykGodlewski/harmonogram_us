@@ -52,7 +52,7 @@ test("[F3] pełny cykl: admin tworzy, uczestnik się zapisuje, wydarzenie się k
 	// Given an admin and a participant
 	const adminEmail = uniqueEmail(testInfo);
 	const password = randomBytes(18).toString("base64url");
-	await createTestUser(adminEmail, { admin: true, password });
+	await createTestUser(adminEmail, { role: "admin", password });
 	const participantEmail = `uczestnik-${adminEmail}`;
 	const participant = await createTestUser(participantEmail);
 	// (the fixture also makes sure the "Seminarium" type exists)

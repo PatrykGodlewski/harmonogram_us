@@ -4,7 +4,7 @@ import { createAgendaItem } from "@repo/db/queries/agenda-items";
 import { createEvent } from "@repo/db/queries/events";
 import { authUsers } from "@repo/db/schema/better-auth";
 import { eventFaculties, eventTypes } from "@repo/db/schema/event-lookups";
-import { ensureAccount } from "@repo/db/seed/accounts";
+import { type AccountRole, ensureAccount } from "@repo/db/seed/accounts";
 
 /** A unique address per test, so tests never share mailboxes or accounts. */
 export function uniqueEmail(testInfo: TestInfo): string {
@@ -18,12 +18,12 @@ export function uniqueEmail(testInfo: TestInfo): string {
 
 export async function createTestUser(
 	email: string,
-	opts?: { admin?: boolean; password?: string },
+	opts?: { role?: AccountRole; password?: string },
 ): Promise<{ id: string }> {
 	const { id } = await ensureAccount({
 		email,
 		name: "Test User",
-		role: opts?.admin ? "admin" : "user",
+		role: opts?.role ?? "user",
 		password: opts?.password,
 	});
 	return { id };

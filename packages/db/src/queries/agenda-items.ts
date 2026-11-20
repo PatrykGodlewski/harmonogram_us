@@ -159,3 +159,14 @@ export async function deleteAgendaItem(
 		.returning({ id: agendaItems.id });
 	return deleted ?? null;
 }
+
+/** The event an agenda item belongs to, or null when the item doesn't exist. */
+export async function getAgendaItemEventId(
+	itemId: string,
+): Promise<string | null> {
+	const [row] = await db
+		.select({ eventId: agendaItems.eventId })
+		.from(agendaItems)
+		.where(eq(agendaItems.id, itemId));
+	return row?.eventId ?? null;
+}

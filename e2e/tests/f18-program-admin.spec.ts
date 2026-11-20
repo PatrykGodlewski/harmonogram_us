@@ -10,7 +10,7 @@ test("[F18] admin widzi program w widoku kalendarza", async ({
 	// Given an admin and an event with an opening and two parallel workshops
 	const email = uniqueEmail(testInfo);
 	const password = randomBytes(18).toString("base64url");
-	await createTestUser(email, { admin: true, password });
+	await createTestUser(email, { role: "admin", password });
 	const event = await createTestEvent({
 		agenda: [
 			{ title: "Otwarcie", startHour: 0, durationMinutes: 60 },

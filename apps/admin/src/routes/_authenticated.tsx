@@ -18,13 +18,13 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthenticatedLayout() {
 	const { user } = Route.useRouteContext();
 
-	// Server functions enforce the admin role too; this only avoids showing a broken panel.
-	if (!user?.isAdmin) {
+	// Server functions check access too; this only avoids showing a broken panel.
+	if (!user?.hasPanelAccess) {
 		return <NoAccess />;
 	}
 
 	return (
-		<AdminLayout>
+		<AdminLayout isAdmin={user.isAdmin}>
 			<Outlet />
 		</AdminLayout>
 	);

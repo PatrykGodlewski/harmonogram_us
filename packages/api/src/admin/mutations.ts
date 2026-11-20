@@ -17,6 +17,12 @@ import {
 } from "@repo/db/queries/lookups";
 import { createServerFn } from "@tanstack/react-start";
 import { adminMiddleware } from "../auth/admin-middleware";
+import {
+	assertCanCreateEvents,
+	assertCanManageAgendaItem,
+	assertCanManageEvent,
+} from "../auth/event-access";
+import { panelActionFn } from "../auth/panel-middleware";
 import { appError, withDomainErrors } from "../errors";
 import { registrationEmailHooks } from "../notifications/registration-hooks";
 import {
@@ -33,13 +39,17 @@ const adminActionFn = createServerFn({ method: "POST" }).middleware([
 	adminMiddleware,
 ]);
 
-export const createAdminEventServer = adminActionFn
+export const createAdminEventServer = panelActionFn
 	.inputValidator((input: unknown) => createEventSchema.parse(input))
-	.handler(async ({ data }) => createEvent({ ...data, organizerId: null }));
+	.handler(async ({ data, context }) => {
+		await assertCanCreateEvents(context.user);
+		return createEvent({ ...data, organizerId: context.user.id });
+	});
 
-export const updateAdminEventServer = adminActionFn
+export const updateAdminEventServer = panelActionFn
 	.inputValidator((input: unknown) => updateEventSchema.parse(input))
-	.handler(async ({ data }) => {
+	.handler(async ({ data, context }) => {
+		await assertCanManageEvent(context.user, data.id);
 		const event = await withDomainErrors(() =>
 			updateEvent(data, registrationEmailHooks),
 		);
@@ -49,9 +59,10 @@ export const updateAdminEventServer = adminActionFn
 		return event;
 	});
 
-export const deleteAdminEventServer = adminActionFn
+export const deleteAdminEventServer = panelActionFn
 	.inputValidator((input: unknown) => deleteByIdSchema.parse(input))
-	.handler(async ({ data }) => {
+	.handler(async ({ data, context }) => {
+		await assertCanManageEvent(context.user, data.id);
 		const event = await deleteEvent(data.id);
 		if (!event) {
 			throw appError("NOT_FOUND");
@@ -131,13 +142,17 @@ export const deleteAdminEventFacultyServer = adminActionFn
 		return row;
 	});
 
-export const createAdminAgendaItemServer = adminActionFn
+export const createAdminAgendaItemServer = panelActionFn
 	.inputValidator((input: unknown) => createAgendaItemSchema.parse(input))
-	.handler(async ({ data }) => withDomainErrors(() => createAgendaItem(data)));
+	.handler(async ({ data, context }) => {
+		await assertCanManageEvent(context.user, data.eventId);
+		return withDomainErrors(() => createAgendaItem(data));
+	});
 
-export const updateAdminAgendaItemServer = adminActionFn
+export const updateAdminAgendaItemServer = panelActionFn
 	.inputValidator((input: unknown) => updateAgendaItemSchema.parse(input))
-	.handler(async ({ data }) => {
+	.handler(async ({ data, context }) => {
+		await assertCanManageAgendaItem(context.user, data.id);
 		const { id, ...values } = data;
 		const item = await withDomainErrors(() => updateAgendaItem(id, values));
 		if (!item) {
@@ -146,9 +161,10 @@ export const updateAdminAgendaItemServer = adminActionFn
 		return item;
 	});
 
-export const deleteAdminAgendaItemServer = adminActionFn
+export const deleteAdminAgendaItemServer = panelActionFn
 	.inputValidator((input: unknown) => deleteByIdSchema.parse(input))
-	.handler(async ({ data }) => {
+	.handler(async ({ data, context }) => {
+		await assertCanManageAgendaItem(context.user, data.id);
 		const item = await deleteAgendaItem(data.id);
 		if (!item) {
 			throw appError("NOT_FOUND");
