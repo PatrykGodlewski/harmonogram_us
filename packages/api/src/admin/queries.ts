@@ -36,7 +36,7 @@ const adminQueryFn = createServerFn({ method: "GET" }).middleware([
 export const fetchAdminEventsServer = panelQueryFn
 	.inputValidator((input: unknown) => adminEventsQuerySchema.parse(input))
 	.handler(async ({ data, context }) => {
-		const managed = await listManagedEventIds(context.user.id);
+		const managed = await listManagedEventIds(context.user);
 		return getEvents({
 			audience: "manage",
 			sortOrder: data.sortOrder,

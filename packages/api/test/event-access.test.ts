@@ -5,9 +5,11 @@ import { db } from "@repo/db/client";
 import { createAgendaItem } from "@repo/db/queries/agenda-items";
 import { eventOrganizers } from "@repo/db/schema/event-organizers";
 import { authUsers } from "@repo/db/schema/better-auth";
+import { events } from "@repo/db/schema/events";
 import { createEvent, createUser, resetDb } from "../../db/test/helpers";
 import {
 	assertCanCreateEvents,
+	assertCanDeleteEvent,
 	assertCanManageAgendaItem,
 	assertCanManageEvent,
 } from "../src/auth/event-access";
@@ -66,6 +68,20 @@ describe("event access", () => {
 		);
 	});
 
+	it("organizers delete only drafts; published events go through cancellation", async () => {
+		const owner = await user("organizer");
+		const admin = await user("admin");
+		const eventId = await createEvent();
+		await db.insert(eventOrganizers).values({ eventId, userId: owner.id });
+
+		await expect(assertCanDeleteEvent(owner, eventId)).rejects.toThrow(
+			"FORBIDDEN",
+		);
+		await expect(assertCanDeleteEvent(admin, eventId)).resolves.toBeUndefined();
+		await db.update(events).set({ status: "draft" }).where(eq(events.id, eventId));
+		await expect(assertCanDeleteEvent(owner, eventId)).resolves.toBeUndefined();
+	});
+
 	it("only organizers and admins create events", async () => {
 		await expect(
 			assertCanCreateEvents(await user("organizer")),
@@ -89,7 +105,7 @@ describe("panel server functions check event access", () => {
 	/** Panel-wide reads that are not about one event. */
 	const panelWide = ["fetchAdminEventFilterOptionsServer"];
 	const checks =
-		/assertCanManageEvent|assertCanManageAgendaItem|assertCanCreateEvents|listManagedEventIds/;
+		/assertCanManageEvent|assertCanManageAgendaItem|assertCanCreateEvents|assertCanDeleteEvent|listManagedEventIds/;
 
 	for (const file of files) {
 		const source = readFileSync(new URL(file, import.meta.url), "utf8");

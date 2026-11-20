@@ -52,6 +52,10 @@ describe("proxyShape", () => {
 		);
 		expect(calls[0]?.searchParams.get("table")).toBe("events");
 		expect(calls[0]?.searchParams.get("where")).toBe("status = 'cancelled'");
+		// Subset filters may only touch the shape's own columns.
+		expect(calls[0]?.searchParams.get("queryable_columns")).toBe(
+			shapes.cancelledEvents.columns.join(","),
+		);
 	});
 
 	it("omits the secret when none is configured", async () => {

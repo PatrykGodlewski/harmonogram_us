@@ -3,6 +3,7 @@ import {
 	canCreateEvents,
 	canManageEvent,
 } from "@repo/db/queries/event-organizers";
+import { getEventStatus } from "@repo/db/queries/events";
 import { appError } from "../errors";
 import type { AuthenticatedUser } from "./user";
 
@@ -11,7 +12,7 @@ export async function assertCanManageEvent(
 	user: AuthenticatedUser,
 	eventId: string,
 ): Promise<void> {
-	if (!(await canManageEvent(user.id, eventId))) {
+	if (!(await canManageEvent(user, eventId))) {
 		throw appError("FORBIDDEN");
 	}
 }
@@ -32,7 +33,24 @@ export async function assertCanManageAgendaItem(
 export async function assertCanCreateEvents(
 	user: AuthenticatedUser,
 ): Promise<void> {
-	if (!(await canCreateEvents(user.id))) {
+	if (!canCreateEvents(user.role)) {
+		throw appError("FORBIDDEN");
+	}
+}
+
+/**
+ * Admins delete any event; organizers only drafts. A published event goes
+ * through cancellation, so registrants are told and its history stays.
+ */
+export async function assertCanDeleteEvent(
+	user: AuthenticatedUser,
+	eventId: string,
+): Promise<void> {
+	await assertCanManageEvent(user, eventId);
+	if (user.isAdmin) {
+		return;
+	}
+	if ((await getEventStatus(eventId)) !== "draft") {
 		throw appError("FORBIDDEN");
 	}
 }

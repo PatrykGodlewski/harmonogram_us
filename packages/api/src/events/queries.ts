@@ -1,7 +1,8 @@
-import { getMyRegistrations } from "@repo/db/queries/event-registrations";
+import { isRegisteredForEvent } from "@repo/db/queries/event-registrations";
 import {
 	getEventById,
 	getEventFilterOptions,
+	getEventOnlineUrl,
 	getEventPage,
 } from "@repo/db/queries/events";
 import type { QueryClient } from "@tanstack/react-query";
@@ -58,9 +59,14 @@ export const fetchEventDetailsServer = createServerFn({ method: "GET" })
 		if (!event) {
 			throw appError("EVENT_NOT_FOUND");
 		}
-		// The meeting link is for registered people only.
-		if (event.onlineUrl && !(await isRegisteredFor(event.id))) {
-			return { ...event, onlineUrl: null };
+		// The public read never carries the meeting link; registered people get it here.
+		const session = await getCurrentSession();
+		if (
+			event.attendanceMode !== "onsite" &&
+			session?.user &&
+			(await isRegisteredForEvent(event.id, session.user.id))
+		) {
+			return { ...event, onlineUrl: await getEventOnlineUrl(event.id) };
 		}
 		return event;
 	});
@@ -71,14 +77,3 @@ export const eventDetailsQueryOptions = (eventId: string) =>
 		queryFn: () => fetchEventDetailsServer({ data: { eventId } }),
 		staleTime: 30_000,
 	});
-
-async function isRegisteredFor(eventId: string): Promise<boolean> {
-	const session = await getCurrentSession();
-	if (!session?.user) {
-		return false;
-	}
-	const mine = await getMyRegistrations(session.user.id);
-	return mine.events.some(
-		(entry) => entry.eventId === eventId && entry.state === "registered",
-	);
-}

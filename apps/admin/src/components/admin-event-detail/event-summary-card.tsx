@@ -7,13 +7,12 @@ import {
 	admin_event_publish,
 	admin_event_published,
 	admin_event_status_draft,
-	attendance_mode_hybrid,
-	attendance_mode_online,
 	event_status_cancelled,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
+import { AttendanceModeBadge } from "@repo/ui/composed/events/attendance-mode-badge";
 import { formatEventDateTime } from "@repo/ui/time";
 import { useMutation } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -60,12 +59,7 @@ export function EventSummaryCard({ event, onChanged }: EventSummaryCardProps) {
 				{event.status === "cancelled" ? (
 					<Badge variant="destructive">{event_status_cancelled()}</Badge>
 				) : null}
-				{event.attendanceMode === "online" ? (
-					<Badge variant="outline">{attendance_mode_online()}</Badge>
-				) : null}
-				{event.attendanceMode === "hybrid" ? (
-					<Badge variant="outline">{attendance_mode_hybrid()}</Badge>
-				) : null}
+				<AttendanceModeBadge mode={event.attendanceMode} />
 				<Badge variant="secondary">{event.typeLabel}</Badge>
 				{event.facultyLabel ? (
 					<Badge variant="outline">{event.facultyLabel}</Badge>

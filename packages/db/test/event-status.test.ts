@@ -1,10 +1,14 @@
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "../src/client";
-import { registerForEvent } from "../src/queries/event-registrations";
+import {
+	isRegisteredForEvent,
+	registerForEvent,
+} from "../src/queries/event-registrations";
 import {
 	createEvent,
 	getEventById,
+	getEventOnlineUrl,
 	getEventPage,
 	publishEvent,
 } from "../src/queries/events";
@@ -109,5 +113,31 @@ describe("event status", () => {
 		await expect(publishEvent(id)).rejects.toMatchObject({
 			code: "EVENT_NOT_DRAFT",
 		});
+	});
+
+	it("the public list and page never carry the meeting link; it is read on its own", async () => {
+		const id = await draft({
+			status: "published",
+			attendanceMode: "online",
+			onlineUrl: "https://meet.example.test/secret",
+		});
+		const page = await getEventPage({ audience: "public" }, 20);
+		expect(page.events.find((e) => e.id === id)?.onlineUrl).toBeNull();
+		expect((await getEventById(id, "public"))?.onlineUrl).toBeNull();
+		expect((await getEventById(id, "manage"))?.onlineUrl).toBe(
+			"https://meet.example.test/secret",
+		);
+		expect(await getEventOnlineUrl(id)).toBe("https://meet.example.test/secret");
+	});
+
+	it("isRegisteredForEvent is true only for a registered (not waitlisted) person", async () => {
+		const id = await draft({ status: "published", maxSeats: 1 });
+		const first = await createUser();
+		const second = await createUser();
+		await registerForEvent(id, first, "pl");
+		await registerForEvent(id, second, "pl");
+		expect(await isRegisteredForEvent(id, first)).toBe(true);
+		expect(await isRegisteredForEvent(id, second)).toBe(false);
+		expect(await isRegisteredForEvent(id, await createUser())).toBe(false);
 	});
 });

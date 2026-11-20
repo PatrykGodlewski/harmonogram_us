@@ -30,7 +30,7 @@ export async function getCurrentSession() {
 export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
 	const session = await getCurrentSession();
 	if (!session?.user) return null;
-	const [credentialAccount, role, panelAccess] = await Promise.all([
+	const [credentialAccount, storedRole] = await Promise.all([
 		db.query.authAccounts.findFirst({
 			where: and(
 				eq(authAccounts.userId, session.user.id),
@@ -42,15 +42,16 @@ export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
 			},
 		}),
 		getUserRole(session.user.id),
-		hasPanelAccess(session.user.id),
 	]);
+	const role = storedRole ?? "user";
+	const panelAccess = await hasPanelAccess({ id: session.user.id, role });
 
 	return {
 		id: session.user.id,
 		email: session.user.email,
 		hasPassword: Boolean(credentialAccount),
 		isAdmin: role === "admin",
-		role: role ?? "user",
+		role,
 		hasPanelAccess: panelAccess,
 	};
 }

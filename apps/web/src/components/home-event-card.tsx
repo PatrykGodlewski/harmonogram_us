@@ -11,6 +11,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@repo/ui/components/card";
+import { AttendanceModeBadge } from "@repo/ui/composed/events/attendance-mode-badge";
 import { Link } from "@tanstack/react-router";
 import { EventRegistrationButton } from "~/components/event-registration-button";
 import { formatEventDateForLocale } from "~/lib/events/format-event-date";
@@ -19,7 +20,6 @@ import type {
 	HomeEventListEvent,
 } from "~/lib/events/types";
 import type { EventRegistrationActions } from "~/lib/registration/use-event-list-registrations";
-import { AttendanceModeBadge } from "./attendance-mode-badge";
 
 type HomeEventCardProps = {
 	event: HomeEventListEvent;

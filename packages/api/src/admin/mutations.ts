@@ -27,6 +27,7 @@ import { z } from "zod";
 import { adminMiddleware } from "../auth/admin-middleware";
 import {
 	assertCanCreateEvents,
+	assertCanDeleteEvent,
 	assertCanManageAgendaItem,
 	assertCanManageEvent,
 } from "../auth/event-access";
@@ -38,6 +39,7 @@ import {
 	createEventSchema,
 	createLookupSchema,
 	deleteByIdSchema,
+	eventIdActionSchema,
 	updateAgendaItemSchema,
 	updateEventSchema,
 	updateLookupSchema,
@@ -68,9 +70,9 @@ export const updateAdminEventServer = panelActionFn
 	});
 
 export const deleteAdminEventServer = panelActionFn
-	.inputValidator((input: unknown) => deleteByIdSchema.parse(input))
+	.inputValidator((input: unknown) => eventIdActionSchema.parse(input))
 	.handler(async ({ data, context }) => {
-		await assertCanManageEvent(context.user, data.id);
+		await assertCanDeleteEvent(context.user, data.id);
 		const event = await deleteEvent(data.id);
 		if (!event) {
 			throw appError("NOT_FOUND");
@@ -79,14 +81,14 @@ export const deleteAdminEventServer = panelActionFn
 	});
 
 export const publishAdminEventServer = panelActionFn
-	.inputValidator((input: unknown) => deleteByIdSchema.parse(input))
+	.inputValidator((input: unknown) => eventIdActionSchema.parse(input))
 	.handler(async ({ data, context }) => {
 		await assertCanManageEvent(context.user, data.id);
 		return withDomainErrors(() => publishEvent(data.id));
 	});
 
 export const cancelAdminEventServer = panelActionFn
-	.inputValidator((input: unknown) => deleteByIdSchema.parse(input))
+	.inputValidator((input: unknown) => eventIdActionSchema.parse(input))
 	.handler(async ({ data, context }) => {
 		await assertCanManageEvent(context.user, data.id);
 		return withDomainErrors(() => cancelEvent(data.id, registrationEmailHooks));

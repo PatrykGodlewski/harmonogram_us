@@ -4,7 +4,7 @@ import { authUsers } from "../schema/better-auth";
 import { eventOrganizers } from "../schema/event-organizers";
 import { DomainError, mapConstraintError } from "./domain-errors";
 import { lockEvent } from "./locks";
-import { getUserRole } from "./roles";
+import type { UserRole } from "./roles";
 
 export type EventOrganizer = {
 	userId: string;
@@ -13,59 +13,59 @@ export type EventOrganizer = {
 	addedAt: Date;
 };
 
+/** Who is asking: callers already know the role (it is on the session user). */
+export type PanelUser = { id: string; role: UserRole };
+
 /** Organizers and admins may create events. */
-export async function canCreateEvents(userId: string): Promise<boolean> {
-	const role = await getUserRole(userId);
+export function canCreateEvents(role: UserRole): boolean {
 	return role === "organizer" || role === "admin";
 }
 
-async function isOrganizerOf(userId: string, eventId: string) {
+/** Admins manage every event; everyone else only the events they organize. */
+export async function canManageEvent(
+	user: PanelUser,
+	eventId: string,
+): Promise<boolean> {
+	if (user.role === "admin") {
+		return true;
+	}
 	const [row] = await db
 		.select({ userId: eventOrganizers.userId })
 		.from(eventOrganizers)
 		.where(
 			and(
 				eq(eventOrganizers.eventId, eventId),
-				eq(eventOrganizers.userId, userId),
+				eq(eventOrganizers.userId, user.id),
 			),
-		);
+		)
+		.limit(1);
 	return Boolean(row);
 }
 
-/** Admins manage every event; everyone else only the events they organize. */
-export async function canManageEvent(
-	userId: string,
-	eventId: string,
-): Promise<boolean> {
-	if ((await getUserRole(userId)) === "admin") {
-		return true;
-	}
-	return isOrganizerOf(userId, eventId);
-}
-
 /** Whether the user may open the admin panel: can create events or organizes at least one. */
-export async function hasPanelAccess(userId: string): Promise<boolean> {
-	if (await canCreateEvents(userId)) {
+export async function hasPanelAccess(user: PanelUser): Promise<boolean> {
+	if (canCreateEvents(user.role)) {
 		return true;
 	}
 	const [row] = await db
-		.select({ n: count() })
+		.select({ userId: eventOrganizers.userId })
 		.from(eventOrganizers)
-		.where(eq(eventOrganizers.userId, userId));
-	return (row?.n ?? 0) > 0;
+		.where(eq(eventOrganizers.userId, user.id))
+		.limit(1);
+	return Boolean(row);
 }
 
 /** The ids of the events the user manages, or "all" for admins. */
 export async function listManagedEventIds(
-	userId: string,
+	user: PanelUser,
 ): Promise<string[] | "all"> {
-	if ((await getUserRole(userId)) === "admin") {
+	if (user.role === "admin") {
 		return "all";
 	}
 	const rows = await db
 		.select({ eventId: eventOrganizers.eventId })
 		.from(eventOrganizers)
-		.where(eq(eventOrganizers.userId, userId));
+		.where(eq(eventOrganizers.userId, user.id));
 	return rows.map((row) => row.eventId);
 }
 

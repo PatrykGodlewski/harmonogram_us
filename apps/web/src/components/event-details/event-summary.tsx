@@ -14,6 +14,7 @@ import {
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
+import { AttendanceModeBadge } from "@repo/ui/composed/events/attendance-mode-badge";
 import { formatEventDateTime } from "@repo/ui/time";
 import { Link } from "@tanstack/react-router";
 import type {
@@ -21,7 +22,6 @@ import type {
 	EventDetailsRegistrations,
 } from "~/lib/event-details/types";
 import type { EventSeatCount } from "~/lib/events/types";
-import { AttendanceModeBadge } from "../attendance-mode-badge";
 import { LoginToRegisterButton } from "./login-to-register-button";
 import { UnregisterEventDialog } from "./unregister-event-dialog";
 

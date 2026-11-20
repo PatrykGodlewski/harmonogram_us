@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "../src/client";
 import { registerForEvent } from "../src/queries/event-registrations";
-import { cancelEvent } from "../src/queries/events";
+import { cancelEvent, updateEvent } from "../src/queries/events";
 import { registrationGroups } from "../src/schema/groups";
 import { events } from "../src/schema/events";
 import {
@@ -86,5 +86,19 @@ describe("cancelEvent", () => {
 				expect(changes).toHaveLength(1);
 			}
 		}
+	});
+
+	it("a cancelled event can't be edited and promotes nobody", async () => {
+		const eventId = await createEvent({ maxSeats: 1 });
+		await registerForEvent(eventId, await createUser(), "pl");
+		const waiting = await createUser();
+		await registerForEvent(eventId, waiting, "pl");
+		await cancelEvent(eventId);
+		const { changes, hooks } = collectChanges();
+		expect(
+			await rejectionCode(updateEvent({ id: eventId, maxSeats: 5 }, hooks)),
+		).toBe("EVENT_CANCELLED");
+		expect(changes).toHaveLength(0);
+		expect(await stateOf(eventId, waiting)).toBe("waitlisted");
 	});
 });

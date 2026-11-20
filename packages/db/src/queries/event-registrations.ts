@@ -129,6 +129,14 @@ export async function promoteFromWaitlist(
 	if (free <= 0 || (await hasEventEnded(tx, eventId))) {
 		return [];
 	}
+	const [event] = await tx
+		.select({ status: events.status })
+		.from(events)
+		.where(eq(events.id, eventId));
+	// Only a published event moves people up (never a cancelled one).
+	if (event?.status !== "published") {
+		return [];
+	}
 	const next = await tx
 		.select({ id: eventRegistrations.id })
 		.from(eventRegistrations)
@@ -530,4 +538,23 @@ export async function getEventRegistrants(
 		.orderBy(asc(eventRegistrations.createdAt));
 
 	return rows;
+}
+
+/** Whether the user holds a place (registered, not waitlisted) at the event. */
+export async function isRegisteredForEvent(
+	eventId: string,
+	userId: string,
+): Promise<boolean> {
+	const [row] = await db
+		.select({ id: eventRegistrations.id })
+		.from(eventRegistrations)
+		.where(
+			and(
+				eq(eventRegistrations.eventId, eventId),
+				eq(eventRegistrations.userId, userId),
+				eq(eventRegistrations.state, "registered"),
+			),
+		)
+		.limit(1);
+	return Boolean(row);
 }

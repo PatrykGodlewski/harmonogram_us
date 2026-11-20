@@ -193,7 +193,11 @@ async function queryEvents(
 			status: events.status,
 			publishedAt: events.publishedAt,
 			cancelledAt: events.cancelledAt,
-			onlineUrl: events.onlineUrl,
+			// The meeting link is for registered people only: never on the public site's reads.
+			onlineUrl:
+				filters.audience === "public"
+					? sql<string | null>`null`
+					: events.onlineUrl,
 			attendanceMode: events.attendanceMode,
 			createdAt: events.createdAt,
 			updatedAt: events.updatedAt,
@@ -289,7 +293,11 @@ export async function updateEvent(
 	const { id, ...values } = input;
 	try {
 		return await db.transaction(async (tx) => {
-			await lockEvent(tx, id);
+			const locked = await lockEvent(tx, id);
+			// A cancelled event is history: no edits, so no promotions or e-mails either.
+			if (locked?.status === "cancelled") {
+				throw new DomainError("EVENT_CANCELLED");
+			}
 			if (values.maxSeats !== undefined) {
 				const [largest] = await tx
 					.select({ maxSeats: max(agendaItems.maxSeats) })
@@ -452,4 +460,25 @@ export async function cancelEvent(
 		);
 		return { txid: await getCurrentTxId(tx) };
 	});
+}
+
+/** The meeting link of an event (show it only to registered people). */
+export async function getEventOnlineUrl(
+	eventId: string,
+): Promise<string | null> {
+	const [row] = await db
+		.select({ onlineUrl: events.onlineUrl })
+		.from(events)
+		.where(eq(events.id, eventId));
+	return row?.onlineUrl ?? null;
+}
+
+export async function getEventStatus(
+	eventId: string,
+): Promise<EventStatus | null> {
+	const [row] = await db
+		.select({ status: events.status })
+		.from(events)
+		.where(eq(events.id, eventId));
+	return row?.status ?? null;
 }

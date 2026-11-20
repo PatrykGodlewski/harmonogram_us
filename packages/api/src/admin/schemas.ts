@@ -25,6 +25,11 @@ export const deleteByIdSchema = z.object({
 	id: z.string().min(1),
 });
 
+/** An action on one event (publish, cancel, delete). */
+export const eventIdActionSchema = z.object({
+	id: z.string().min(1),
+});
+
 export const adminEventsQuerySchema = z.object({
 	sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });

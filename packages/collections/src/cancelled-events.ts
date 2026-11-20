@@ -7,7 +7,6 @@ import { shapes } from "./shapes";
 
 const CancelledEventSchema = z.object({
 	id: z.string(),
-	status: z.string(),
 	cancelled_at: z.string().nullable().optional(),
 });
 
@@ -26,8 +25,3 @@ export const cancelledEventsCollection = createCollection(
 		},
 	}),
 );
-
-export function ensureCancelledEventsSync() {
-	cancelledEventsCollection.startSyncImmediate();
-	return cancelledEventsCollection.preload();
-}

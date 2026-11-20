@@ -11,6 +11,7 @@ import {
 	removeEventOrganizer,
 } from "../src/queries/event-organizers";
 import { createEvent } from "../src/queries/events";
+import { getUserRole } from "../src/queries/roles";
 import { authUsers } from "../src/schema/better-auth";
 import { eventTypes } from "../src/schema/event-lookups";
 import { createUser, resetDb } from "./helpers";
@@ -19,6 +20,11 @@ beforeEach(resetDb);
 
 async function setRole(userId: string, role: string) {
 	await db.update(authUsers).set({ role }).where(eq(authUsers.id, userId));
+}
+
+/** The panel user as the session would carry it. */
+async function as(userId: string) {
+	return { id: userId, role: (await getUserRole(userId)) ?? "user" };
 }
 
 async function newEvent(organizerId: string | null) {
@@ -46,7 +52,7 @@ describe("event organizers", () => {
 		const creator = await createUser();
 		await setRole(creator, "organizer");
 		const eventId = await newEvent(creator);
-		expect(await canManageEvent(creator, eventId)).toBe(true);
+		expect(await canManageEvent(await as(creator), eventId)).toBe(true);
 		const organizers = await listEventOrganizers(eventId);
 		expect(organizers.map((o) => o.userId)).toEqual([creator]);
 	});
@@ -58,8 +64,8 @@ describe("event organizers", () => {
 		await setRole(other, "organizer");
 		await setRole(admin, "admin");
 		const eventId = await newEvent(creator);
-		expect(await canManageEvent(other, eventId)).toBe(false);
-		expect(await canManageEvent(admin, eventId)).toBe(true);
+		expect(await canManageEvent(await as(other), eventId)).toBe(false);
+		expect(await canManageEvent(await as(admin), eventId)).toBe(true);
 	});
 
 	it("adds an existing account by e-mail, case-insensitively", async () => {
@@ -71,7 +77,7 @@ describe("event organizers", () => {
 			userId: colleague,
 			email: "kolega@e2e.test",
 		});
-		expect(await canManageEvent(colleague, eventId)).toBe(true);
+		expect(await canManageEvent(await as(colleague), eventId)).toBe(true);
 		await rejects(
 			addEventOrganizer(eventId, "kolega@e2e.test"),
 			"ALREADY_ORGANIZER",
@@ -87,20 +93,20 @@ describe("event organizers", () => {
 		const plain = await createUser("plain@e2e.test");
 		const stranger = await createUser();
 		await setRole(organizer, "organizer");
-		expect(await canCreateEvents(organizer)).toBe(true);
-		expect(await canCreateEvents(plain)).toBe(false);
-		expect(await hasPanelAccess(organizer)).toBe(true);
+		expect(canCreateEvents((await as(organizer)).role)).toBe(true);
+		expect(canCreateEvents((await as(plain)).role)).toBe(false);
+		expect(await hasPanelAccess(await as(organizer))).toBe(true);
 		const eventId = await newEvent(organizer);
 		await addEventOrganizer(eventId, "plain@e2e.test");
-		expect(await hasPanelAccess(plain)).toBe(true);
-		expect(await hasPanelAccess(stranger)).toBe(false);
-		expect(await listManagedEventIds(plain)).toEqual([eventId]);
+		expect(await hasPanelAccess(await as(plain))).toBe(true);
+		expect(await hasPanelAccess(await as(stranger))).toBe(false);
+		expect(await listManagedEventIds(await as(plain))).toEqual([eventId]);
 	});
 
 	it("lists all events for an admin", async () => {
 		const admin = await createUser();
 		await setRole(admin, "admin");
-		expect(await listManagedEventIds(admin)).toBe("all");
+		expect(await listManagedEventIds(await as(admin))).toBe("all");
 	});
 
 	it("cannot remove the last organizer", async () => {
@@ -109,7 +115,7 @@ describe("event organizers", () => {
 		const eventId = await newEvent(creator);
 		await addEventOrganizer(eventId, "c@e2e.test");
 		await removeEventOrganizer(eventId, colleague);
-		expect(await canManageEvent(colleague, eventId)).toBe(false);
+		expect(await canManageEvent(await as(colleague), eventId)).toBe(false);
 		await rejects(removeEventOrganizer(eventId, creator), "LAST_ORGANIZER");
 	});
 

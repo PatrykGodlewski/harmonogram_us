@@ -30,6 +30,8 @@ export async function proxyShape(
 
 	upstream.searchParams.set("table", shape.table);
 	upstream.searchParams.set("columns", shape.columns.join(","));
+	// Subset filters (subset__where) may only use the shape's own columns.
+	upstream.searchParams.set("queryable_columns", shape.columns.join(","));
 	if ("where" in shape && shape.where) {
 		upstream.searchParams.set("where", shape.where);
 	}

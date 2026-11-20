@@ -33,7 +33,7 @@ export const shapes = {
 	cancelledEvents: {
 		path: "/api/electric/cancelled-events",
 		table: "events",
-		columns: ["id", "status", "cancelled_at"],
+		columns: ["id", "cancelled_at"],
 		where: "status = 'cancelled'",
 	},
 } as const satisfies Record<string, ShapeDefinition>;

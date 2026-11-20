@@ -1,18 +1,12 @@
-import {
-	cancelledEventsCollection,
-	ensureCancelledEventsSync,
-} from "@repo/collections/cancelled-events";
+import { cancelledEventsCollection } from "@repo/collections/cancelled-events";
 import { eq, useLiveQuery } from "@tanstack/react-db";
-import { useEffect } from "react";
 
 /** Whether the event is cancelled: from the server-rendered status, or live once it changes. */
 export function useEventCancelled(
 	eventId: string,
 	initialStatus: "draft" | "published" | "cancelled",
 ): boolean {
-	useEffect(() => {
-		void ensureCancelledEventsSync();
-	}, []);
+	// The collection starts syncing with its first subscriber (startSync: false).
 	const live = useLiveQuery(
 		(q) =>
 			q
