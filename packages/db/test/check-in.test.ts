@@ -90,4 +90,26 @@ describe("check-in", () => {
 			"NOT_REGISTERED",
 		);
 	});
+
+	it("the manual switch follows the scanner's rules and keeps the first time", async () => {
+		const eventId = await createEvent({ maxSeats: 1 });
+		const holder = await createUser();
+		const waiting = await createUser();
+		await registerForEvent(eventId, holder, "pl");
+		await registerForEvent(eventId, waiting, "pl");
+		const held = await ticketOf(eventId, holder);
+		await checkInByTicketCode(eventId, held.ticketCode);
+		const first = (await ticketOf(eventId, holder)).checkedInAt;
+		await setCheckedIn(eventId, held.id, true);
+		expect((await ticketOf(eventId, holder)).checkedInAt).toEqual(first);
+		expect(
+			await rejectionCode(
+				setCheckedIn(eventId, (await ticketOf(eventId, waiting)).id, true),
+			),
+		).toBe("TICKET_WAITLISTED");
+		await cancelEvent(eventId);
+		expect(await rejectionCode(setCheckedIn(eventId, held.id, false))).toBe(
+			"EVENT_CANCELLED",
+		);
+	});
 });

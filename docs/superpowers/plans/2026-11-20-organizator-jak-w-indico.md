@@ -60,17 +60,17 @@
 - `CreateEventInput` dostaje `organizerId: string | null`. `createEvent` w jednej transakcji wstawia wydarzenie i, gdy `organizerId` nie jest `null`, wiersz organizatora.
 - Nowe kody: `USER_NOT_FOUND`, `ALREADY_ORGANIZER`, `LAST_ORGANIZER`.
 
-- [ ] **Krok 1: testy Vitest:**
+- [x] **Krok 1: testy Vitest:**
   - `createEvent({ ..., organizerId })` czyni twórcę organizatorem, a `canManageEvent(twórca, id)` to `true`;
   - obcy organizator: `canManageEvent` to `false`, a admin bez wiersza: `true`;
   - `addEventOrganizer(id, "  Kolega@E2E.test ")` dodaje istniejące konto `kolega@e2e.test`, drugi raz daje `ALREADY_ORGANIZER`, a nieznany e-mail `USER_NOT_FOUND`;
   - `hasPanelAccess` jest `true` dla zwykłego użytkownika dodanego jako współorganizator i `false` dla zwykłego użytkownika bez wydarzeń;
   - `removeEventOrganizer` ostatniej osoby daje `LAST_ORGANIZER`;
   - migracja odrzuca `role = 'superuser'`.
-- [ ] **Krok 2:** `pnpm --filter @repo/db exec vitest run test/event-organizers.test.ts`. Oczekiwane: FAIL, brak modułu.
-- [ ] **Krok 3:** schemat, `pnpm db:generate`, dopisanie `CHECK` do migracji, zapytania i poprawione wywołania `createEvent` (seed: `organizerId: null`, fikstura e2e `createTestEvent` przyjmuje opcjonalne `organizerId`).
-- [ ] **Krok 4:** `pnpm --filter @repo/db test`. Oczekiwane: PASS.
-- [ ] **Krok 5:** commit `feat(db): organizer role and event organizers`.
+- [x] **Krok 2:** `pnpm --filter @repo/db exec vitest run test/event-organizers.test.ts`. Oczekiwane: FAIL, brak modułu.
+- [x] **Krok 3:** schemat, `pnpm db:generate`, dopisanie `CHECK` do migracji, zapytania i poprawione wywołania `createEvent` (seed: `organizerId: null`, fikstura e2e `createTestEvent` przyjmuje opcjonalne `organizerId`).
+- [x] **Krok 4:** `pnpm --filter @repo/db test`. Oczekiwane: PASS.
+- [x] **Krok 5:** commit `feat(db): organizer role and event organizers`.
 
 ### Task 2: Panel ograniczony do wydarzeń organizatora i współorganizatorzy w UI
 
@@ -93,17 +93,17 @@
 - `createAdminEventServer` wymaga `canCreateEvents` i przekazuje `organizerId: user.id`.
 - Nowe server functions w `packages/api/src/admin/organizers.ts`: `fetchEventOrganizersServer({ eventId })`, `addEventOrganizerServer({ eventId, email })`, `removeEventOrganizerServer({ eventId, userId })` i `eventOrganizersQueryOptions(eventId)` z kluczem `["admin","event",eventId,"organizers"]`.
 
-- [ ] **Krok 1: test e2e (najpierw)** `[F2] organizator tworzy wydarzenie, dodaje współorganizatora, obcy nie ma dostępu @organizator`:
+- [x] **Krok 1: test e2e (najpierw)** `[F2] organizator tworzy wydarzenie, dodaje współorganizatora, obcy nie ma dostępu @organizator`:
   - organizator A (rola `organizer`, hasło) loguje się do panelu, widzi „Wydarzenia”, a nie widzi „Typy wydarzeń”;
   - tworzy wydarzenie i w karcie „Organizatorzy” dodaje e-mail zwykłego użytkownika B;
   - B loguje się do panelu, widzi tylko to wydarzenie, zmienia tytuł, a strona publiczna pokazuje nowy tytuł;
   - organizator C otwiera adres wydarzenia w panelu i widzi „Brak dostępu do tego wydarzenia”. Lista C nie zawiera wydarzenia;
   - zwykły użytkownik D bez wydarzeń widzi ekran `NoAccess`.
-- [ ] **Krok 2:** `pnpm e2e:up && pnpm --filter e2e e2e -g "\[F2\] organizator tworzy"`. Oczekiwane: FAIL (A widzi `NoAccess`).
-- [ ] **Krok 3: test Vitest** `event-access.test.ts`: dla każdej server function wydarzenia (lista eksportów z `admin/mutations.ts`, `admin/queries.ts` i `admin/organizers.ts`, poza słownikami) handler wywołany jako obcy organizator daje `FORBIDDEN`. Mockuje `getCurrentUser` tak jak w istniejących testach API. Patrz, jak pada.
-- [ ] **Krok 4:** implementacja. Błąd `FORBIDDEN` na stronie wydarzenia renderuje `admin_error_forbidden` w treści strony, bez przekierowania.
-- [ ] **Krok 5:** Vitest i e2e z kroku 2, potem `pnpm --filter e2e e2e -g "\[F3\]|\[F18\]"` (testy admina nadal przechodzą). Oczekiwane: PASS.
-- [ ] **Krok 6:** commit `feat(admin): organizers manage their own events`.
+- [x] **Krok 2:** `pnpm e2e:up && pnpm --filter e2e e2e -g "\[F2\] organizator tworzy"`. Oczekiwane: FAIL (A widzi `NoAccess`).
+- [x] **Krok 3: test Vitest** `event-access.test.ts`: dla każdej server function wydarzenia (lista eksportów z `admin/mutations.ts`, `admin/queries.ts` i `admin/organizers.ts`, poza słownikami) handler wywołany jako obcy organizator daje `FORBIDDEN`. Mockuje `getCurrentUser` tak jak w istniejących testach API. Patrz, jak pada.
+- [x] **Krok 4:** implementacja. Błąd `FORBIDDEN` na stronie wydarzenia renderuje `admin_error_forbidden` w treści strony, bez przekierowania.
+- [x] **Krok 5:** Vitest i e2e z kroku 2, potem `pnpm --filter e2e e2e -g "\[F3\]|\[F18\]"` (testy admina nadal przechodzą). Oczekiwane: PASS.
+- [x] **Krok 6:** commit `feat(admin): organizers manage their own events`.
 
 ### Task 3: Administrator nadaje role
 
@@ -117,12 +117,12 @@
 - `setUserRole(userId: string, role: UserRole): Promise<UserListItem | null>`.
 - Server functions (`adminMiddleware`): `searchUsersServer({ query })` (limit 50), `setUserRoleServer({ userId, role })`. Admin nie może zmienić własnej roli: `FORBIDDEN`.
 
-- [ ] **Krok 1: test e2e** `[F2] administrator nadaje rolę organizatora @organizator`: admin szuka użytkownika po e-mailu na stronie „Użytkownicy”, wybiera „Organizator” i widzi komunikat zapisu. Ta osoba loguje się do panelu i widzi przycisk „Dodaj” na liście wydarzeń.
-- [ ] **Krok 2:** uruchom test. Oczekiwane: FAIL, brak strony.
-- [ ] **Krok 3: Vitest:** `searchUsers` po fragmencie e-maila, `setUserRole`. Patrz, jak pada.
-- [ ] **Krok 4:** implementacja. Na telefonie lista kart z `Select` roli, na komputerze tabela (`AdminEntityTable`). Wyszukiwanie z opóźnieniem 300 ms, zapamiętane w `?q=`.
-- [ ] **Krok 5:** testy. Oczekiwane: PASS.
-- [ ] **Krok 6:** commit `feat(admin): admins assign roles`.
+- [x] **Krok 1: test e2e** `[F2] administrator nadaje rolę organizatora @organizator`: admin szuka użytkownika po e-mailu na stronie „Użytkownicy”, wybiera „Organizator” i widzi komunikat zapisu. Ta osoba loguje się do panelu i widzi przycisk „Dodaj” na liście wydarzeń.
+- [x] **Krok 2:** uruchom test. Oczekiwane: FAIL, brak strony.
+- [x] **Krok 3: Vitest:** `searchUsers` po fragmencie e-maila, `setUserRole`. Patrz, jak pada.
+- [x] **Krok 4:** implementacja. Na telefonie lista kart z `Select` roli, na komputerze tabela (`AdminEntityTable`). Wyszukiwanie z opóźnieniem 300 ms, zapamiętane w `?q=`.
+- [x] **Krok 5:** testy. Oczekiwane: PASS.
+- [x] **Krok 6:** commit `feat(admin): admins assign roles`.
 
 ### Task 4: Szkic i publikacja, link online i forma wydarzenia
 
@@ -144,14 +144,14 @@
 - Link online widzą na stronie publicznej tylko osoby ze stanem `registered` (pole w `fetchEventDetailsServer` zerowane dla reszty).
 - Server function `publishAdminEventServer({ id })` z `assertCanManageEvent`. Nowe kody: `EVENT_INCOMPLETE`, `EVENT_NOT_DRAFT`.
 
-- [ ] **Krok 1: testy e2e:**
+- [x] **Krok 1: testy e2e:**
   - `[F3] szkic nie jest publiczny, publikacja go pokazuje @organizator`: organizator tworzy wydarzenie z tytułem, datą, typem i formą „Online” bez linku i widzi plakietkę „Szkic”. Uczestnik pod `/pl/events/<id>` dostaje 404, a lista go nie zawiera. „Opublikuj” pokazuje „Uzupełnij miejsce albo link online”. Po wpisaniu linku i „Opublikuj” plakietka znika, a uczestnik widzi wydarzenie na liście z oznaczeniem „Online”;
   - `[F3] link online widzą tylko zapisani @uczestnik`: niezapisany nie widzi linku, a po zapisie widzi link „Dołącz online”.
-- [ ] **Krok 2:** uruchom testy. Oczekiwane: FAIL.
-- [ ] **Krok 3: Vitest:** domyślny `draft`; publiczne `getEventPage` pomija szkic; `registerForEvent` na szkicu daje `EVENT_NOT_FOUND`; `publishEvent` bez miejsca i linku daje `EVENT_INCOMPLETE`; drugi `publishEvent` daje `EVENT_NOT_DRAFT`; migracja zostawia istniejące wydarzenia jako `published`. Patrz, jak pada.
-- [ ] **Krok 4:** implementacja. Formularz: pole „Forma” (`Select`: Na miejscu, Online, Hybrydowo) i „Link online” widoczny dla `online` i `hybrid`. Typ wydarzenia i limit miejsc mają wartości domyślne (pierwszy typ, 50), więc wystarczy wpisać tytuł, datę i miejsce albo link. Fikstura `createTestEvent` tworzy wydarzenia jako `published` (opcja `status`).
-- [ ] **Krok 5:** Vitest, e2e z kroku 1 i `pnpm e2e`. Oczekiwane: PASS.
-- [ ] **Krok 6:** commit `feat: event drafts, publishing, online link`.
+- [x] **Krok 2:** uruchom testy. Oczekiwane: FAIL.
+- [x] **Krok 3: Vitest:** domyślny `draft`; publiczne `getEventPage` pomija szkic; `registerForEvent` na szkicu daje `EVENT_NOT_FOUND`; `publishEvent` bez miejsca i linku daje `EVENT_INCOMPLETE`; drugi `publishEvent` daje `EVENT_NOT_DRAFT`; migracja zostawia istniejące wydarzenia jako `published`. Patrz, jak pada.
+- [x] **Krok 4:** implementacja. Formularz: pole „Forma” (`Select`: Na miejscu, Online, Hybrydowo) i „Link online” widoczny dla `online` i `hybrid`. Typ wydarzenia i limit miejsc mają wartości domyślne (pierwszy typ, 50), więc wystarczy wpisać tytuł, datę i miejsce albo link. Fikstura `createTestEvent` tworzy wydarzenia jako `published` (opcja `status`).
+- [x] **Krok 5:** Vitest, e2e z kroku 1 i `pnpm e2e`. Oczekiwane: PASS.
+- [x] **Krok 6:** commit `feat: event drafts, publishing, online link`.
 
 ### Task 5: Odwołanie wydarzenia z e-mailem i stanem na żywo
 
@@ -168,22 +168,22 @@
 - `useEventCancelled(eventId: string, initialStatus: EventStatus): boolean`: `true`, gdy status z serwera to `cancelled` albo kolekcja zawiera `eventId`.
 - Server function `cancelAdminEventServer({ id })` z `assertCanManageEvent` i `registrationEmailHooks`. Nowy kod: `EVENT_ALREADY_CANCELLED`, `EVENT_CANCELLED`.
 
-- [ ] **Krok 1: test e2e** `[F3] [F6] odwołanie zamyka zapisy, wysyła e-maile i zmienia stronę na żywo @organizator`:
+- [x] **Krok 1: test e2e** `[F3] [F6] odwołanie zamyka zapisy, wysyła e-maile i zmienia stronę na żywo @organizator`:
   - wydarzenie ma 1 miejsce, osobę zapisaną X i osobę Y z listy rezerwowej. Uczestnik Z ma otwartą stronę wydarzenia;
   - organizator klika „Odwołaj wydarzenie” i potwierdza;
   - bez przeładowania strona Z pokazuje „Wydarzenie odwołane”, a przycisku „Zarejestruj się” nie ma;
   - X i Y mają w Mailpit wiadomość z „Odwołano” i tytułem w temacie oraz linkiem do wydarzenia;
   - lista publiczna pokazuje plakietkę „Odwołane”, a konto X pokazuje wydarzenie bez przycisku „Wypisz się”.
-- [ ] **Krok 2:** uruchom test. Oczekiwane: FAIL.
-- [ ] **Krok 3: Vitest:**
+- [x] **Krok 2:** uruchom test. Oczekiwane: FAIL.
+- [x] **Krok 3: Vitest:**
   - `cancelEvent` kolejkuje joby `cancelled` dla X i Y, a `registerForEvent` po odwołaniu daje `EVENT_CANCELLED`;
   - równoległe `registerForEvent` i `cancelEvent` (dwa połączenia, jak w `concurrency.test.ts`): nowy zapis ma job `cancelled` albo dostaje `EVENT_CANCELLED`;
   - worker: job `cancelled` wysyła e-mail bez linku do biletu, a dla wydarzenia, które nie jest `cancelled`, nic nie wysyła;
   - proxy: `where` z definicji kształtu trafia do Electric, a `where` od klienta jest ignorowane.
   Patrz, jak padają.
-- [ ] **Krok 4:** implementacja. `useRegistrationActions` traktuje `EVENT_CANCELLED` jak każdy błąd domenowy (komunikat w `app-errors`).
-- [ ] **Krok 5:** Vitest (`pnpm test`) i e2e z kroku 1. Oczekiwane: PASS.
-- [ ] **Krok 6:** commit `feat: cancel an event with e-mails and live state`.
+- [x] **Krok 4:** implementacja. `useRegistrationActions` traktuje `EVENT_CANCELLED` jak każdy błąd domenowy (komunikat w `app-errors`).
+- [x] **Krok 5:** Vitest (`pnpm test`) i e2e z kroku 1. Oczekiwane: PASS.
+- [x] **Krok 6:** commit `feat: cancel an event with e-mails and live state`.
 
 ### Task 6: Duplikowanie wydarzenia
 
@@ -195,12 +195,12 @@
 - `duplicateEvent(input: { eventId: string; date: Date; actorId: string }): Promise<{ id: string }>`: nowe wydarzenie w stanie `draft` z tym samym tytułem, opisem, typem, miejscem, jednostką, limitem, terminem grup, linkiem i formą. `endsAt` i każdy punkt programu są przesunięte o `date - source.date`, z tymi samymi limitami, salami i `requiresRegistration`. Organizatorzy to organizatorzy źródła plus `actorId`. Zapisów, grup ani obecności nie kopiuje. Cała operacja to jedna transakcja.
 - Server function `duplicateAdminEventServer({ id, date })` z `assertCanManageEvent(source)` i `canCreateEvents`. Po sukcesie panel przechodzi na nowe wydarzenie.
 
-- [ ] **Krok 1: test e2e** `[F3] duplikat ma te same dane i nowy termin @organizator`: wydarzenie z opisem i dwoma punktami programu jest duplikowane na termin za 14 dni o 12:00. Panel otwiera kopię z plakietką „Szkic”, tym samym tytułem i opisem, datą za 14 dni 12:00 i dwoma punktami przesuniętymi o tę samą różnicę. Lista zapisanych kopii jest pusta.
-- [ ] **Krok 2:** uruchom test. Oczekiwane: FAIL.
-- [ ] **Krok 3: Vitest:** przesunięcie punktów o różnicę dat (także przez zmianę czasu letniego: źródło 20 marca 10:00, kopia 3 kwietnia 10:00 czasu warszawskiego); brak zapisów w kopii; organizatorzy skopiowani; kopia jest `draft`. Patrz, jak pada.
-- [ ] **Krok 4:** implementacja. Różnica liczona w czasie ściennym strefy instalacji: dzień i godzinę każdego punktu przenosi się o liczbę dni między `toEventDateInput(source.date)` i `toEventDateInput(date)` oraz o różnicę godzin startu, przez `fromEventWallTime`. Dzięki temu 10:00 zostaje 10:00 po zmianie czasu.
-- [ ] **Krok 5:** testy. Oczekiwane: PASS.
-- [ ] **Krok 6:** commit `feat: duplicate an event`.
+- [x] **Krok 1: test e2e** `[F3] duplikat ma te same dane i nowy termin @organizator`: wydarzenie z opisem i dwoma punktami programu jest duplikowane na termin za 14 dni o 12:00. Panel otwiera kopię z plakietką „Szkic”, tym samym tytułem i opisem, datą za 14 dni 12:00 i dwoma punktami przesuniętymi o tę samą różnicę. Lista zapisanych kopii jest pusta.
+- [x] **Krok 2:** uruchom test. Oczekiwane: FAIL.
+- [x] **Krok 3: Vitest:** przesunięcie punktów o różnicę dat (także przez zmianę czasu letniego: źródło 20 marca 10:00, kopia 3 kwietnia 10:00 czasu warszawskiego); brak zapisów w kopii; organizatorzy skopiowani; kopia jest `draft`. Patrz, jak pada.
+- [x] **Krok 4:** implementacja. Różnica liczona w czasie ściennym strefy instalacji: dzień i godzinę każdego punktu przenosi się o liczbę dni między `toEventDateInput(source.date)` i `toEventDateInput(date)` oraz o różnicę godzin startu, przez `fromEventWallTime`. Dzięki temu 10:00 zostaje 10:00 po zmianie czasu.
+- [x] **Krok 5:** testy. Oczekiwane: PASS.
+- [x] **Krok 6:** commit `feat: duplicate an event`.
 
 ### Task 7: Wydarzenie tylko dla zalogowanych
 
@@ -214,12 +214,12 @@
 - `audience` z Task 4 zmienia typ na `{ kind: "public"; signedIn: boolean } | { kind: "manage" }`. Dla niezalogowanego publiczne zapytania pomijają `authenticated`.
 - Strona wydarzenia `authenticated` dla niezalogowanego przekierowuje na `/login?redirect=<adres wydarzenia>` (nie 404, żeby link z ogłoszenia działał po zalogowaniu). Klucz zapytania listy zawiera `signedIn`.
 
-- [ ] **Krok 1: test e2e** `[F2] wydarzenie tylko dla zalogowanych nie jest widoczne dla niezalogowanego @uczestnik`: niezalogowany nie widzi wydarzenia na liście, a jego adres prowadzi do logowania. Po zalogowaniu wraca na stronę wydarzenia i widzi je na liście.
-- [ ] **Krok 2:** uruchom test. Oczekiwane: FAIL.
-- [ ] **Krok 3: Vitest:** `getEventPage({ audience: { kind: "public", signedIn: false } })` pomija wydarzenie, a `signedIn: true` je zwraca. Patrz, jak pada.
-- [ ] **Krok 4:** implementacja. W formularzu przełącznik „Tylko dla zalogowanych” (`Switch`).
-- [ ] **Krok 5:** testy. Oczekiwane: PASS.
-- [ ] **Krok 6:** commit `feat: events visible only to signed-in users`.
+- [x] **Krok 1: test e2e** `[F2] wydarzenie tylko dla zalogowanych nie jest widoczne dla niezalogowanego @uczestnik`: niezalogowany nie widzi wydarzenia na liście, a jego adres prowadzi do logowania. Po zalogowaniu wraca na stronę wydarzenia i widzi je na liście.
+- [x] **Krok 2:** uruchom test. Oczekiwane: FAIL.
+- [x] **Krok 3: Vitest:** `getEventPage({ audience: { kind: "public", signedIn: false } })` pomija wydarzenie, a `signedIn: true` je zwraca. Patrz, jak pada.
+- [x] **Krok 4:** implementacja. W formularzu przełącznik „Tylko dla zalogowanych” (`Switch`).
+- [x] **Krok 5:** testy. Oczekiwane: PASS.
+- [x] **Krok 6:** commit `feat: events visible only to signed-in users`.
 
 ### Task 8: Lista zapisanych: wyszukiwanie, ręczne dodanie i usunięcie, CSV
 
@@ -234,16 +234,16 @@
 - `toRegistrantsCsv(registrants: EventRegistrant[], agenda: AgendaItem[], locale: "pl" | "en"): string`: BOM `﻿`, separator `;`, CRLF i nagłówki z messages: Imię i nazwisko; E-mail; Status; Data zapisu; Grupa; Punkty programu. Wartości w cudzysłowach z podwojonymi `"`. Komórka zaczynająca się od `= + - @ \t \r` dostaje prefiks `'`. Daty w strefie instalacji (`formatEventDateTime`).
 - Server functions (z `assertCanManageEvent`): `addRegistrantServer({ eventId, email, locale })`, `removeRegistrantServer({ eventId, registrationId })`, `exportRegistrantsCsvServer({ eventId, locale }) → { filename: string; csv: string }`. `filename` to `zapisani-<slug tytułu>-<YYYY-MM-DD>.csv`.
 
-- [ ] **Krok 1: test e2e** `[F7] organizator dodaje i usuwa osobę, szuka i pobiera CSV @organizator`:
+- [x] **Krok 1: test e2e** `[F7] organizator dodaje i usuwa osobę, szuka i pobiera CSV @organizator`:
   - organizator dodaje po e-mailu istniejącego użytkownika P, który pojawia się na liście ze statusem „Zarejestrowano” i dostaje e-mail potwierdzenia;
   - usuwa osobę Q (potwierdzenie w `AlertDialog`), a pierwsza osoba z listy rezerwowej awansuje (plakietka znika);
   - wpisanie fragmentu e-maila P w pole „Szukaj” zostawia na liście tylko P;
   - „Pobierz CSV” daje plik (`page.waitForEvent("download")`), którego pierwsza linia po BOM to nagłówki, a jeden z wierszy zawiera e-mail P i „Zarejestrowano”.
-- [ ] **Krok 2:** uruchom test. Oczekiwane: FAIL.
-- [ ] **Krok 3: Vitest:** `addRegistrantByEmail` na pełne wydarzenie daje `waitlisted`; `removeRegistrant` promuje pierwszą osobę z listy i kolejkuje e-mail `promoted`; `removeRegistrant` z `registrationId` innego wydarzenia daje `NOT_REGISTERED`. `toRegistrantsCsv`: BOM, `Zażółć`, cudzysłów w nazwie, prefiks `'` przed `=HYPERLINK("x")`. Patrz, jak pada.
-- [ ] **Krok 4:** implementacja. Wyszukiwanie filtruje po stronie klienta (imię, e-mail) z filtrem stanu (Wszyscy, Zarejestrowani, Lista rezerwowa). Pobranie przez `Blob` i `<a download>`.
-- [ ] **Krok 5:** testy. Oczekiwane: PASS.
-- [ ] **Krok 6:** commit `feat(admin): manage registrants and export CSV`.
+- [x] **Krok 2:** uruchom test. Oczekiwane: FAIL.
+- [x] **Krok 3: Vitest:** `addRegistrantByEmail` na pełne wydarzenie daje `waitlisted`; `removeRegistrant` promuje pierwszą osobę z listy i kolejkuje e-mail `promoted`; `removeRegistrant` z `registrationId` innego wydarzenia daje `NOT_REGISTERED`. `toRegistrantsCsv`: BOM, `Zażółć`, cudzysłów w nazwie, prefiks `'` przed `=HYPERLINK("x")`. Patrz, jak pada.
+- [x] **Krok 4:** implementacja. Wyszukiwanie filtruje po stronie klienta (imię, e-mail) z filtrem stanu (Wszyscy, Zarejestrowani, Lista rezerwowa). Pobranie przez `Blob` i `<a download>`.
+- [x] **Krok 5:** testy. Oczekiwane: PASS.
+- [x] **Krok 6:** commit `feat(admin): manage registrants and export CSV`.
 
 ### Task 9: Wiadomość do zapisanych
 
@@ -260,12 +260,12 @@
 - `EVENT_MESSAGE_LIMIT: RateLimit = { points: 5, durationSeconds: 3600 }` na klucz `event:<eventId>`.
 - Server function `sendEventMessageServer({ eventId, audience, subject, body })` z `assertCanManageEvent` i limitem. Zwraca `{ recipients }`, a panel pokazuje „Wysłano do N osób”.
 
-- [ ] **Krok 1: test e2e** `[F7] wiadomość dociera do wszystkich zapisanych @organizator`: wydarzenie ma dwie osoby zapisane i jedną na liście rezerwowej. Organizator wysyła „Zmiana sali” do odbiorców „Zarejestrowani”. Obie zapisane osoby mają w Mailpit wiadomość z tematem `[<tytuł>] Zmiana sali` i treścią, a osoba z listy rezerwowej jej nie ma.
-- [ ] **Krok 2:** uruchom test. Oczekiwane: FAIL.
-- [ ] **Krok 3: Vitest:** `queueEventMessage` z `audience` `registered`, `waitlisted` i `all` kolejkuje właściwą liczbę jobów. Worker: treść `<b>x</b>` trafia do HTML jako tekst (escapowana), a nagłówek `Reply-To` to e-mail organizatora. Patrz, jak pada.
-- [ ] **Krok 4:** implementacja.
-- [ ] **Krok 5:** testy. Oczekiwane: PASS.
-- [ ] **Krok 6:** commit `feat: message registrants by e-mail`.
+- [x] **Krok 1: test e2e** `[F7] wiadomość dociera do wszystkich zapisanych @organizator`: wydarzenie ma dwie osoby zapisane i jedną na liście rezerwowej. Organizator wysyła „Zmiana sali” do odbiorców „Zarejestrowani”. Obie zapisane osoby mają w Mailpit wiadomość z tematem `[<tytuł>] Zmiana sali` i treścią, a osoba z listy rezerwowej jej nie ma.
+- [x] **Krok 2:** uruchom test. Oczekiwane: FAIL.
+- [x] **Krok 3: Vitest:** `queueEventMessage` z `audience` `registered`, `waitlisted` i `all` kolejkuje właściwą liczbę jobów. Worker: treść `<b>x</b>` trafia do HTML jako tekst (escapowana), a nagłówek `Reply-To` to e-mail organizatora. Patrz, jak pada.
+- [x] **Krok 4:** implementacja.
+- [x] **Krok 5:** testy. Oczekiwane: PASS.
+- [x] **Krok 6:** commit `feat: message registrants by e-mail`.
 
 ### Task 10: Skaner biletów i obecność
 
@@ -283,30 +283,30 @@
 - Server functions z `assertCanManageEvent`: `checkInServer({ eventId, ticketCode })`, `setCheckedInServer({ eventId, registrationId, checkedIn })`.
 - Fikstura `writeQrY4m(text: string, path: string): Promise<void>` zapisuje 30 klatek 640×480 YUV4MPEG2 (C420jpeg) z kodem QR (`qrcode.toBuffer` → `pngjs` → konwersja RGB na YCbCr BT.601). Projekt Playwright `skaner` (Chromium, 360 px) ma `launchOptions.args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream", "--use-file-for-fake-video-capture=<e2e/.run/ticket.y4m>"]` i `permissions: ["camera"]`, uruchamia tylko testy `@skaner`, a plik powstaje w `globalSetup` dla stałej treści `harmonogram-ticket:e2e-skaner-0000…` (64 znaki).
 
-- [ ] **Krok 1: test e2e** `[F11] skan biletu odhacza obecność @skaner`:
+- [x] **Krok 1: test e2e** `[F11] skan biletu odhacza obecność @skaner`:
   - fikstura usuwa ewentualny stary zapis z kodem `e2e-skaner-…`, zapisuje uczestnika i ustawia jego `ticket_code` na tę stałą;
   - organizator otwiera „Skanuj bilety” i widzi „Obecny: <imię>”;
   - lista zapisanych pokazuje przełącznik obecności włączony i „Obecni: 1 / 1”;
   - po 3 s ten sam obraz pokazuje „Już odhaczono o <HH:MM>”.
   Drugi test `[F11] ręczne odhaczenie i obecność w CSV @organizator`: przełącznik przy osobie zapisanej ustawia obecność, a CSV ma w kolumnie „Obecność” wartość „tak”.
-- [ ] **Krok 2:** uruchom testy. Oczekiwane: FAIL.
-- [ ] **Krok 3: Vitest:** pierwszy skan `checked-in`, drugi `already-checked-in` z tym samym czasem; kod z innego wydarzenia daje `TICKET_NOT_FOUND`; osoba z listy rezerwowej daje `TICKET_WAITLISTED`; awans nie zmienia `checked_in_at`. Patrz, jak pada.
-- [ ] **Krok 4:** implementacja. Skaner: `getUserMedia({ video: { facingMode: "environment" } })` w `<video>`, a co 250 ms klatka trafia przez `<canvas>` do `jsQR`. Wynik ma duży komunikat (zielony: obecny, żółty: już odhaczony, czerwony: błąd) i wibrację `navigator.vibrate(100)`, jeśli jest. Brak zgody na kamerę daje komunikat z instrukcją. Kamera zatrzymuje się po opuszczeniu strony.
-- [ ] **Krok 5:** testy, potem `pnpm e2e`. Oczekiwane: PASS.
-- [ ] **Krok 6:** commit `feat(admin): ticket scanner and attendance`.
+- [x] **Krok 2:** uruchom testy. Oczekiwane: FAIL.
+- [x] **Krok 3: Vitest:** pierwszy skan `checked-in`, drugi `already-checked-in` z tym samym czasem; kod z innego wydarzenia daje `TICKET_NOT_FOUND`; osoba z listy rezerwowej daje `TICKET_WAITLISTED`; awans nie zmienia `checked_in_at`. Patrz, jak pada.
+- [x] **Krok 4:** implementacja. Skaner: `getUserMedia({ video: { facingMode: "environment" } })` w `<video>`, a co 250 ms klatka trafia przez `<canvas>` do `jsQR`. Wynik ma duży komunikat (zielony: obecny, żółty: już odhaczony, czerwony: błąd) i wibrację `navigator.vibrate(100)`, jeśli jest. Brak zgody na kamerę daje komunikat z instrukcją. Kamera zatrzymuje się po opuszczeniu strony.
+- [x] **Krok 5:** testy, potem `pnpm e2e`. Oczekiwane: PASS.
+- [x] **Krok 6:** commit `feat(admin): ticket scanner and attendance`.
 
 ### Task 11: Spec, dokumentacja i pełna weryfikacja
 
 **Pliki:** `docs/superpowers/specs/2026-11-19-produkt-design.md`, `CLAUDE.md`
 
-- [ ] **Krok 1: spec:**
+- [x] **Krok 1: spec:**
   - statusy F2, F3, F7 i F11 na „gotowe” (z nazwami testów);
   - F6: trzy przypadki ze specu działają;
   - poprawka K4 (organizator w `apps/admin`, decyzja z 20.11) i wpis w historii zmian;
   - statusy F4 i F6, które są dziś nieaktualne, wyrównane z testami.
-- [ ] **Krok 2: `CLAUDE.md`:** „Built and tested”, rola `organizer` i `event_organizers` w Architecture (Auth), kształt `cancelledEvents` w opisie Electric, Roadmap: plan 2 wykonany, następny plan 3.
-- [ ] **Krok 3:** `pnpm lint && pnpm typecheck && pnpm test && pnpm e2e:up && pnpm e2e`. Oczekiwane: wszystko zielone.
-- [ ] **Krok 4:** commit `docs: organizer plan done`. Bez pushowania.
+- [x] **Krok 2: `CLAUDE.md`:** „Built and tested”, rola `organizer` i `event_organizers` w Architecture (Auth), kształt `cancelledEvents` w opisie Electric, Roadmap: plan 2 wykonany, następny plan 3.
+- [x] **Krok 3:** `pnpm lint && pnpm typecheck && pnpm test && pnpm e2e:up && pnpm e2e`. Oczekiwane: wszystko zielone.
+- [x] **Krok 4:** commit `docs: organizer plan done`. Bez pushowania.
 
 ---
 
@@ -330,3 +330,19 @@ Każdy punkt to przyszły plan albo jego część, zgodnie z zasadą „jeden ak
 **Później (w specu, bez planu):** abstrakty i recenzje, rezerwacja sal, identyfikatory do druku, treść w dwóch językach, odznaki, push, rekomendacje.
 
 **Porządki:** zamknąć albo przypisać do funkcji otwarte issues (#5–#25). Część jest zrobiona (#11 bilet, #17 e-mail, #22 pg-boss, #6 lista), część wchodzi w ten plan (#14 kreator, #16 odwołanie).
+
+## Verification summary
+
+- **Verified:** 2026-11-20, branch `next`, range `3c23efa..` (final fix commit after `a03b30f`; `9d0bcb4` is the user's own docs consolidation, not part of this plan). No other uncommitted code.
+- **Scope:** F2, F3, F6, F7 and F11 acceptance criteria from the spec are implemented and covered. Not in scope (see "Następne"): F1, F4 (ICS/OG), F8, F9, F18 speakers, F10, F12–F25.
+- **Evidence (criterion → test, `pnpm e2e` after `pnpm e2e:up`):**
+  - F2 co-organiser edits, foreign organiser refused → `e2e/tests/f2-organizatorzy.spec.ts`; refusal of direct server calls → `packages/api/test/event-access.test.ts` (Vitest); signed-in-only event hidden → `f2-widocznosc.spec.ts`; admin grants the role → `f2-organizatorzy.spec.ts`.
+  - F3 draft hidden, publish, online link only for registered → `f3-szkic-i-publikacja.spec.ts`; cancel closes registration and flips the page live → `f3-odwolanie.spec.ts`; duplicate → `f3-duplikowanie.spec.ts`; full cycle → `f3-cykl-wydarzenia.spec.ts`.
+  - F6 confirmation/waitlist/promotion → `f6-powiadomienia.spec.ts`; cancellation e-mail → `f3-odwolanie.spec.ts`.
+  - F7 add/remove/search/CSV → `f7-zapisani.spec.ts`; message → `f7-wiadomosc.spec.ts`.
+  - F11 camera scan (Chromium fake camera, project `skaner`) → `f11-skaner.spec.ts`; manual switch + CSV → same file.
+- **Final checks (on the final code):** `pnpm lint` 0; `pnpm typecheck` 0; `pnpm test` all green (api 75, collections 8, db 159, ui 25, worker 15); `pnpm e2e` 65/65 (komputer, telefon, skaner).
+- **Review:** three per-feature reviews by fresh subagents with Context7 checks (Tasks 1–5, 6–7, 8–9) and one fresh whole-plan review (Opus). Every critical and important finding was fixed test-first: meeting-link leak in the public list, cancelled events editable or promoting, organisers deleting published events, Electric `queryable_columns`, stale cache after logout, oversized e-mail INSERT, per-sender message limit, CSV injection gaps, camera left on after leaving the scan page, a late "confirmed" e-mail after cancellation, manual check-in rules. The camera fix has no automated test (no component-test setup in `apps/admin`).
+- **Decisions (deviations from the plan text):** organisers in `apps/admin` (user, 20.11); CSV built in the browser by `@repo/ui/registrants-csv` instead of an API function (`@repo/ui` depends on `@repo/api`); `messageRegistrants(eventId, audience, onRecipients)` hook instead of a self-enqueuing DB function (`@repo/db` doesn't depend on `@repo/jobs`); `duplicateEvent` in `queries/event-duplicate.ts`, wall-clock shift in SQL; `addRegistrantByEmail` returns `{ state, txid }`; plan Vitest for "each handler as a foreign organiser" replaced by real-DB access tests plus a source scan; checkbox instead of a Switch component; co-organisers may add and remove co-organisers (as Indico event managers).
+- **Open findings (deferred minors):** public ticket page doesn't mark a cancelled event; scan page doesn't show the event title or check access before starting the camera; full-resolution frames are decoded every 250 ms; the access source scan uses a fixed file list; `cancelled-events` shape grows without bound and `event_seat_counts` streams draft ids/capacities; admin event list unpaginated; `updateEvent` can make a published event incomplete; hidden invalid online link blocks submit silently; e-mail `<Preview>` uses the subject; a removed person gets no e-mail; e2e doesn't follow the login redirect back to the event.
+- **Status:** complete.

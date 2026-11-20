@@ -41,6 +41,8 @@ export function TicketScanner({ eventId }: { eventId: string }) {
 		let stream: MediaStream | null = null;
 		let timer: ReturnType<typeof setInterval> | undefined;
 		let busy = false;
+		// The page may be left before the camera starts: then stop it as soon as it does.
+		let cancelled = false;
 		const lastSeen = new Map<string, number>();
 		const canvas = document.createElement("canvas");
 		const context = canvas.getContext("2d", { willReadFrequently: true });
@@ -97,12 +99,22 @@ export function TicketScanner({ eventId }: { eventId: string }) {
 			}
 		};
 
+		if (!navigator.mediaDevices?.getUserMedia) {
+			// No camera API (e.g. a plain-HTTP address that isn't localhost).
+			setCameraDenied(true);
+			return;
+		}
 		navigator.mediaDevices
 			.getUserMedia({ video: { facingMode: "environment" } })
 			.then(async (media) => {
 				stream = media;
 				const video = videoRef.current;
-				if (!video) return;
+				if (cancelled || !video) {
+					for (const track of media.getTracks()) {
+						track.stop();
+					}
+					return;
+				}
 				video.srcObject = media;
 				await video.play();
 				timer = setInterval(() => void scanFrame(), SCAN_INTERVAL_MS);
@@ -110,6 +122,7 @@ export function TicketScanner({ eventId }: { eventId: string }) {
 			.catch(() => setCameraDenied(true));
 
 		return () => {
+			cancelled = true;
 			clearInterval(timer);
 			for (const track of stream?.getTracks() ?? []) {
 				track.stop();

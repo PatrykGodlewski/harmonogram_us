@@ -189,4 +189,22 @@ describe("registration e-mails", () => {
 		expect(sent[0]?.html).toContain("&lt;b&gt;auli&lt;/b&gt;");
 		expect(sent[0]?.html).not.toContain("<b>auli</b>");
 	});
+
+	it("after cancellation, a late confirmation e-mail is not sent", async () => {
+		const { createEvent, createUser, resetDb } = await import("../../../packages/db/test/helpers");
+		const { registerForEvent } = await import("@repo/db/queries/event-registrations");
+		const { cancelEvent } = await import("@repo/db/queries/events");
+		await resetDb();
+		const eventId = await createEvent();
+		let registrationId = "";
+		await registerForEvent(eventId, await createUser("late@x.test"), "pl", {
+			onChanged: async (_tx, changes) => {
+				registrationId = changes[0]?.registrationId ?? "";
+			},
+		});
+		await cancelEvent(eventId);
+		const { sent, deps } = capture();
+		await handleEmailJob({ kind: "registration", registrationId, change: "confirmed" }, deps);
+		expect(sent).toHaveLength(0);
+	});
 });

@@ -43,7 +43,9 @@ export async function handleEmailJob(
 			if (
 				!registration ||
 				(expected !== null && registration.state !== expected) ||
-				(job.change === "cancelled" && registration.eventStatus !== "cancelled")
+				// Only the cancellation e-mail fits a cancelled event (a late "confirmed" would mislead).
+				(job.change === "cancelled") !==
+					(registration.eventStatus === "cancelled")
 			) {
 				return;
 			}

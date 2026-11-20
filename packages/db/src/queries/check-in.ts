@@ -1,4 +1,4 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { db } from "../client";
 import { authUsers } from "../schema/better-auth";
 import { eventRegistrations } from "../schema/event-registrations";
@@ -82,23 +82,37 @@ export async function checkInByTicketCode(
 	};
 }
 
-/** The manual attendance switch on the registrant list. */
+/** The manual attendance switch: same rules as the scanner, and the first check-in time stays. */
 export async function setCheckedIn(
 	eventId: string,
 	registrationId: string,
 	checkedIn: boolean,
 ): Promise<void> {
 	const [row] = await db
-		.update(eventRegistrations)
-		.set({ checkedInAt: checkedIn ? new Date() : null })
+		.select({ state: eventRegistrations.state, eventStatus: events.status })
+		.from(eventRegistrations)
+		.innerJoin(events, eq(events.id, eventRegistrations.eventId))
 		.where(
 			and(
 				eq(eventRegistrations.id, registrationId),
 				eq(eventRegistrations.eventId, eventId),
 			),
-		)
-		.returning({ id: eventRegistrations.id });
+		);
 	if (!row) {
 		throw new DomainError("NOT_REGISTERED");
 	}
+	if (row.eventStatus === "cancelled") {
+		throw new DomainError("EVENT_CANCELLED");
+	}
+	if (row.state !== "registered") {
+		throw new DomainError("TICKET_WAITLISTED");
+	}
+	await db
+		.update(eventRegistrations)
+		.set({
+			checkedInAt: checkedIn
+				? sql`coalesce(${eventRegistrations.checkedInAt}, now())`
+				: null,
+		})
+		.where(eq(eventRegistrations.id, registrationId));
 }
