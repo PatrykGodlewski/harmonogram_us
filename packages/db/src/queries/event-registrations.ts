@@ -548,6 +548,7 @@ export type EventRegistrant = {
 	agendaItemIds: string[];
 	groupId: string | null;
 	groupName: string | null;
+	checkedInAt: Date | null;
 };
 
 export async function getEventRegistrants(
@@ -563,6 +564,7 @@ export async function getEventRegistrants(
 			state: eventRegistrations.state,
 			groupId: eventRegistrations.groupId,
 			groupName: registrationGroups.name,
+			checkedInAt: eventRegistrations.checkedInAt,
 			agendaItemIds: sql<string[]>`coalesce(
 				array_agg(${agendaItemRegistrations.agendaItemId})
 					filter (where ${agendaItemRegistrations.agendaItemId} is not null),

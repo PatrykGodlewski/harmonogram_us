@@ -1,7 +1,10 @@
+import { setCheckedInServer } from "@repo/api/admin/check-in";
 import type { AgendaItem, EventRegistrant } from "@repo/api/admin/queries";
 import { removeRegistrantServer } from "@repo/api/admin/registrants";
 import {
 	admin_action_cancel,
+	admin_attendance,
+	admin_attendance_count,
 	admin_error_generic,
 	admin_event_registrants,
 	admin_event_registrants_empty,
@@ -89,6 +92,13 @@ export function RegistrantsList({
 				(registrant.name ?? "").toLowerCase().includes(needle)),
 	);
 
+	const registeredCount = registrants.filter(
+		(registrant) => registrant.state === "registered",
+	).length;
+	const presentCount = registrants.filter(
+		(registrant) => registrant.checkedInAt !== null,
+	).length;
+
 	const handleDownload = () => {
 		const locale = getLocale();
 		downloadCsv(
@@ -100,9 +110,17 @@ export function RegistrantsList({
 	return (
 		<section aria-labelledby={headingId} className="flex flex-col gap-3">
 			<div className="flex flex-wrap items-center justify-between gap-2">
-				<h2 id={headingId} className="text-lg font-semibold">
-					{admin_event_registrants({ count: registrants.length })}
-				</h2>
+				<div>
+					<h2 id={headingId} className="text-lg font-semibold">
+						{admin_event_registrants({ count: registrants.length })}
+					</h2>
+					<p className="text-sm text-muted-foreground tabular-nums">
+						{admin_attendance_count({
+							present: presentCount,
+							registered: registeredCount,
+						})}
+					</p>
+				</div>
 				<div className="flex flex-wrap gap-2">
 					<AddRegistrantDialog eventId={eventId} onAdded={onChanged} />
 					<Button
@@ -162,7 +180,7 @@ export function RegistrantsList({
 									eventId={eventId}
 									registrant={registrant}
 									titleById={titleById}
-									onRemoved={onChanged}
+									onChanged={onChanged}
 								/>
 							))}
 						</ul>
@@ -177,15 +195,16 @@ type RegistrantRowProps = {
 	eventId: string;
 	registrant: EventRegistrant;
 	titleById: Map<string, string>;
-	onRemoved: () => Promise<unknown>;
+	onChanged: () => Promise<unknown>;
 };
 
 function RegistrantRow({
 	eventId,
 	registrant,
 	titleById,
-	onRemoved,
+	onChanged,
 }: RegistrantRowProps) {
+	const attendanceId = useId();
 	const removeMutation = useMutation({
 		mutationFn: () =>
 			removeRegistrantServer({
@@ -193,11 +212,29 @@ function RegistrantRow({
 			}),
 		onSuccess: async () => {
 			toast.success(admin_registrants_removed());
-			await onRemoved();
+			await onChanged();
 		},
 		onError: (error) =>
 			toast.error(formatMutationError(error, admin_error_generic)),
 	});
+	const attendanceMutation = useMutation({
+		mutationFn: (checkedIn: boolean) =>
+			setCheckedInServer({
+				data: { eventId, registrationId: registrant.registrationId, checkedIn },
+			}),
+		onSuccess: onChanged,
+		onError: (error) =>
+			toast.error(formatMutationError(error, admin_error_generic)),
+		onSettled: () => setPendingAttendance(null),
+	});
+	// The switch moves at once; the list catches up after the save.
+	const [pendingAttendance, setPendingAttendance] = useState<boolean | null>(
+		null,
+	);
+	const handleAttendanceChange = (checkedIn: boolean) => {
+		setPendingAttendance(checkedIn);
+		attendanceMutation.mutate(checkedIn);
+	};
 
 	return (
 		<li className="flex flex-col gap-2 p-3 sm:flex-row sm:items-start sm:justify-between">
@@ -229,34 +266,48 @@ function RegistrantRow({
 					</div>
 				) : null}
 			</div>
-			<AlertDialog>
-				<AlertDialogTrigger asChild>
-					<Button
-						size="sm"
-						variant="outline"
-						className="self-start"
-						disabled={removeMutation.isPending}
-					>
-						{admin_registrants_remove()}
-					</Button>
-				</AlertDialogTrigger>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>
-							{admin_registrants_remove_title({ email: registrant.email })}
-						</AlertDialogTitle>
-						<AlertDialogDescription>
-							{admin_registrants_remove_body()}
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>{admin_action_cancel()}</AlertDialogCancel>
-						<AlertDialogAction onClick={() => removeMutation.mutate()}>
+			<div className="flex items-center gap-3 self-start">
+				{registrant.state === "registered" ? (
+					<div className="flex items-center gap-2">
+						<input
+							id={attendanceId}
+							type="checkbox"
+							className="size-5 accent-primary"
+							checked={pendingAttendance ?? registrant.checkedInAt !== null}
+							disabled={attendanceMutation.isPending}
+							onChange={(event) => handleAttendanceChange(event.target.checked)}
+						/>
+						<Label htmlFor={attendanceId}>{admin_attendance()}</Label>
+					</div>
+				) : null}
+				<AlertDialog>
+					<AlertDialogTrigger asChild>
+						<Button
+							size="sm"
+							variant="outline"
+							disabled={removeMutation.isPending}
+						>
 							{admin_registrants_remove()}
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
+						</Button>
+					</AlertDialogTrigger>
+					<AlertDialogContent>
+						<AlertDialogHeader>
+							<AlertDialogTitle>
+								{admin_registrants_remove_title({ email: registrant.email })}
+							</AlertDialogTitle>
+							<AlertDialogDescription>
+								{admin_registrants_remove_body()}
+							</AlertDialogDescription>
+						</AlertDialogHeader>
+						<AlertDialogFooter>
+							<AlertDialogCancel>{admin_action_cancel()}</AlertDialogCancel>
+							<AlertDialogAction onClick={() => removeMutation.mutate()}>
+								{admin_registrants_remove()}
+							</AlertDialogAction>
+						</AlertDialogFooter>
+					</AlertDialogContent>
+				</AlertDialog>
+			</div>
 		</li>
 	);
 }

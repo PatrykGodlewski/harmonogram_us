@@ -1,13 +1,16 @@
 import type { EventRegistrant } from "@repo/db/queries/event-registrations";
 import {
+	csv_header_attendance,
 	csv_header_email,
 	csv_header_group,
 	csv_header_items,
 	csv_header_name,
 	csv_header_registered_at,
 	csv_header_status,
+	csv_no,
 	csv_status_registered,
 	csv_status_waitlisted,
+	csv_yes,
 } from "@repo/i18n/paraglide/messages";
 import { formatEventDateTime } from "./time";
 
@@ -40,6 +43,7 @@ export function toRegistrantsCsv(
 		csv_header_registered_at({}, options),
 		csv_header_group({}, options),
 		csv_header_items({}, options),
+		csv_header_attendance({}, options),
 	];
 	const rows = registrants.map((registrant) => [
 		registrant.name ?? "",
@@ -53,6 +57,7 @@ export function toRegistrantsCsv(
 			.map((id) => titleById.get(id))
 			.filter(Boolean)
 			.join(", "),
+		registrant.checkedInAt ? csv_yes({}, options) : csv_no({}, options),
 	]);
 	return `﻿${[header, ...rows]
 		.map((row) => row.map(cell).join(";"))

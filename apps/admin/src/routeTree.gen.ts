@@ -21,6 +21,7 @@ import { Route as AuthenticatedEventFacultiesRouteImport } from './routes/_authe
 import { Route as AuthenticatedEventsIndexRouteImport } from './routes/_authenticated/events.index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AuthenticatedEventsEventIdRouteImport } from './routes/_authenticated/events.$eventId'
+import { Route as AuthenticatedEventsEventIdScanRouteImport } from './routes/_authenticated/events.$eventId_.scan'
 
 const LogoutRoute = LogoutRouteImport.update({
   id: '/logout',
@@ -85,6 +86,12 @@ const AuthenticatedEventsEventIdRoute =
     path: '/events/$eventId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedEventsEventIdScanRoute =
+  AuthenticatedEventsEventIdScanRouteImport.update({
+    id: '/events/$eventId_/scan',
+    path: '/events/$eventId/scan',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -98,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/events/': typeof AuthenticatedEventsIndexRoute
+  '/events/$eventId/scan': typeof AuthenticatedEventsEventIdScanRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -111,6 +119,7 @@ export interface FileRoutesByTo {
   '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/events': typeof AuthenticatedEventsIndexRoute
+  '/events/$eventId/scan': typeof AuthenticatedEventsEventIdScanRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -126,6 +135,7 @@ export interface FileRoutesById {
   '/_authenticated/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/_authenticated/events/': typeof AuthenticatedEventsIndexRoute
+  '/_authenticated/events/$eventId_/scan': typeof AuthenticatedEventsEventIdScanRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -141,6 +151,7 @@ export interface FileRouteTypes {
     | '/events/$eventId'
     | '/api/auth/$'
     | '/events/'
+    | '/events/$eventId/scan'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -154,6 +165,7 @@ export interface FileRouteTypes {
     | '/events/$eventId'
     | '/api/auth/$'
     | '/events'
+    | '/events/$eventId/scan'
   id:
     | '__root__'
     | '/_authenticated'
@@ -168,6 +180,7 @@ export interface FileRouteTypes {
     | '/_authenticated/events/$eventId'
     | '/api/auth/$'
     | '/_authenticated/events/'
+    | '/_authenticated/events/$eventId_/scan'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -264,6 +277,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEventsEventIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/events/$eventId_/scan': {
+      id: '/_authenticated/events/$eventId_/scan'
+      path: '/events/$eventId/scan'
+      fullPath: '/events/$eventId/scan'
+      preLoaderRoute: typeof AuthenticatedEventsEventIdScanRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -275,6 +295,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedEventsEventIdRoute: typeof AuthenticatedEventsEventIdRoute
   AuthenticatedEventsIndexRoute: typeof AuthenticatedEventsIndexRoute
+  AuthenticatedEventsEventIdScanRoute: typeof AuthenticatedEventsEventIdScanRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -285,6 +306,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedEventsEventIdRoute: AuthenticatedEventsEventIdRoute,
   AuthenticatedEventsIndexRoute: AuthenticatedEventsIndexRoute,
+  AuthenticatedEventsEventIdScanRoute: AuthenticatedEventsEventIdScanRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

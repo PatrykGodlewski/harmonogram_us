@@ -423,5 +423,20 @@
 	"admin_message_subject": "Subject",
 	"admin_message_body": "Message",
 	"admin_message_send": "Send",
-	"admin_message_sent": "Sent to {count} people."
+	"admin_message_sent": "Sent to {count} people.",
+	"csv_header_attendance": "Attendance",
+	"csv_yes": "yes",
+	"csv_no": "no",
+	"error_ticket_not_found": "This is not a ticket for this event.",
+	"error_ticket_waitlisted": "This person is on the waitlist and has no place.",
+	"admin_scan_open": "Scan tickets",
+	"admin_scan_title": "Scanning tickets",
+	"admin_scan_hint": "Point the camera at the ticket QR code.",
+	"admin_scan_checked_in": "Present: {name}",
+	"admin_scan_already": "Already checked in at {time}: {name}",
+	"admin_scan_not_ticket": "This is not a ticket.",
+	"admin_scan_camera_denied": "No camera access. Allow the camera in the browser settings and reload the page.",
+	"admin_scan_back": "Back to the event",
+	"admin_attendance": "Attendance",
+	"admin_attendance_count": "Present: {present} / {registered}"
 }

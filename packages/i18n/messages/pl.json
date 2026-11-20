@@ -423,5 +423,20 @@
 	"admin_message_subject": "Temat",
 	"admin_message_body": "Treść",
 	"admin_message_send": "Wyślij",
-	"admin_message_sent": "Wysłano do {count} osób."
+	"admin_message_sent": "Wysłano do {count} osób.",
+	"csv_header_attendance": "Obecność",
+	"csv_yes": "tak",
+	"csv_no": "nie",
+	"error_ticket_not_found": "To nie jest bilet na to wydarzenie.",
+	"error_ticket_waitlisted": "Ta osoba jest na liście rezerwowej i nie ma miejsca.",
+	"admin_scan_open": "Skanuj bilety",
+	"admin_scan_title": "Skanowanie biletów",
+	"admin_scan_hint": "Skieruj kamerę na kod QR biletu.",
+	"admin_scan_checked_in": "Obecny: {name}",
+	"admin_scan_already": "Już odhaczono o {time}: {name}",
+	"admin_scan_not_ticket": "To nie jest bilet.",
+	"admin_scan_camera_denied": "Brak dostępu do kamery. Zezwól na kamerę w ustawieniach przeglądarki i odśwież stronę.",
+	"admin_scan_back": "Wróć do wydarzenia",
+	"admin_attendance": "Obecność",
+	"admin_attendance_count": "Obecni: {present} / {registered}"
 }

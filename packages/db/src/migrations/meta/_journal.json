@@ -120,6 +120,13 @@
       "when": 1795161887196,
       "tag": "0016_event_visibility",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1795165334147,
+      "tag": "0017_checked_in_at",
+      "breakpoints": true
     }
   ]
 }

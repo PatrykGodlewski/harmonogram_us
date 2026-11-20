@@ -41,6 +41,8 @@ export const eventRegistrations = pgTable(
 			.default(
 				sql`replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '')`,
 			),
+		/** When the person was checked in at the event (null: not present). */
+		checkedInAt: timestamp("checked_in_at", { withTimezone: true }),
 		/** Insert time (not transaction start), so the waitlist follows the real order of inserts. */
 		createdAt: timestamp("created_at", { withTimezone: true })
 			.notNull()

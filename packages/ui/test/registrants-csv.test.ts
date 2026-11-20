@@ -12,6 +12,7 @@ const base: EventRegistrant = {
 	agendaItemIds: ["i1"],
 	groupId: null,
 	groupName: null,
+	checkedInAt: null,
 };
 
 describe("toRegistrantsCsv", () => {
@@ -20,10 +21,10 @@ describe("toRegistrantsCsv", () => {
 		expect(csv.startsWith("﻿")).toBe(true);
 		const lines = csv.slice(1).split("\r\n");
 		expect(lines[0]).toBe(
-			'"Imię i nazwisko";"E-mail";"Status";"Data zapisu";"Grupa";"Punkty programu"',
+			'"Imię i nazwisko";"E-mail";"Status";"Data zapisu";"Grupa";"Punkty programu";"Obecność"',
 		);
 		expect(lines[1]).toBe(
-			'"Zażółć Gęślą";"ala@x.test";"Zarejestrowano";"1 gru 2026, 10:30";"";"Warsztat"',
+			'"Zażółć Gęślą";"ala@x.test";"Zarejestrowano";"1 gru 2026, 10:30";"";"Warsztat";"nie"',
 		);
 	});
 
@@ -40,5 +41,10 @@ describe("toRegistrantsCsv", () => {
 		expect(lines[1]?.startsWith('"Ala ""Kot"""')).toBe(true);
 		expect(lines[2]?.startsWith(`"'=HYPERLINK(""x"")";`)).toBe(true);
 		expect(lines[2]).toContain('"Lista rezerwowa"');
+	});
+
+	it("marks attendance", () => {
+		const csv = toRegistrantsCsv([{ ...base, checkedInAt: new Date() }], [], "pl");
+		expect(csv.slice(1).split("\r\n")[1]?.endsWith(';"tak"')).toBe(true);
 	});
 });

@@ -7,6 +7,7 @@ import {
 	admin_event_publish,
 	admin_event_published,
 	admin_event_status_draft,
+	admin_scan_open,
 	event_status_cancelled,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
@@ -85,6 +86,13 @@ export function EventSummaryCard({ event, onChanged }: EventSummaryCardProps) {
 			<div className="flex flex-wrap gap-2">
 				<DuplicateEventDialog eventId={event.id} />
 				<MessageDialog eventId={event.id} />
+				{event.status === "published" ? (
+					<Button variant="outline" asChild>
+						<Link to="/events/$eventId/scan" params={{ eventId: event.id }}>
+							{admin_scan_open()}
+						</Link>
+					</Button>
+				) : null}
 				{event.status === "published" &&
 				new Date(event.effectiveEndsAt).getTime() > Date.now() ? (
 					<CancelEventButton eventId={event.id} onCancelled={onChanged} />
