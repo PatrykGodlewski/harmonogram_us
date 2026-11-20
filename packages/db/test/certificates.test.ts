@@ -60,29 +60,34 @@ describe("certificates", () => {
 });
 
 describe("certificate e-mails", () => {
-	it("are queued once per ended event, for attendees only", async () => {
+	it("are queued once per attendee, also for people checked in after the first run", async () => {
 		const { queueReadyCertificates } = await import("../src/queries/certificates");
 		const present = await attended({ present: true });
-		const absent = await attended({ present: false });
-		const calls: { eventId: string; ids: string[] }[] = [];
-		const collect = async (_tx: unknown, ids: string[], eventId: string) => {
-			calls.push({ eventId, ids });
+		const late = await attended({ present: false });
+		const sent: string[] = [];
+		const collect = async (_tx: unknown, ids: string[]) => {
+			sent.push(...ids);
 		};
 		await queueReadyCertificates(new Date(), collect);
-		expect(calls).toEqual([{ eventId: present.eventId, ids: [present.registrationId] }]);
-		expect(calls.some((call) => call.eventId === absent.eventId)).toBe(false);
+		expect(sent).toEqual([present.registrationId]);
+		await db
+			.update(eventRegistrations)
+			.set({ checkedInAt: new Date() })
+			.where(eq(eventRegistrations.id, late.registrationId));
 		await queueReadyCertificates(new Date(), collect);
-		expect(calls).toHaveLength(1);
+		expect(sent).toEqual([present.registrationId, late.registrationId]);
+		await queueReadyCertificates(new Date(), collect);
+		expect(sent).toHaveLength(2);
 	});
 
 	it("wait for the end and for the switch", async () => {
 		const { queueReadyCertificates } = await import("../src/queries/certificates");
 		await attended({ present: true, ended: false });
 		await attended({ present: true, enabled: false });
-		const calls: string[] = [];
-		await queueReadyCertificates(new Date(), async (_tx, _ids, eventId) => {
-			calls.push(eventId);
+		const sent: string[] = [];
+		await queueReadyCertificates(new Date(), async (_tx, ids) => {
+			sent.push(...ids);
 		});
-		expect(calls).toEqual([]);
+		expect(sent).toEqual([]);
 	});
 });

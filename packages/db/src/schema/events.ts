@@ -51,10 +51,6 @@ export const events = pgTable(
 		certificatesEnabled: boolean("certificates_enabled")
 			.notNull()
 			.default(false),
-		/** When the "your certificate is ready" e-mails were queued (once per event). */
-		certificatesSentAt: timestamp("certificates_sent_at", {
-			withTimezone: true,
-		}),
 		/** Registrations wait as `pending` until an organiser approves them. */
 		requiresApproval: boolean("requires_approval").notNull().default(false),
 		attendanceMode: text("attendance_mode")

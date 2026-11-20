@@ -11,6 +11,7 @@ import {
 import { PDFDocument, type PDFFont, type PDFPage, rgb } from "pdf-lib";
 import boldFont from "./assets/NotoSans-Bold.ttf?inline";
 import regularFont from "./assets/NotoSans-Regular.ttf?inline";
+import { fitLines, type MeasureText } from "./layout";
 
 export type CertificateInput = {
 	name: string;
@@ -32,6 +33,11 @@ function fontBytes(dataUrl: string): Uint8Array {
 	);
 }
 
+/** Decoded once per process, not per download. */
+const FONTS = { regular: fontBytes(regularFont), bold: fontBytes(boldFont) };
+/** Text must stay inside the border with a margin. */
+const TEXT_WIDTH = PAGE.width - 160;
+
 function formatDate(date: Date, locale: "pl" | "en"): string {
 	return new Intl.DateTimeFormat(locale === "pl" ? "pl-PL" : "en-GB", {
 		dateStyle: "long",
@@ -39,26 +45,10 @@ function formatDate(date: Date, locale: "pl" | "en"): string {
 	}).format(date);
 }
 
-/** Splits text into lines that fit `maxWidth` (long titles wrap instead of running off the page). */
-function wrap(
-	text: string,
-	font: PDFFont,
-	size: number,
-	maxWidth: number,
-): string[] {
-	const lines: string[] = [];
-	let line = "";
-	for (const word of text.split(/\s+/)) {
-		const candidate = line ? `${line} ${word}` : word;
-		if (line && font.widthOfTextAtSize(candidate, size) > maxWidth) {
-			lines.push(line);
-			line = word;
-		} else {
-			line = candidate;
-		}
-	}
-	return line ? [...lines, line] : lines;
-}
+const measure =
+	(font: PDFFont): MeasureText =>
+	(text, size) =>
+		font.widthOfTextAtSize(text, size);
 
 function drawCentered(
 	page: PDFPage,
@@ -80,8 +70,8 @@ export async function renderCertificatePdf(
 	const pdf = await PDFDocument.create();
 	pdf.registerFontkit(fontkit);
 	pdf.setTitle(`${certificate_title({}, { locale })} — ${input.eventTitle}`);
-	const regular = await pdf.embedFont(fontBytes(regularFont), { subset: true });
-	const bold = await pdf.embedFont(fontBytes(boldFont), { subset: true });
+	const regular = await pdf.embedFont(FONTS.regular, { subset: true });
+	const bold = await pdf.embedFont(FONTS.bold, { subset: true });
 	const page = pdf.addPage([PAGE.width, PAGE.height]);
 
 	page.drawRectangle({
@@ -98,12 +88,27 @@ export async function renderCertificatePdf(
 	y -= 56;
 	drawCentered(page, certificate_person({}, { locale }), y, regular, 13, GREY);
 	y -= 34;
-	drawCentered(page, input.name, y, bold, 26);
+	const name = fitLines(
+		input.name,
+		measure(bold),
+		TEXT_WIDTH,
+		[26, 22, 18, 14],
+		1,
+	);
+	drawCentered(page, name.lines[0] ?? "", y, bold, name.size);
 	y -= 46;
 	drawCentered(page, certificate_intro({}, { locale }), y, regular, 13, GREY);
-	for (const line of wrap(input.eventTitle, bold, 20, PAGE.width - 160)) {
-		y -= 30;
-		drawCentered(page, line, y, bold, 20);
+	// At most three lines, so the date never reaches the footer.
+	const title = fitLines(
+		input.eventTitle,
+		measure(bold),
+		TEXT_WIDTH,
+		[20, 17, 14],
+		3,
+	);
+	for (const line of title.lines) {
+		y -= title.size + 10;
+		drawCentered(page, line, y, bold, title.size);
 	}
 	y -= 40;
 	drawCentered(

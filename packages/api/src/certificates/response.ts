@@ -3,6 +3,8 @@ import { getCertificate } from "@repo/db/queries/certificates";
 import { getCurrentSession } from "../auth/user";
 import { renderCertificatePdf } from "./pdf";
 
+const FILENAMES = { pl: "zaswiadczenie.pdf", en: "certificate.pdf" } as const;
+
 /** The signed-in user's certificate for one of their registrations; 404 when there is none. */
 export async function certificateResponse(
 	registrationId: string,
@@ -21,7 +23,7 @@ export async function certificateResponse(
 	return new Response(Buffer.from(pdf), {
 		headers: {
 			"content-type": "application/pdf",
-			"content-disposition": 'attachment; filename="zaswiadczenie.pdf"',
+			"content-disposition": `attachment; filename="${FILENAMES[certificate.locale]}"`,
 			"cache-control": "private, no-store",
 		},
 	});

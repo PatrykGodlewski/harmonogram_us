@@ -51,6 +51,10 @@ export const eventRegistrations = pgTable(
 			),
 		/** When the person was checked in at the event (null: not present). */
 		checkedInAt: timestamp("checked_in_at", { withTimezone: true }),
+		/** When the "your certificate is ready" e-mail was queued (once per registration). */
+		certificateEmailedAt: timestamp("certificate_emailed_at", {
+			withTimezone: true,
+		}),
 		/** Insert time (not transaction start), so the waitlist follows the real order of inserts. */
 		createdAt: timestamp("created_at", { withTimezone: true })
 			.notNull()

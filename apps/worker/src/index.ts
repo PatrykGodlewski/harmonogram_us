@@ -95,9 +95,9 @@ await boss.schedule(QUEUE_EVENT_REMINDERS, EVENT_REMINDERS_CRON, null, {
 });
 
 await boss.work(QUEUE_CERTIFICATE_EMAILS, async () => {
-	const { events } = await queueReadyCertificateEmails(new Date());
-	if (events > 0) {
-		console.log(`[worker] queued certificates for ${events} event(s)`);
+	const { registrations } = await queueReadyCertificateEmails(new Date());
+	if (registrations > 0) {
+		console.log(`[worker] queued ${registrations} certificate e-mail(s)`);
 	}
 });
 
