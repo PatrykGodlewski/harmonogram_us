@@ -43,24 +43,26 @@ test("[F3] szkic nie jest publiczny, publikacja go pokazuje @organizator", async
 	await open(visitor, `/pl?search=${encodeURIComponent(title)}`);
 	await expect(visitor.getByText(title)).toHaveCount(0);
 
-	// Without a link the card says what's missing and Publish waits
+	// The checklist says what's missing, and the fix is right there
+	const checklist = page.getByRole("region", { name: "Przed publikacją" });
+	await expect(checklist.getByText("Gotowe w 1 z 2")).toBeVisible();
+	const linkRow = checklist
+		.getByRole("listitem")
+		.filter({ hasText: "Link online" });
+	await expect(linkRow.getByText("Brakuje")).toBeVisible();
 	await expect(
-		page.getByText("Aby opublikować, dodaj link online."),
+		checklist.getByRole("button", { name: "Opublikuj" }),
+	).toBeDisabled();
+	await linkRow.getByLabel("Link online").fill("meet.example.test/abc");
+	await linkRow.getByRole("button", { name: "Zapisz" }).click();
+	await expect(
+		linkRow.getByText("Link musi zaczynać się od https://"),
 	).toBeVisible();
-	await expect(page.getByRole("button", { name: "Opublikuj" })).toBeDisabled();
-
-	// When the link is added and the event published
-	await open(page, adminUrl("/pl/events"));
-	await page
-		.getByRole("row")
-		.filter({ hasText: title })
-		.getByRole("button", { name: "Edytuj" })
-		.click();
-	await dialog.getByLabel("Link online").fill("https://meet.example.test/abc");
-	await dialog.getByRole("button", { name: "Zapisz" }).click();
-	await expect(dialog).toBeHidden();
-	await page.getByRole("link", { name: title }).click();
-	await page.getByRole("button", { name: "Opublikuj" }).click();
+	await linkRow.getByLabel("Link online").fill("https://meet.example.test/abc");
+	await linkRow.getByRole("button", { name: "Zapisz" }).click();
+	await expect(linkRow.getByText("Gotowe")).toBeVisible();
+	await expect(checklist.getByText("Gotowe w 2 z 2")).toBeVisible();
+	await checklist.getByRole("button", { name: "Opublikuj" }).click();
 	await expect(page.getByText("Szkic", { exact: true })).toHaveCount(0);
 
 	// Then participants find it, marked as online
@@ -121,4 +123,46 @@ test("[F3] sala wpisana ręcznie wystarcza do publikacji @organizator", async ({
 	const visitor = await (await browser.newContext()).newPage();
 	await open(visitor, `/pl/events/${eventId}`);
 	await expect(visitor.getByText("sala B105")).toBeVisible();
+});
+
+test("[F3] brakującą salę wpisuje się na liście kontrolnej @organizator", async ({
+	page,
+}, testInfo) => {
+	const email = uniqueEmail(testInfo);
+	const password = randomBytes(18).toString("base64url");
+	const organizer = await createTestUser(email, {
+		role: "organizer",
+		password,
+	});
+	const event = await createTestEvent({
+		organizerId: organizer.id,
+		status: "draft",
+	});
+
+	await signInAsAdmin(page, email, password);
+	await open(page, adminUrl(`/pl/events/${event.id}`));
+	const checklist = page.getByRole("region", { name: "Przed publikacją" });
+	const placeRow = checklist
+		.getByRole("listitem")
+		.filter({ hasText: "Miejsce lub sala" });
+	await expect(placeRow.getByText("Brakuje")).toBeVisible();
+	await placeRow.getByLabel("Sala / pokój").fill("B105");
+	await placeRow.getByRole("button", { name: "Zapisz" }).click();
+	await expect(placeRow.getByText("Gotowe")).toBeVisible();
+	await expect(placeRow.getByText("sala B105")).toBeVisible();
+
+	// Switching to online in the checklist asks for a link instead
+	await checklist.getByRole("combobox", { name: "Forma" }).click();
+	await page.getByRole("option", { name: "Online" }).click();
+	await expect(
+		checklist
+			.getByRole("listitem")
+			.filter({ hasText: "Link online" })
+			.getByText("Brakuje"),
+	).toBeVisible();
+	await checklist.getByRole("combobox", { name: "Forma" }).click();
+	await page.getByRole("option", { name: "Na miejscu" }).click();
+
+	await checklist.getByRole("button", { name: "Opublikuj" }).click();
+	await expect(page.getByText("Szkic", { exact: true })).toHaveCount(0);
 });
