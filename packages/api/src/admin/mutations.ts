@@ -98,6 +98,9 @@ export const cancelAdminEventServer = panelActionFn
 const duplicateEventSchema = z.object({
 	id: z.string().min(1),
 	date: z.coerce.date(),
+	repeat: z.enum(["once", "weekly", "monthly"]).optional(),
+	count: z.number().int().min(1).max(12).optional(),
+	copy: z.object({ agenda: z.boolean(), organizers: z.boolean() }).optional(),
 });
 
 export const duplicateAdminEventServer = panelActionFn
@@ -109,6 +112,9 @@ export const duplicateAdminEventServer = panelActionFn
 			duplicateEvent({
 				eventId: data.id,
 				date: data.date,
+				repeat: data.repeat,
+				count: data.count,
+				copy: data.copy,
 				actorId: context.user.id,
 			}),
 		);

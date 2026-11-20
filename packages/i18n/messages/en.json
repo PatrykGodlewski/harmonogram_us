@@ -593,5 +593,16 @@
 	"admin_field_certificates": "Certificates for attendees",
 	"admin_field_certificates_hint": "After the event, attendees can download a PDF confirming attendance and get it by e-mail.",
 	"reg_email_certificate_subject": "Certificate: {event}",
-	"reg_email_certificate_intro": "Thank you for attending {event} ({date}). Download your certificate of attendance from your account — it stays there as long as we keep the registration data."
+	"reg_email_certificate_intro": "Thank you for attending {event} ({date}). Download your certificate of attendance from your account — it stays there as long as we keep the registration data.",
+	"admin_duplicate_repeat": "Repeat",
+	"admin_duplicate_once": "Once",
+	"admin_duplicate_weekly": "Every week",
+	"admin_duplicate_monthly": "Every month",
+	"admin_duplicate_count": "How many times",
+	"admin_duplicate_copy": "What to copy",
+	"admin_duplicate_copy_agenda": "Programme",
+	"admin_duplicate_copy_organizers": "Organisers",
+	"admin_duplicate_series_submit": "Create copies ({count})",
+	"admin_duplicate_series_done": "Drafts created: {count}",
+	"admin_duplicate_series_hint": "Following dates at the same time. Each copy is a draft to check and publish."
 }

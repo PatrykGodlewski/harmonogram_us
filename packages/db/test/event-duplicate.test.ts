@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, inArray } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "../src/client";
 import { createAgendaItem } from "../src/queries/agenda-items";
@@ -140,5 +140,66 @@ describe("duplicateEvent", () => {
 		await expect(
 			duplicateEvent({ eventId: "missing", date: TARGET, actorId: actor }),
 		).rejects.toMatchObject({ code: "EVENT_NOT_FOUND" });
+	});
+});
+
+describe("recurring copies", () => {
+	async function copiesOf(ids: string[]) {
+		return db
+			.select({ id: events.id, date: events.date })
+			.from(events)
+			.where(inArray(events.id, ids))
+			.orderBy(asc(events.date));
+	}
+
+	it("weekly copies keep 10:00 local time across the change to summer time", async () => {
+		const actor = await createUser();
+		const sourceId = await sourceEvent(actor);
+		const { ids } = await duplicateEvent({
+			eventId: sourceId,
+			date: new Date("2027-03-19T09:00:00Z"),
+			repeat: "weekly",
+			count: 3,
+			actorId: actor,
+		});
+		expect((await copiesOf(ids)).map((copy) => copy.date.toISOString())).toEqual([
+			"2027-03-19T09:00:00.000Z",
+			"2027-03-26T09:00:00.000Z",
+			"2027-04-02T08:00:00.000Z",
+		]);
+	});
+
+	it("monthly copies from the 31st land on each month's last day", async () => {
+		const actor = await createUser();
+		const sourceId = await sourceEvent(actor);
+		const { ids } = await duplicateEvent({
+			eventId: sourceId,
+			date: new Date("2027-01-31T09:00:00Z"),
+			repeat: "monthly",
+			count: 3,
+			actorId: actor,
+		});
+		expect((await copiesOf(ids)).map((copy) => copy.date.toISOString())).toEqual([
+			"2027-01-31T09:00:00.000Z",
+			"2027-02-28T09:00:00.000Z",
+			"2027-03-31T08:00:00.000Z",
+		]);
+	});
+
+	it("copies only what was chosen", async () => {
+		const actor = await createUser();
+		const sourceId = await sourceEvent(actor);
+		await createUser("other@x.test");
+		await addEventOrganizer(sourceId, "other@x.test");
+		const { ids } = await duplicateEvent({
+			eventId: sourceId,
+			date: TARGET,
+			copy: { agenda: false, organizers: false },
+			actorId: actor,
+		});
+		const [id] = ids;
+		const items = await db.select().from(agendaItems).where(eq(agendaItems.eventId, id ?? ""));
+		expect(items).toHaveLength(0);
+		expect((await listEventOrganizers(id ?? "")).map((o) => o.userId)).toEqual([actor]);
 	});
 });
