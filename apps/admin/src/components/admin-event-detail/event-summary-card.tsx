@@ -20,6 +20,7 @@ import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { formatMutationError } from "~/lib/format-mutation-error";
 import { CancelEventButton } from "./cancel-event-button";
+import { DuplicateEventDialog } from "./duplicate-event-dialog";
 
 type EventSummaryCardProps = {
 	event: EventDetails;
@@ -86,12 +87,13 @@ export function EventSummaryCard({ event, onChanged }: EventSummaryCardProps) {
 					</Button>
 				</div>
 			) : null}
-			{event.status === "published" &&
-			new Date(event.effectiveEndsAt).getTime() > Date.now() ? (
-				<div>
+			<div className="flex flex-wrap gap-2">
+				<DuplicateEventDialog eventId={event.id} />
+				{event.status === "published" &&
+				new Date(event.effectiveEndsAt).getTime() > Date.now() ? (
 					<CancelEventButton eventId={event.id} onCancelled={onChanged} />
-				</div>
-			) : null}
+				) : null}
+			</div>
 			{event.description ? (
 				<p className="max-w-prose whitespace-pre-line text-sm">
 					{event.description}

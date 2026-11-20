@@ -380,5 +380,10 @@
 	"admin_event_cancel_title": "Odwołać wydarzenie?",
 	"admin_event_cancel_body": "Zapisy zostaną zamknięte, a wszyscy zapisani i osoby z listy rezerwowej dostaną e-mail. Tego nie da się cofnąć.",
 	"admin_event_cancel_keep": "Nie odwołuj",
-	"admin_event_cancelled_toast": "Wydarzenie zostało odwołane."
+	"admin_event_cancelled_toast": "Wydarzenie zostało odwołane.",
+	"admin_event_duplicate": "Duplikuj",
+	"admin_event_duplicate_title": "Duplikuj wydarzenie",
+	"admin_event_duplicate_body": "Kopia dostanie te same dane, program i organizatorów, bez zapisów. Powstanie jako szkic.",
+	"admin_event_duplicate_date": "Nowy termin",
+	"admin_event_duplicated": "Utworzono kopię wydarzenia."
 }

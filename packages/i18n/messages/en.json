@@ -380,5 +380,10 @@
 	"admin_event_cancel_title": "Cancel the event?",
 	"admin_event_cancel_body": "Registration closes and everyone registered or waitlisted gets an e-mail. This cannot be undone.",
 	"admin_event_cancel_keep": "Keep the event",
-	"admin_event_cancelled_toast": "The event has been cancelled."
+	"admin_event_cancelled_toast": "The event has been cancelled.",
+	"admin_event_duplicate": "Duplicate",
+	"admin_event_duplicate_title": "Duplicate event",
+	"admin_event_duplicate_body": "The copy gets the same details, agenda and organizers, without registrations. It starts as a draft.",
+	"admin_event_duplicate_date": "New date",
+	"admin_event_duplicated": "Event copy created."
 }

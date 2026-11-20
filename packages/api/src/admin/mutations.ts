@@ -3,6 +3,7 @@ import {
 	deleteAgendaItem,
 	updateAgendaItem,
 } from "@repo/db/queries/agenda-items";
+import { duplicateEvent } from "@repo/db/queries/event-duplicate";
 import {
 	cancelEvent,
 	createEvent,
@@ -22,6 +23,7 @@ import {
 	updateEventType,
 } from "@repo/db/queries/lookups";
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { adminMiddleware } from "../auth/admin-middleware";
 import {
 	assertCanCreateEvents,
@@ -88,6 +90,25 @@ export const cancelAdminEventServer = panelActionFn
 	.handler(async ({ data, context }) => {
 		await assertCanManageEvent(context.user, data.id);
 		return withDomainErrors(() => cancelEvent(data.id, registrationEmailHooks));
+	});
+
+const duplicateEventSchema = z.object({
+	id: z.string().min(1),
+	date: z.coerce.date(),
+});
+
+export const duplicateAdminEventServer = panelActionFn
+	.inputValidator((input: unknown) => duplicateEventSchema.parse(input))
+	.handler(async ({ data, context }) => {
+		await assertCanManageEvent(context.user, data.id);
+		await assertCanCreateEvents(context.user);
+		return withDomainErrors(() =>
+			duplicateEvent({
+				eventId: data.id,
+				date: data.date,
+				actorId: context.user.id,
+			}),
+		);
 	});
 
 export const createAdminEventTypeServer = adminActionFn
