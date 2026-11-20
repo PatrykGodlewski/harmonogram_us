@@ -99,6 +99,13 @@
       "when": 1795062797825,
       "tag": "0013_ticket_code",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1795156917918,
+      "tag": "0014_event_organizers",
+      "breakpoints": true
     }
   ]
 }

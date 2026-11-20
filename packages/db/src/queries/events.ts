@@ -6,6 +6,7 @@ import {
 	eventLocations,
 	eventTypes,
 } from "../schema/event-lookups";
+import { eventOrganizers } from "../schema/event-organizers";
 import { eventSeatCounts } from "../schema/event-registrations";
 import { events } from "../schema/events";
 import { type AgendaItem, listAgendaItems } from "./agenda-items";
@@ -192,27 +193,36 @@ export type CreateEventInput = {
 	typeId: string;
 	locationId?: string | null;
 	facultyId?: string | null;
+	/** Becomes the event's first organizer; null for events only admins manage (seed data). */
+	organizerId: string | null;
 };
 
 export async function createEvent(input: CreateEventInput) {
-	const [event] = await db
-		.insert(events)
-		.values({
-			...(input.id ? { id: input.id } : {}),
-			title: input.title,
-			description: input.description ?? null,
-			date: input.date,
-			endsAt: input.endsAt ?? null,
-			...(input.groupDeadlineHours !== undefined
-				? { groupDeadlineHours: input.groupDeadlineHours }
-				: {}),
-			maxSeats: input.maxSeats,
-			typeId: input.typeId,
-			locationId: input.locationId ?? null,
-			facultyId: input.facultyId ?? null,
-		})
-		.returning();
-	return event;
+	return db.transaction(async (tx) => {
+		const [event] = await tx
+			.insert(events)
+			.values({
+				...(input.id ? { id: input.id } : {}),
+				title: input.title,
+				description: input.description ?? null,
+				date: input.date,
+				endsAt: input.endsAt ?? null,
+				...(input.groupDeadlineHours !== undefined
+					? { groupDeadlineHours: input.groupDeadlineHours }
+					: {}),
+				maxSeats: input.maxSeats,
+				typeId: input.typeId,
+				locationId: input.locationId ?? null,
+				facultyId: input.facultyId ?? null,
+			})
+			.returning();
+		if (event && input.organizerId) {
+			await tx
+				.insert(eventOrganizers)
+				.values({ eventId: event.id, userId: input.organizerId });
+		}
+		return event;
+	});
 }
 
 export type UpdateEventInput = {

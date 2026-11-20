@@ -47,6 +47,8 @@ export async function createTestEvent(input: {
 	maxSeats?: number;
 	startsInDays?: number;
 	faculty?: string;
+	/** Makes this user the event's organizer (default: none, only admins manage it). */
+	organizerId?: string;
 	/** startHour: hours after the event starts (default: the item's index); durationMinutes default 50. */
 	agenda?: {
 		title: string;
@@ -65,6 +67,7 @@ export async function createTestEvent(input: {
 		facultyId: input.faculty
 			? await lookup(eventFaculties, input.faculty)
 			: null,
+		organizerId: input.organizerId ?? null,
 	});
 	if (!event) {
 		throw new Error("createEvent returned nothing");

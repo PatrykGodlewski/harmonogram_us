@@ -3,7 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "../client";
 import { authAccounts, authUsers } from "../schema/better-auth";
 
-export type AccountRole = "user" | "admin";
+export type AccountRole = "user" | "organizer" | "admin";
 
 /** Minimum length of a test-account password (seed, CLI). */
 export const MIN_ACCOUNT_PASSWORD_LENGTH = 12;

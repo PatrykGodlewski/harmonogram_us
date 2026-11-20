@@ -4,14 +4,14 @@ import { z } from "zod";
 import { closeDb } from "../client";
 import { ensureAccount, MIN_ACCOUNT_PASSWORD_LENGTH } from "./accounts";
 
-const USAGE = `Usage: pnpm db:account --email <address> [--role user|admin] [--name <name>] [--password <password> | --link-only]
+const USAGE = `Usage: pnpm db:account --email <address> [--role user|organizer|admin] [--name <name>] [--password <password> | --link-only]
 
 Creates or updates a verified account. Without --password a random password is generated
 and printed once; --link-only creates an account that signs in with e-mail links only.`;
 
 const argsSchema = z.object({
 	email: z.email(),
-	role: z.enum(["user", "admin"]),
+	role: z.enum(["user", "organizer", "admin"]),
 	name: z.string().min(1).optional(),
 	password: z.string().min(MIN_ACCOUNT_PASSWORD_LENGTH).optional(),
 	"link-only": z.boolean(),

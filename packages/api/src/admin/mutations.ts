@@ -35,7 +35,7 @@ const adminActionFn = createServerFn({ method: "POST" }).middleware([
 
 export const createAdminEventServer = adminActionFn
 	.inputValidator((input: unknown) => createEventSchema.parse(input))
-	.handler(async ({ data }) => createEvent(data));
+	.handler(async ({ data }) => createEvent({ ...data, organizerId: null }));
 
 export const updateAdminEventServer = adminActionFn
 	.inputValidator((input: unknown) => updateEventSchema.parse(input))

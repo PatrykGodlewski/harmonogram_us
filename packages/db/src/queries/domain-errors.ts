@@ -22,6 +22,9 @@ export const DOMAIN_ERROR_CODES = [
 	"EMAIL_NOT_VERIFIED",
 	"ITEM_NOT_IN_GROUP",
 	"MAX_SEATS_BELOW_REGISTERED",
+	"USER_NOT_FOUND",
+	"ALREADY_ORGANIZER",
+	"LAST_ORGANIZER",
 ] as const;
 
 export type DomainErrorCode = (typeof DOMAIN_ERROR_CODES)[number];
