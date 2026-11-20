@@ -1,5 +1,5 @@
 import { publishAdminEventServer } from "@repo/api/admin/mutations";
-import type { EventDetails } from "@repo/api/admin/queries";
+import type { AdminEventDetails } from "@repo/api/admin/queries";
 import {
 	admin_error_generic,
 	admin_event_back,
@@ -7,7 +7,11 @@ import {
 	admin_event_publish,
 	admin_event_published,
 	admin_event_status_draft,
+	admin_publish_missing_both,
+	admin_publish_missing_link,
+	admin_publish_missing_place,
 	admin_scan_open,
+	event_room,
 	event_status_cancelled,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
@@ -23,14 +27,21 @@ import { CancelEventButton } from "./cancel-event-button";
 import { DuplicateEventDialog } from "./duplicate-event-dialog";
 import { MessageDialog } from "./message-dialog";
 
+const MISSING_MESSAGE: Record<string, () => string> = {
+	place: admin_publish_missing_place,
+	link: admin_publish_missing_link,
+	"place+link": admin_publish_missing_both,
+};
+
 type EventSummaryCardProps = {
-	event: EventDetails;
+	event: AdminEventDetails;
 	onChanged: () => Promise<unknown>;
 };
 
 export function EventSummaryCard({ event, onChanged }: EventSummaryCardProps) {
 	const locale = getLocale();
 	const registered = event.maxSeats - event.seatsRemaining;
+	const missing = event.missingForPublish;
 	const publishMutation = useMutation({
 		mutationFn: () => publishAdminEventServer({ data: { id: event.id } }),
 		onSuccess: async () => {
@@ -69,15 +80,23 @@ export function EventSummaryCard({ event, onChanged }: EventSummaryCardProps) {
 				{event.locationLabel ? (
 					<Badge variant="outline">{event.locationLabel}</Badge>
 				) : null}
+				{event.room ? (
+					<Badge variant="outline">{event_room({ room: event.room })}</Badge>
+				) : null}
 			</div>
 			<p className="tabular-nums">
 				{admin_event_places({ registered, max: event.maxSeats })}
 			</p>
 			{event.status === "draft" ? (
-				<div>
+				<div className="flex flex-col items-start gap-2">
+					{missing.length > 0 ? (
+						<p className="text-sm text-muted-foreground">
+							{MISSING_MESSAGE[missing.join("+")]?.()}
+						</p>
+					) : null}
 					<Button
 						onClick={() => publishMutation.mutate()}
-						disabled={publishMutation.isPending}
+						disabled={publishMutation.isPending || missing.length > 0}
 					>
 						{admin_event_publish()}
 					</Button>

@@ -31,6 +31,8 @@ export const events = pgTable(
 		cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
 		/** Meeting link; shown only to registered people. */
 		onlineUrl: text("online_url"),
+		/** A typed room ("B105"), next to the place picked from the list. */
+		room: text("room"),
 		attendanceMode: text("attendance_mode")
 			.$type<AttendanceMode>()
 			.notNull()

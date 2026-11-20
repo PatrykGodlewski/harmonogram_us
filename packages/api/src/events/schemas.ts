@@ -57,6 +57,14 @@ const onlineUrlSchema = z
 	.optional();
 const attendanceModeSchema = z.enum(["onsite", "online", "hybrid"]);
 const visibilitySchema = z.enum(["public", "authenticated"]);
+/** A typed room; blank means none. */
+const roomSchema = z
+	.string()
+	.trim()
+	.max(100)
+	.transform((value) => value || null)
+	.nullable()
+	.optional();
 
 export const createEventSchema = z.object({
 	id: optionalIdSchema,
@@ -72,6 +80,7 @@ export const createEventSchema = z.object({
 	onlineUrl: onlineUrlSchema,
 	attendanceMode: attendanceModeSchema.optional(),
 	visibility: visibilitySchema.optional(),
+	room: roomSchema,
 });
 
 export type CreateEventParams = z.infer<typeof createEventSchema>;
@@ -90,6 +99,7 @@ export const updateEventSchema = z.object({
 	onlineUrl: onlineUrlSchema,
 	attendanceMode: attendanceModeSchema.optional(),
 	visibility: visibilitySchema.optional(),
+	room: roomSchema,
 });
 
 export type UpdateEventParams = z.infer<typeof updateEventSchema>;

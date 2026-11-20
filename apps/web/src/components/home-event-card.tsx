@@ -1,4 +1,5 @@
 import {
+	event_room,
 	event_status_cancelled,
 	events_seats_remaining,
 } from "@repo/i18n/paraglide/messages";
@@ -84,6 +85,9 @@ export function HomeEventCard({
 					<Badge variant="secondary">{event.typeLabel}</Badge>
 					{event.locationLabel ? (
 						<Badge variant="outline">{event.locationLabel}</Badge>
+					) : null}
+					{event.room ? (
+						<Badge variant="outline">{event_room({ room: event.room })}</Badge>
 					) : null}
 					{event.facultyLabel ? (
 						<Badge variant="outline">{event.facultyLabel}</Badge>

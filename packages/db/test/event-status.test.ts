@@ -13,6 +13,7 @@ import {
 	publishEvent,
 } from "../src/queries/events";
 import { eventLocations, eventTypes } from "../src/schema/event-lookups";
+import { missingForPublish } from "../src/queries/event-completeness";
 import { events } from "../src/schema/events";
 import { createUser, resetDb } from "./helpers";
 
@@ -139,5 +140,26 @@ describe("event status", () => {
 		expect(await isRegisteredForEvent(id, first)).toBe(true);
 		expect(await isRegisteredForEvent(id, second)).toBe(false);
 		expect(await isRegisteredForEvent(id, await createUser())).toBe(false);
+	});
+
+	it("a typed room counts as the place; blank text does not", async () => {
+		const withRoom = await draft({ room: "B105" });
+		expect((await publishEvent(withRoom)).room).toBe("B105");
+		const blank = await draft({ room: "   " });
+		await expect(publishEvent(blank)).rejects.toMatchObject({
+			code: "EVENT_INCOMPLETE",
+		});
+	});
+
+	it("says what is missing for each format", () => {
+		expect(
+			missingForPublish({ attendanceMode: "online", locationId: null, room: null, onlineUrl: "https://x.test" }),
+		).toEqual([]);
+		expect(
+			missingForPublish({ attendanceMode: "hybrid", locationId: null, room: "B105", onlineUrl: null }),
+		).toEqual(["link"]);
+		expect(
+			missingForPublish({ attendanceMode: "onsite", locationId: null, room: null, onlineUrl: null }),
+		).toEqual(["place"]);
 	});
 });

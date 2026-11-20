@@ -43,11 +43,11 @@ test("[F3] szkic nie jest publiczny, publikacja go pokazuje @organizator", async
 	await open(visitor, `/pl?search=${encodeURIComponent(title)}`);
 	await expect(visitor.getByText(title)).toHaveCount(0);
 
-	// When publishing without a link it asks for one
-	await page.getByRole("button", { name: "Opublikuj" }).click();
+	// Without a link the card says what's missing and Publish waits
 	await expect(
-		page.getByText("Uzupełnij miejsce albo link online"),
+		page.getByText("Aby opublikować, dodaj link online."),
 	).toBeVisible();
+	await expect(page.getByRole("button", { name: "Opublikuj" })).toBeDisabled();
 
 	// When the link is added and the event published
 	await open(page, adminUrl("/pl/events"));
@@ -93,4 +93,32 @@ test("[F3] link online widzą tylko zapisani @uczestnik", async ({
 		"href",
 		"https://meet.example.test/tylko-dla-zapisanych",
 	);
+});
+
+test("[F3] sala wpisana ręcznie wystarcza do publikacji @organizator", async ({
+	browser,
+	page,
+}, testInfo) => {
+	const email = uniqueEmail(testInfo);
+	const password = randomBytes(18).toString("base64url");
+	await createTestUser(email, { role: "organizer", password });
+	const title = `Sala ${randomBytes(4).toString("hex")}`;
+
+	await signInAsAdmin(page, email, password);
+	await open(page, adminUrl("/pl/events"));
+	await page.getByRole("button", { name: "Dodaj", exact: true }).click();
+	const dialog = page.getByRole("dialog");
+	await dialog.getByLabel("Tytuł").fill(title);
+	await dialog.getByLabel("Data").fill(warsawDateTime(6, "12:00"));
+	await dialog.getByLabel("Sala / pokój").fill("B105");
+	await dialog.getByRole("button", { name: "Zapisz" }).click();
+	await expect(dialog).toBeHidden();
+	await page.getByRole("link", { name: title }).click();
+	await page.getByRole("button", { name: "Opublikuj" }).click();
+	await expect(page.getByText("Szkic", { exact: true })).toHaveCount(0);
+	const eventId = page.url().split("/").at(-1) ?? "";
+
+	const visitor = await (await browser.newContext()).newPage();
+	await open(visitor, `/pl/events/${eventId}`);
+	await expect(visitor.getByText("sala B105")).toBeVisible();
 });

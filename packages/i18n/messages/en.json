@@ -440,5 +440,10 @@
 	"admin_attendance": "Attendance",
 	"admin_attendance_count": "Present: {present} / {registered}",
 	"admin_registrants_csv_file": "registrants",
-	"admin_field_time_required": "Enter a time."
+	"admin_field_time_required": "Enter a time.",
+	"admin_field_room_hint": "E.g. B105. Enough instead of a place from the list.",
+	"event_room": "room {room}",
+	"admin_publish_missing_place": "To publish, pick a place or type a room.",
+	"admin_publish_missing_link": "To publish, add an online link.",
+	"admin_publish_missing_both": "To publish, add a place or room and an online link."
 }

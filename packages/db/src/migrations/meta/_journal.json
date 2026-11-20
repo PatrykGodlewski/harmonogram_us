@@ -127,6 +127,13 @@
       "when": 1795165334147,
       "tag": "0017_checked_in_at",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1795171448623,
+      "tag": "0018_event_room",
+      "breakpoints": true
     }
   ]
 }

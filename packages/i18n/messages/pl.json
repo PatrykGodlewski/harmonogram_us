@@ -178,7 +178,7 @@
 	"admin_field_description": "Opis",
 	"admin_field_start_time": "Godzina rozpoczęcia",
 	"admin_field_end_time": "Godzina zakończenia",
-	"admin_field_room": "Sala",
+	"admin_field_room": "Sala / pokój",
 	"admin_field_seat_limit": "Limit miejsc",
 	"admin_field_seat_limit_hint": "Pozostaw puste, aby nie ograniczać",
 	"admin_field_requires_registration": "Wymaga zapisu",
@@ -440,5 +440,10 @@
 	"admin_attendance": "Obecność",
 	"admin_attendance_count": "Obecni: {present} / {registered}",
 	"admin_registrants_csv_file": "zapisani",
-	"admin_field_time_required": "Podaj godzinę."
+	"admin_field_time_required": "Podaj godzinę.",
+	"admin_field_room_hint": "Np. B105. Wystarczy zamiast miejsca z listy.",
+	"event_room": "sala {room}",
+	"admin_publish_missing_place": "Aby opublikować, wybierz miejsce albo wpisz salę.",
+	"admin_publish_missing_link": "Aby opublikować, dodaj link online.",
+	"admin_publish_missing_both": "Aby opublikować, podaj miejsce lub salę i link online."
 }

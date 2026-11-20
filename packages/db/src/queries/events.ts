@@ -24,6 +24,7 @@ import {
 	DomainError,
 	mapConstraintError,
 } from "./domain-errors";
+import { missingForPublish } from "./event-completeness";
 import {
 	getEffectiveEventEnd,
 	hasEventEnded,
@@ -70,6 +71,7 @@ export type EventWithRelations = {
 	cancelledAt: Date | null;
 	onlineUrl: string | null;
 	attendanceMode: AttendanceMode;
+	room: string | null;
 	visibility: EventVisibility;
 	createdAt: Date;
 	updatedAt: Date;
@@ -209,6 +211,7 @@ async function queryEvents(
 					? sql<string | null>`null`
 					: events.onlineUrl,
 			attendanceMode: events.attendanceMode,
+			room: events.room,
 			visibility: events.visibility,
 			createdAt: events.createdAt,
 			updatedAt: events.updatedAt,
@@ -248,6 +251,7 @@ export type CreateEventInput = {
 	onlineUrl?: string | null;
 	attendanceMode?: AttendanceMode;
 	visibility?: EventVisibility;
+	room?: string | null;
 	/** Becomes the event's first organizer; null for events only admins manage (seed data). */
 	organizerId: string | null;
 };
@@ -272,6 +276,7 @@ export async function createEvent(input: CreateEventInput) {
 				onlineUrl: input.onlineUrl ?? null,
 				attendanceMode: input.attendanceMode ?? "onsite",
 				visibility: input.visibility ?? "public",
+				room: input.room ?? null,
 			})
 			.returning();
 		if (event && input.organizerId) {
@@ -297,6 +302,7 @@ export type UpdateEventInput = {
 	onlineUrl?: string | null;
 	attendanceMode?: AttendanceMode;
 	visibility?: EventVisibility;
+	room?: string | null;
 };
 
 /** Updates an event; raising the limit promotes waitlisted people into the new places. */
@@ -369,19 +375,6 @@ export async function getEventById(
 	};
 }
 
-/** Whether an event has what its form needs to be public: a place, a link, or both (hybrid). */
-function isComplete(event: {
-	attendanceMode: AttendanceMode;
-	locationId: string | null;
-	onlineUrl: string | null;
-}): boolean {
-	const hasPlace = event.locationId !== null;
-	const hasLink = Boolean(event.onlineUrl);
-	if (event.attendanceMode === "online") return hasLink;
-	if (event.attendanceMode === "hybrid") return hasPlace && hasLink;
-	return hasPlace;
-}
-
 /** Makes a draft public. EVENT_INCOMPLETE without a place or link; EVENT_NOT_DRAFT if already public. */
 export async function publishEvent(
 	eventId: string,
@@ -396,6 +389,7 @@ export async function publishEvent(
 				attendanceMode: events.attendanceMode,
 				locationId: events.locationId,
 				onlineUrl: events.onlineUrl,
+				room: events.room,
 			})
 			.from(events)
 			.where(eq(events.id, eventId));
@@ -405,7 +399,7 @@ export async function publishEvent(
 		if (event.status !== "draft") {
 			throw new DomainError("EVENT_NOT_DRAFT");
 		}
-		if (!isComplete(event)) {
+		if (missingForPublish(event).length > 0) {
 			throw new DomainError("EVENT_INCOMPLETE");
 		}
 		const now = new Date();

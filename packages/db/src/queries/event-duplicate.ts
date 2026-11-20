@@ -55,6 +55,7 @@ export async function duplicateEvent(
 				onlineUrl: source.onlineUrl,
 				attendanceMode: source.attendanceMode,
 				visibility: source.visibility,
+				room: source.room,
 				status: "draft",
 			})
 			.returning({ id: events.id });

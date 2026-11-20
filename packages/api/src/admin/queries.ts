@@ -1,3 +1,4 @@
+import { missingForPublish } from "@repo/db/queries/event-completeness";
 import { listManagedEventIds } from "@repo/db/queries/event-organizers";
 import { getEventRegistrants } from "@repo/db/queries/event-registrations";
 import {
@@ -21,11 +22,12 @@ import { adminEventIdSchema, adminEventsQuerySchema } from "./schemas";
 
 export type { AgendaItem } from "@repo/db/queries/agenda-items";
 export type { EventRegistrant } from "@repo/db/queries/event-registrations";
-export type {
-	EventDetails,
-	EventWithRelations,
-	FilterOption,
-} from "@repo/db/queries/events";
+export type { EventWithRelations, FilterOption } from "@repo/db/queries/events";
+
+/** An event as the panel's event page gets it: details plus what publishing still needs. */
+export type AdminEventDetails = Awaited<
+	ReturnType<typeof fetchAdminEventDetailsServer>
+>;
 export type { GroupSummary } from "@repo/db/queries/groups";
 export type { LookupRow } from "@repo/db/queries/lookups";
 
@@ -96,7 +98,8 @@ export const fetchAdminEventDetailsServer = panelQueryFn
 		if (!event) {
 			throw appError("NOT_FOUND");
 		}
-		return event;
+		// What a draft still needs before publishing, so the panel can say so up front.
+		return { ...event, missingForPublish: missingForPublish(event) };
 	});
 
 export const adminEventDetailsQueryOptions = (eventId: string) =>

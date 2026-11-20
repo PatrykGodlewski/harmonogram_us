@@ -35,6 +35,8 @@ import {
 	admin_field_max_seats,
 	admin_field_none,
 	admin_field_online_url,
+	admin_field_room,
+	admin_field_room_hint,
 	admin_field_signed_in_only,
 	admin_field_status,
 	admin_field_title,
@@ -120,6 +122,7 @@ export function AdminEventsPage({
 				groupDeadlineHours: z.number().int().min(0).max(720),
 				typeId: z.string().min(1),
 				locationId: z.string(),
+				room: z.string().max(100),
 				facultyId: z.string(),
 				attendanceMode: z.enum(["onsite", "online", "hybrid"]),
 				signedInOnly: z.boolean(),
@@ -162,6 +165,7 @@ export function AdminEventsPage({
 				groupDeadlineHours: values.groupDeadlineHours,
 				typeId: values.typeId,
 				locationId: values.locationId === NONE_VALUE ? null : values.locationId,
+				room: values.room.trim() || null,
 				facultyId: values.facultyId === NONE_VALUE ? null : values.facultyId,
 				attendanceMode: values.attendanceMode,
 				visibility: values.signedInOnly
@@ -213,6 +217,7 @@ export function AdminEventsPage({
 			groupDeadlineHours: 48,
 			typeId: "",
 			locationId: NONE_VALUE,
+			room: "",
 			facultyId: NONE_VALUE,
 			attendanceMode: "onsite" as AttendanceMode,
 			signedInOnly: false,
@@ -263,6 +268,7 @@ export function AdminEventsPage({
 		form.setFieldValue("groupDeadlineHours", row.groupDeadlineHours);
 		form.setFieldValue("typeId", row.typeId);
 		form.setFieldValue("locationId", row.locationId ?? NONE_VALUE);
+		form.setFieldValue("room", row.room ?? "");
 		form.setFieldValue("facultyId", row.facultyId ?? NONE_VALUE);
 		form.setFieldValue("attendanceMode", row.attendanceMode);
 		form.setFieldValue("onlineUrl", row.onlineUrl ?? "");
@@ -570,6 +576,26 @@ export function AdminEventsPage({
 									))}
 								</SelectContent>
 							</Select>
+						</div>
+					)}
+				</form.Field>
+
+				<form.Field name="room">
+					{(field) => (
+						<div>
+							<Label htmlFor={field.name}>{admin_field_room()}</Label>
+							<Input
+								id={field.name}
+								className="mt-1"
+								maxLength={100}
+								disabled={saveMutation.isPending}
+								value={field.state.value}
+								onBlur={field.handleBlur}
+								onChange={(event) => field.handleChange(event.target.value)}
+							/>
+							<p className="mt-1 text-xs text-muted-foreground">
+								{admin_field_room_hint()}
+							</p>
 						</div>
 					)}
 				</form.Field>

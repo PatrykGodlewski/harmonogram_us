@@ -3,6 +3,7 @@ import {
 	event_details_closed,
 	event_details_places_left,
 	event_join_online,
+	event_room,
 	events_join_waitlist,
 	events_leave_waitlist,
 	events_register,
@@ -69,6 +70,9 @@ export function EventSummary({
 					) : null}
 					{event.locationLabel ? (
 						<Badge variant="outline">{event.locationLabel}</Badge>
+					) : null}
+					{event.room ? (
+						<Badge variant="outline">{event_room({ room: event.room })}</Badge>
 					) : null}
 				</div>
 			</div>

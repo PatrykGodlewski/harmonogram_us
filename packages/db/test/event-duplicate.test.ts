@@ -42,7 +42,7 @@ async function sourceEvent(organizerId: string) {
 	if (!event) throw new Error("no event");
 	await db
 		.update(events)
-		.set({ status: "published" })
+		.set({ status: "published", room: "B105" })
 		.where(eq(events.id, event.id));
 	await createAgendaItem({
 		eventId: event.id,
@@ -74,6 +74,7 @@ describe("duplicateEvent", () => {
 			groupDeadlineHours: 24,
 			attendanceMode: "online",
 			onlineUrl: "https://meet.example.test/s",
+			room: "B105",
 			date: TARGET,
 			// 14:00 Warsaw stays 14:00 after the clock change.
 			endsAt: new Date("2027-04-02T12:00:00Z"),
