@@ -9,6 +9,7 @@ Data: 2026-11-19 · Status: **do akceptacji** · Jedyne źródło prawdy o tym, 
 | 2026-11-19 | Pierwszy spec produktu. Zastępuje specy funkcji z 18.11, które są teraz archiwalne. Lista funkcji F1–F25 ze zlecenia oraz F26 (rejestracja grupowa) i F27 (zapis na punkty programu), które już działają. Zasady pracy po przeglądzie (`docs/superpowers/audits/2026-11-19-przeglad.md`). | Nowy, uproszczony kierunek produktu |
 | 2026-11-19 | Plan „moje zapisy, bilety, agenda" wykonany: statusy F5, F11 (bilet z QR; skaner w planie 2) i F18 (widok listy i kalendarza). | Prośba użytkownika o konto z zapisami, bilet z kodem QR i kalendarz programu |
 | 2026-11-20 | Plan „organizator na poziomie Indico" wykonany: F2, F3, F6, F7, F11 gotowe. Decyzja: organizator pracuje w `apps/admin` ograniczonym do swoich wydarzeń (zmienia K4). | Decyzja użytkownika z 20.11; plan `docs/superpowers/plans/2026-11-20-organizator-jak-w-indico.md` |
+| 2026-11-20 | Dodane F28–F31 z porównania z Indico (`docs/indico-comparison.md`). Plan 3: F9, F13, reszta F4, F28, F29. Plan 4: F30, F12, F31, F18/F19 prelegenci. | Decyzja użytkownika 20.11 |
 
 ## Kierunek produktu
 
@@ -83,6 +84,17 @@ Kryterium „gotowe” to zawsze przechodzący test e2e `[Fn] …` z widocznym s
 |---|---|---|---|---|
 | F26 | Rejestracja grupowa | Nauczyciel rezerwuje miejsca dla klasy, zaprasza uczniów e-mailem albo linkiem z kodem QR, a uczeń potwierdza miejsce jednym przyciskiem. Niepotwierdzone miejsca wracają po terminie. | grupa trzyma miejsca w licznikach; uczeń potwierdza z linku w Mailpit; zamknięcie grupy zwalnia miejsca | działa (`packages/db/src/queries/groups.ts`, `group-members.ts`, testy Vitest) |
 | F27 | Zapis na punkty programu | Zapis na wybrane punkty programu z własnym limitem; zapis na punkt zapisuje też na wydarzenie. | zapis na pełny punkt jest odrzucony z komunikatem; licznik punktu zmienia się na żywo | działa (`queries/event-registrations.ts`, `agenda-items.test.ts`) |
+
+### Uzupełnienia z porównania z Indico (decyzja użytkownika 20.11)
+
+Źródło: `docs/indico-comparison.md`. Użytkownik: „ensure we contain these features and improve upon them UX related”. Każda funkcja ma być co najmniej na poziomie Indico i wygodniejsza na telefonie.
+
+| # | Funkcja | Co użytkownik może zrobić | Gotowe, gdy test e2e pokazuje, że… | Stan |
+|---|---|---|---|---|
+| F28 | Akcje grupowe i eksport XLSX | Organizator zaznacza kilka osób na liście zapisanych i jednym ruchem odhacza obecność, usuwa je albo pisze tylko do nich; pobiera listę także jako arkusz XLSX. | zaznaczenie dwóch osób i „Odhacz obecność” zmienia obie; wiadomość do zaznaczonych trafia tylko do nich; plik XLSX ma nagłówki i wiersze zapisanych | brak |
+| F29 | Pomocnik od wejścia | Organizator dodaje osobę, która może tylko skanować bilety i odhaczać obecność w tym wydarzeniu. | pomocnik widzi skaner i listę obecności, ale nie może edytować wydarzenia ani usuwać zapisów | brak |
+| F30 | Akceptacja zapisów | Wydarzenie może wymagać akceptacji: zapis czeka, organizator akceptuje albo odrzuca (także grupowo), uczestnik dostaje e-mail. | zapis na wydarzenie z akceptacją ma stan „czeka”; po akceptacji osoba jest zapisana i dostaje e-mail; po odrzuceniu dostaje e-mail z odmową | brak |
+| F31 | Wydarzenia cykliczne | Duplikowanie co tydzień albo co miesiąc przez wybraną liczbę powtórzeń, z wyborem, co skopiować. | „co tydzień, 4 razy” tworzy cztery szkice w kolejnych tygodniach o tej samej godzinie | brak |
 
 ### Później (tylko wpis, bez planu)
 
