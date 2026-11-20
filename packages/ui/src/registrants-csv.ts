@@ -25,15 +25,14 @@ function cell(value: string): string {
 }
 
 /**
- * The registrant list as CSV for spreadsheets: a UTF-8 BOM (so Excel reads
- * Polish letters), `;` separators, CRLF line ends, dates in the installation
- * time zone.
+ * The registrant list as rows (header first) in the UI language: one source
+ * for the CSV and the XLSX export, so both always carry the same columns.
  */
-export function toRegistrantsCsv(
+export function registrantRows(
 	registrants: EventRegistrant[],
 	agenda: { id: string; title: string }[],
 	locale: Locale,
-): string {
+): string[][] {
 	const options = { locale };
 	const titleById = new Map(agenda.map((item) => [item.id, item.title]));
 	const header = [
@@ -59,7 +58,20 @@ export function toRegistrantsCsv(
 			.join(", "),
 		registrant.checkedInAt ? csv_yes({}, options) : csv_no({}, options),
 	]);
-	return `﻿${[header, ...rows]
+	return [header, ...rows];
+}
+
+/**
+ * The registrant list as CSV for spreadsheets: a UTF-8 BOM (so Excel reads
+ * Polish letters), `;` separators, CRLF line ends, dates in the installation
+ * time zone.
+ */
+export function toRegistrantsCsv(
+	registrants: EventRegistrant[],
+	agenda: { id: string; title: string }[],
+	locale: Locale,
+): string {
+	return `\uFEFF${registrantRows(registrants, agenda, locale)
 		.map((row) => row.map(cell).join(";"))
 		.join("\r\n")}`;
 }

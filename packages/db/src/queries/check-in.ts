@@ -1,4 +1,4 @@
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { db } from "../client";
 import { authUsers } from "../schema/better-auth";
 import { eventRegistrations } from "../schema/event-registrations";
@@ -115,4 +115,38 @@ export async function setCheckedIn(
 				: null,
 		})
 		.where(eq(eventRegistrations.id, registrationId));
+}
+
+/** Checks in (or clears) several registrations at once; waitlisted ones are skipped. */
+export async function setCheckedInMany(
+	eventId: string,
+	registrationIds: string[],
+	checkedIn: boolean,
+): Promise<{ updated: number }> {
+	if (registrationIds.length === 0) {
+		return { updated: 0 };
+	}
+	const [event] = await db
+		.select({ status: events.status })
+		.from(events)
+		.where(eq(events.id, eventId));
+	if (event?.status === "cancelled") {
+		throw new DomainError("EVENT_CANCELLED");
+	}
+	const rows = await db
+		.update(eventRegistrations)
+		.set({
+			checkedInAt: checkedIn
+				? sql`coalesce(${eventRegistrations.checkedInAt}, now())`
+				: null,
+		})
+		.where(
+			and(
+				eq(eventRegistrations.eventId, eventId),
+				eq(eventRegistrations.state, "registered"),
+				inArray(eventRegistrations.id, registrationIds),
+			),
+		)
+		.returning({ id: eventRegistrations.id });
+	return { updated: rows.length };
 }

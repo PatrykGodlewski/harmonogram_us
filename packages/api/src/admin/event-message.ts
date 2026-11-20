@@ -12,6 +12,8 @@ import {
 const sendEventMessageSchema = z.object({
 	eventId: z.string().min(1),
 	audience: z.enum(["registered", "waitlisted", "all"]),
+	/** When given, exactly these people (selected on the list) instead of the audience. */
+	registrationIds: z.array(z.string().min(1)).min(1).max(1000).optional(),
 	subject: z.string().trim().min(1).max(200),
 	body: z.string().trim().min(1).max(5000),
 });
@@ -24,7 +26,10 @@ export const sendEventMessageServer = panelActionFn
 		for (const key of eventMessageRateKeys(data.eventId, context.user.id)) {
 			await consumeRateLimit("event-message", EVENT_MESSAGE_LIMIT, key);
 		}
-		return messageRegistrants(data.eventId, data.audience, (tx, ids) =>
+		const target = data.registrationIds
+			? { registrationIds: data.registrationIds }
+			: data.audience;
+		return messageRegistrants(data.eventId, target, (tx, ids) =>
 			enqueueEmails(
 				ids.map((registrationId) => ({
 					kind: "event-message",

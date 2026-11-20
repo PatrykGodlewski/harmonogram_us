@@ -511,5 +511,18 @@
 	"filter_when_7d": "Next 7 days",
 	"filter_when_30d": "Next 30 days",
 	"filter_mode_placeholder": "Format",
-	"filter_mode_all": "Any format"
+	"filter_mode_all": "Any format",
+	"admin_bulk_toolbar": "Selected",
+	"admin_bulk_count": "Selected: {count}",
+	"admin_bulk_select": "Select {email}",
+	"admin_bulk_select_all": "Select everyone shown",
+	"admin_bulk_checkin": "Check in",
+	"admin_bulk_message": "Message",
+	"admin_bulk_remove": "Remove",
+	"admin_bulk_remove_title": "Remove the selected people?",
+	"admin_bulk_remove_confirm": "Remove selected ({count})",
+	"admin_bulk_clear": "Clear",
+	"admin_bulk_done": "Done: {count}.",
+	"admin_message_selected": "Recipients: selected ({count})",
+	"admin_registrants_xlsx": "Download XLSX"
 }

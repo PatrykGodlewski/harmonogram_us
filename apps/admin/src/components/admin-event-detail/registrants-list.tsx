@@ -5,14 +5,14 @@ import {
 	admin_action_cancel,
 	admin_attendance,
 	admin_attendance_count,
+	admin_bulk_select,
+	admin_bulk_select_all,
 	admin_error_generic,
 	admin_event_registrants,
 	admin_event_registrants_empty,
 	admin_group_badge,
 	admin_group_unnamed,
 	admin_registrant_waitlisted,
-	admin_registrants_csv,
-	admin_registrants_csv_file,
 	admin_registrants_filter,
 	admin_registrants_filter_all,
 	admin_registrants_filter_registered,
@@ -47,13 +47,14 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@repo/ui/components/select";
-import { toRegistrantsCsv } from "@repo/ui/registrants-csv";
-import { formatEventDateTime, toEventDateInput } from "@repo/ui/time";
+import { formatEventDateTime } from "@repo/ui/time";
 import { useMutation } from "@tanstack/react-query";
 import { useId, useState } from "react";
 import { toast } from "sonner";
 import { formatMutationError } from "~/lib/format-mutation-error";
 import { AddRegistrantDialog } from "./add-registrant-dialog";
+import { BulkActionsBar } from "./bulk-actions-bar";
+import { RegistrantExports } from "./registrant-exports";
 
 type StateFilter = "all" | "registered" | "waitlisted";
 
@@ -81,6 +82,7 @@ export function RegistrantsList({
 	const headingId = useId();
 	const searchId = useId();
 	const filterId = useId();
+	const selectAllId = useId();
 	const [search, setSearch] = useState("");
 	const [stateFilter, setStateFilter] = useState<StateFilter>("all");
 	const titleById = new Map(agenda.map((item) => [item.id, item.title]));
@@ -93,20 +95,37 @@ export function RegistrantsList({
 				(registrant.name ?? "").toLowerCase().includes(needle)),
 	);
 
+	// Selection for bulk actions; ids that left the list drop out on their own.
+	const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
+	const selectedIds = registrants
+		.map((registrant) => registrant.registrationId)
+		.filter((id) => selected.has(id));
+	const allVisibleSelected =
+		visible.length > 0 &&
+		visible.every((registrant) => selected.has(registrant.registrationId));
+	const handleSelect = (id: string, isSelected: boolean) =>
+		setSelected((current) => {
+			const next = new Set(current);
+			if (isSelected) next.add(id);
+			else next.delete(id);
+			return next;
+		});
+	const handleSelectAllVisible = (isSelected: boolean) =>
+		setSelected(
+			isSelected
+				? new Set([
+						...selected,
+						...visible.map((registrant) => registrant.registrationId),
+					])
+				: new Set(),
+		);
+
 	const registeredCount = registrants.filter(
 		(registrant) => registrant.state === "registered",
 	).length;
 	const presentCount = registrants.filter(
 		(registrant) => registrant.checkedInAt !== null,
 	).length;
-
-	const handleDownload = () => {
-		const locale = getLocale();
-		downloadCsv(
-			`${admin_registrants_csv_file()}-${slugify(eventTitle)}-${toEventDateInput(new Date())}.csv`,
-			toRegistrantsCsv(registrants, agenda, locale),
-		);
-	};
 
 	return (
 		<section aria-labelledby={headingId} className="flex flex-col gap-3">
@@ -124,14 +143,11 @@ export function RegistrantsList({
 				</div>
 				<div className="flex flex-wrap gap-2">
 					<AddRegistrantDialog eventId={eventId} onAdded={onChanged} />
-					<Button
-						size="sm"
-						variant="outline"
-						onClick={handleDownload}
-						disabled={registrants.length === 0}
-					>
-						{admin_registrants_csv()}
-					</Button>
+					<RegistrantExports
+						eventTitle={eventTitle}
+						registrants={registrants}
+						agenda={agenda}
+					/>
 				</div>
 			</div>
 			{registrants.length === 0 ? (
@@ -174,17 +190,43 @@ export function RegistrantsList({
 							{admin_registrants_no_match()}
 						</p>
 					) : (
-						<ul className="divide-y rounded-lg border">
-							{visible.map((registrant) => (
-								<RegistrantRow
-									key={registrant.registrationId}
-									eventId={eventId}
-									registrant={registrant}
-									titleById={titleById}
-									onChanged={onChanged}
+						<>
+							<div className="flex items-center gap-2 px-1">
+								<input
+									id={selectAllId}
+									type="checkbox"
+									className="size-5 accent-primary"
+									checked={allVisibleSelected}
+									onChange={(event) =>
+										handleSelectAllVisible(event.target.checked)
+									}
 								/>
-							))}
-						</ul>
+								<Label htmlFor={selectAllId}>{admin_bulk_select_all()}</Label>
+							</div>
+							<ul className="divide-y rounded-lg border">
+								{visible.map((registrant) => (
+									<RegistrantRow
+										key={registrant.registrationId}
+										eventId={eventId}
+										registrant={registrant}
+										titleById={titleById}
+										selected={selected.has(registrant.registrationId)}
+										onSelectedChange={(isSelected) =>
+											handleSelect(registrant.registrationId, isSelected)
+										}
+										onChanged={onChanged}
+									/>
+								))}
+							</ul>
+							{selectedIds.length > 0 ? (
+								<BulkActionsBar
+									eventId={eventId}
+									selectedIds={selectedIds}
+									onDone={onChanged}
+									onClear={() => setSelected(new Set())}
+								/>
+							) : null}
+						</>
 					)}
 				</>
 			)}
@@ -196,6 +238,8 @@ type RegistrantRowProps = {
 	eventId: string;
 	registrant: EventRegistrant;
 	titleById: Map<string, string>;
+	selected: boolean;
+	onSelectedChange: (selected: boolean) => void;
 	onChanged: () => Promise<unknown>;
 };
 
@@ -203,6 +247,8 @@ function RegistrantRow({
 	eventId,
 	registrant,
 	titleById,
+	selected,
+	onSelectedChange,
 	onChanged,
 }: RegistrantRowProps) {
 	const attendanceId = useId();
@@ -239,33 +285,42 @@ function RegistrantRow({
 
 	return (
 		<li className="flex flex-col gap-2 p-3 sm:flex-row sm:items-start sm:justify-between">
-			<div className="flex min-w-0 flex-col gap-1">
-				<div className="flex flex-wrap items-center gap-2">
-					<p className="font-medium break-all">{registrant.email}</p>
-					{registrant.state === "waitlisted" ? (
-						<Badge variant="secondary">{admin_registrant_waitlisted()}</Badge>
-					) : null}
-					{registrant.groupId ? (
-						<Badge variant="outline">
-							{admin_group_badge({
-								name: registrant.groupName ?? admin_group_unnamed(),
-							})}
-						</Badge>
+			<div className="flex min-w-0 gap-3">
+				<input
+					type="checkbox"
+					className="mt-1 size-5 shrink-0 accent-primary"
+					aria-label={admin_bulk_select({ email: registrant.email })}
+					checked={selected}
+					onChange={(event) => onSelectedChange(event.target.checked)}
+				/>
+				<div className="flex min-w-0 flex-col gap-1">
+					<div className="flex flex-wrap items-center gap-2">
+						<p className="font-medium break-all">{registrant.email}</p>
+						{registrant.state === "waitlisted" ? (
+							<Badge variant="secondary">{admin_registrant_waitlisted()}</Badge>
+						) : null}
+						{registrant.groupId ? (
+							<Badge variant="outline">
+								{admin_group_badge({
+									name: registrant.groupName ?? admin_group_unnamed(),
+								})}
+							</Badge>
+						) : null}
+					</div>
+					<p className="text-sm text-muted-foreground">
+						{registrant.name ? `${registrant.name} · ` : ""}
+						{formatEventDateTime(registrant.registeredAt, getLocale())}
+					</p>
+					{registrant.agendaItemIds.length > 0 ? (
+						<div className="flex flex-wrap gap-1">
+							{registrant.agendaItemIds.map((id) => (
+								<Badge key={id} variant="secondary">
+									{titleById.get(id) ?? id}
+								</Badge>
+							))}
+						</div>
 					) : null}
 				</div>
-				<p className="text-sm text-muted-foreground">
-					{registrant.name ? `${registrant.name} · ` : ""}
-					{formatEventDateTime(registrant.registeredAt, getLocale())}
-				</p>
-				{registrant.agendaItemIds.length > 0 ? (
-					<div className="flex flex-wrap gap-1">
-						{registrant.agendaItemIds.map((id) => (
-							<Badge key={id} variant="secondary">
-								{titleById.get(id) ?? id}
-							</Badge>
-						))}
-					</div>
-				) : null}
 			</div>
 			<div className="flex items-center gap-3 self-start">
 				{registrant.state === "registered" ? (
@@ -311,30 +366,4 @@ function RegistrantRow({
 			</div>
 		</li>
 	);
-}
-
-function slugify(text: string): string {
-	return (
-		text
-			.normalize("NFD")
-			.replace(/\p{Diacritic}/gu, "")
-			.replace(/ł/g, "l")
-			.replace(/Ł/g, "L")
-			.toLowerCase()
-			.replace(/[^a-z0-9]+/g, "-")
-			.replace(/^-|-$/g, "")
-			.slice(0, 40) || "wydarzenie"
-	);
-}
-
-function downloadCsv(filename: string, content: string): void {
-	const url = URL.createObjectURL(
-		new Blob([content], { type: "text/csv;charset=utf-8" }),
-	);
-	const link = document.createElement("a");
-	link.href = url;
-	link.download = filename;
-	link.click();
-	// Some browsers start the download after click() returns.
-	setTimeout(() => URL.revokeObjectURL(url), 0);
 }

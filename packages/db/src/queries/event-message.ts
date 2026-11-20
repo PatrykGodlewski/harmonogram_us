@@ -1,9 +1,10 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { db, type TransactionClient } from "../client";
 import { eventRegistrations } from "../schema/event-registrations";
 
-/** Who an organizer's message goes to. */
+/** Who an organizer's message goes to: a group, or exactly the people selected on the list. */
 export type MessageAudience = "registered" | "waitlisted" | "all";
+export type MessageTarget = MessageAudience | { registrationIds: string[] };
 
 /**
  * Picks the event's registrations for a message and hands them to
@@ -11,7 +12,7 @@ export type MessageAudience = "registered" | "waitlisted" | "all";
  */
 export async function messageRegistrants(
 	eventId: string,
-	audience: MessageAudience,
+	target: MessageTarget,
 	onRecipients: (
 		tx: TransactionClient,
 		registrationIds: string[],
@@ -24,9 +25,11 @@ export async function messageRegistrants(
 			.where(
 				and(
 					eq(eventRegistrations.eventId, eventId),
-					audience === "all"
-						? undefined
-						: eq(eventRegistrations.state, audience),
+					typeof target === "object"
+						? inArray(eventRegistrations.id, target.registrationIds)
+						: target === "all"
+							? undefined
+							: eq(eventRegistrations.state, target),
 				),
 			)
 			.orderBy(asc(eventRegistrations.createdAt));

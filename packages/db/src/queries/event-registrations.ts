@@ -458,6 +458,35 @@ export async function removeRegistrant(
 	});
 }
 
+/**
+ * An organizer removes several people at once: one lock, one waitlist
+ * promotion. Ids that are no longer there (removed in another tab) are skipped.
+ */
+export async function removeRegistrants(
+	eventId: string,
+	registrationIds: string[],
+	hooks?: RegistrationHooks,
+): Promise<{ removed: number; txid: number }> {
+	return db.transaction(async (tx) => {
+		await lockEvent(tx, eventId);
+		await assertEventOpen(tx, eventId);
+		const removed =
+			registrationIds.length === 0
+				? []
+				: await tx
+						.delete(eventRegistrations)
+						.where(
+							and(
+								eq(eventRegistrations.eventId, eventId),
+								inArray(eventRegistrations.id, registrationIds),
+							),
+						)
+						.returning({ id: eventRegistrations.id });
+		await promoteAndNotify(tx, eventId, hooks);
+		return { removed: removed.length, txid: await getCurrentTxId(tx) };
+	});
+}
+
 /** An organizer adds an existing account by e-mail; the same rules as registering (waitlist when full). */
 export async function addRegistrantByEmail(
 	eventId: string,

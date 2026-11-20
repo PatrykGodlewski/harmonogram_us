@@ -511,5 +511,18 @@
 	"filter_when_7d": "Najbliższe 7 dni",
 	"filter_when_30d": "Najbliższe 30 dni",
 	"filter_mode_placeholder": "Forma",
-	"filter_mode_all": "Każda forma"
+	"filter_mode_all": "Każda forma",
+	"admin_bulk_toolbar": "Zaznaczeni",
+	"admin_bulk_count": "Zaznaczono: {count}",
+	"admin_bulk_select": "Zaznacz {email}",
+	"admin_bulk_select_all": "Zaznacz wszystkich widocznych",
+	"admin_bulk_checkin": "Odhacz obecność",
+	"admin_bulk_message": "Wiadomość",
+	"admin_bulk_remove": "Usuń",
+	"admin_bulk_remove_title": "Usunąć zaznaczone osoby?",
+	"admin_bulk_remove_confirm": "Usuń zaznaczonych ({count})",
+	"admin_bulk_clear": "Odznacz",
+	"admin_bulk_done": "Gotowe: {count}.",
+	"admin_message_selected": "Odbiorcy: zaznaczeni ({count})",
+	"admin_registrants_xlsx": "Pobierz XLSX"
 }

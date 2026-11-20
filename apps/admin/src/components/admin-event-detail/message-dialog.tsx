@@ -9,6 +9,7 @@ import {
 	admin_message_body,
 	admin_message_body_hint,
 	admin_message_open,
+	admin_message_selected,
 	admin_message_send,
 	admin_message_sent,
 	admin_message_subject,
@@ -35,7 +36,7 @@ import {
 } from "@repo/ui/components/select";
 import { Textarea } from "@repo/ui/components/textarea";
 import { useMutation } from "@tanstack/react-query";
-import { type FormEvent, useId, useState } from "react";
+import { type FormEvent, type ReactNode, useId, useState } from "react";
 import { toast } from "sonner";
 import { formatMutationError } from "~/lib/format-mutation-error";
 
@@ -48,7 +49,21 @@ const AUDIENCE_LABELS: Record<Audience, () => string> = {
 };
 
 /** Writes one e-mail to the event's registrants (plain text). */
-export function MessageDialog({ eventId }: { eventId: string }) {
+type MessageDialogProps = {
+	eventId: string;
+	/** Exactly these people (selected on the list) instead of choosing a group. */
+	registrationIds?: string[];
+	/** The button that opens the dialog (default: "Send a message"). */
+	trigger?: ReactNode;
+	onSent?: () => void;
+};
+
+export function MessageDialog({
+	eventId,
+	registrationIds,
+	trigger,
+	onSent,
+}: MessageDialogProps) {
 	const audienceId = useId();
 	const subjectId = useId();
 	const bodyId = useId();
@@ -59,12 +74,15 @@ export function MessageDialog({ eventId }: { eventId: string }) {
 
 	const sendMutation = useMutation({
 		mutationFn: () =>
-			sendEventMessageServer({ data: { eventId, audience, subject, body } }),
+			sendEventMessageServer({
+				data: { eventId, audience, subject, body, registrationIds },
+			}),
 		onSuccess: ({ recipients }) => {
 			toast.success(admin_message_sent({ count: recipients }));
 			setSubject("");
 			setBody("");
 			setOpen(false);
+			onSent?.();
 		},
 		onError: (error) =>
 			toast.error(formatMutationError(error, admin_error_generic)),
@@ -80,7 +98,7 @@ export function MessageDialog({ eventId }: { eventId: string }) {
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
-				<Button variant="outline">{admin_message_open()}</Button>
+				{trigger ?? <Button variant="outline">{admin_message_open()}</Button>}
 			</DialogTrigger>
 			<DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
 				<DialogHeader>
@@ -88,24 +106,30 @@ export function MessageDialog({ eventId }: { eventId: string }) {
 					<DialogDescription>{admin_message_body_hint()}</DialogDescription>
 				</DialogHeader>
 				<form onSubmit={handleSubmit} className="flex flex-col gap-4">
-					<div className="flex flex-col gap-2">
-						<Label htmlFor={audienceId}>{admin_message_audience()}</Label>
-						<Select
-							value={audience}
-							onValueChange={(value) => setAudience(value as Audience)}
-						>
-							<SelectTrigger id={audienceId} className="w-full">
-								<SelectValue />
-							</SelectTrigger>
-							<SelectContent>
-								{(Object.keys(AUDIENCE_LABELS) as Audience[]).map((key) => (
-									<SelectItem key={key} value={key}>
-										{AUDIENCE_LABELS[key]()}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					</div>
+					{registrationIds ? (
+						<p className="text-sm font-medium">
+							{admin_message_selected({ count: registrationIds.length })}
+						</p>
+					) : (
+						<div className="flex flex-col gap-2">
+							<Label htmlFor={audienceId}>{admin_message_audience()}</Label>
+							<Select
+								value={audience}
+								onValueChange={(value) => setAudience(value as Audience)}
+							>
+								<SelectTrigger id={audienceId} className="w-full">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									{(Object.keys(AUDIENCE_LABELS) as Audience[]).map((key) => (
+										<SelectItem key={key} value={key}>
+											{AUDIENCE_LABELS[key]()}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
+					)}
 					<div className="flex flex-col gap-2">
 						<Label htmlFor={subjectId}>{admin_message_subject()}</Label>
 						<Input
