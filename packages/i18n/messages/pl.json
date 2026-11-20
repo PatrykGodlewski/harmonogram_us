@@ -604,5 +604,18 @@
 	"admin_duplicate_copy_organizers": "Organizatorzy",
 	"admin_duplicate_series_submit": "Utwórz kopie ({count})",
 	"admin_duplicate_series_done": "Utworzono szkiców: {count}",
-	"admin_duplicate_series_hint": "Kolejne terminy o tej samej godzinie. Każda kopia to szkic do sprawdzenia i publikacji."
+	"admin_duplicate_series_hint": "Kolejne terminy o tej samej godzinie. Każda kopia to szkic do sprawdzenia i publikacji.",
+	"admin_speakers": "Prelegenci",
+	"admin_speaker_add": "Dodaj prelegenta",
+	"admin_speaker_name": "Imię i nazwisko prelegenta {n}",
+	"admin_speaker_affiliation": "Afiliacja prelegenta {n}",
+	"admin_speaker_remove": "Usuń prelegenta {n}",
+	"admin_materials": "Materiały (linki)",
+	"admin_material_add": "Dodaj materiał",
+	"admin_material_label": "Nazwa materiału {n}",
+	"admin_material_url": "Adres materiału {n}",
+	"admin_material_remove": "Usuń materiał {n}",
+	"admin_material_url_invalid": "Podaj adres zaczynający się od https://",
+	"agenda_speakers": "Prowadzący",
+	"agenda_materials": "Materiały"
 }

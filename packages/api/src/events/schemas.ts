@@ -154,6 +154,24 @@ const agendaItemFields = {
 	locationId: z.string().min(1).nullable().optional(),
 	maxSeats: z.number().int().min(0).nullable().optional(),
 	requiresRegistration: z.boolean().optional(),
+	speakers: z
+		.array(
+			z.object({
+				name: z.string().trim().min(1).max(200),
+				affiliation: z.string().trim().max(200).optional(),
+			}),
+		)
+		.max(20)
+		.optional(),
+	materials: z
+		.array(
+			z.object({
+				label: z.string().trim().min(1).max(200),
+				url: z.url({ protocol: /^https?$/ }).max(2000),
+			}),
+		)
+		.max(20)
+		.optional(),
 };
 
 const endsAfterStarts = (value: { startsAt?: Date; endsAt?: Date }) =>

@@ -148,6 +148,11 @@ export function AgendaEditor({
 										{item.locationLabel ? ` · ${item.locationLabel}` : ""}
 									</p>
 									<p className="font-medium">{item.title}</p>
+									{item.speakers.length > 0 ? (
+										<p className="text-sm text-muted-foreground">
+											{item.speakers.map((speaker) => speaker.name).join(", ")}
+										</p>
+									) : null}
 									<p className="text-sm tabular-nums">{placesLabel(item)}</p>
 								</div>
 								<div className="flex gap-2">

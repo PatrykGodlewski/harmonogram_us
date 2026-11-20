@@ -1,6 +1,11 @@
 import { asc, eq } from "drizzle-orm";
 import { type DbExecutor, db, type TransactionClient } from "../client";
-import { agendaItemSeatCounts, agendaItems } from "../schema/agenda";
+import {
+	type AgendaMaterial,
+	type AgendaSpeaker,
+	agendaItemSeatCounts,
+	agendaItems,
+} from "../schema/agenda";
 import { eventLocations } from "../schema/event-lookups";
 import { events } from "../schema/events";
 import {
@@ -20,6 +25,8 @@ export type AgendaItem = {
 	locationLabel: string | null;
 	maxSeats: number | null;
 	requiresRegistration: boolean;
+	speakers: AgendaSpeaker[];
+	materials: AgendaMaterial[];
 	seatsRemaining: number | null;
 	registeredCount: number;
 };
@@ -33,6 +40,8 @@ export type AgendaItemInput = {
 	locationId?: string | null;
 	maxSeats?: number | null;
 	requiresRegistration?: boolean;
+	speakers?: AgendaSpeaker[];
+	materials?: AgendaMaterial[];
 };
 
 function selectAgendaItems(client: DbExecutor) {
@@ -48,6 +57,8 @@ function selectAgendaItems(client: DbExecutor) {
 			locationLabel: eventLocations.label,
 			maxSeats: agendaItems.maxSeats,
 			requiresRegistration: agendaItems.requiresRegistration,
+			speakers: agendaItems.speakers,
+			materials: agendaItems.materials,
 			seatsRemaining: agendaItemSeatCounts.seatsRemaining,
 			registeredCount: agendaItemSeatCounts.registeredCount,
 		})
@@ -112,6 +123,8 @@ export async function createAgendaItem(
 					locationId: input.locationId ?? null,
 					maxSeats: input.maxSeats ?? null,
 					requiresRegistration: input.requiresRegistration ?? true,
+					speakers: input.speakers ?? [],
+					materials: input.materials ?? [],
 				})
 				.returning({ id: agendaItems.id });
 			const item = inserted ? await getAgendaItem(tx, inserted.id) : null;

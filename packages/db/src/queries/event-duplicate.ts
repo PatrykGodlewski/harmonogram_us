@@ -128,6 +128,8 @@ async function copyEvent(
 					locationId: agendaItems.locationId,
 					maxSeats: agendaItems.maxSeats,
 					requiresRegistration: agendaItems.requiresRegistration,
+					speakers: agendaItems.speakers,
+					materials: agendaItems.materials,
 					createdAt: sql<Date>`now()`.as("created_at"),
 					updatedAt: sql<Date>`now()`.as("updated_at"),
 				})

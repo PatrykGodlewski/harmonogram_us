@@ -1,4 +1,6 @@
 import {
+	agenda_materials,
+	agenda_speakers,
 	event_details_closed,
 	event_details_full,
 	event_details_no_registration,
@@ -62,8 +64,42 @@ export function AgendaItemRow({
 					{item.locationLabel ? ` · ${item.locationLabel}` : ""}
 				</p>
 				<p className="font-medium">{item.title}</p>
+				{item.speakers.length > 0 ? (
+					<ul aria-label={agenda_speakers()} className="text-sm">
+						{item.speakers.map((speaker) => (
+							<li key={`${speaker.name}|${speaker.affiliation ?? ""}`}>
+								<span className="font-medium">{speaker.name}</span>
+								{speaker.affiliation ? (
+									<span className="text-muted-foreground">
+										{" · "}
+										{speaker.affiliation}
+									</span>
+								) : null}
+							</li>
+						))}
+					</ul>
+				) : null}
 				{item.description ? (
 					<p className="text-sm text-muted-foreground">{item.description}</p>
+				) : null}
+				{item.materials.length > 0 ? (
+					<ul
+						aria-label={agenda_materials()}
+						className="flex flex-wrap gap-x-3 gap-y-1 text-sm"
+					>
+						{item.materials.map((material) => (
+							<li key={material.url}>
+								<a
+									href={material.url}
+									target="_blank"
+									rel="noopener noreferrer"
+									className="underline underline-offset-2"
+								>
+									{material.label}
+								</a>
+							</li>
+						))}
+					</ul>
 				) : null}
 				{item.requiresRegistration && seatCount.maxSeats !== null ? (
 					<p

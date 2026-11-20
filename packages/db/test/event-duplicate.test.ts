@@ -203,3 +203,28 @@ describe("recurring copies", () => {
 		expect((await listEventOrganizers(id ?? "")).map((o) => o.userId)).toEqual([actor]);
 	});
 });
+
+describe("speakers and materials", () => {
+	it("are saved with a programme item and copied with the event", async () => {
+		const actor = await createUser();
+		const sourceId = await sourceEvent(actor);
+		const speakers = [{ name: "dr Anna Nowak", affiliation: "Instytut Fizyki" }];
+		const materials = [{ label: "Slajdy", url: "https://example.test/s.pdf" }];
+		await createAgendaItem({
+			eventId: sourceId,
+			title: "Wykład",
+			startsAt: new Date("2027-03-19T11:00:00Z"),
+			endsAt: new Date("2027-03-19T12:00:00Z"),
+			speakers,
+			materials,
+		});
+		const { id } = await duplicateEvent({ eventId: sourceId, date: TARGET, actorId: actor });
+		const [copied] = await db
+			.select({ speakers: agendaItems.speakers, materials: agendaItems.materials })
+			.from(agendaItems)
+			.where(eq(agendaItems.eventId, id))
+			.orderBy(asc(agendaItems.startsAt))
+			.offset(1);
+		expect(copied).toEqual({ speakers, materials });
+	});
+});

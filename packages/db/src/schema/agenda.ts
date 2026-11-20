@@ -4,6 +4,7 @@ import {
 	check,
 	index,
 	integer,
+	jsonb,
 	pgTable,
 	text,
 	timestamp,
@@ -13,6 +14,11 @@ import { authUsers } from "./better-auth";
 import { eventLocations } from "./event-lookups";
 import { eventRegistrations } from "./event-registrations";
 import { events } from "./events";
+
+/** Who speaks at a programme item ("dr Anna Nowak", "Instytut Fizyki"). */
+export type AgendaSpeaker = { name: string; affiliation?: string };
+/** A link to slides, a recording or a paper. */
+export type AgendaMaterial = { label: string; url: string };
 
 export const agendaItems = pgTable(
 	"agenda_items",
@@ -31,6 +37,11 @@ export const agendaItems = pgTable(
 		requiresRegistration: boolean("requires_registration")
 			.notNull()
 			.default(true),
+		speakers: jsonb("speakers").$type<AgendaSpeaker[]>().notNull().default([]),
+		materials: jsonb("materials")
+			.$type<AgendaMaterial[]>()
+			.notNull()
+			.default([]),
 		createdAt: timestamp("created_at", { withTimezone: true })
 			.notNull()
 			.defaultNow(),

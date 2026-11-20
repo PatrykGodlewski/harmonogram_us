@@ -604,5 +604,18 @@
 	"admin_duplicate_copy_organizers": "Organisers",
 	"admin_duplicate_series_submit": "Create copies ({count})",
 	"admin_duplicate_series_done": "Drafts created: {count}",
-	"admin_duplicate_series_hint": "Following dates at the same time. Each copy is a draft to check and publish."
+	"admin_duplicate_series_hint": "Following dates at the same time. Each copy is a draft to check and publish.",
+	"admin_speakers": "Speakers",
+	"admin_speaker_add": "Add speaker",
+	"admin_speaker_name": "Speaker {n} name",
+	"admin_speaker_affiliation": "Speaker {n} affiliation",
+	"admin_speaker_remove": "Remove speaker {n}",
+	"admin_materials": "Materials (links)",
+	"admin_material_add": "Add material",
+	"admin_material_label": "Material {n} name",
+	"admin_material_url": "Material {n} address",
+	"admin_material_remove": "Remove material {n}",
+	"admin_material_url_invalid": "Enter an address starting with https://",
+	"agenda_speakers": "Speakers",
+	"agenda_materials": "Materials"
 }
