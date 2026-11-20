@@ -49,3 +49,11 @@ export const EVENT_MESSAGE_LIMIT: RateLimit = {
 	points: 5,
 	durationSeconds: 60 * 60,
 };
+
+/** One budget per event and one per sender, so neither can be drained through the other. */
+export function eventMessageRateKeys(
+	eventId: string,
+	userId: string,
+): string[] {
+	return [`event:${eventId}`, `user:${userId}`];
+}

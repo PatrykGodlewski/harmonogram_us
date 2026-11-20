@@ -4,7 +4,10 @@ import { z } from "zod";
 import { assertCanManageEvent } from "../auth/event-access";
 import { panelActionFn } from "../auth/panel-middleware";
 import { consumeRateLimit } from "../security/rate-limit";
-import { EVENT_MESSAGE_LIMIT } from "../security/rate-limits";
+import {
+	EVENT_MESSAGE_LIMIT,
+	eventMessageRateKeys,
+} from "../security/rate-limits";
 
 const sendEventMessageSchema = z.object({
 	eventId: z.string().min(1),
@@ -18,11 +21,9 @@ export const sendEventMessageServer = panelActionFn
 	.inputValidator((input: unknown) => sendEventMessageSchema.parse(input))
 	.handler(async ({ data, context }) => {
 		await assertCanManageEvent(context.user, data.eventId);
-		await consumeRateLimit(
-			"event-message",
-			EVENT_MESSAGE_LIMIT,
-			`event:${data.eventId}`,
-		);
+		for (const key of eventMessageRateKeys(data.eventId, context.user.id)) {
+			await consumeRateLimit("event-message", EVENT_MESSAGE_LIMIT, key);
+		}
 		return messageRegistrants(data.eventId, data.audience, (tx, ids) =>
 			enqueueEmails(
 				ids.map((registrationId) => ({

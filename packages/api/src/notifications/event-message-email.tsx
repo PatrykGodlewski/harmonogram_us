@@ -53,12 +53,7 @@ export function eventMessageEmailText(props: EventMessageEmailProps): {
 	};
 }
 
-const text = {
-	fontSize: "15px",
-	lineHeight: "22px",
-	margin: "0 0 12px",
-	whiteSpace: "pre-line" as const,
-};
+const text = { fontSize: "15px", lineHeight: "22px", margin: "0 0 12px" };
 
 export function EventMessageEmail(props: EventMessageEmailProps) {
 	const { locale } = props;
@@ -86,9 +81,17 @@ export function EventMessageEmail(props: EventMessageEmailProps) {
 							padding: "24px",
 						}}
 					>
-						{paragraphs(props.body).map((paragraph) => (
-							<Text key={paragraph} style={text}>
-								{paragraph}
+						{paragraphs(props.body).map((paragraph, index) => (
+							// Static list: the index is a stable key (paragraphs may repeat).
+							// biome-ignore lint/suspicious/noArrayIndexKey: static content
+							<Text key={index} style={text}>
+								{paragraph.split("\n").map((line, lineIndex) => (
+									// biome-ignore lint/suspicious/noArrayIndexKey: static content
+									<span key={lineIndex}>
+										{lineIndex > 0 ? <br /> : null}
+										{line}
+									</span>
+								))}
 							</Text>
 						))}
 						<Button

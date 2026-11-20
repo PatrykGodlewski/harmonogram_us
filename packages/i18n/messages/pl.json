@@ -438,5 +438,6 @@
 	"admin_scan_camera_denied": "Brak dostępu do kamery. Zezwól na kamerę w ustawieniach przeglądarki i odśwież stronę.",
 	"admin_scan_back": "Wróć do wydarzenia",
 	"admin_attendance": "Obecność",
-	"admin_attendance_count": "Obecni: {present} / {registered}"
+	"admin_attendance_count": "Obecni: {present} / {registered}",
+	"admin_registrants_csv_file": "zapisani"
 }

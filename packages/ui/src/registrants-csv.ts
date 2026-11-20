@@ -16,8 +16,8 @@ import { formatEventDateTime } from "./time";
 
 type Locale = "pl" | "en";
 
-/** A spreadsheet runs cells starting with these as formulas (CSV injection). */
-const FORMULA_START = /^[=+\-@\t\r]/;
+/** A spreadsheet runs these as formulas (CSV injection), also after leading spaces; `|` is DDE. */
+const FORMULA_START = /^\s*[=+\-@|]|^[\t\r\n]/;
 
 function cell(value: string): string {
 	const safe = FORMULA_START.test(value) ? `'${value}` : value;

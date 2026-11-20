@@ -47,4 +47,18 @@ describe("toRegistrantsCsv", () => {
 		const csv = toRegistrantsCsv([{ ...base, checkedInAt: new Date() }], [], "pl");
 		expect(csv.slice(1).split("\r\n")[1]?.endsWith(';"tak"')).toBe(true);
 	});
+
+	it("defuses formulas after spaces and DDE pipes too", () => {
+		const csv = toRegistrantsCsv(
+			[
+				{ ...base, name: "  =1+1" },
+				{ ...base, registrationId: "r2", name: "|calc" },
+			],
+			[],
+			"pl",
+		);
+		const lines = csv.slice(1).split("\r\n");
+		expect(lines[1]?.startsWith(`"'  =1+1";`)).toBe(true);
+		expect(lines[2]?.startsWith(`"'|calc";`)).toBe(true);
+	});
 });

@@ -12,6 +12,7 @@ import {
 	admin_group_unnamed,
 	admin_registrant_waitlisted,
 	admin_registrants_csv,
+	admin_registrants_csv_file,
 	admin_registrants_filter,
 	admin_registrants_filter_all,
 	admin_registrants_filter_registered,
@@ -102,7 +103,7 @@ export function RegistrantsList({
 	const handleDownload = () => {
 		const locale = getLocale();
 		downloadCsv(
-			`zapisani-${slugify(eventTitle)}-${toEventDateInput(new Date())}.csv`,
+			`${admin_registrants_csv_file()}-${slugify(eventTitle)}-${toEventDateInput(new Date())}.csv`,
 			toRegistrantsCsv(registrants, agenda, locale),
 		);
 	};
@@ -316,7 +317,7 @@ function slugify(text: string): string {
 	return (
 		text
 			.normalize("NFD")
-			.replace(/[̀-ͯ]/g, "")
+			.replace(/\p{Diacritic}/gu, "")
 			.replace(/ł/g, "l")
 			.replace(/Ł/g, "L")
 			.toLowerCase()
@@ -334,5 +335,6 @@ function downloadCsv(filename: string, content: string): void {
 	link.href = url;
 	link.download = filename;
 	link.click();
-	URL.revokeObjectURL(url);
+	// Some browsers start the download after click() returns.
+	setTimeout(() => URL.revokeObjectURL(url), 0);
 }

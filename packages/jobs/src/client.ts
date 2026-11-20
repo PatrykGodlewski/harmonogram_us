@@ -89,12 +89,21 @@ export async function enqueueEmails(
 		return;
 	}
 	const boss = await getBoss();
-	await boss.insert(
-		QUEUE_EMAILS,
-		jobs.map((job) => ({ data: job, retryLimit: 3, retryBackoff: true })),
-		opts.tx ? { db: fromDrizzle(opts.tx, sql) } : undefined,
-	);
+	const insertOptions = opts.tx ? { db: fromDrizzle(opts.tx, sql) } : undefined;
+	// Batches keep each INSERT's parameter small (a message to thousands of people).
+	for (let start = 0; start < jobs.length; start += EMAIL_INSERT_BATCH) {
+		await boss.insert(
+			QUEUE_EMAILS,
+			jobs
+				.slice(start, start + EMAIL_INSERT_BATCH)
+				.map((job) => ({ data: job, retryLimit: 3, retryBackoff: true })),
+			insertOptions,
+		);
+	}
 }
+
+/** Jobs per INSERT when queueing many e-mails. */
+const EMAIL_INSERT_BATCH = 500;
 
 /**
  * Starts the pg-boss producer ahead of time (called from the web server entry),
