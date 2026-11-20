@@ -20,9 +20,18 @@ test("[F2] wydarzenie tylko dla zalogowanych nie jest widoczne dla niezalogowane
 	// After signing in, the event is on the list and its page opens
 	await signInByEmail(page, email);
 	await open(page, listUrl);
-	await expect(page.getByText(event.title)).toBeVisible();
-	await open(page, `/pl/events/${event.id}`);
+	await page.getByRole("link", { name: event.title }).click();
 	await expect(
 		page.getByRole("heading", { name: event.title, level: 1 }),
 	).toBeVisible();
+
+	// After signing out in the same tab, the (cached) list no longer shows it
+	await page.getByRole("link", { name: "Wyloguj" }).click();
+	await page.waitForURL(/\/pl\/?$/);
+	await page.locator("html[data-hydrated=true]").waitFor();
+	await page.getByPlaceholder("Wyszukaj wydarzenie...").fill(event.title);
+	await expect(
+		page.getByText("Brak dostępnych wydarzeń").or(page.getByText(event.title)),
+	).toBeVisible();
+	await expect(page.getByText(event.title)).toHaveCount(0);
 });

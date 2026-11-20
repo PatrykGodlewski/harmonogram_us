@@ -56,6 +56,7 @@ const onlineUrlSchema = z
 	.nullable()
 	.optional();
 const attendanceModeSchema = z.enum(["onsite", "online", "hybrid"]);
+const visibilitySchema = z.enum(["public", "authenticated"]);
 
 export const createEventSchema = z.object({
 	id: optionalIdSchema,
@@ -70,7 +71,7 @@ export const createEventSchema = z.object({
 	facultyId: z.string().min(1).nullable().optional(),
 	onlineUrl: onlineUrlSchema,
 	attendanceMode: attendanceModeSchema.optional(),
-	visibility: z.enum(["public", "authenticated"]).optional(),
+	visibility: visibilitySchema.optional(),
 });
 
 export type CreateEventParams = z.infer<typeof createEventSchema>;
@@ -88,7 +89,7 @@ export const updateEventSchema = z.object({
 	facultyId: z.string().min(1).nullable().optional(),
 	onlineUrl: onlineUrlSchema,
 	attendanceMode: attendanceModeSchema.optional(),
-	visibility: z.enum(["public", "authenticated"]).optional(),
+	visibility: visibilitySchema.optional(),
 });
 
 export type UpdateEventParams = z.infer<typeof updateEventSchema>;

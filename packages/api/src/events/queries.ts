@@ -64,19 +64,16 @@ export const fetchEventDetailsServer = createServerFn({ method: "GET" })
 	.handler(async ({ data }) => {
 		const session = await getCurrentSession();
 		const signedIn = Boolean(session?.user);
+		// Load as if signed in, then decide: a signed-in-only event asks an anonymous visitor to sign in.
 		const event = await getEventById(data.eventId, {
 			kind: "public",
-			signedIn,
+			signedIn: true,
 		});
 		if (!event) {
-			// A signed-in-only event asks an anonymous visitor to sign in (the page redirects).
-			if (
-				!signedIn &&
-				(await getEventById(data.eventId, { kind: "public", signedIn: true }))
-			) {
-				throw appError("UNAUTHORIZED");
-			}
 			throw appError("EVENT_NOT_FOUND");
+		}
+		if (!signedIn && event.visibility === "authenticated") {
+			throw appError("UNAUTHORIZED");
 		}
 		// The public read never carries the meeting link; registered people get it here.
 		if (

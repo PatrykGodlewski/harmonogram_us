@@ -33,7 +33,7 @@ export const Route = createFileRoute("/events/$eventId")({
 		joined: z.coerce.number().optional().catch(undefined),
 		agenda: z.enum(["list", "calendar"]).optional().catch(undefined),
 	}),
-	loader: async ({ context: { queryClient, user }, params }) => {
+	loader: async ({ context: { queryClient, user }, params, location }) => {
 		try {
 			await queryClient.ensureQueryData(
 				eventDetailsQueryOptions(params.eventId),
@@ -47,7 +47,7 @@ export const Route = createFileRoute("/events/$eventId")({
 			if (error instanceof Error && error.message === "UNAUTHORIZED") {
 				throw redirect({
 					to: "/login",
-					search: { redirect: `/events/${params.eventId}` },
+					search: { redirect: location.href },
 				});
 			}
 			throw error;

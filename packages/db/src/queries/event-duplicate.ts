@@ -1,5 +1,5 @@
 import { env } from "@repo/env/client";
-import { eq, sql } from "drizzle-orm";
+import { eq, type SQL, sql } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { db } from "../client";
 import { agendaItems } from "../schema/agenda";
@@ -35,8 +35,8 @@ export async function duplicateEvent(
 		}
 		// Local time of the copy minus local time of the source, as an interval.
 		const shift = sql`((${input.date.toISOString()}::timestamptz AT TIME ZONE ${zone}) - (${source.date.toISOString()}::timestamptz AT TIME ZONE ${zone}))`;
-		const moved = (column: AnyPgColumn) =>
-			sql<Date>`(((${column} AT TIME ZONE ${zone}) + ${shift}) AT TIME ZONE ${zone})`;
+		const moved = (time: AnyPgColumn | SQL) =>
+			sql<Date>`(((${time} AT TIME ZONE ${zone}) + ${shift}) AT TIME ZONE ${zone})`;
 
 		const [copy] = await tx
 			.insert(events)
@@ -45,7 +45,7 @@ export async function duplicateEvent(
 				description: source.description,
 				date: input.date,
 				endsAt: source.endsAt
-					? sql`(((${source.endsAt.toISOString()}::timestamptz AT TIME ZONE ${zone}) + ${shift}) AT TIME ZONE ${zone})`
+					? moved(sql`${source.endsAt.toISOString()}::timestamptz`)
 					: null,
 				maxSeats: source.maxSeats,
 				groupDeadlineHours: source.groupDeadlineHours,
@@ -81,17 +81,19 @@ export async function duplicateEvent(
 				.where(eq(agendaItems.eventId, source.id)),
 		);
 
-		await tx.insert(eventOrganizers).select(
-			tx
-				.selectDistinct({
-					eventId: sql<string>`${copy.id}`.as("event_id"),
-					userId: sql<string>`u.user_id`.as("user_id"),
-					createdAt: sql<Date>`now()`.as("created_at"),
-				})
-				.from(
-					sql`(SELECT user_id FROM event_organizers WHERE event_id = ${source.id} UNION SELECT ${input.actorId}) AS u`,
-				),
-		);
+		const organizers = await tx
+			.select({ userId: eventOrganizers.userId })
+			.from(eventOrganizers)
+			.where(eq(eventOrganizers.eventId, source.id));
+		const organizerIds = new Set([
+			...organizers.map((row) => row.userId),
+			input.actorId,
+		]);
+		await tx
+			.insert(eventOrganizers)
+			.values(
+				[...organizerIds].map((userId) => ({ eventId: copy.id, userId })),
+			);
 		return { id: copy.id };
 	});
 }

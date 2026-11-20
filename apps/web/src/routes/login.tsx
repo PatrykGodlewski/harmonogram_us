@@ -17,9 +17,11 @@ export const Route = createFileRoute("/login")({
 
 function LoginComp() {
 	const { redirect } = Route.useSearch();
-	const redirectTo = redirect?.startsWith("/")
-		? localizeHref(redirect)
-		: localizeHref("/");
+	// Same-site paths only: "//host" would be another site.
+	const redirectTo =
+		redirect?.startsWith("/") && !redirect.startsWith("//")
+			? localizeHref(redirect)
+			: localizeHref("/");
 
 	return (
 		<div className="flex min-h-[50vh] items-center justify-center p-8">
