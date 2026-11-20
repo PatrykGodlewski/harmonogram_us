@@ -3,14 +3,19 @@ import {
 	event_cancelled_banner,
 	event_details_closed,
 	event_details_places_left,
+	event_details_requires_approval,
 	event_join_online,
 	event_room,
 	events_join_waitlist,
 	events_leave_waitlist,
+	events_pending_approval,
 	events_register,
 	events_registered,
+	events_rejected,
+	events_request_registration,
 	events_unregister,
 	events_waitlisted,
+	events_withdraw_request,
 	groups_register_group,
 	privacy_link,
 	privacy_notice_short,
@@ -115,9 +120,15 @@ export function EventSummary({
 					interactive={interactive}
 					isClosed={isClosed}
 					isFull={seatCount.seatsRemaining <= 0}
+					requiresApproval={event.requiresApproval}
 					registrations={registrations}
 				/>
 			</div>
+			{event.requiresApproval && !isClosed ? (
+				<p className="text-sm text-muted-foreground">
+					{event_details_requires_approval()}
+				</p>
+			) : null}
 			{isClosed ? null : (
 				<p className="text-xs text-muted-foreground">
 					{privacy_notice_short()}{" "}
@@ -143,6 +154,7 @@ type EventRegistrationActionProps = {
 	interactive: boolean;
 	isClosed: boolean;
 	isFull: boolean;
+	requiresApproval: boolean;
 	registrations: EventDetailsRegistrations;
 };
 
@@ -152,6 +164,7 @@ function EventRegistrationAction({
 	interactive,
 	isClosed,
 	isFull,
+	requiresApproval,
 	registrations,
 }: EventRegistrationActionProps) {
 	const busy = !interactive || registrations.isBusy;
@@ -225,6 +238,29 @@ function EventRegistrationAction({
 		);
 	}
 
+	if (registrations.approval === "rejected") {
+		return <p className="text-sm text-muted-foreground">{events_rejected()}</p>;
+	}
+
+	if (registrations.approval === "pending") {
+		return (
+			<div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+				<Badge variant="secondary">{events_pending_approval()}</Badge>
+				{isClosed ? null : (
+					<Button
+						size="sm"
+						variant="outline"
+						className="w-full sm:w-auto"
+						disabled={busy}
+						onClick={registrations.unregisterEvent}
+					>
+						{events_withdraw_request()}
+					</Button>
+				)}
+			</div>
+		);
+	}
+
 	if (isClosed) {
 		return <p className="text-muted-foreground">{event_details_closed()}</p>;
 	}
@@ -237,7 +273,11 @@ function EventRegistrationAction({
 			disabled={busy}
 			onClick={registrations.registerEvent}
 		>
-			{isFull ? events_join_waitlist() : events_register()}
+			{requiresApproval
+				? events_request_registration()
+				: isFull
+					? events_join_waitlist()
+					: events_register()}
 		</Button>
 	);
 }

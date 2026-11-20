@@ -97,6 +97,7 @@ export const createEventSchema = z.object({
 	visibility: visibilitySchema.optional(),
 	room: roomSchema,
 	reminderHoursBefore: reminderHoursSchema,
+	requiresApproval: z.boolean().optional(),
 });
 
 export type CreateEventParams = z.infer<typeof createEventSchema>;
@@ -117,6 +118,7 @@ export const updateEventSchema = z.object({
 	visibility: visibilitySchema.optional(),
 	room: roomSchema,
 	reminderHoursBefore: reminderHoursSchema,
+	requiresApproval: z.boolean().optional(),
 });
 
 export type UpdateEventParams = z.infer<typeof updateEventSchema>;

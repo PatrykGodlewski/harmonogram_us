@@ -27,6 +27,8 @@ import {
 	admin_field_none,
 	admin_field_online_url,
 	admin_field_reminder,
+	admin_field_requires_approval,
+	admin_field_requires_approval_hint,
 	admin_field_room,
 	admin_field_room_hint,
 	admin_field_signed_in_only,
@@ -123,6 +125,7 @@ const EMPTY_VALUES = {
 	facultyId: NONE_VALUE,
 	attendanceMode: "onsite" as AttendanceMode,
 	signedInOnly: false,
+	requiresApproval: false,
 	onlineUrl: "",
 };
 
@@ -144,6 +147,7 @@ function toFormValues(event: EventWithRelations): EventFormValues {
 		facultyId: event.facultyId ?? NONE_VALUE,
 		attendanceMode: event.attendanceMode,
 		signedInOnly: event.visibility === "authenticated",
+		requiresApproval: event.requiresApproval,
 		onlineUrl: event.onlineUrl ?? "",
 	};
 }
@@ -181,6 +185,7 @@ export function EventFormDialog({
 				facultyId: z.string(),
 				attendanceMode: z.enum(["onsite", "online", "hybrid"]),
 				signedInOnly: z.boolean(),
+				requiresApproval: z.boolean(),
 				onlineUrl: z.union([
 					z.literal(""),
 					z.url({ protocol: /^https$/ }).max(2000),
@@ -214,6 +219,7 @@ export function EventFormDialog({
 				visibility: values.signedInOnly
 					? ("authenticated" as const)
 					: ("public" as const),
+				requiresApproval: values.requiresApproval,
 				onlineUrl:
 					values.attendanceMode === "onsite" || !values.onlineUrl.trim()
 						? null
@@ -617,6 +623,33 @@ export function EventFormDialog({
 							onChange={(event) => field.handleChange(event.target.checked)}
 						/>
 						<Label htmlFor={field.name}>{admin_field_signed_in_only()}</Label>
+					</div>
+				)}
+			</form.Field>
+
+			<form.Field name="requiresApproval">
+				{(field) => (
+					<div className="flex items-start gap-2">
+						<input
+							id={field.name}
+							type="checkbox"
+							className="mt-0.5 size-4 accent-primary"
+							checked={field.state.value}
+							disabled={saveMutation.isPending}
+							aria-describedby={`${field.name}-hint`}
+							onChange={(event) => field.handleChange(event.target.checked)}
+						/>
+						<div>
+							<Label htmlFor={field.name}>
+								{admin_field_requires_approval()}
+							</Label>
+							<p
+								id={`${field.name}-hint`}
+								className="text-xs text-muted-foreground"
+							>
+								{admin_field_requires_approval_hint()}
+							</p>
+						</div>
 					</div>
 				)}
 			</form.Field>

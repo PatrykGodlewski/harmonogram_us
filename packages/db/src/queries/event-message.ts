@@ -28,7 +28,7 @@ export async function messageRegistrants(
 					typeof target === "object"
 						? inArray(eventRegistrations.id, target.registrationIds)
 						: target === "all"
-							? undefined
+							? inArray(eventRegistrations.state, ["registered", "waitlisted"])
 							: eq(eventRegistrations.state, target),
 				),
 			)

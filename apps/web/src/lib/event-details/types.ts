@@ -1,4 +1,5 @@
 import type { EventDetails } from "@repo/api/events/queries";
+import type { Approval } from "~/lib/registration/use-event-list-registrations";
 
 export type EventDetailsData = EventDetails;
 export type AgendaItemData = EventDetails["agenda"][number];
@@ -19,6 +20,7 @@ export type EventDetailsRegistrations = {
 	registeredItemIds: ReadonlySet<string>;
 	/** 1-based waitlist position, or null when not waitlisted. */
 	waitlistPosition: number | null;
+	approval: Approval;
 	/** An action on this page is in flight (buttons wait for it). */
 	isBusy: boolean;
 	registerEvent: () => void;

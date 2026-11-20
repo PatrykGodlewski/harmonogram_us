@@ -59,6 +59,7 @@ export async function createTestEvent(input: {
 	attendanceMode?: AttendanceMode;
 	onlineUrl?: string;
 	visibility?: EventVisibility;
+	requiresApproval?: boolean;
 	/** Makes this user the event's organizer (default: none, only admins manage it). */
 	organizerId?: string;
 	/** startHour: hours after the event starts (default: the item's index); durationMinutes default 50. */
@@ -83,6 +84,7 @@ export async function createTestEvent(input: {
 		attendanceMode: input.attendanceMode,
 		onlineUrl: input.onlineUrl ?? null,
 		visibility: input.visibility,
+		requiresApproval: input.requiresApproval,
 	});
 	if (!event) {
 		throw new Error("createEvent returned nothing");

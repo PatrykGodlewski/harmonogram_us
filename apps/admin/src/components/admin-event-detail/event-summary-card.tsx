@@ -5,6 +5,7 @@ import {
 	admin_event_places,
 	admin_event_status_draft,
 	admin_scan_open,
+	admin_summary_requires_approval,
 	event_room,
 	event_status_cancelled,
 } from "@repo/i18n/paraglide/messages";
@@ -55,6 +56,9 @@ export function EventSummaryCard({ event, onChanged }: EventSummaryCardProps) {
 				) : null}
 				<AttendanceModeBadge mode={event.attendanceMode} />
 				<Badge variant="secondary">{event.typeLabel}</Badge>
+				{event.requiresApproval ? (
+					<Badge variant="outline">{admin_summary_requires_approval()}</Badge>
+				) : null}
 				{event.facultyLabel ? (
 					<Badge variant="outline">{event.facultyLabel}</Badge>
 				) : null}

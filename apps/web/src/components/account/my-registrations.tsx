@@ -4,7 +4,9 @@ import {
 	account_my_registrations,
 	account_open_event,
 	account_past,
+	account_pending,
 	account_registrations_empty,
+	account_rejected,
 	account_section_empty,
 	account_ticket,
 	account_upcoming,
@@ -103,6 +105,19 @@ function RegistrationGroup({
 	);
 }
 
+function stateLabel(row: MyRegistrationListItem): string {
+	switch (row.state) {
+		case "registered":
+			return events_registered();
+		case "waitlisted":
+			return account_waitlisted({ position: row.waitlistPosition ?? 0 });
+		case "pending":
+			return account_pending();
+		case "rejected":
+			return account_rejected();
+	}
+}
+
 function RegistrationRow({
 	row,
 	canWithdraw,
@@ -128,9 +143,7 @@ function RegistrationRow({
 						<Badge variant="destructive">{event_status_cancelled()}</Badge>
 					) : null}
 					<Badge variant={row.state === "registered" ? "default" : "secondary"}>
-						{row.state === "registered"
-							? events_registered()
-							: account_waitlisted({ position: row.waitlistPosition ?? 0 })}
+						{stateLabel(row)}
 					</Badge>
 				</div>
 				{row.items.length > 0 ? (

@@ -17,8 +17,12 @@ import {
 	reg_email_cancelled_subject,
 	reg_email_confirmed_intro,
 	reg_email_confirmed_subject,
+	reg_email_pending_intro,
+	reg_email_pending_subject,
 	reg_email_promoted_intro,
 	reg_email_promoted_subject,
+	reg_email_rejected_intro,
+	reg_email_rejected_subject,
 	reg_email_reminder_intro,
 	reg_email_reminder_subject,
 	reg_email_ticket,
@@ -33,7 +37,9 @@ export type RegistrationEmailChange =
 	| "waitlisted"
 	| "promoted"
 	| "cancelled"
-	| "reminder";
+	| "reminder"
+	| "pending"
+	| "rejected";
 
 export type RegistrationEmailProps = {
 	change: RegistrationEmailChange;
@@ -52,6 +58,8 @@ const SUBJECTS = {
 	promoted: reg_email_promoted_subject,
 	cancelled: reg_email_cancelled_subject,
 	reminder: reg_email_reminder_subject,
+	pending: reg_email_pending_subject,
+	rejected: reg_email_rejected_subject,
 } as const;
 
 const INTROS = {
@@ -60,7 +68,14 @@ const INTROS = {
 	promoted: reg_email_promoted_intro,
 	cancelled: reg_email_cancelled_intro,
 	reminder: reg_email_reminder_intro,
+	pending: reg_email_pending_intro,
+	rejected: reg_email_rejected_intro,
 } as const;
+
+/** Nothing to withdraw from once the event is cancelled or the request declined. */
+function hasWithdrawHint(change: RegistrationEmailChange): boolean {
+	return change !== "cancelled" && change !== "rejected";
+}
 
 /** Subject and plain-text body; the HTML version is RegistrationEmail. */
 export function registrationEmailText(props: RegistrationEmailProps): {
@@ -80,9 +95,9 @@ export function registrationEmailText(props: RegistrationEmailProps): {
 			props.ticketUrl
 				? `${reg_email_ticket({}, { locale })}\n${props.ticketUrl}`
 				: null,
-			props.change === "cancelled"
-				? null
-				: reg_email_withdraw_hint({}, { locale }),
+			hasWithdrawHint(props.change)
+				? reg_email_withdraw_hint({}, { locale })
+				: null,
 		]
 			.filter(Boolean)
 			.join("\n\n"),
@@ -149,7 +164,7 @@ export function RegistrationEmail(props: RegistrationEmailProps) {
 								{reg_email_ticket_button({}, { locale })}
 							</Button>
 						) : null}
-						{props.change === "cancelled" ? null : (
+						{!hasWithdrawHint(props.change) ? null : (
 							<Text
 								style={{
 									...text,

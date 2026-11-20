@@ -84,7 +84,13 @@ export async function assertEventOpen(tx: TransactionClient, eventId: string) {
 
 export type RegistrationChange = {
 	registrationId: string;
-	change: "confirmed" | "waitlisted" | "promoted" | "cancelled";
+	change:
+		| "confirmed"
+		| "waitlisted"
+		| "promoted"
+		| "cancelled"
+		| "pending"
+		| "rejected";
 };
 
 /** Where and when an event takes place, as people read it ("Aula · B105"). */
@@ -238,12 +244,45 @@ async function insertEventRegistration(
 	return id;
 }
 
-/** Registers for the event, or joins its waitlist when it is full. */
+const CHANGE_FOR_NEW_STATE = {
+	registered: "confirmed",
+	waitlisted: "waitlisted",
+	pending: "pending",
+} as const satisfies Record<string, RegistrationChange["change"]>;
+
+/** A self-registration waits for approval, takes a free place, or joins the waitlist. */
+async function stateForNewRegistration(
+	tx: TransactionClient,
+	eventId: string,
+	byOrganizer: boolean,
+): Promise<keyof typeof CHANGE_FOR_NEW_STATE> {
+	if (!byOrganizer && (await requiresApproval(tx, eventId))) {
+		return "pending";
+	}
+	return (await seatsRemaining(tx, eventId)) > 0 ? "registered" : "waitlisted";
+}
+
+async function requiresApproval(
+	tx: TransactionClient,
+	eventId: string,
+): Promise<boolean> {
+	const [row] = await tx
+		.select({ requiresApproval: events.requiresApproval })
+		.from(events)
+		.where(eq(events.id, eventId));
+	return row?.requiresApproval ?? false;
+}
+
+/**
+ * Registers for the event, joins its waitlist when it is full, or asks for
+ * approval when the event requires it (not when an organiser adds the person).
+ */
 export async function registerForEvent(
 	eventId: string,
 	userId: string,
 	locale: "pl" | "en",
 	hooks?: RegistrationHooks,
+	{ byOrganizer = false }: { byOrganizer?: boolean } = {},
 ): Promise<{ state: RegistrationState; txid: number }> {
 	try {
 		return await db.transaction(async (tx) => {
@@ -256,8 +295,7 @@ export async function registerForEvent(
 				throw new DomainError("ALREADY_REGISTERED");
 			}
 
-			const state: RegistrationState =
-				(await seatsRemaining(tx, eventId)) > 0 ? "registered" : "waitlisted";
+			const state = await stateForNewRegistration(tx, eventId, byOrganizer);
 			const registrationId = await insertEventRegistration(
 				tx,
 				eventId,
@@ -266,10 +304,7 @@ export async function registerForEvent(
 				locale,
 			);
 			await notify(tx, hooks, [
-				{
-					registrationId,
-					change: state === "registered" ? "confirmed" : "waitlisted",
-				},
+				{ registrationId, change: CHANGE_FOR_NEW_STATE[state] },
 			]);
 			return { state, txid: await getCurrentTxId(tx) };
 		});
@@ -341,6 +376,14 @@ export async function registerForAgendaItem(
 			if (registration?.state === "waitlisted") {
 				throw new DomainError("EVENT_WAITLISTED");
 			}
+			// Items come after approval: no item registration on a pending or missing one.
+			if (
+				registration?.state === "pending" ||
+				registration?.state === "rejected" ||
+				(!registration && (await requiresApproval(tx, item.eventId)))
+			) {
+				throw new DomainError("APPROVAL_REQUIRED");
+			}
 			let eventRegistrationId = registration?.id ?? null;
 			const eventRegistered = eventRegistrationId === null;
 			if (eventRegistrationId === null) {
@@ -410,8 +453,10 @@ export async function unregisterFromEvent(
 ): Promise<{ txid: number }> {
 	return db.transaction(async (tx) => {
 		await lockEvent(tx, eventId);
-		const existingId = await findEventRegistrationId(tx, eventId, userId);
-		return withdraw(tx, eventId, existingId, hooks);
+		const existing = await findEventRegistration(tx, eventId, userId);
+		// A rejected request stays, so withdrawing cannot be used to ask again.
+		const id = existing?.state === "rejected" ? null : (existing?.id ?? null);
+		return withdraw(tx, eventId, id, hooks);
 	});
 }
 
@@ -498,7 +543,9 @@ export async function addRegistrantByEmail(
 	if (!user) {
 		throw new DomainError("USER_NOT_FOUND");
 	}
-	return registerForEvent(eventId, user.id, locale, hooks);
+	return registerForEvent(eventId, user.id, locale, hooks, {
+		byOrganizer: true,
+	});
 }
 
 type MyRegistrationState = {

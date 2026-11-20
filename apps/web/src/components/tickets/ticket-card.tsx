@@ -1,5 +1,7 @@
 import type { Ticket } from "@repo/api/events/ticket";
 import {
+	events_pending_approval,
+	events_rejected,
 	tickets_holder,
 	tickets_print,
 	tickets_qr_alt,
@@ -51,7 +53,11 @@ export function TicketCard({ ticket }: { ticket: Ticket }) {
 				</>
 			) : (
 				<p className="rounded-md bg-muted p-3 text-sm">
-					{tickets_waitlisted()}
+					{ticket.state === "waitlisted"
+						? tickets_waitlisted()
+						: ticket.state === "pending"
+							? events_pending_approval()
+							: events_rejected()}
 				</p>
 			)}
 		</article>

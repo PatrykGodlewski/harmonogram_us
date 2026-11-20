@@ -12,8 +12,16 @@ import { authUsers } from "./better-auth";
 import { events } from "./events";
 import { registrationGroups } from "./groups";
 
-/** `registered` holds a place; `waitlisted` waits in `created_at` order for one. */
-export type RegistrationState = "registered" | "waitlisted";
+/**
+ * `registered` holds a place; `waitlisted` waits in `created_at` order for one;
+ * `pending` waits for the organiser's approval and `rejected` was turned down
+ * (neither takes a place).
+ */
+export type RegistrationState =
+	| "registered"
+	| "waitlisted"
+	| "pending"
+	| "rejected";
 
 export const eventRegistrations = pgTable(
 	"event_registrations",
@@ -51,7 +59,7 @@ export const eventRegistrations = pgTable(
 	(table) => [
 		check(
 			"event_registrations_state_check",
-			sql`${table.state} IN ('registered', 'waitlisted')`,
+			sql`${table.state} IN ('registered', 'waitlisted', 'pending', 'rejected')`,
 		),
 		check(
 			"event_registrations_locale_check",

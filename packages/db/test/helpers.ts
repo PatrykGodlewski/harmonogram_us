@@ -44,6 +44,7 @@ export async function createEvent(opts?: {
 	maxSeats?: number;
 	date?: Date;
 	endsAt?: Date | null;
+	requiresApproval?: boolean;
 }): Promise<string> {
 	await db
 		.insert(eventTypes)
@@ -58,6 +59,7 @@ export async function createEvent(opts?: {
 			maxSeats: opts?.maxSeats ?? 10,
 			typeId: TEST_TYPE_ID,
 			status: "published",
+			requiresApproval: opts?.requiresApproval ?? false,
 		})
 		.returning({ id: events.id });
 	if (!event) throw new Error("event insert failed");

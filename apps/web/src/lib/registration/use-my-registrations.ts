@@ -1,9 +1,10 @@
 import { myRegistrationsQueryOptions } from "@repo/api/events/my-registrations";
+import type { RegistrationState } from "@repo/db/schema/event-registrations";
 import { useQuery } from "@tanstack/react-query";
 import * as React from "react";
 
 export type EventRegistrationState = {
-	state: "registered" | "waitlisted";
+	state: RegistrationState;
 	/** 1-based place on the waitlist; null when registered. */
 	waitlistPosition: number | null;
 };

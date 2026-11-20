@@ -33,6 +33,7 @@ export const DOMAIN_ERROR_CODES = [
 	"TICKET_WAITLISTED",
 	"SOLE_ORGANIZER",
 	"LAST_ADMIN",
+	"APPROVAL_REQUIRED",
 ] as const;
 
 export type DomainErrorCode = (typeof DOMAIN_ERROR_CODES)[number];

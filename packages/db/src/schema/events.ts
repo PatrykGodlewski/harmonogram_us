@@ -1,5 +1,12 @@
 import { relations, sql } from "drizzle-orm";
-import { check, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+	boolean,
+	check,
+	integer,
+	pgTable,
+	text,
+	timestamp,
+} from "drizzle-orm/pg-core";
 import { eventFaculties, eventLocations, eventTypes } from "./event-lookups";
 
 /** `draft` is visible only in the panel; `cancelled` keeps its registrations as history. */
@@ -36,6 +43,8 @@ export const events = pgTable(
 		/** Hours before the start when registrants get a reminder; null switches it off. */
 		reminderHoursBefore: integer("reminder_hours_before").default(24),
 		reminderSentAt: timestamp("reminder_sent_at", { withTimezone: true }),
+		/** Registrations wait as `pending` until an organiser approves them. */
+		requiresApproval: boolean("requires_approval").notNull().default(false),
 		attendanceMode: text("attendance_mode")
 			.$type<AttendanceMode>()
 			.notNull()

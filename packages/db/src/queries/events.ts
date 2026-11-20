@@ -81,6 +81,7 @@ export type EventWithRelations = {
 	room: string | null;
 	reminderHoursBefore: number | null;
 	visibility: EventVisibility;
+	requiresApproval: boolean;
 	createdAt: Date;
 	updatedAt: Date;
 	typeLabel: string;
@@ -230,6 +231,7 @@ async function queryEvents(
 			room: events.room,
 			reminderHoursBefore: events.reminderHoursBefore,
 			visibility: events.visibility,
+			requiresApproval: events.requiresApproval,
 			createdAt: events.createdAt,
 			updatedAt: events.updatedAt,
 			typeLabel: eventTypes.label,
@@ -270,6 +272,7 @@ export type CreateEventInput = {
 	visibility?: EventVisibility;
 	room?: string | null;
 	reminderHoursBefore?: number | null;
+	requiresApproval?: boolean;
 	/** Becomes the event's first organizer; null for events only admins manage (seed data). */
 	organizerId: string | null;
 };
@@ -295,6 +298,7 @@ export async function createEvent(input: CreateEventInput) {
 				attendanceMode: input.attendanceMode ?? "onsite",
 				visibility: input.visibility ?? "public",
 				room: input.room ?? null,
+				requiresApproval: input.requiresApproval ?? false,
 				...(input.reminderHoursBefore !== undefined
 					? { reminderHoursBefore: input.reminderHoursBefore }
 					: {}),
@@ -325,6 +329,7 @@ export type UpdateEventInput = {
 	visibility?: EventVisibility;
 	room?: string | null;
 	reminderHoursBefore?: number | null;
+	requiresApproval?: boolean;
 };
 
 /** Updates an event; raising the limit promotes waitlisted people into the new places. */
@@ -393,7 +398,12 @@ export async function updateEvent(
 					const people = await tx
 						.select({ id: eventRegistrations.id })
 						.from(eventRegistrations)
-						.where(eq(eventRegistrations.eventId, id));
+						.where(
+							and(
+								eq(eventRegistrations.eventId, id),
+								ne(eventRegistrations.state, "rejected"),
+							),
+						);
 					if (people.length > 0) {
 						await hooks.onEventChanged(tx, {
 							eventId: id,
@@ -531,7 +541,12 @@ export async function cancelEvent(
 		const people = await tx
 			.select({ id: eventRegistrations.id })
 			.from(eventRegistrations)
-			.where(eq(eventRegistrations.eventId, eventId))
+			.where(
+				and(
+					eq(eventRegistrations.eventId, eventId),
+					ne(eventRegistrations.state, "rejected"),
+				),
+			)
 			.orderBy(asc(eventRegistrations.createdAt), asc(eventRegistrations.id));
 		await notify(
 			tx,

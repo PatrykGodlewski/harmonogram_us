@@ -528,5 +528,20 @@
 	"admin_organizers_role": "Rola",
 	"admin_role_manager": "Współorganizator",
 	"admin_role_checkin": "Pomocnik od wejścia",
-	"calendar_campus_subscribe": "Subskrybuj kalendarz kampusu"
+	"calendar_campus_subscribe": "Subskrybuj kalendarz kampusu",
+	"events_request_registration": "Poproś o zapis",
+	"events_pending_approval": "Czeka na akceptację",
+	"events_withdraw_request": "Wycofaj zgłoszenie",
+	"events_rejected": "Zgłoszenie odrzucone",
+	"event_details_requires_approval": "Organizator akceptuje zapisy — dostaniesz e-mail z decyzją.",
+	"account_pending": "Czeka na akceptację",
+	"account_rejected": "Odrzucone",
+	"error_approval_required": "Na punkty programu zapiszesz się, gdy organizator zaakceptuje Twój zapis.",
+	"reg_email_pending_subject": "Czeka na akceptację: {event}",
+	"reg_email_pending_intro": "Dostaliśmy Twoje zgłoszenie na {event} ({date}). Organizator je rozpatrzy — napiszemy, gdy podejmie decyzję.",
+	"reg_email_rejected_subject": "Zgłoszenie odrzucone: {event}",
+	"reg_email_rejected_intro": "Organizator nie zaakceptował Twojego zgłoszenia na {event} ({date}).",
+	"admin_field_requires_approval": "Zapisy wymagają akceptacji",
+	"admin_field_requires_approval_hint": "Zgłoszenia czekają, aż je zaakceptujesz albo odrzucisz.",
+	"admin_summary_requires_approval": "Zapisy z akceptacją"
 }

@@ -46,6 +46,8 @@ export const emailJob = z.discriminatedUnion("kind", [
 			"promoted",
 			"cancelled",
 			"reminder",
+			"pending",
+			"rejected",
 		]),
 	}),
 	z.object({

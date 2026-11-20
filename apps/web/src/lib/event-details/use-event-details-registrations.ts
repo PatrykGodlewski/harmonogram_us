@@ -1,3 +1,4 @@
+import { approvalOf } from "~/lib/registration/use-event-list-registrations";
 import { useMyRegistrations } from "~/lib/registration/use-my-registrations";
 import { useRegistrationActions } from "~/lib/registration/use-registration-actions";
 import type { EventDetailsRegistrations } from "./types";
@@ -15,6 +16,7 @@ export function useEventDetailsRegistrations(
 		isEventRegistered: mine?.state === "registered",
 		registeredItemIds: agendaItemIds,
 		waitlistPosition: mine?.waitlistPosition ?? null,
+		approval: approvalOf(mine?.state),
 		isBusy: actions.hasPending,
 		registerEvent: () => actions.register(eventId),
 		unregisterEvent: () => actions.unregister(eventId),

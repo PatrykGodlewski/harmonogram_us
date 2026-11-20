@@ -71,6 +71,7 @@ export function HomeEventCard({
 							user={user}
 							interactive={interactive}
 							seatsRemaining={seatsRemaining}
+							requiresApproval={event.requiresApproval}
 							registrations={registrations}
 						/>
 					</CardAction>

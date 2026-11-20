@@ -155,6 +155,13 @@
       "when": 1795179410732,
       "tag": "0021_organizer_roles",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1795211689011,
+      "tag": "0022_registration_approval",
+      "breakpoints": true
     }
   ]
 }
