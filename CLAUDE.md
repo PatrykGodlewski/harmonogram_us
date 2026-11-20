@@ -51,6 +51,8 @@ Automated checks: `pnpm lint`, `pnpm typecheck`, `pnpm test` (Vitest; DB tests r
 
 **How we work** (spec, section "Zasady"): a feature is done when its Playwright test passes; test names carry the feature number (`[F5] …`); write the e2e test first and see it fail. One active plan at a time (about 10 tasks), each task a feature or a coherent part with its test; executed inline (`superpowers:executing-plans`) with one review at the end. No temporary solutions, no code "for the future".
 
+**Review and refactor after every major feature** (applies to every agent and subagent working here): when a feature or other major piece of work is finished and its tests are green, review the changed code and refactor it before moving on. Check library and framework usage against current docs with Context7 (`npx ctx7@latest library …` then `docs …`; TanStack Start/Router/Query/DB, Electric, Drizzle, Better Auth, pg-boss, Zod, shadcn), and apply clean-code principles with a focus on scalability and maintainability: small focused modules, one responsibility per file, no duplication, clear names, explicit types on public APIs, no N+1 queries or unbounded reads. Keep the refactor behaviour-preserving: tests stay green, and re-run them after.
+
 Mailpit inbox for local email (magic links): http://localhost:8025.
 
 ## Architecture
