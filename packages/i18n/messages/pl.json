@@ -467,5 +467,14 @@
 	"privacy_what": "Przetwarzamy imię, nazwisko, adres e-mail, zapisy na wydarzenia i punkty programu oraz obecność, aby zorganizować wydarzenie i wysyłać o nim wiadomości.",
 	"privacy_retention": "Dane zapisów przechowujemy przez {days} dni od zakończenia wydarzenia, potem usuwamy je automatycznie.",
 	"privacy_rights": "Na stronie konta możesz pobrać swoje dane albo usunąć konto razem z zapisami.",
-	"privacy_back": "Wróć do wydarzeń"
+	"privacy_back": "Wróć do wydarzeń",
+	"account_data_title": "Twoje dane",
+	"account_data_body": "Możesz pobrać wszystko, co o tobie przechowujemy, albo usunąć konto razem z zapisami.",
+	"account_data_export": "Pobierz moje dane",
+	"account_data_delete": "Usuń konto",
+	"account_data_delete_title": "Usunąć konto na zawsze?",
+	"account_data_delete_body": "Wypiszemy cię z nadchodzących wydarzeń (miejsca dostaną osoby z listy rezerwowej), zamkniemy twoje grupy i usuniemy konto. Tego nie da się cofnąć.",
+	"account_data_delete_confirm_label": "Wpisz swój e-mail, aby potwierdzić",
+	"account_data_delete_submit": "Usuń konto na zawsze",
+	"account_data_deleted": "Konto zostało usunięte."
 }

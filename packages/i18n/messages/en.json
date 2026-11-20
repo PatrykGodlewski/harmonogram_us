@@ -467,5 +467,14 @@
 	"privacy_what": "We process your name, e-mail address, registrations for events and agenda items, and attendance to organize the event and send messages about it.",
 	"privacy_retention": "We keep registration data for {days} days after the event ends, then delete it automatically.",
 	"privacy_rights": "On your account page you can download your data or delete your account with its registrations.",
-	"privacy_back": "Back to events"
+	"privacy_back": "Back to events",
+	"account_data_title": "Your data",
+	"account_data_body": "You can download everything we keep about you, or delete your account with its registrations.",
+	"account_data_export": "Download my data",
+	"account_data_delete": "Delete account",
+	"account_data_delete_title": "Delete your account for good?",
+	"account_data_delete_body": "We'll withdraw you from upcoming events (waitlisted people get the places), close your groups and delete the account. This can't be undone.",
+	"account_data_delete_confirm_label": "Type your e-mail to confirm",
+	"account_data_delete_submit": "Delete account for good",
+	"account_data_deleted": "Your account has been deleted."
 }

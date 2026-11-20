@@ -44,6 +44,7 @@ import { getRequestHeaders } from "@tanstack/react-start/server";
 import * as React from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { MyData } from "~/components/account/my-data";
 import { MyRegistrations } from "~/components/account/my-registrations";
 import { authClient } from "../lib/auth-client";
 
@@ -173,6 +174,7 @@ function AccountPage() {
 			</div>
 			{user ? <MyRegistrations userId={user.id} /> : null}
 			<MyGroups />
+			{user ? <MyData email={user.email} /> : null}
 			<div className="mt-6 rounded-lg border p-4">
 				<h2 className="mb-4 text-lg font-semibold">
 					{account_password_title()}
