@@ -36,7 +36,9 @@ test("[F9] klauzula jest widoczna przy zapisie @uczestnik", async ({
 			level: 1,
 		}),
 	).toBeVisible();
-	await expect(page.getByText(/przechowujemy przez \d+ dni/)).toBeVisible();
+	await expect(
+		page.getByText(/usuwamy automatycznie \d+ dni po zakończeniu wydarzenia/),
+	).toBeVisible();
 });
 
 test("[F9] eksport zawiera moje zapisy, a po usunięciu konta logowanie nie działa @uczestnik", async ({

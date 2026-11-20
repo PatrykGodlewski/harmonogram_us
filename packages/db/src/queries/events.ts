@@ -334,12 +334,21 @@ export async function updateEvent(
 				values.date !== undefined &&
 				before !== null &&
 				values.date.getTime() !== before.date.getTime();
+			// A new date gets a new reminder, unless its reminder time has already passed.
+			const reminderHours =
+				values.reminderHoursBefore !== undefined
+					? values.reminderHoursBefore
+					: (before?.reminderHoursBefore ?? null);
+			const rearmReminder =
+				dateMoved &&
+				values.date !== undefined &&
+				reminderHours !== null &&
+				values.date.getTime() - reminderHours * 3_600_000 > Date.now();
 			const [event] = await tx
 				.update(events)
 				.set({
 					...values,
-					// A new date gets a new reminder.
-					...(dateMoved ? { reminderSentAt: null } : {}),
+					...(rearmReminder ? { reminderSentAt: null } : {}),
 					updatedAt: new Date(),
 				})
 				.where(eq(events.id, id))
@@ -351,7 +360,9 @@ export async function updateEvent(
 				event &&
 				before &&
 				locked?.status === "published" &&
-				hooks?.onEventChanged
+				hooks?.onEventChanged &&
+				// Fixing a past event's details tells nobody.
+				!(await hasEventEnded(tx, id))
 			) {
 				const after = await readWhenWhere(tx, id);
 				if (
@@ -367,8 +378,8 @@ export async function updateEvent(
 						await hooks.onEventChanged(tx, {
 							eventId: id,
 							registrationIds: people.map((row) => row.id),
-							before,
-							after,
+							before: { date: before.date, place: before.place },
+							after: { date: after.date, place: after.place },
 						});
 					}
 				}
@@ -536,10 +547,11 @@ export async function getEventStatus(
 async function readWhenWhere(
 	tx: TransactionClient,
 	eventId: string,
-): Promise<EventWhenWhere | null> {
+): Promise<(EventWhenWhere & { reminderHoursBefore: number | null }) | null> {
 	const [row] = await tx
 		.select({
 			date: events.date,
+			reminderHoursBefore: events.reminderHoursBefore,
 			location: eventLocations.label,
 			room: events.room,
 		})
@@ -550,5 +562,9 @@ async function readWhenWhere(
 		return null;
 	}
 	const place = [row.location, row.room].filter(Boolean).join(" · ");
-	return { date: row.date, place: place || null };
+	return {
+		date: row.date,
+		place: place || null,
+		reminderHoursBefore: row.reminderHoursBefore,
+	};
 }

@@ -3,6 +3,7 @@ import { type AppErrorCode, DomainError } from "@repo/db/queries/domain-errors";
 /** HTTP status per error code; any code not listed is a conflict with the current state (409). */
 const STATUS: Partial<Record<AppErrorCode, number>> = {
 	UNAUTHORIZED: 401,
+	REAUTH_REQUIRED: 401,
 	FORBIDDEN: 403,
 	NOT_GROUP_OWNER: 403,
 	EMAIL_NOT_VERIFIED: 403,

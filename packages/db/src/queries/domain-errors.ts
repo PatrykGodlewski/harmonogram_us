@@ -31,6 +31,8 @@ export const DOMAIN_ERROR_CODES = [
 	"EVENT_ALREADY_CANCELLED",
 	"TICKET_NOT_FOUND",
 	"TICKET_WAITLISTED",
+	"SOLE_ORGANIZER",
+	"LAST_ADMIN",
 ] as const;
 
 export type DomainErrorCode = (typeof DOMAIN_ERROR_CODES)[number];
@@ -44,6 +46,7 @@ export const TRANSPORT_ERROR_CODES = [
 	"CAPTCHA_REQUIRED",
 	"CAPTCHA_FAILED",
 	"EMAIL_NOT_ALLOWED",
+	"REAUTH_REQUIRED",
 ] as const;
 
 export type TransportErrorCode = (typeof TRANSPORT_ERROR_CODES)[number];

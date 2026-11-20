@@ -461,12 +461,12 @@
 	"publish_checklist_saved": "Saved.",
 	"admin_events_search": "Search events",
 	"privacy_title": "Personal data notice",
-	"privacy_notice_short": "By registering, you share your name and e-mail with the organizer. We delete them automatically after the retention period.",
+	"privacy_notice_short": "By registering, you share your name and e-mail with the organizer. Registration data, attendance included, is deleted automatically after the retention period.",
 	"privacy_link": "Personal data notice",
 	"privacy_who": "The university running this service controls the data. The event's organizers can see registration data.",
 	"privacy_what": "We process your name, e-mail address, registrations for events and agenda items, and attendance to organize the event and send messages about it.",
-	"privacy_retention": "We keep registration data for {days} days after the event ends, then delete it automatically.",
-	"privacy_rights": "On your account page you can download your data or delete your account with its registrations.",
+	"privacy_retention": "Registration data, attendance and groups included, is deleted automatically {days} days after the event ends. Account data (name, e-mail) is kept until you delete your account.",
+	"privacy_rights": "You may access, correct, delete and move your data: on your account page you can download it or delete your account. You may also complain to the Polish data protection authority (UODO).",
 	"privacy_back": "Back to events",
 	"account_data_title": "Your data",
 	"account_data_body": "You can download everything we keep about you, or delete your account with its registrations.",
@@ -498,5 +498,11 @@
 	"calendar_my_copy": "Copy address",
 	"calendar_my_copied": "Address copied.",
 	"calendar_my_open": "Open in calendar",
-	"calendar_my_private": "This address is private: don't share it."
+	"calendar_my_private": "This address is private: don't share it.",
+	"error_sole_organizer": "You're the only organizer of an upcoming event. Add a co-organizer or cancel the event before deleting your account.",
+	"error_last_admin": "This is the last admin account. Make someone else an admin before deleting it.",
+	"privacy_controller": "Data controller: {controller}.",
+	"privacy_contact": "Contact about your data: {email}.",
+	"privacy_basis": "The basis is your registration for the event, the service you ask for (GDPR art. 6(1)(b)).",
+	"error_reauth_required": "For your security, sign in again, then delete your account."
 }

@@ -1,6 +1,9 @@
 import { privacyInfoQueryOptions } from "@repo/api/events/privacy";
 import {
 	privacy_back,
+	privacy_basis,
+	privacy_contact,
+	privacy_controller,
 	privacy_retention,
 	privacy_rights,
 	privacy_title,
@@ -27,7 +30,14 @@ function PrivacyPage() {
 				{privacy_title()}
 			</h1>
 			<p>{privacy_who()}</p>
+			{data.controller ? (
+				<p>{privacy_controller({ controller: data.controller })}</p>
+			) : null}
+			{data.contactEmail ? (
+				<p>{privacy_contact({ email: data.contactEmail })}</p>
+			) : null}
 			<p>{privacy_what()}</p>
+			<p>{privacy_basis()}</p>
 			<p>{privacy_retention({ days: data.retentionDays })}</p>
 			<p>{privacy_rights()}</p>
 		</article>

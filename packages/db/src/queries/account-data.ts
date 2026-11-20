@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, count, eq, sql } from "drizzle-orm";
 import { db } from "../client";
 import { agendaItemRegistrations, agendaItems } from "../schema/agenda";
 import { authUsers } from "../schema/better-auth";
@@ -7,6 +7,7 @@ import { events } from "../schema/events";
 import { registrationGroups } from "../schema/groups";
 import { DomainError } from "./domain-errors";
 import {
+	effectiveEventEndSql,
 	type RegistrationHooks,
 	unregisterFromEvent,
 } from "./event-registrations";
@@ -121,6 +122,7 @@ export async function deleteAccount(
 	userId: string,
 	hooks?: RegistrationHooks,
 ): Promise<void> {
+	await assertCanLeave(userId);
 	const registrations = await db
 		.select({ eventId: eventRegistrations.eventId })
 		.from(eventRegistrations)
@@ -151,5 +153,32 @@ async function withdrawIfOpen(withdraw: () => Promise<unknown>) {
 		if (!(error instanceof DomainError)) {
 			throw error;
 		}
+	}
+}
+
+/** Nobody may leave events without an organizer, or the instance without an admin. */
+async function assertCanLeave(userId: string): Promise<void> {
+	const [user] = await db
+		.select({ role: authUsers.role })
+		.from(authUsers)
+		.where(eq(authUsers.id, userId));
+	if (user?.role === "admin") {
+		const [admins] = await db
+			.select({ n: count() })
+			.from(authUsers)
+			.where(eq(authUsers.role, "admin"));
+		if ((admins?.n ?? 0) <= 1) {
+			throw new DomainError("LAST_ADMIN");
+		}
+	}
+	const orphaned = await db.execute<{ id: string }>(sql`
+		SELECT e.id FROM events e
+		JOIN event_organizers mine ON mine.event_id = e.id AND mine.user_id = ${userId}
+		WHERE e.status <> 'cancelled'
+			AND ${effectiveEventEndSql(sql`e`)} > now()
+			AND (SELECT count(*) FROM event_organizers o WHERE o.event_id = e.id) = 1
+		LIMIT 1`);
+	if (orphaned.length > 0) {
+		throw new DomainError("SOLE_ORGANIZER");
 	}
 }

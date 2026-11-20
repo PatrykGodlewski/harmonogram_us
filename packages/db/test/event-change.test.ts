@@ -70,4 +70,20 @@ describe("event change notices", () => {
 		const [row] = await db.select({ sent: events.reminderSentAt }).from(events).where(eq(events.id, published));
 		expect(row?.sent).toBeNull();
 	});
+
+	it("an event that already ended tells nobody, and a reminder already past stays sent", async () => {
+		const ended = await createEvent({ date: hoursFromNow(-48) });
+		await registerForEvent(await createEvent(), await createUser(), "pl");
+		const { notices, hooks } = collect();
+		await updateEvent({ id: ended, date: hoursFromNow(-47) }, hooks);
+		expect(notices).toHaveLength(0);
+
+		const soon = await createEvent({ date: hoursFromNow(20) });
+		const sentAt = new Date();
+		await db.update(events).set({ reminderSentAt: sentAt }).where(eq(events.id, soon));
+		// Moved 30 minutes: the 24 h reminder time is still in the past, so no second reminder.
+		await updateEvent({ id: soon, date: hoursFromNow(20.5) }, hooks);
+		const [row] = await db.select({ sent: events.reminderSentAt }).from(events).where(eq(events.id, soon));
+		expect(row?.sent).toEqual(sentAt);
+	});
 });

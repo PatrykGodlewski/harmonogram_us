@@ -40,6 +40,9 @@ export const env = createEnv({
 			.int()
 			.positive()
 			.default(365),
+		/** Who controls personal data (GDPR art. 13), shown on the privacy page. */
+		PRIVACY_CONTROLLER: z.string().min(1).optional(),
+		PRIVACY_CONTACT_EMAIL: z.email().optional(),
 
 		GOOGLE_CLIENT_ID: z.string().optional(),
 		GOOGLE_CLIENT_SECRET: z.string().optional(),

@@ -4,7 +4,15 @@ import { db } from "../src/client";
 import { deleteAccount, exportAccountData } from "../src/queries/account-data";
 import { registerForEvent } from "../src/queries/event-registrations";
 import { authUsers } from "../src/schema/better-auth";
-import { collectChanges, createEvent, createUser, resetDb, stateOf } from "./helpers";
+import { eventOrganizers } from "../src/schema/event-organizers";
+import {
+	collectChanges,
+	createEvent,
+	createUser,
+	rejectionCode,
+	resetDb,
+	stateOf,
+} from "./helpers";
 
 beforeEach(resetDb);
 
@@ -38,5 +46,23 @@ describe("account data", () => {
 		expect(changes.map((c) => c.change)).toEqual(["promoted"]);
 		const [row] = await db.select().from(authUsers).where(eq(authUsers.id, leaving));
 		expect(row).toBeUndefined();
+	});
+
+	it("refuses while the person is the only organizer of an upcoming event", async () => {
+		const organizer = await createUser();
+		const eventId = await createEvent();
+		await db.insert(eventOrganizers).values({ eventId, userId: organizer });
+		expect(await rejectionCode(deleteAccount(organizer))).toBe("SOLE_ORGANIZER");
+		const co = await createUser();
+		await db.insert(eventOrganizers).values({ eventId, userId: co });
+		await deleteAccount(organizer);
+		const [row] = await db.select().from(authUsers).where(eq(authUsers.id, organizer));
+		expect(row).toBeUndefined();
+	});
+
+	it("refuses to delete the last admin", async () => {
+		const admin = await createUser();
+		await db.update(authUsers).set({ role: "admin" }).where(eq(authUsers.id, admin));
+		expect(await rejectionCode(deleteAccount(admin))).toBe("LAST_ADMIN");
 	});
 });

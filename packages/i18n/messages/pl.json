@@ -461,12 +461,12 @@
 	"publish_checklist_saved": "Zapisano.",
 	"admin_events_search": "Szukaj wydarzenia",
 	"privacy_title": "Informacja o danych osobowych",
-	"privacy_notice_short": "Zapisując się, przekazujesz organizatorowi imię, nazwisko i e-mail. Po zakończeniu okresu przechowywania usuwamy je automatycznie.",
+	"privacy_notice_short": "Zapisując się, przekazujesz organizatorowi imię, nazwisko i e-mail. Dane zapisu, także obecność, usuwamy automatycznie po okresie przechowywania.",
 	"privacy_link": "Informacja o danych osobowych",
 	"privacy_who": "Administratorem danych jest uczelnia prowadząca serwis. Dostęp do danych zapisu mają organizatorzy wydarzenia.",
 	"privacy_what": "Przetwarzamy imię, nazwisko, adres e-mail, zapisy na wydarzenia i punkty programu oraz obecność, aby zorganizować wydarzenie i wysyłać o nim wiadomości.",
-	"privacy_retention": "Dane zapisów przechowujemy przez {days} dni od zakończenia wydarzenia, potem usuwamy je automatycznie.",
-	"privacy_rights": "Na stronie konta możesz pobrać swoje dane albo usunąć konto razem z zapisami.",
+	"privacy_retention": "Dane zapisów, w tym obecność i grupy, usuwamy automatycznie {days} dni po zakończeniu wydarzenia. Dane konta (imię, nazwisko, e-mail) przechowujemy, dopóki nie usuniesz konta.",
+	"privacy_rights": "Masz prawo dostępu do danych, ich sprostowania, usunięcia i przeniesienia: na stronie konta pobierzesz swoje dane albo usuniesz konto. Możesz też złożyć skargę do Prezesa Urzędu Ochrony Danych Osobowych.",
 	"privacy_back": "Wróć do wydarzeń",
 	"account_data_title": "Twoje dane",
 	"account_data_body": "Możesz pobrać wszystko, co o tobie przechowujemy, albo usunąć konto razem z zapisami.",
@@ -498,5 +498,11 @@
 	"calendar_my_copy": "Kopiuj adres",
 	"calendar_my_copied": "Skopiowano adres.",
 	"calendar_my_open": "Otwórz w kalendarzu",
-	"calendar_my_private": "Ten adres jest prywatny: nie udostępniaj go innym."
+	"calendar_my_private": "Ten adres jest prywatny: nie udostępniaj go innym.",
+	"error_sole_organizer": "Jesteś jedynym organizatorem nadchodzącego wydarzenia. Dodaj współorganizatora albo odwołaj wydarzenie, zanim usuniesz konto.",
+	"error_last_admin": "To ostatnie konto administratora. Nadaj komuś rolę administratora, zanim je usuniesz.",
+	"privacy_controller": "Administrator danych: {controller}.",
+	"privacy_contact": "Kontakt w sprawie danych: {email}.",
+	"privacy_basis": "Podstawą przetwarzania jest twój zapis na wydarzenie, czyli usługa, o którą prosisz (art. 6 ust. 1 lit. b RODO).",
+	"error_reauth_required": "Ze względów bezpieczeństwa zaloguj się ponownie, a potem usuń konto."
 }

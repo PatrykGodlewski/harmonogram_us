@@ -57,6 +57,11 @@ const onlineUrlSchema = z
 	.optional();
 const attendanceModeSchema = z.enum(["onsite", "online", "hybrid"]);
 const visibilitySchema = z.enum(["public", "authenticated"]);
+/** The reminder choices the form offers (hours before the start); null switches it off. */
+const reminderHoursSchema = z
+	.union([z.literal(1), z.literal(24), z.literal(48)])
+	.nullable()
+	.optional();
 /** A typed room; blank means none. */
 const roomSchema = z
 	.string()
@@ -81,7 +86,7 @@ export const createEventSchema = z.object({
 	attendanceMode: attendanceModeSchema.optional(),
 	visibility: visibilitySchema.optional(),
 	room: roomSchema,
-	reminderHoursBefore: z.number().int().min(1).max(168).nullable().optional(),
+	reminderHoursBefore: reminderHoursSchema,
 });
 
 export type CreateEventParams = z.infer<typeof createEventSchema>;
@@ -101,7 +106,7 @@ export const updateEventSchema = z.object({
 	attendanceMode: attendanceModeSchema.optional(),
 	visibility: visibilitySchema.optional(),
 	room: roomSchema,
-	reminderHoursBefore: z.number().int().min(1).max(168).nullable().optional(),
+	reminderHoursBefore: reminderHoursSchema,
 });
 
 export type UpdateEventParams = z.infer<typeof updateEventSchema>;

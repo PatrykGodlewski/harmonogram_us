@@ -23,9 +23,12 @@ import {
 	error_group_places_unavailable,
 	error_invitation_invalid,
 	error_item_not_in_group,
+	error_last_admin,
 	error_last_organizer,
 	error_not_group_owner,
 	error_rate_limited,
+	error_reauth_required,
+	error_sole_organizer,
 	error_ticket_not_found,
 	error_ticket_waitlisted,
 	error_user_not_found,
@@ -75,6 +78,8 @@ const APP_ERROR_MESSAGES: Record<AppErrorCode, () => string> = {
 	EVENT_ALREADY_CANCELLED: admin_error_event_already_cancelled,
 	TICKET_NOT_FOUND: error_ticket_not_found,
 	TICKET_WAITLISTED: error_ticket_waitlisted,
+	SOLE_ORGANIZER: error_sole_organizer,
+	LAST_ADMIN: error_last_admin,
 	UNAUTHORIZED: events_register_login_required,
 	FORBIDDEN: admin_error_forbidden,
 	NOT_FOUND: admin_error_not_found,
@@ -82,6 +87,7 @@ const APP_ERROR_MESSAGES: Record<AppErrorCode, () => string> = {
 	CAPTCHA_REQUIRED: error_captcha,
 	CAPTCHA_FAILED: error_captcha,
 	EMAIL_NOT_ALLOWED: error_email_not_allowed,
+	REAUTH_REQUIRED: error_reauth_required,
 };
 
 /** The error code carried by a server error (`Error(code)` or a `{ code }` body), if any. */
