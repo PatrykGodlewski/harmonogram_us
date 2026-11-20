@@ -527,5 +527,6 @@
 	"admin_registrants_xlsx": "Download XLSX",
 	"admin_organizers_role": "Role",
 	"admin_role_manager": "Co-organizer",
-	"admin_role_checkin": "Check-in helper"
+	"admin_role_checkin": "Check-in helper",
+	"calendar_campus_subscribe": "Subscribe to the campus calendar"
 }

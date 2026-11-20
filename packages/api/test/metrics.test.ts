@@ -4,6 +4,10 @@ import { metricsRegistry, recordHttpRequest, routeLabel } from "../src/observabi
 describe("routeLabel", () => {
 	it.each([
 		["/pl", "/:locale"],
+		[
+			`/api/calendar/my/${"a1".repeat(32)}`,
+			"/api/calendar/my/:id",
+		],
 		["/en/events/6f1c2a4e-1b2c-4d5e-8f90-123456789abc", "/:locale/events/:id"],
 		["/pl/tickets/0f8b7e6d-5c4b-4a39-8281-7f6e5d4c3b2a", "/:locale/tickets/:id"],
 		["/pl/events/evt-1", "/:locale/events/:id"],

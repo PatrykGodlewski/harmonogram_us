@@ -19,6 +19,8 @@ export type CalendarEntry = {
 
 /** How many events one feed carries at most. */
 const FEED_LIMIT = 500;
+/** Past events kept in the personal feed (recent history stays visible in calendars). */
+const RECENT_DAYS = 90;
 
 const entryColumns = {
 	id: events.id,
@@ -114,8 +116,15 @@ export async function listMyCalendarEntries(
 				eq(eventRegistrations.state, "registered"),
 			),
 		);
+	// Upcoming and recent events only: years of history must not push upcoming ones past the cap.
+	const recent = new Date(Date.now() - RECENT_DAYS * 86_400_000).toISOString();
 	const rows = await selectEntries()
-		.where(inArray(events.id, mine))
+		.where(
+			and(
+				inArray(events.id, mine),
+				gte(sql`${effectiveEventEndSql(sql`${events}`)}`, recent),
+			),
+		)
 		.orderBy(asc(events.date))
 		.limit(FEED_LIMIT);
 	return rows.map(toEntry);

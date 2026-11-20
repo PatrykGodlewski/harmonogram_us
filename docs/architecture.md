@@ -27,6 +27,7 @@ Both apps have near-identical `vite.config.ts`, `router.tsx` and `server.ts` set
 - Never edit generated `routeTree.gen.ts`.
 - Better Auth is mounted at `routes/api/auth/$.ts` in each app.
 - Admin pages use the `_authenticated` layout; the layout only hides the panel, servers decide. Roles: `user.role` is `user | organizer | admin`. `organizer` (and `admin`) may **create** events; a row in `event_organizers` lets anyone **manage** that one event (co-organisers are added by e-mail); admins manage everything. `AuthenticatedUser` carries `role` and `hasPanelAccess`.
+- Event roles: an `event_organizers` row has `role` `manager` (runs the event) or `checkin` (a helper: scanner and attendance only; `assertCanCheckIn`). The panel event page shows helpers a door view (`access: "checkin"` on the admin event details).
 - Panel server functions use `panelQueryFn`/`panelActionFn` (`packages/api/src/auth/panel-middleware.ts`) and must call a check from `packages/api/src/auth/event-access.ts` in the handler: `assertCanManageEvent`, `assertCanManageAgendaItem`, `assertCanCreateEvents`, `assertCanDeleteEvent` (organisers delete only drafts; published events are cancelled). `packages/api/test/event-access.test.ts` fails if a panel function in `admin/*.ts` skips the check; add new files to its list. Lookups and roles (`admin/users.ts`) stay behind `adminMiddleware`.
 - Event lifecycle: `events.status` is `draft | published | cancelled` (publishing needs a place and/or an online link for the attendance mode; cancelling is irreversible, keeps registrations and e-mails everyone). `events.visibility` `authenticated` hides an event from anonymous visitors; its page redirects to login. Public reads use `getEventById/getEventPage` with `audience: { kind: "public", signedIn }` (no drafts, no meeting link); the panel uses `{ kind: "manage" }`. The meeting link reaches only registered people (`getEventOnlineUrl` after `isRegisteredForEvent`).
 - Both roots render `HydrationMarker` (`<html data-hydrated="true">`); e2e waits for it before interacting.
@@ -56,3 +57,11 @@ Each app records request counts/durations per normalised route through `@repo/ap
 Prometheus/Grafana live in `observability/`, enabled by the Compose `observability` profile. See development commands for e2e ports.
 
 `@prometheus-io/client` pulls in `@opentelemetry/api`, aliased to its ESM build in both Vite configs because its CJS build breaks the SSR bundle (as does `tslib`'s). Preserve these aliases. Global function middleware maps app errors to 4xx. Start discovers `src/start.ts` by name inside `src/`.
+
+## Calendar feeds and link previews
+
+`packages/api/src/calendar/ics.ts` writes iCalendar (escaping, folding, UTC). `feeds.ts` is **server-only** (imported only by the routes under `apps/web/src/routes/api/calendar/`); the account page's feed URL comes from the server function in `my-calendar-url.ts`. Never import a module with plain server exports into a component: it pulls the database into the browser bundle. Links in feeds use `?lang=` from the page (server functions have no locale prefix). The event route's loader returns Open Graph data for `head`.
+
+## Personal data
+
+`REGISTRATION_RETENTION_DAYS` (default 365) drives the daily `prune-old-registrations` job; `PRIVACY_CONTROLLER` and `PRIVACY_CONTACT_EMAIL` fill the privacy page. Account deletion (`deleteMyAccountServer`) needs a sign-in from the last 24 hours, refuses the last admin and the sole manager of an upcoming event, and withdraws registrations the normal way first.

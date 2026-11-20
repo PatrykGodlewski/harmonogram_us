@@ -17,7 +17,7 @@ describe("toIcs", () => {
 		const ics = toIcs([event], "Wydarzenia");
 		const lines = ics.split("\r\n");
 		expect(lines[0]).toBe("BEGIN:VCALENDAR");
-		expect(ics).toContain("SUMMARY:Wykład\\, część 1\; sala B");
+		expect(ics).toContain("SUMMARY:Wykład\\, część 1\\; sala B");
 		expect(ics).toContain("DESCRIPTION:Linia pierwsza\\nLinia druga");
 		expect(ics).toContain("DTSTART:20261201T090000Z");
 		expect(ics).toContain("DTEND:20261201T103000Z");

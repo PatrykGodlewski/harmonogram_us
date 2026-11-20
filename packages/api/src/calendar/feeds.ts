@@ -82,6 +82,8 @@ export async function eventCalendarResponse(
 	}
 	return calendarResponse(toIcs([toIcsEvent(entry, locale)], entry.title), {
 		filename: "wydarzenie.ics",
+		// A signed-in visitor may get signed-in-only events: keep those out of shared caches.
+		personal: Boolean(session?.user),
 	});
 }
 

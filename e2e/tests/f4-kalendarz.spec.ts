@@ -32,6 +32,20 @@ test("[F4] plik ICS zawiera wydarzenie z poprawnym terminem i linkiem @uczestnik
 	expect(ics).toMatch(/DTSTART:\d{8}T\d{6}Z/);
 	expect(ics).toContain(`/pl/events/${event.id}`);
 
+	// The campus calendar subscription is offered on the event list
+	await open(page, "/pl");
+	const campusFeed = page.getByRole("link", {
+		name: "Subskrybuj kalendarz kampusu",
+	});
+	const campusHref = (await campusFeed.getAttribute("href")) ?? "";
+	expect(campusHref).toMatch(/^webcal:\/\/.+\/api\/calendar\/events/);
+	const campus = await page.request.get(
+		campusHref.replace(/^webcal:/, "http:"),
+	);
+	// (The e2e database holds thousands of load-test events, past the feed's 500-event cap.)
+	expect(campus.headers()["content-type"]).toContain("text/calendar");
+	expect(await campus.text()).toContain("BEGIN:VEVENT");
+
 	// The personal subscription on the account page lists my registration
 	await signInByEmail(page, email);
 	await open(page, "/pl/account");

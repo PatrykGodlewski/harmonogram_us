@@ -191,10 +191,11 @@ async function queryEvents(
 
 	if (filters.whenFilter && filters.whenFilter !== "all") {
 		const zone = clientEnv.VITE_APP_TIME_ZONE;
-		const startOfToday = sql`(date_trunc('day', now() AT TIME ZONE ${zone}) AT TIME ZONE ${zone})`;
+		// Day boundaries are computed in local time, so "7 days" stays 7 calendar days across DST.
+		const today = sql`date_trunc('day', now() AT TIME ZONE ${zone})`;
 		conditions.push(
-			sql`${events.date} >= ${startOfToday}`,
-			sql`${events.date} < ${startOfToday} + make_interval(days => ${WHEN_DAYS[filters.whenFilter]})`,
+			sql`${events.date} >= (${today} AT TIME ZONE ${zone})`,
+			sql`${events.date} < ((${today} + make_interval(days => ${WHEN_DAYS[filters.whenFilter]})) AT TIME ZONE ${zone})`,
 		);
 	}
 

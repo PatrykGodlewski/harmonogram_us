@@ -527,5 +527,6 @@
 	"admin_registrants_xlsx": "Pobierz XLSX",
 	"admin_organizers_role": "Rola",
 	"admin_role_manager": "Współorganizator",
-	"admin_role_checkin": "Pomocnik od wejścia"
+	"admin_role_checkin": "Pomocnik od wejścia",
+	"calendar_campus_subscribe": "Subskrybuj kalendarz kampusu"
 }
