@@ -12,6 +12,7 @@ Shared agent rules live in [AGENTS.md](../AGENTS.md). Claude imports that file t
 | Evidence, review findings, blockers and completion reports                 | [Reporting](reporting.md)                                                                       |
 | Setup, commands, UI components and code simplification                     | [Development](development.md)                                                                   |
 | Load-test details                                                          | [Load-test guide](../e2e/load/README.md)                                                        |
+| Where we stand against Indico (snapshot with sources)                     | [Indico comparison](indico-comparison.md)                                                       |
 
 ## Product and plan context
 
