@@ -488,5 +488,15 @@
 	"event_change_intro": "Zmieniły się szczegóły wydarzenia {event}, na które jesteś zapisany.",
 	"event_change_date": "Termin: {before} → {after}",
 	"event_change_place": "Miejsce: {before} → {after}",
-	"event_change_no_place": "(brak)"
+	"event_change_no_place": "(brak)",
+	"calendar_public_name": "Wydarzenia na kampusie",
+	"calendar_my_name": "Moje zapisy",
+	"calendar_add": "Dodaj do kalendarza",
+	"calendar_my_title": "Kalendarz",
+	"calendar_my_body": "Dodaj ten adres w swoim kalendarzu (Google, Apple, Outlook), a twoje zapisy będą się w nim pojawiać same.",
+	"calendar_my_url": "Adres subskrypcji moich zapisów",
+	"calendar_my_copy": "Kopiuj adres",
+	"calendar_my_copied": "Skopiowano adres.",
+	"calendar_my_open": "Otwórz w kalendarzu",
+	"calendar_my_private": "Ten adres jest prywatny: nie udostępniaj go innym."
 }

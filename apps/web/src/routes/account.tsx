@@ -1,4 +1,5 @@
 import { setPasswordForCurrentSession } from "@repo/api/auth/user";
+import { myCalendarUrlQueryOptions } from "@repo/api/calendar/my-calendar-url";
 import { myRegistrationListQueryOptions } from "@repo/api/events/my-registration-list";
 import { ensureMyRegistrations } from "@repo/api/events/my-registrations";
 import { myGroupsQueryOptions } from "@repo/api/groups/queries";
@@ -44,6 +45,7 @@ import { getRequestHeaders } from "@tanstack/react-start/server";
 import * as React from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { MyCalendar } from "~/components/account/my-calendar";
 import { MyData } from "~/components/account/my-data";
 import { MyRegistrations } from "~/components/account/my-registrations";
 import { authClient } from "../lib/auth-client";
@@ -78,6 +80,7 @@ export const Route = createFileRoute("/account")({
 		Promise.all([
 			queryClient.ensureQueryData(myRegistrationListQueryOptions),
 			ensureMyRegistrations(queryClient),
+			queryClient.ensureQueryData(myCalendarUrlQueryOptions),
 		]),
 	component: AccountPage,
 });
@@ -174,6 +177,7 @@ function AccountPage() {
 			</div>
 			{user ? <MyRegistrations userId={user.id} /> : null}
 			<MyGroups />
+			<MyCalendar />
 			{user ? <MyData email={user.email} /> : null}
 			<div className="mt-6 rounded-lg border p-4">
 				<h2 className="mb-4 text-lg font-semibold">

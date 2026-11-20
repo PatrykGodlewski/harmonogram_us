@@ -141,6 +141,13 @@
       "when": 1795176484555,
       "tag": "0019_event_reminders",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1795177307864,
+      "tag": "0020_calendar_token",
+      "breakpoints": true
     }
   ]
 }

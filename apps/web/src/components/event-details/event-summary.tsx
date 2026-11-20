@@ -1,4 +1,5 @@
 import {
+	calendar_add,
 	event_cancelled_banner,
 	event_details_closed,
 	event_details_places_left,
@@ -82,6 +83,14 @@ export function EventSummary({
 			{event.description ? (
 				<p className="max-w-prose whitespace-pre-line">{event.description}</p>
 			) : null}
+
+			<div className="flex flex-wrap gap-2">
+				<Button asChild variant="outline" size="sm">
+					<a href={`/api/calendar/event/${event.id}?lang=${locale}`} download>
+						{calendar_add()}
+					</a>
+				</Button>
+			</div>
 
 			{event.onlineUrl ? (
 				<div>

@@ -18,6 +18,13 @@ export const authUsers = pgTable(
 		image: text("image"),
 		/** "user" | "organizer" | "admin". Organizers create events; admins manage everything. */
 		role: text("role").notNull().default("user"),
+		/** Secret part of the personal calendar feed URL ("my registrations"). */
+		calendarToken: text("calendar_token")
+			.notNull()
+			.unique()
+			.default(
+				sql`replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '')`,
+			),
 		createdAt: timestamp("created_at", { withTimezone: true })
 			.notNull()
 			.defaultNow(),

@@ -488,5 +488,15 @@
 	"event_change_intro": "The details of {event}, which you registered for, have changed.",
 	"event_change_date": "Date: {before} → {after}",
 	"event_change_place": "Place: {before} → {after}",
-	"event_change_no_place": "(none)"
+	"event_change_no_place": "(none)",
+	"calendar_public_name": "Campus events",
+	"calendar_my_name": "My registrations",
+	"calendar_add": "Add to calendar",
+	"calendar_my_title": "Calendar",
+	"calendar_my_body": "Add this address in your calendar (Google, Apple, Outlook) and your registrations show up there on their own.",
+	"calendar_my_url": "My registrations subscription address",
+	"calendar_my_copy": "Copy address",
+	"calendar_my_copied": "Address copied.",
+	"calendar_my_open": "Open in calendar",
+	"calendar_my_private": "This address is private: don't share it."
 }
