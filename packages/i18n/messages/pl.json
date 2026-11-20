@@ -504,5 +504,12 @@
 	"privacy_controller": "Administrator danych: {controller}.",
 	"privacy_contact": "Kontakt w sprawie danych: {email}.",
 	"privacy_basis": "Podstawą przetwarzania jest twój zapis na wydarzenie, czyli usługa, o którą prosisz (art. 6 ust. 1 lit. b RODO).",
-	"error_reauth_required": "Ze względów bezpieczeństwa zaloguj się ponownie, a potem usuń konto."
+	"error_reauth_required": "Ze względów bezpieczeństwa zaloguj się ponownie, a potem usuń konto.",
+	"filter_when_placeholder": "Termin",
+	"filter_when_all": "Każdy termin",
+	"filter_when_today": "Dziś",
+	"filter_when_7d": "Najbliższe 7 dni",
+	"filter_when_30d": "Najbliższe 30 dni",
+	"filter_mode_placeholder": "Forma",
+	"filter_mode_all": "Każda forma"
 }

@@ -1,10 +1,16 @@
 import { myRegistrationsQueryOptions } from "@repo/api/events/my-registrations";
-import { eventDetailsQueryOptions } from "@repo/api/events/queries";
+import {
+	type EventDetails,
+	eventDetailsQueryOptions,
+} from "@repo/api/events/queries";
+import { siteUrlQueryOptions } from "@repo/api/site";
 import {
 	event_details_back,
 	event_details_not_found,
 	joined_toast,
 } from "@repo/i18n/paraglide/messages";
+import { getLocale } from "@repo/i18n/paraglide/runtime";
+import { formatEventDateTime } from "@repo/ui/time";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import {
 	createFileRoute,
@@ -34,8 +40,9 @@ export const Route = createFileRoute("/events/$eventId")({
 		agenda: z.enum(["list", "calendar"]).optional().catch(undefined),
 	}),
 	loader: async ({ context: { queryClient, user }, params, location }) => {
+		let event: EventDetails;
 		try {
-			await queryClient.ensureQueryData(
+			event = await queryClient.ensureQueryData(
 				eventDetailsQueryOptions(params.eventId),
 			);
 		} catch (error) {
@@ -52,10 +59,35 @@ export const Route = createFileRoute("/events/$eventId")({
 			}
 			throw error;
 		}
-		if (user) {
-			await queryClient.ensureQueryData(myRegistrationsQueryOptions);
-		}
+		const [siteUrl] = await Promise.all([
+			queryClient.ensureQueryData(siteUrlQueryOptions),
+			user ? queryClient.ensureQueryData(myRegistrationsQueryOptions) : null,
+		]);
+		const when = formatEventDateTime(event.date, getLocale());
+		return {
+			preview: {
+				title: event.title,
+				description: event.description?.trim().slice(0, 200) || when,
+				url: `${siteUrl}/${getLocale()}/events/${event.id}`,
+			},
+		};
 	},
+	// Link previews when the event is shared (Open Graph).
+	head: ({ loaderData }) => ({
+		meta: loaderData
+			? [
+					{ title: loaderData.preview.title },
+					{ name: "description", content: loaderData.preview.description },
+					{ property: "og:type", content: "website" },
+					{ property: "og:title", content: loaderData.preview.title },
+					{
+						property: "og:description",
+						content: loaderData.preview.description,
+					},
+					{ property: "og:url", content: loaderData.preview.url },
+				]
+			: [],
+	}),
 	component: EventDetailsPage,
 	errorComponent: EventDetailsError,
 	notFoundComponent: EventNotFound,

@@ -5,6 +5,10 @@ import { optionalIdSchema } from "../admin/optional-id-schema";
 export const EVENT_PAGE_SIZE = 20;
 export const EVENT_PAGE_MAX = 200;
 
+/** "Next N days" from the start of today in the installation time zone. */
+const whenFilterSchema = z.enum(["all", "today", "7d", "30d"]);
+const modeFilterSchema = z.enum(["all", "onsite", "online", "hybrid"]);
+
 export const eventFiltersSchema = z.object({
 	limit: z.number().int().min(1).max(EVENT_PAGE_MAX).default(EVENT_PAGE_SIZE),
 	search: z.string().max(200).optional(),
@@ -12,6 +16,8 @@ export const eventFiltersSchema = z.object({
 	locationFilter: z.string().optional(),
 	facultyFilter: z.string().optional(),
 	eventTypeFilter: z.string().optional(),
+	whenFilter: whenFilterSchema.optional(),
+	modeFilter: modeFilterSchema.optional(),
 });
 
 export type EventFiltersParams = z.infer<typeof eventFiltersSchema>;
@@ -29,6 +35,8 @@ export const eventSearchSchema = z.object({
 	locationFilter: z.string().optional().catch("all"),
 	facultyFilter: z.string().optional().catch("all"),
 	eventTypeFilter: z.string().optional().catch("all"),
+	whenFilter: whenFilterSchema.optional().catch("all"),
+	modeFilter: modeFilterSchema.optional().catch("all"),
 });
 
 export type EventSearch = z.infer<typeof eventSearchSchema>;
@@ -40,6 +48,8 @@ export function toEventFiltersParams(search: EventSearch): EventFiltersParams {
 		locationFilter: search.locationFilter ?? "all",
 		facultyFilter: search.facultyFilter ?? "all",
 		eventTypeFilter: search.eventTypeFilter ?? "all",
+		whenFilter: search.whenFilter ?? "all",
+		modeFilter: search.modeFilter ?? "all",
 	};
 	if (search.search) {
 		filters.search = search.search;

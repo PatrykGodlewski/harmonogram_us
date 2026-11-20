@@ -504,5 +504,12 @@
 	"privacy_controller": "Data controller: {controller}.",
 	"privacy_contact": "Contact about your data: {email}.",
 	"privacy_basis": "The basis is your registration for the event, the service you ask for (GDPR art. 6(1)(b)).",
-	"error_reauth_required": "For your security, sign in again, then delete your account."
+	"error_reauth_required": "For your security, sign in again, then delete your account.",
+	"filter_when_placeholder": "Date",
+	"filter_when_all": "Any date",
+	"filter_when_today": "Today",
+	"filter_when_7d": "Next 7 days",
+	"filter_when_30d": "Next 30 days",
+	"filter_mode_placeholder": "Format",
+	"filter_mode_all": "Any format"
 }

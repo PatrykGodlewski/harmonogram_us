@@ -1,3 +1,4 @@
+import { env as clientEnv } from "@repo/env/client";
 import { and, asc, desc, eq, ilike, inArray, max, ne, sql } from "drizzle-orm";
 import { db, type TransactionClient } from "../client";
 import { agendaItems } from "../schema/agenda";
@@ -53,7 +54,12 @@ export type EventFilters = {
 	locationFilter?: string;
 	facultyFilter?: string;
 	eventTypeFilter?: string;
+	/** Events starting today, or within the next 7 or 30 days (installation time zone). */
+	whenFilter?: "all" | "today" | "7d" | "30d";
+	modeFilter?: "all" | AttendanceMode;
 };
+
+const WHEN_DAYS = { today: 1, "7d": 7, "30d": 30 } as const;
 
 export type EventWithRelations = {
 	id: string;
@@ -177,6 +183,19 @@ async function queryEvents(
 
 	if (filters?.eventTypeFilter && filters.eventTypeFilter !== "all") {
 		conditions.push(eq(eventTypes.slug, filters.eventTypeFilter));
+	}
+
+	if (filters.modeFilter && filters.modeFilter !== "all") {
+		conditions.push(eq(events.attendanceMode, filters.modeFilter));
+	}
+
+	if (filters.whenFilter && filters.whenFilter !== "all") {
+		const zone = clientEnv.VITE_APP_TIME_ZONE;
+		const startOfToday = sql`(date_trunc('day', now() AT TIME ZONE ${zone}) AT TIME ZONE ${zone})`;
+		conditions.push(
+			sql`${events.date} >= ${startOfToday}`,
+			sql`${events.date} < ${startOfToday} + make_interval(days => ${WHEN_DAYS[filters.whenFilter]})`,
+		);
 	}
 
 	// The id breaks ties, so pages stay stable for events at the same time.

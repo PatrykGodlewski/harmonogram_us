@@ -56,7 +56,7 @@ export function EventFilters({ search, onSearchChange }: EventFiltersProps) {
 				onChange={(e) => setSearchInput(e.target.value)}
 				disabled={loading || optionsQuery.isError}
 			/>
-			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 				{loading || optionsQuery.isError
 					? FILTER_SELECTS.map(({ id }) => (
 							<Skeleton key={id} className="h-9 w-full" />
