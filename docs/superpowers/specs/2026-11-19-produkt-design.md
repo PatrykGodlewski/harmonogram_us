@@ -10,6 +10,7 @@ Data: 2026-11-19 · Status: **do akceptacji** · Jedyne źródło prawdy o tym, 
 | 2026-11-19 | Plan „moje zapisy, bilety, agenda" wykonany: statusy F5, F11 (bilet z QR; skaner w planie 2) i F18 (widok listy i kalendarza). | Prośba użytkownika o konto z zapisami, bilet z kodem QR i kalendarz programu |
 | 2026-11-20 | Plan „organizator na poziomie Indico" wykonany: F2, F3, F6, F7, F11 gotowe. Decyzja: organizator pracuje w `apps/admin` ograniczonym do swoich wydarzeń (zmienia K4). | Decyzja użytkownika z 20.11; plan `docs/superpowers/plans/2026-11-20-organizator-jak-w-indico.md` |
 | 2026-11-20 | Dodane F28–F31 z porównania z Indico (`docs/indico-comparison.md`). Plan 3: F9, F13, reszta F4, F28, F29. Plan 4: F30, F12, F31, F18/F19 prelegenci. | Decyzja użytkownika 20.11 |
+| 2026-11-20 | Plan 4 (decyzje oddane Claude: „decide for me to ensure to have better or the same as indico behavior”): F30, F32 (nowa: wydarzenia na zaproszenie), F12, F31, prelegenci i linki do materiałów (F18/F19). Akceptacja przy pełnym wydarzeniu daje listę rezerwową; zaświadczenia wysyłane e-mailem po wydarzeniu i dostępne do usunięcia danych (F9); edycja zapisu czeka na F10 (bez pytań nie ma czego edytować); pliki prelegentów czekają na przechowywanie plików (F14). | Decyzja użytkownika 20.11 |
 | 2026-11-20 | Plan 3 wykonany: F4, F9, F13, F28, F29 gotowe. | Plan `docs/superpowers/plans/2026-11-20-rodo-przypomnienia-kalendarz-zapisani.md` |
 
 ## Kierunek produktu
@@ -96,6 +97,7 @@ Kryterium „gotowe” to zawsze przechodzący test e2e `[Fn] …` z widocznym s
 | F29 | Pomocnik od wejścia | Organizator dodaje osobę, która może tylko skanować bilety i odhaczać obecność w tym wydarzeniu. | pomocnik widzi skaner i listę obecności, ale nie może edytować wydarzenia ani usuwać zapisów | gotowe (20.11): pomocnik od wejścia (rola przy wydarzeniu), widok wejścia: skaner i obecność (`e2e/tests/f29-pomocnik.spec.ts`) |
 | F30 | Akceptacja zapisów | Wydarzenie może wymagać akceptacji: zapis czeka, organizator akceptuje albo odrzuca (także grupowo), uczestnik dostaje e-mail. | zapis na wydarzenie z akceptacją ma stan „czeka”; po akceptacji osoba jest zapisana i dostaje e-mail; po odrzuceniu dostaje e-mail z odmową | brak |
 | F31 | Wydarzenia cykliczne | Duplikowanie co tydzień albo co miesiąc przez wybraną liczbę powtórzeń, z wyborem, co skopiować. | „co tydzień, 4 razy” tworzy cztery szkice w kolejnych tygodniach o tej samej godzinie | brak |
+| F32 | Wydarzenia na zaproszenie | Wydarzenie „tylko z zaproszeniem” nie jest na liście ani w kalendarzach; widzą je organizatorzy, zapisani i osoby z linkiem zaproszenia. Organizator kopiuje link, zmienia go albo wysyła zaproszenia e-mailem. | wydarzenie na zaproszenie nie jest na liście; bez linku strona odmawia, z linkiem można się zapisać; zaproszenie e-mailem dociera z linkiem; zmieniony link przestaje działać | brak |
 
 ### Później (tylko wpis, bez planu)
 
