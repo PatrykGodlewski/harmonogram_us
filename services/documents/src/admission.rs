@@ -1,6 +1,7 @@
 //! A bounded render pool: at most `workers` renders at once and `queue` more waiting;
 //! anything beyond is refused at once, so a burst cannot exhaust memory.
 
+use prometheus_client::metrics::gauge::Gauge;
 use std::sync::Arc;
 use tokio::sync::{OwnedSemaphorePermit, Semaphore};
 
@@ -8,12 +9,14 @@ use tokio::sync::{OwnedSemaphorePermit, Semaphore};
 pub struct Admission {
     slots: Arc<Semaphore>,
     workers: Arc<Semaphore>,
+    in_use: Gauge,
 }
 
 /// A place in the pool, held for the whole request.
 pub struct Ticket {
     _slot: OwnedSemaphorePermit,
     workers: Arc<Semaphore>,
+    in_use: Gauge,
 }
 
 impl Admission {
@@ -21,6 +24,7 @@ impl Admission {
         Self {
             slots: Arc::new(Semaphore::new(workers + queue)),
             workers: Arc::new(Semaphore::new(workers)),
+            in_use: Gauge::default(),
         }
     }
 
@@ -33,10 +37,23 @@ impl Admission {
     /// A place in the pool, or `None` when it is full.
     pub fn try_enter(&self) -> Option<Ticket> {
         let slot = self.slots.clone().try_acquire_owned().ok()?;
+        self.in_use.inc();
         Some(Ticket {
             _slot: slot,
             workers: self.workers.clone(),
+            in_use: self.in_use.clone(),
         })
+    }
+
+    /// Requests holding a place (rendering or waiting), for the metrics.
+    pub fn in_use(&self) -> Gauge {
+        self.in_use.clone()
+    }
+}
+
+impl Drop for Ticket {
+    fn drop(&mut self) {
+        self.in_use.dec();
     }
 }
 
@@ -45,6 +62,7 @@ impl Ticket {
     pub async fn run<T: Send + 'static>(self, work: impl FnOnce() -> T + Send + 'static) -> T {
         let _worker = self
             .workers
+            .clone()
             .acquire_owned()
             .await
             .expect("the worker semaphore is never closed");
@@ -65,7 +83,9 @@ mod tests {
         let second = admission.try_enter();
         assert!(first.is_some() && second.is_some());
         assert!(admission.try_enter().is_none());
+        assert_eq!(admission.in_use().get(), 2);
         drop(first);
+        assert_eq!(admission.in_use().get(), 1);
         assert!(admission.try_enter().is_some());
     }
 }
