@@ -1,4 +1,5 @@
-# Development: `docker compose up -d` starts the services the apps need (db, mailpit, electric).
+# Development: `docker compose up -d` starts the services the apps need (db, mailpit, electric,
+# documents: the Rust PDF service, rebuilt with `docker compose up -d --build documents`).
 # Full stack (production images of web, admin and worker): `docker compose --profile app up -d --build`.
 # The e2e suite runs the full stack as a separate project on other ports: see e2e/README.md.
 # Metrics: add `--profile observability` for Prometheus (scrapes /api/metrics, receives k6) and Grafana.
@@ -9,6 +10,7 @@ x-app-env: &app-env
   ELECTRIC_URL: http://electric:3000
   SMTP_HOST: mailpit
   SMTP_PORT: "1025"
+  DOCUMENTS_URL: http://documents:50051
   BETTER_AUTH_URL: http://localhost:${WEB_PORT:-3000}
   ADMIN_URL: http://localhost:${ADMIN_PORT:-3001}
   # University sign-in (OpenID Connect); set in .env, or by e2e/ports.env for the mock.
@@ -59,6 +61,21 @@ services:
       db:
         condition: service_healthy
 
+  # Renders PDFs over gRPC (services/documents); needs DOCUMENTS_TOKEN from .env.
+  documents:
+    build:
+      context: .
+      dockerfile: services/documents/Dockerfile
+    env_file: .env
+    ports:
+      - "${DOCUMENTS_PORT:-50051}:50051"
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/documents", "healthcheck"]
+      interval: 2s
+      retries: 30
+    stop_grace_period: 10s
+    restart: unless-stopped
+
   web:
     profiles: [app]
     build:
@@ -77,6 +94,7 @@ services:
       db: { condition: service_healthy }
       electric: { condition: service_started }
       mailpit: { condition: service_started }
+      documents: { condition: service_healthy }
 
   admin:
     profiles: [app]
@@ -95,6 +113,7 @@ services:
     depends_on:
       db: { condition: service_healthy }
       mailpit: { condition: service_started }
+      documents: { condition: service_healthy }
 
   worker:
     profiles: [app]
