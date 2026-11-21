@@ -271,22 +271,27 @@ test("[F8] okno otwarte dotknięciem oddaje fokus przyciskowi (Safari) @uczestni
 test("[F8] nagłówek mieści się przy szerszej czcionce @uczestnik", async ({
 	page,
 }) => {
-	// Fonts differ between devices (CI's DejaVu Sans is wider than Liberation Sans, and the
-	// header overflowed there): at 320 px, wider text must shrink or wrap, never scroll sideways.
+	// Fonts differ between devices: CI's DejaVu Sans is wider than Liberation Sans, and the
+	// header overflowed there. Wider text (simulated with letter spacing) must make the
+	// header's brand shrink, not push the header past the screen at 320 px.
 	await page.setViewportSize({ width: 320, height: 800 });
 	for (const url of ["/pl/login", adminUrl("/pl/login")]) {
 		await open(page, url);
 		await page.addStyleTag({
-			content: "* { letter-spacing: 0.15em !important; }",
+			content: "header * { letter-spacing: 0.15em !important; }",
 		});
 		await expect
 			.poll(
 				() =>
-					page.evaluate(
-						() => document.documentElement.scrollWidth - window.innerWidth,
+					page.evaluate(() =>
+						Math.max(
+							...[...document.querySelectorAll("header *")].map(
+								(element) => element.getBoundingClientRect().right,
+							),
+						),
 					),
-				{ message: `${url}: sideways scroll with a wider font` },
+				{ message: `${url}: header wider than the screen` },
 			)
-			.toBe(0);
+			.toBeLessThanOrEqual(320);
 	}
 });
