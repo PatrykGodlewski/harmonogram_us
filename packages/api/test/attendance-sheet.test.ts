@@ -1,13 +1,19 @@
+import { documentsClient } from "@repo/rpc/documents";
 import { extractText } from "unpdf";
 import { describe, expect, it } from "vitest";
-import { pageRows, renderAttendanceSheetPdf } from "../src/admin/attendance-sheet-pdf";
+import {
+	type AttendanceSheetInput,
+	attendanceSheetRequest,
+} from "../src/admin/attendance-sheet-document";
+
+// Renders through the documents service: `docker compose up -d documents`.
+// Page splitting is tested in Rust (services/documents/src/sheet.rs).
+async function renderAttendanceSheetPdf(input: AttendanceSheetInput): Promise<Uint8Array> {
+	const { pdf } = await documentsClient().renderAttendanceSheet(attendanceSheetRequest(input));
+	return pdf;
+}
 
 describe("attendance sheet", () => {
-	it("splits rows into pages, the first one shorter for the header", () => {
-		expect(pageRows(60, 20, 25)).toEqual([20, 25, 15]);
-		expect(pageRows(0, 20, 25)).toEqual([0]);
-	});
-
 	it("lists people with a signature column, on as many pages as needed", async () => {
 		const people = Array.from({ length: 45 }, (_, index) => ({
 			name: `Osoba ${String(index + 1).padStart(2, "0")} Żółć`,
@@ -24,6 +30,22 @@ describe("attendance sheet", () => {
 		expect(text).toContain("Lista obecności");
 		expect(text).toContain("Podpis");
 		expect(text).toContain("Osoba 45 Żółć");
+		expect(text).toContain("Strona 2 z 2");
+	});
+
+	it("renders 2 000 people within the deadline", async () => {
+		const people = Array.from({ length: 2000 }, (_, index) => ({
+			name: `Osoba ${index + 1}`,
+			email: `o${index}@x.test`,
+		}));
+		const pdf = await renderAttendanceSheetPdf({
+			eventTitle: "Inauguracja roku",
+			eventDate: new Date("2026-10-01T09:00:00Z"),
+			people,
+			locale: "pl",
+		});
+		const { totalPages } = await extractText(new Uint8Array(pdf), { mergePages: true });
+		expect(totalPages).toBe(75);
 	});
 });
 

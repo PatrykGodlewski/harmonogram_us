@@ -2,8 +2,10 @@
 import { canCheckIn } from "@repo/db/queries/event-organizers";
 import { getEventRegistrants } from "@repo/db/queries/event-registrations";
 import { getEventById } from "@repo/db/queries/events";
+import { documentsClient } from "@repo/rpc/documents";
 import { getCurrentUser } from "../auth/user";
-import { renderAttendanceSheetPdf } from "./attendance-sheet-pdf";
+import { pdfResponse } from "../documents/http";
+import { attendanceSheetRequest } from "./attendance-sheet-document";
 
 /** Surname order (last word), the way paper lists are read at the door. */
 function bySurname(locale: "pl" | "en") {
@@ -37,17 +39,15 @@ export async function attendanceSheetResponse(
 			email: registrant.email,
 		}))
 		.sort(bySurname(locale));
-	const pdf = await renderAttendanceSheetPdf({
+	const request = attendanceSheetRequest({
 		eventTitle: event.title,
 		eventDate: event.date,
 		people,
 		locale,
 	});
-	return new Response(Buffer.from(pdf), {
-		headers: {
-			"content-type": "application/pdf",
-			"content-disposition": `attachment; filename="${locale === "pl" ? "lista-obecnosci" : "attendance"}.pdf"`,
-			"cache-control": "private, no-store",
-		},
-	});
+	return pdfResponse(
+		async () => (await documentsClient().renderAttendanceSheet(request)).pdf,
+		locale === "pl" ? "lista-obecnosci" : "attendance",
+		locale,
+	);
 }
