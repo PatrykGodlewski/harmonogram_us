@@ -5,9 +5,10 @@ use crate::fonts::Fonts;
 use crate::metrics::Metrics;
 use crate::proto::document_service_server::DocumentService;
 use crate::proto::{
-    RenderCertificateRequest, RenderCertificateResponse, RenderTicketRequest, RenderTicketResponse,
+    RenderAttendanceSheetRequest, RenderAttendanceSheetResponse, RenderCertificateRequest,
+    RenderCertificateResponse, RenderTicketRequest, RenderTicketResponse,
 };
-use crate::{certificate, limits, ticket};
+use crate::{certificate, limits, sheet, ticket};
 use std::sync::Arc;
 use std::time::Instant;
 use tonic::{Request, Response, Status};
@@ -78,6 +79,21 @@ impl DocumentService for Documents {
         }
         .map(|pdf| RenderCertificateResponse { pdf });
         self.record("RenderCertificate", started, &result);
+        result.map(Response::new)
+    }
+
+    async fn render_attendance_sheet(
+        &self,
+        request: Request<RenderAttendanceSheetRequest>,
+    ) -> Result<Response<RenderAttendanceSheetResponse>, Status> {
+        let started = Instant::now();
+        let req = request.into_inner();
+        let result = match limits::check_sheet(&req) {
+            Ok(()) => self.render(req, sheet::render).await,
+            Err(status) => Err(status),
+        }
+        .map(|pdf| RenderAttendanceSheetResponse { pdf });
+        self.record("RenderAttendanceSheet", started, &result);
         result.map(Response::new)
     }
 }

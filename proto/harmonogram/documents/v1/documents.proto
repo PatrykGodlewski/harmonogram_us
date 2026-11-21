@@ -7,6 +7,7 @@ package harmonogram.documents.v1;
 service DocumentService {
   rpc RenderTicket(RenderTicketRequest) returns (RenderTicketResponse);
   rpc RenderCertificate(RenderCertificateRequest) returns (RenderCertificateResponse);
+  rpc RenderAttendanceSheet(RenderAttendanceSheetRequest) returns (RenderAttendanceSheetResponse);
 }
 
 message RenderTicketRequest {
@@ -51,5 +52,33 @@ message RenderCertificateRequest {
 }
 
 message RenderCertificateResponse {
+  bytes pdf = 1;
+}
+
+message RenderAttendanceSheetRequest {
+  // PDF metadata title, e.g. "Lista obecności — Warsztaty".
+  string document_title = 1;
+  // Heading on the first page, e.g. "Lista obecności".
+  string title = 2;
+  string event_title = 3;
+  // Formatted start, e.g. "1 grudnia 2026, 10:00".
+  string date_text = 4;
+  // Column headings.
+  string no_label = 5;
+  string name_label = 6;
+  string email_label = 7;
+  string signature_label = 8;
+  // Page footer with placeholders the service fills in, e.g. "Strona {page} z {pages}".
+  string page_label_template = 9;
+  // In the order to print.
+  repeated Person people = 10;
+}
+
+message Person {
+  string name = 1;
+  string email = 2;
+}
+
+message RenderAttendanceSheetResponse {
   bytes pdf = 1;
 }

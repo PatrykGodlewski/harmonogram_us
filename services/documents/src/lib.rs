@@ -12,6 +12,7 @@ mod limits;
 pub mod metrics;
 pub mod qr;
 mod service;
+pub mod sheet;
 pub mod telemetry;
 pub mod ticket;
 

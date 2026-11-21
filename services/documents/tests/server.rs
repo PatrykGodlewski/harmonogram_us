@@ -3,7 +3,9 @@
 use documents::admission::Admission;
 use documents::config::Config;
 use documents::proto::document_service_client::DocumentServiceClient;
-use documents::proto::{RenderCertificateRequest, RenderTicketRequest};
+use documents::proto::{
+    Person, RenderAttendanceSheetRequest, RenderCertificateRequest, RenderTicketRequest,
+};
 use documents::{AppState, serve};
 use tokio::net::TcpListener;
 use tokio::sync::oneshot;
@@ -284,6 +286,58 @@ async fn oversize_certificate_field_is_invalid_argument() {
         .unwrap_err();
     assert_eq!(status.code(), Code::InvalidArgument);
     assert!(status.message().contains("signer"), "{}", status.message());
+}
+
+fn sheet(people: Vec<Person>) -> RenderAttendanceSheetRequest {
+    RenderAttendanceSheetRequest {
+        document_title: "Lista obecności — Warsztaty".into(),
+        title: "Lista obecności".into(),
+        event_title: "Warsztaty".into(),
+        date_text: "1 grudnia 2026, 10:00".into(),
+        no_label: "Lp.".into(),
+        name_label: "Imię i nazwisko".into(),
+        email_label: "E-mail".into(),
+        signature_label: "Podpis".into(),
+        page_label_template: "Strona {page} z {pages}".into(),
+        people,
+    }
+}
+
+fn person(name: &str, email: &str) -> Person {
+    Person {
+        name: name.into(),
+        email: email.into(),
+    }
+}
+
+#[tokio::test]
+async fn renders_sheet() {
+    let server = start(Admission::new(2, 2)).await;
+    let pdf = client(&server.addr)
+        .await
+        .render_attendance_sheet(authorized(sheet(vec![person("Ala", "a@x.test")]), TOKEN))
+        .await
+        .unwrap()
+        .into_inner()
+        .pdf;
+    assert!(pdf.starts_with(b"%PDF"));
+}
+
+#[tokio::test]
+async fn oversize_person_is_invalid_argument() {
+    let server = start(Admission::new(2, 2)).await;
+    let people = vec![person("Ala", "a@x.test"), person("Ola", &"o".repeat(2001))];
+    let status = client(&server.addr)
+        .await
+        .render_attendance_sheet(authorized(sheet(people), TOKEN))
+        .await
+        .unwrap_err();
+    assert_eq!(status.code(), Code::InvalidArgument);
+    assert!(
+        status.message().contains("people[1].email"),
+        "{}",
+        status.message()
+    );
 }
 
 impl Drop for Running {

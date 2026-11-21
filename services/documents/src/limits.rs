@@ -1,6 +1,6 @@
 //! Input limits: they stop abuse; real data never comes near them.
 
-use crate::proto::{RenderCertificateRequest, RenderTicketRequest};
+use crate::proto::{RenderAttendanceSheetRequest, RenderCertificateRequest, RenderTicketRequest};
 use tonic::Status;
 
 /// The most characters any text field may hold.
@@ -41,4 +41,21 @@ pub fn check_certificate(req: &RenderCertificateRequest) -> Result<(), Status> {
     text("note", req.note.as_deref().unwrap_or_default())?;
     text("signer", req.signer.as_deref().unwrap_or_default())?;
     text("footer", &req.footer)
+}
+
+pub fn check_sheet(req: &RenderAttendanceSheetRequest) -> Result<(), Status> {
+    text("document_title", &req.document_title)?;
+    text("title", &req.title)?;
+    text("event_title", &req.event_title)?;
+    text("date_text", &req.date_text)?;
+    text("no_label", &req.no_label)?;
+    text("name_label", &req.name_label)?;
+    text("email_label", &req.email_label)?;
+    text("signature_label", &req.signature_label)?;
+    text("page_label_template", &req.page_label_template)?;
+    for (index, person) in req.people.iter().enumerate() {
+        text(&format!("people[{index}].name"), &person.name)?;
+        text(&format!("people[{index}].email"), &person.email)?;
+    }
+    Ok(())
 }
