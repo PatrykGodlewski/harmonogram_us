@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fitLines } from "../src/certificates/layout";
+import { fitLines } from "../src/pdf/layout";
 
 /** Every character is half the font size wide. */
 const width = (text: string, size: number) => text.length * size * 0.5;

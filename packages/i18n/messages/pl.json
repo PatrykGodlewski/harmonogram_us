@@ -662,5 +662,7 @@
 	"answers_edit": "Zmień odpowiedzi",
 	"answers_save": "Zapisz odpowiedzi",
 	"answers_saved": "Zapisano odpowiedzi",
-	"admin_answers_edit": "Edytuj odpowiedzi"
+	"admin_answers_edit": "Edytuj odpowiedzi",
+	"tickets_pdf": "Pobierz PDF",
+	"tickets_pdf_code": "Kod biletu (gdyby skaner nie działał):"
 }

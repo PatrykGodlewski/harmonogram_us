@@ -3,6 +3,7 @@ import {
 	events_pending_approval,
 	events_rejected,
 	tickets_holder,
+	tickets_pdf,
 	tickets_print,
 	tickets_qr_alt,
 	tickets_show_at_entry,
@@ -50,13 +51,19 @@ export function TicketCard({ ticket }: { ticket: Ticket }) {
 					<p className="text-center text-sm text-muted-foreground">
 						{tickets_show_at_entry()}
 					</p>
-					<Button
-						variant="outline"
-						className="print:hidden"
-						onClick={handlePrint}
-					>
-						{tickets_print()}
-					</Button>
+					<div className="flex flex-wrap justify-center gap-2 print:hidden">
+						<Button variant="outline" asChild>
+							<a
+								href={`/api/tickets/${ticket.registrationId}/pdf?lang=${getLocale()}`}
+								download
+							>
+								{tickets_pdf()}
+							</a>
+						</Button>
+						<Button variant="outline" onClick={handlePrint}>
+							{tickets_print()}
+						</Button>
+					</div>
 				</>
 			) : (
 				<p className="rounded-md bg-muted p-3 text-sm">

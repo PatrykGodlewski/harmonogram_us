@@ -662,5 +662,7 @@
 	"answers_edit": "Change answers",
 	"answers_save": "Save answers",
 	"answers_saved": "Answers saved",
-	"admin_answers_edit": "Edit answers"
+	"admin_answers_edit": "Edit answers",
+	"tickets_pdf": "Download PDF",
+	"tickets_pdf_code": "Ticket code (if the scanner fails):"
 }

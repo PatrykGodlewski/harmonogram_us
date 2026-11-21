@@ -1,6 +1,4 @@
 /** Server-only: renders attendance certificates (never import from components). */
-import fontkit from "@pdf-lib/fontkit";
-import { env } from "@repo/env/client";
 import {
 	certificate_date,
 	certificate_footer,
@@ -8,10 +6,15 @@ import {
 	certificate_person,
 	certificate_title,
 } from "@repo/i18n/paraglide/messages";
-import { PDFDocument, type PDFFont, type PDFPage, rgb } from "pdf-lib";
-import boldFont from "./assets/NotoSans-Bold.ttf?inline";
-import regularFont from "./assets/NotoSans-Regular.ttf?inline";
-import { fitLines, type MeasureText } from "./layout";
+import {
+	createPdf,
+	drawCentered,
+	formatLongDate,
+	GREY,
+	measure,
+	NAVY,
+} from "../pdf/document";
+import { fitLines } from "../pdf/layout";
 
 export type CertificateInput = {
 	name: string;
@@ -24,54 +27,17 @@ export type CertificateInput = {
 
 /** A4 landscape, in PDF points. */
 const PAGE = { width: 842, height: 595 };
-const NAVY = rgb(0.06, 0.16, 0.34);
-const GREY = rgb(0.35, 0.38, 0.42);
-
-function fontBytes(dataUrl: string): Uint8Array {
-	return Uint8Array.from(
-		Buffer.from(dataUrl.slice(dataUrl.indexOf(",") + 1), "base64"),
-	);
-}
-
-/** Decoded once per process, not per download. */
-const FONTS = { regular: fontBytes(regularFont), bold: fontBytes(boldFont) };
 /** Text must stay inside the border with a margin. */
 const TEXT_WIDTH = PAGE.width - 160;
-
-function formatDate(date: Date, locale: "pl" | "en"): string {
-	return new Intl.DateTimeFormat(locale === "pl" ? "pl-PL" : "en-GB", {
-		dateStyle: "long",
-		timeZone: env.VITE_APP_TIME_ZONE,
-	}).format(date);
-}
-
-const measure =
-	(font: PDFFont): MeasureText =>
-	(text, size) =>
-		font.widthOfTextAtSize(text, size);
-
-function drawCentered(
-	page: PDFPage,
-	text: string,
-	y: number,
-	font: PDFFont,
-	size: number,
-	color = NAVY,
-): void {
-	const x = (PAGE.width - font.widthOfTextAtSize(text, size)) / 2;
-	page.drawText(text, { x, y, size, font, color });
-}
 
 /** One-page PDF confirming that the person attended the event. */
 export async function renderCertificatePdf(
 	input: CertificateInput,
 ): Promise<Uint8Array> {
 	const { locale } = input;
-	const pdf = await PDFDocument.create();
-	pdf.registerFontkit(fontkit);
-	pdf.setTitle(`${certificate_title({}, { locale })} — ${input.eventTitle}`);
-	const regular = await pdf.embedFont(FONTS.regular, { subset: true });
-	const bold = await pdf.embedFont(FONTS.bold, { subset: true });
+	const { pdf, regular, bold } = await createPdf(
+		`${certificate_title({}, { locale })} — ${input.eventTitle}`,
+	);
 	const page = pdf.addPage([PAGE.width, PAGE.height]);
 
 	page.drawRectangle({
@@ -113,7 +79,7 @@ export async function renderCertificatePdf(
 	y -= 40;
 	drawCentered(
 		page,
-		`${certificate_date({}, { locale })}: ${formatDate(input.eventDate, locale)}`,
+		`${certificate_date({}, { locale })}: ${formatLongDate(input.eventDate, locale)}`,
 		y,
 		regular,
 		14,
