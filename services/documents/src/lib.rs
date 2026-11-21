@@ -4,6 +4,8 @@
 pub mod config;
 pub mod fonts;
 pub mod layout;
+pub mod qr;
+pub mod ticket;
 
 /// Generated from `proto/harmonogram/documents/v1/documents.proto`.
 pub mod proto {

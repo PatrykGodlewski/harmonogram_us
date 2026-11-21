@@ -1,23 +1,27 @@
 //! The app's fonts (Noto Sans, OFL; see `assets/fonts/OFL.txt`), embedded in the binary.
 
+use std::sync::Arc;
+
 static REGULAR: &[u8] = include_bytes!("../assets/fonts/NotoSans-Regular.ttf");
 static BOLD: &[u8] = include_bytes!("../assets/fonts/NotoSans-Bold.ttf");
 
 /// One font face: its file and the advance widths used to lay out text.
 pub struct FontFace {
-    bytes: &'static [u8],
     face: ttf_parser::Face<'static>,
+    pdf: krilla::text::Font,
 }
 
 impl FontFace {
     fn parse(bytes: &'static [u8]) -> Self {
         let face = ttf_parser::Face::parse(bytes, 0).expect("embedded font is valid");
-        Self { bytes, face }
+        let data: Arc<dyn AsRef<[u8]> + Send + Sync> = Arc::new(bytes);
+        let pdf = krilla::text::Font::new(data.into(), 0).expect("embedded font is valid");
+        Self { face, pdf }
     }
 
-    /// The TrueType file, for embedding in a PDF.
-    pub fn bytes(&self) -> &'static [u8] {
-        self.bytes
+    /// The font for drawing (krilla embeds the glyphs used, subset).
+    pub fn pdf(&self) -> krilla::text::Font {
+        self.pdf.clone()
     }
 
     /// Width of `text` at `size` points (sum of advances, no kerning, like pdf-lib).
