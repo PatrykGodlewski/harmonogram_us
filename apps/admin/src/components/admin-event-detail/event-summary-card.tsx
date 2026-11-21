@@ -4,6 +4,7 @@ import {
 	admin_event_edit,
 	admin_event_places,
 	admin_event_status_draft,
+	admin_event_status_ended,
 	admin_scan_open,
 	admin_summary_requires_approval,
 	event_room,
@@ -35,6 +36,7 @@ export function EventSummaryCard({ event, onChanged }: EventSummaryCardProps) {
 	const [editOpen, setEditOpen] = useState(false);
 	// A check-in helper sees the event and the scanner, nothing that changes it.
 	const canManage = event.access === "manage";
+	const hasEnded = new Date(event.effectiveEndsAt).getTime() <= Date.now();
 
 	return (
 		<section className="flex flex-col gap-3">
@@ -55,6 +57,9 @@ export function EventSummaryCard({ event, onChanged }: EventSummaryCardProps) {
 				) : null}
 				{event.status === "cancelled" ? (
 					<Badge variant="destructive">{event_status_cancelled()}</Badge>
+				) : null}
+				{event.status === "published" && hasEnded ? (
+					<Badge variant="outline">{admin_event_status_ended()}</Badge>
 				) : null}
 				<AttendanceModeBadge mode={event.attendanceMode} />
 				<Badge variant="secondary">{event.typeLabel}</Badge>
@@ -104,8 +109,7 @@ export function EventSummaryCard({ event, onChanged }: EventSummaryCardProps) {
 						{event.status === "published" ? (
 							<InviteDialog eventId={event.id} />
 						) : null}
-						{event.status === "published" &&
-						new Date(event.effectiveEndsAt).getTime() > Date.now() ? (
+						{event.status === "published" && !hasEnded ? (
 							<CancelEventButton eventId={event.id} onCancelled={onChanged} />
 						) : null}
 					</>

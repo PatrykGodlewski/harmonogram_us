@@ -619,5 +619,6 @@
 	"agenda_speakers": "Prowadzący",
 	"agenda_materials": "Materiały",
 	"admin_material_url_required": "Podaj adres materiału.",
-	"admin_speaker_name_required": "Podaj imię i nazwisko prelegenta."
+	"admin_speaker_name_required": "Podaj imię i nazwisko prelegenta.",
+	"admin_event_status_ended": "Zakończone"
 }

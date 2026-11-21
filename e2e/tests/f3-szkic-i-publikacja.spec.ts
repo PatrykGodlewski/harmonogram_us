@@ -166,3 +166,25 @@ test("[F3] brakującą salę wpisuje się na liście kontrolnej @organizator", a
 	await checklist.getByRole("button", { name: "Opublikuj" }).click();
 	await expect(page.getByText("Szkic", { exact: true })).toHaveCount(0);
 });
+
+test("[F3] zakończone wydarzenie ma w panelu stan „Zakończone” @organizator", async ({
+	page,
+}, testInfo) => {
+	const email = uniqueEmail(testInfo);
+	const password = randomBytes(18).toString("base64url");
+	const organizer = await createTestUser(email, {
+		role: "organizer",
+		password,
+	});
+	const event = await createTestEvent({
+		organizerId: organizer.id,
+		startsInDays: -3,
+	});
+
+	await signInAsAdmin(page, email, password);
+	await open(page, adminUrl("/pl/events"));
+	const row = page.getByRole("row").filter({ hasText: event.title });
+	await expect(row.getByText("Zakończone")).toBeVisible();
+	await row.getByRole("link", { name: event.title }).click();
+	await expect(page.getByText("Zakończone", { exact: true })).toBeVisible();
+});

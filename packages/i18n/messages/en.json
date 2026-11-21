@@ -619,5 +619,6 @@
 	"agenda_speakers": "Speakers",
 	"agenda_materials": "Materials",
 	"admin_material_url_required": "Enter the material's address.",
-	"admin_speaker_name_required": "Enter the speaker's name."
+	"admin_speaker_name_required": "Enter the speaker's name.",
+	"admin_event_status_ended": "Ended"
 }

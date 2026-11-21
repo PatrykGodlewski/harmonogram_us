@@ -9,6 +9,7 @@ import {
 	admin_delete_success,
 	admin_error_generic,
 	admin_event_status_draft,
+	admin_event_status_ended,
 	admin_event_status_published,
 	admin_events_description,
 	admin_events_search,
@@ -149,6 +150,8 @@ export function AdminEventsPage({
 								<Badge variant="secondary">{admin_event_status_draft()}</Badge>
 							) : row.status === "cancelled" ? (
 								<Badge variant="destructive">{event_status_cancelled()}</Badge>
+							) : new Date(row.effectiveEndsAt).getTime() <= Date.now() ? (
+								<Badge variant="outline">{admin_event_status_ended()}</Badge>
 							) : (
 								admin_event_status_published()
 							),

@@ -28,7 +28,7 @@ import {
 import { missingForPublish } from "./event-completeness";
 import {
 	type EventWhenWhere,
-	getEffectiveEventEnd,
+	effectiveEventEndSql,
 	hasEventEnded,
 	notify,
 	promoteAndNotify,
@@ -84,6 +84,8 @@ export type EventWithRelations = {
 	visibility: EventVisibility;
 	requiresApproval: boolean;
 	certificatesEnabled: boolean;
+	/** End, else the end of its last agenda item, else a day after the start. */
+	effectiveEndsAt: Date;
 	createdAt: Date;
 	updatedAt: Date;
 	typeLabel: string;
@@ -241,6 +243,10 @@ async function queryEvents(
 			visibility: events.visibility,
 			requiresApproval: events.requiresApproval,
 			certificatesEnabled: events.certificatesEnabled,
+			effectiveEndsAt:
+				sql<Date>`${effectiveEventEndSql(sql`"events"`)}`.mapWith(
+					(value: string | Date) => new Date(value),
+				),
 			createdAt: events.createdAt,
 			updatedAt: events.updatedAt,
 			typeLabel: eventTypes.label,
@@ -529,29 +535,17 @@ export async function deleteEvent(id: string) {
 	return event ?? null;
 }
 
-export type EventDetails = EventWithRelations & {
-	effectiveEndsAt: Date;
-	agenda: AgendaItem[];
-};
+export type EventDetails = EventWithRelations & { agenda: AgendaItem[] };
 
 export async function getEventById(
 	id: string,
 	audience: EventAudience,
 ): Promise<EventDetails | null> {
-	const [[event], agenda, effectiveEndsAt] = await Promise.all([
+	const [[event], agenda] = await Promise.all([
 		queryEvents({ audience }, id),
 		listAgendaItems(id),
-		getEffectiveEventEnd(db, id),
 	]);
-	if (!event) {
-		return null;
-	}
-	return {
-		...event,
-		agenda,
-		effectiveEndsAt:
-			effectiveEndsAt ?? new Date(event.date.getTime() + 86_400_000),
-	};
+	return event ? { ...event, agenda } : null;
 }
 
 /** Makes a draft public. EVENT_INCOMPLETE without a place or link; EVENT_NOT_DRAFT if already public. */
