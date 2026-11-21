@@ -2,8 +2,8 @@
 
 use documents::admission::Admission;
 use documents::config::Config;
-use documents::proto::RenderTicketRequest;
 use documents::proto::document_service_client::DocumentServiceClient;
+use documents::proto::{RenderCertificateRequest, RenderTicketRequest};
 use documents::{AppState, serve};
 use tokio::net::TcpListener;
 use tokio::sync::oneshot;
@@ -228,6 +228,62 @@ async fn shutdown_stops_serving() {
             .await
             .is_err()
     );
+}
+
+fn certificate() -> RenderCertificateRequest {
+    RenderCertificateRequest {
+        document_title: "Zaświadczenie — Warsztaty".into(),
+        issuer: None,
+        title: "Zaświadczenie o udziale".into(),
+        person_label: "Zaświadcza się, że".into(),
+        name: "Ada Lovelace".into(),
+        intro: "uczestniczyła w".into(),
+        event_title: "Warsztaty".into(),
+        date_line: "Data: 1 grudnia 2026".into(),
+        note: None,
+        signer: None,
+        footer: "Nr AB12CD34".into(),
+    }
+}
+
+#[tokio::test]
+async fn renders_certificate() {
+    let server = start(Admission::new(2, 2)).await;
+    let pdf = client(&server.addr)
+        .await
+        .render_certificate(authorized(certificate(), TOKEN))
+        .await
+        .unwrap()
+        .into_inner()
+        .pdf;
+    assert!(pdf.starts_with(b"%PDF"));
+}
+
+#[tokio::test]
+async fn certificate_requires_token() {
+    let server = start(Admission::new(2, 2)).await;
+    let status = client(&server.addr)
+        .await
+        .render_certificate(certificate())
+        .await
+        .unwrap_err();
+    assert_eq!(status.code(), Code::Unauthenticated);
+}
+
+#[tokio::test]
+async fn oversize_certificate_field_is_invalid_argument() {
+    let server = start(Admission::new(2, 2)).await;
+    let request = RenderCertificateRequest {
+        signer: Some("a".repeat(2001)),
+        ..certificate()
+    };
+    let status = client(&server.addr)
+        .await
+        .render_certificate(authorized(request, TOKEN))
+        .await
+        .unwrap_err();
+    assert_eq!(status.code(), Code::InvalidArgument);
+    assert!(status.message().contains("signer"), "{}", status.message());
 }
 
 impl Drop for Running {

@@ -6,6 +6,7 @@ package harmonogram.documents.v1;
 // the service only lays it out.
 service DocumentService {
   rpc RenderTicket(RenderTicketRequest) returns (RenderTicketResponse);
+  rpc RenderCertificate(RenderCertificateRequest) returns (RenderCertificateResponse);
 }
 
 message RenderTicketRequest {
@@ -25,5 +26,30 @@ message RenderTicketRequest {
 }
 
 message RenderTicketResponse {
+  bytes pdf = 1;
+}
+
+message RenderCertificateRequest {
+  // PDF metadata title, e.g. "Zaświadczenie o udziale — Warsztaty".
+  string document_title = 1;
+  // Who issues it (set by the organiser), above the title.
+  optional string issuer = 2;
+  string title = 3;
+  // "This is to certify that" line above the name.
+  string person_label = 4;
+  string name = 5;
+  // "attended" line above the event title.
+  string intro = 6;
+  string event_title = 7;
+  // Formatted, e.g. "Data: 1 grudnia 2026".
+  string date_line = 8;
+  optional string note = 9;
+  // Name under a line to sign, bottom right.
+  optional string signer = 10;
+  // Reference line at the bottom.
+  string footer = 11;
+}
+
+message RenderCertificateResponse {
   bytes pdf = 1;
 }

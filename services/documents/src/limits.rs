@@ -1,6 +1,6 @@
 //! Input limits: they stop abuse; real data never comes near them.
 
-use crate::proto::RenderTicketRequest;
+use crate::proto::{RenderCertificateRequest, RenderTicketRequest};
 use tonic::Status;
 
 /// The most characters any text field may hold.
@@ -27,4 +27,18 @@ pub fn check_ticket(req: &RenderTicketRequest) -> Result<(), Status> {
     text("show_at_entry", &req.show_at_entry)?;
     text("holder_label", &req.holder_label)?;
     text("holder_name", &req.holder_name)
+}
+
+pub fn check_certificate(req: &RenderCertificateRequest) -> Result<(), Status> {
+    text("document_title", &req.document_title)?;
+    text("issuer", req.issuer.as_deref().unwrap_or_default())?;
+    text("title", &req.title)?;
+    text("person_label", &req.person_label)?;
+    text("name", &req.name)?;
+    text("intro", &req.intro)?;
+    text("event_title", &req.event_title)?;
+    text("date_line", &req.date_line)?;
+    text("note", req.note.as_deref().unwrap_or_default())?;
+    text("signer", req.signer.as_deref().unwrap_or_default())?;
+    text("footer", &req.footer)
 }

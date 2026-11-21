@@ -3,7 +3,9 @@
 
 pub mod admission;
 mod auth;
+pub mod certificate;
 pub mod config;
+mod draw;
 pub mod fonts;
 pub mod layout;
 mod limits;

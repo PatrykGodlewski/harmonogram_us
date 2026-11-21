@@ -4,8 +4,10 @@ use crate::admission::Admission;
 use crate::fonts::Fonts;
 use crate::metrics::Metrics;
 use crate::proto::document_service_server::DocumentService;
-use crate::proto::{RenderTicketRequest, RenderTicketResponse};
-use crate::{limits, ticket};
+use crate::proto::{
+    RenderCertificateRequest, RenderCertificateResponse, RenderTicketRequest, RenderTicketResponse,
+};
+use crate::{certificate, limits, ticket};
 use std::sync::Arc;
 use std::time::Instant;
 use tonic::{Request, Response, Status};
@@ -17,15 +19,18 @@ pub struct Documents {
 }
 
 impl Documents {
-    async fn ticket(&self, req: RenderTicketRequest) -> Result<RenderTicketResponse, Status> {
-        limits::check_ticket(&req)?;
+    /// Takes a place in the pool and renders on the blocking pool.
+    async fn render<R: Send + 'static>(
+        &self,
+        req: R,
+        draw: fn(&R, &Fonts) -> Vec<u8>,
+    ) -> Result<Vec<u8>, Status> {
         let place = self
             .admission
             .try_enter()
             .ok_or_else(|| Status::resource_exhausted("too many documents in progress"))?;
         let fonts = self.fonts.clone();
-        let pdf = place.run(move || ticket::render(&req, &fonts)).await;
-        Ok(RenderTicketResponse { pdf })
+        Ok(place.run(move || draw(&req, &fonts)).await)
     }
 
     /// One metric sample and one log line per call; never the request's contents.
@@ -51,8 +56,28 @@ impl DocumentService for Documents {
         request: Request<RenderTicketRequest>,
     ) -> Result<Response<RenderTicketResponse>, Status> {
         let started = Instant::now();
-        let result = self.ticket(request.into_inner()).await;
+        let req = request.into_inner();
+        let result = match limits::check_ticket(&req) {
+            Ok(()) => self.render(req, ticket::render).await,
+            Err(status) => Err(status),
+        }
+        .map(|pdf| RenderTicketResponse { pdf });
         self.record("RenderTicket", started, &result);
+        result.map(Response::new)
+    }
+
+    async fn render_certificate(
+        &self,
+        request: Request<RenderCertificateRequest>,
+    ) -> Result<Response<RenderCertificateResponse>, Status> {
+        let started = Instant::now();
+        let req = request.into_inner();
+        let result = match limits::check_certificate(&req) {
+            Ok(()) => self.render(req, certificate::render).await,
+            Err(status) => Err(status),
+        }
+        .map(|pdf| RenderCertificateResponse { pdf });
+        self.record("RenderCertificate", started, &result);
         result.map(Response::new)
     }
 }

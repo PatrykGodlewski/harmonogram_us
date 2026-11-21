@@ -1,53 +1,29 @@
 //! The printable ticket: a port of `packages/api/src/tickets/pdf.ts`.
 
+use crate::draw::{GREY, NAVY, Page, Rgb};
 use crate::fonts::{FontFace, Fonts};
 use crate::layout::fit_lines;
 use crate::proto::RenderTicketRequest;
 use crate::qr;
 use krilla::Document;
-use krilla::color::rgb;
-use krilla::geom::{Point, Size, Transform};
+use krilla::geom::{Size, Transform};
 use krilla::image::Image;
 use krilla::metadata::Metadata;
-use krilla::num::NormalizedF32;
 use krilla::page::PageSettings;
-use krilla::paint::{Fill, FillRule};
 use krilla::surface::Surface;
-use krilla::text::TextDirection;
 
 /// A6 portrait (a phone-sized card), in PDF points.
-const WIDTH: f32 = 298.0;
-const HEIGHT: f32 = 420.0;
+const PAGE: Page = Page {
+    width: 298.0,
+    height: 420.0,
+};
+const WIDTH: f32 = PAGE.width;
+const HEIGHT: f32 = PAGE.height;
 const TEXT_WIDTH: f32 = WIDTH - 40.0;
 const QR_SIZE: f32 = 150.0;
 
-/// RGB of the brand navy and the secondary grey, as in the TypeScript PDFs.
-const NAVY: (u8, u8, u8) = (15, 41, 87);
-const GREY: (u8, u8, u8) = (89, 97, 107);
-
-/// Draws one line centred across the page; `y` counts up from the bottom, as in pdf-lib.
-fn centered(
-    surface: &mut Surface,
-    text: &str,
-    y: f32,
-    font: &FontFace,
-    size: f32,
-    (r, g, b): (u8, u8, u8),
-) {
-    surface.set_fill(Some(Fill {
-        paint: rgb::Color::new(r, g, b).into(),
-        opacity: NormalizedF32::ONE,
-        rule: FillRule::NonZero,
-    }));
-    let x = (WIDTH - font.width(text, size)) / 2.0;
-    surface.draw_text(
-        Point::from_xy(x, HEIGHT - y),
-        font.pdf(),
-        size,
-        text,
-        false,
-        TextDirection::Auto,
-    );
+fn centered(surface: &mut Surface, text: &str, y: f32, font: &FontFace, size: f32, color: Rgb) {
+    PAGE.centered(surface, text, y, font, size, color);
 }
 
 /// One page: event, holder and the QR code the door scanner reads.
