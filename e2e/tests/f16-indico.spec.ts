@@ -39,3 +39,18 @@ test("[F16] wydarzenie z Indico jest w kalendarzu z oznaczeniem i linkiem @uczes
 		"Rejestracja na wydarzenia uczelniane | Studenci",
 	);
 });
+
+test("[F16] wydarzenie z Indico jest w kalendarzu uczelni (ICS) @uczestnik", async ({
+	request,
+}) => {
+	await expect(async () => {
+		const feed = await (
+			await request.get("/api/calendar/events?lang=pl")
+		).text();
+		// Lines are unfolded first: long ones continue after a CRLF and a space.
+		const unfolded = feed.replace(/\r\n /g, "");
+		expect(unfolded).toContain(`SUMMARY:${TITLE}`);
+		expect(unfolded).toContain(`URL:${INDICO_LINK}`);
+		expect(unfolded).toContain("UID:indico-1001@harmonogram");
+	}).toPass({ timeout: 30_000 });
+});
