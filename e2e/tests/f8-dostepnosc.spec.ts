@@ -2,7 +2,11 @@ import { randomBytes } from "node:crypto";
 import { expect, type Page, test } from "@playwright/test";
 import { createEventQuestion } from "@repo/db/queries/event-questions";
 import { registerForEvent } from "@repo/db/queries/event-registrations";
-import { expectAccessible, expectAccessibleOverlay } from "../fixtures/a11y";
+import {
+	expectAccessible,
+	expectAccessibleOverlay,
+	tabTo,
+} from "../fixtures/a11y";
 import { adminUrl, signInAsAdmin, signInByEmail } from "../fixtures/auth";
 import { createTestEvent, createTestUser, uniqueEmail } from "../fixtures/data";
 import { latestMessageTo } from "../fixtures/mailpit";
@@ -155,11 +159,14 @@ test("[F8] ekrany organizatora spełniają WCAG AA @organizator", async ({
 		["Dodaj punkt", "punkt programu"],
 		["Dodaj osobę", "dodawanie osoby"],
 	] as const) {
-		await page.getByRole("button", { name: button, exact: true }).click();
+		const trigger = page.getByRole("button", { name: button, exact: true });
+		await trigger.click();
 		await page.getByRole("dialog").waitFor();
 		await expectAccessibleOverlay(page, `panel: ${screen}`);
 		await page.keyboard.press("Escape");
 		await expect(page.getByRole("dialog")).toBeHidden();
+		// WCAG 2.4.3: closing returns focus to what opened it.
+		await expect(trigger, `${screen}: focus back on the button`).toBeFocused();
 	}
 	await page.getByRole("checkbox", { name: `Zaznacz ${participant}` }).check();
 	await page.getByRole("toolbar", { name: "Zaznaczeni" }).waitFor();
@@ -189,4 +196,49 @@ test("[F8] ekrany administratora spełniają WCAG AA @organizator", async ({
 	] as const) {
 		await audit(page, adminUrl(path), `panel: ${title}`, title);
 	}
+});
+
+test("[F8] zapis i bilet obsługiwane samą klawiaturą @uczestnik", async ({
+	page,
+}, testInfo) => {
+	const email = uniqueEmail(testInfo);
+	await createTestUser(email);
+	const event = await createTestEvent({});
+	await signInByEmail(page, email);
+
+	await open(page, `/pl/events/${event.id}`);
+	await tabTo(page, "Zarejestruj się");
+	await page.keyboard.press("Enter");
+	await expect(
+		page.locator("section").first().getByText("Zarejestrowano"),
+	).toBeVisible();
+	await open(page, "/pl/account");
+	await tabTo(page, "Bilet");
+	await page.keyboard.press("Enter");
+	await expect(page).toHaveURL(/\/pl\/tickets\//);
+});
+
+test("[F8] panel organizatora obsługiwany klawiaturą @organizator", async ({
+	page,
+}, testInfo) => {
+	const email = uniqueEmail(testInfo);
+	const password = randomBytes(18).toString("base64url");
+	const organizer = await createTestUser(email, {
+		role: "organizer",
+		password,
+	});
+	const event = await createTestEvent({ organizerId: organizer.id });
+
+	await signInAsAdmin(page, email, password);
+	await open(page, adminUrl(`/pl/events/${event.id}`));
+	await tabTo(page, "Dodaj pytanie");
+	await page.keyboard.press("Enter");
+	const dialog = page.getByRole("dialog");
+	await expect(dialog).toBeVisible();
+	await expect(dialog.locator(":focus")).toHaveCount(1);
+	await page.keyboard.press("Escape");
+	await expect(dialog).toBeHidden();
+	await expect(
+		page.getByRole("button", { name: "Dodaj pytanie" }),
+	).toBeFocused();
 });

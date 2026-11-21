@@ -71,3 +71,59 @@ export async function expectAccessibleOverlay(
 	await expectNoAxeViolations(page, screen);
 	await expectReflow(page, screen);
 }
+
+/**
+ * Presses Tab until the focused element's name matches (WCAG 2.1.1), checking that
+ * every element on the way shows where focus is (2.4.7).
+ */
+export async function tabTo(
+	page: Page,
+	name: string,
+	maxSteps = 80,
+): Promise<void> {
+	const visited: string[] = [];
+	for (let step = 0; step < maxSteps; step++) {
+		await page.keyboard.press("Tab");
+		await settle(page); // focus rings fade in (transition-all)
+		const focused = await page.evaluate(() => {
+			const element = document.activeElement as HTMLElement | null;
+			if (!element || element === document.body) return null;
+			const style = getComputedStyle(element);
+			const outline =
+				style.outlineStyle !== "none" &&
+				Number.parseFloat(style.outlineWidth) > 0;
+			// A focus ring is a box-shadow with a spread and a visible colour
+			// (components always carry transparent or soft shadows too).
+			const ring = [
+				...style.boxShadow.matchAll(
+					/\w+\(([^)]*)\)\s+-?[\d.]+px\s+-?[\d.]+px\s+[\d.]+px\s+([\d.]+)px/g,
+				),
+			].some(([, color = "", spread = "0"]) => {
+				// rgba(r, g, b, a) or oklab(l a b / a); no alpha means opaque.
+				const alpha = color.includes("/")
+					? color.split("/")[1]
+					: color.split(",")[3];
+				return Number(spread) > 0 && Number(alpha ?? 1) > 0;
+			});
+			return {
+				name: (
+					element.getAttribute("aria-label") ??
+					element.innerText ??
+					""
+				).trim(),
+				visible: outline || ring,
+				html: `${element.outerHTML.slice(0, 160)} outline=${style.outlineStyle} ${style.outlineWidth} shadow=${style.boxShadow}`,
+			};
+		});
+		if (!focused) continue;
+		visited.push(focused.name);
+		expect(
+			focused.visible,
+			`no visible focus: ${focused.html} (after ${visited.join(" → ")})`,
+		).toBe(true);
+		if (focused.name === name) return;
+	}
+	throw new Error(
+		`"${name}" not reached with Tab in ${maxSteps} steps: ${visited.join(" → ")}`,
+	);
+}
