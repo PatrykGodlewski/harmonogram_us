@@ -725,5 +725,13 @@
 	"guest_confirm_title": "Confirm your registration",
 	"guest_confirm_body": "Press the button to confirm your registration for the event.",
 	"guest_confirm_button": "Confirm registration",
-	"title_guest_confirm": "Confirm registration"
+	"title_guest_confirm": "Confirm registration",
+	"error_withdraw_link_invalid": "This link is not valid. Withdraw on the event page or use the link from the latest e-mail.",
+	"withdraw_title": "Withdraw from the event",
+	"withdraw_body": "Press the button to withdraw. Your place goes to the next person on the waitlist.",
+	"withdraw_button": "Withdraw",
+	"withdraw_done": "You have withdrawn.",
+	"withdraw_error_generic": "We couldn't withdraw you. Please try again.",
+	"reg_email_withdraw_link": "Withdraw",
+	"title_withdraw": "Withdraw"
 }

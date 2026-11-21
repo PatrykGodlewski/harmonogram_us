@@ -725,5 +725,13 @@
 	"guest_confirm_title": "Potwierdź zapis",
 	"guest_confirm_body": "Naciśnij przycisk, aby potwierdzić zapis na wydarzenie.",
 	"guest_confirm_button": "Potwierdź zapis",
-	"title_guest_confirm": "Potwierdzenie zapisu"
+	"title_guest_confirm": "Potwierdzenie zapisu",
+	"error_withdraw_link_invalid": "Link jest nieprawidłowy. Wypisz się na stronie wydarzenia albo skorzystaj z linku z ostatniego e-maila.",
+	"withdraw_title": "Rezygnacja z zapisu",
+	"withdraw_body": "Naciśnij przycisk, aby zrezygnować z zapisu. Twoje miejsce dostanie następna osoba z listy rezerwowej.",
+	"withdraw_button": "Zrezygnuj z zapisu",
+	"withdraw_done": "Zrezygnowano z zapisu.",
+	"withdraw_error_generic": "Nie udało się zrezygnować. Spróbuj ponownie.",
+	"reg_email_withdraw_link": "Zrezygnuj z zapisu",
+	"title_withdraw": "Rezygnacja z zapisu"
 }

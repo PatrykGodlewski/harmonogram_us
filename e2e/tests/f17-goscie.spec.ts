@@ -1,7 +1,12 @@
 import { expect, type Page, test } from "@playwright/test";
+import { db } from "@repo/db/client";
 import { createEventQuestion } from "@repo/db/queries/event-questions";
+import { registerForEvent } from "@repo/db/queries/event-registrations";
+import { authUsers } from "@repo/db/schema/better-auth";
+import { eventRegistrations } from "@repo/db/schema/event-registrations";
+import { and, eq } from "drizzle-orm";
 import { waitForCaptcha } from "../fixtures/auth";
-import { createTestEvent, uniqueEmail } from "../fixtures/data";
+import { createTestEvent, createTestUser, uniqueEmail } from "../fixtures/data";
 import { latestMessageTo } from "../fixtures/mailpit";
 import { open } from "../fixtures/navigation";
 
@@ -94,3 +99,67 @@ test("[F17] wydarzenie tylko dla zalogowanych nie ma zapisu gościa @uczestnik",
 		page.getByRole("button", { name: "Zapisz się bez konta" }),
 	).toHaveCount(0);
 });
+
+test("[F17] gość rezygnuje przez link z e-maila @uczestnik", async ({
+	page,
+}, testInfo) => {
+	const email = uniqueEmail(testInfo);
+	const waiting = `w-${email}`;
+	// One place: the guest takes it, a signed-up person waits for it.
+	const event = await createTestEvent({ maxSeats: 1 });
+	const link = await registerAsGuest(page, event.id, email);
+	await open(page, link);
+	await page.getByRole("button", { name: "Potwierdź zapis" }).click();
+	await expect(page).toHaveURL(new RegExp(`/pl/events/${event.id}`));
+	const waiter = await createTestUser(waiting);
+	await registerForEvent(event.id, waiter.id, "pl");
+
+	const confirmed = await latestMessageTo(email, { subject: "Zapisano" });
+	const withdraw = confirmed.links.find((href) => href.includes("/withdraw"));
+	expect(withdraw, "withdraw link in the confirmation e-mail").toBeTruthy();
+
+	// A mail scanner fetching the link changes nothing.
+	await page.request.get(withdraw ?? "");
+	await expect(await stateOf(event.id, email)).toBe("registered");
+
+	await open(page, withdraw ?? "");
+	await page.getByRole("button", { name: "Zrezygnuj z zapisu" }).click();
+	await expect(page.getByRole("status")).toContainText("Zrezygnowano");
+	expect(await stateOf(event.id, email)).toBeNull();
+	// The place went to the person waiting.
+	await latestMessageTo(waiting, { subject: "Miejsce się zwolniło" });
+});
+
+test("[F17] zmieniony link rezygnacji nie działa @uczestnik", async ({
+	page,
+}, testInfo) => {
+	const email = uniqueEmail(testInfo);
+	const event = await createTestEvent({});
+	const link = await registerAsGuest(page, event.id, email);
+	await open(page, link);
+	await page.getByRole("button", { name: "Potwierdź zapis" }).click();
+	await expect(page).toHaveURL(new RegExp(`/pl/events/${event.id}`));
+	const confirmed = await latestMessageTo(email, { subject: "Zapisano" });
+	const withdraw = new URL(
+		confirmed.links.find((href) => href.includes("/withdraw")) ?? "",
+	);
+	withdraw.searchParams.set("token", "x".repeat(43));
+
+	await open(page, withdraw.toString());
+	await page.getByRole("button", { name: "Zrezygnuj z zapisu" }).click();
+	await expect(page.getByRole("alert")).toContainText(
+		"Link jest nieprawidłowy",
+	);
+	expect(await stateOf(event.id, email)).toBe("registered");
+});
+
+async function stateOf(eventId: string, email: string) {
+	const [row] = await db
+		.select({ state: eventRegistrations.state })
+		.from(eventRegistrations)
+		.innerJoin(authUsers, eq(authUsers.id, eventRegistrations.userId))
+		.where(
+			and(eq(eventRegistrations.eventId, eventId), eq(authUsers.email, email)),
+		);
+	return row?.state ?? null;
+}

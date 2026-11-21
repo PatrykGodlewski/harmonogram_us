@@ -7,6 +7,7 @@ import {
 	Container,
 	Head,
 	Html,
+	Link,
 	Preview,
 	Section,
 	Text,
@@ -32,6 +33,7 @@ import {
 	reg_email_waitlisted_intro,
 	reg_email_waitlisted_subject,
 	reg_email_withdraw_hint,
+	reg_email_withdraw_link,
 } from "@repo/i18n/paraglide/messages";
 
 export type RegistrationEmailChange =
@@ -53,6 +55,8 @@ export type RegistrationEmailProps = {
 	url: string;
 	/** The registrant's ticket; only for a registration that holds a place. */
 	ticketUrl?: string;
+	/** Signed link to withdraw without signing in (shown with the withdraw hint). */
+	withdrawUrl?: string;
 };
 
 const SUBJECTS = {
@@ -104,6 +108,9 @@ export function registrationEmailText(props: RegistrationEmailProps): {
 				: null,
 			hasWithdrawHint(props.change)
 				? reg_email_withdraw_hint({}, { locale })
+				: null,
+			hasWithdrawHint(props.change) && props.withdrawUrl
+				? `${reg_email_withdraw_link({}, { locale })}: ${props.withdrawUrl}`
 				: null,
 		]
 			.filter(Boolean)
@@ -181,6 +188,14 @@ export function RegistrationEmail(props: RegistrationEmailProps) {
 								}}
 							>
 								{reg_email_withdraw_hint({}, { locale })}
+								{props.withdrawUrl ? (
+									<>
+										{" "}
+										<Link href={props.withdrawUrl} style={{ color: "#0f2a56" }}>
+											{reg_email_withdraw_link({}, { locale })}
+										</Link>
+									</>
+								) : null}
 							</Text>
 						)}
 					</Section>

@@ -10,6 +10,7 @@ import { eventMessageEmailText } from "@repo/api/notifications/event-message-ema
 import { guestConfirmationEmail } from "@repo/api/notifications/guest-confirmation-email";
 import { registrationEmailText } from "@repo/api/notifications/registration-email";
 import { verificationEmail } from "@repo/api/notifications/verification-email";
+import { withdrawUrl } from "@repo/api/registrations/withdraw-link";
 import { getRegistrationForEmail } from "@repo/db/queries/event-registrations";
 import { getInvitationEvent } from "@repo/db/queries/events";
 import { env } from "@repo/env";
@@ -98,6 +99,7 @@ export async function handleEmailJob(
 					job.change !== "certificate"
 						? `${appUrl}/tickets/${job.registrationId}`
 						: undefined,
+				withdrawUrl: withdrawUrl(job.registrationId, registration.locale),
 			};
 			const { subject, text } = registrationEmailText(props);
 			await deps.send({
