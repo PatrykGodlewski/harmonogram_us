@@ -51,6 +51,8 @@ export function EventFilters({ search, onSearchChange }: EventFiltersProps) {
 				<EventErrorAlert error={optionsQuery.error} />
 			) : null}
 			<Input
+				type="search"
+				aria-label={filter_search_placeholder()}
 				placeholder={filter_search_placeholder()}
 				value={searchInput}
 				onChange={(e) => setSearchInput(e.target.value)}
@@ -69,7 +71,10 @@ export function EventFilters({ search, onSearchChange }: EventFiltersProps) {
 									onSearchChange((prev) => ({ ...prev, [id]: value }))
 								}
 							>
-								<SelectTrigger className="w-full bg-background">
+								<SelectTrigger
+									className="w-full bg-background"
+									aria-label={placeholder()}
+								>
 									<SelectValue placeholder={placeholder()} />
 								</SelectTrigger>
 								<SelectContent>

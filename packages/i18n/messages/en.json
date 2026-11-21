@@ -678,5 +678,15 @@
 	"admin_field_certificate_issuer": "Certificate issuer",
 	"admin_field_certificate_signer": "Signature on the certificate",
 	"admin_field_certificate_note": "Extra information",
-	"admin_field_certificate_hint": "E.g. “Faculty of Physics”, “Dr Jan Nowak, head” and “Hours: 4”. Empty fields are left out."
+	"admin_field_certificate_hint": "E.g. “Faculty of Physics”, “Dr Jan Nowak, head” and “Hours: 4”. Empty fields are left out.",
+	"a11y_title": "Accessibility statement",
+	"a11y_intro": "The university is committed to making this service accessible in line with the Polish Act of 4 April 2019 on the digital accessibility of public bodies' websites and mobile applications.",
+	"a11y_status": "The service is partially compliant with WCAG 2.1 level AA. Every participant and organiser screen is checked automatically (axe-core); a full expert audit has not taken place yet.",
+	"a11y_known": "Known limitations: the ticket scanner needs a camera — attendance can also be marked by hand on the list; PDF files (tickets, certificates, attendance sheets) are not tagged yet.",
+	"a11y_prepared": "This statement was prepared on 21 November 2026 by self-assessment.",
+	"a11y_contact": "Report accessibility problems to: {email}. We will reply within 7 days at the latest.",
+	"a11y_contact_generic": "Report accessibility problems to the site administrator. We will reply within 7 days at the latest.",
+	"a11y_complaint": "If we refuse to provide accessibility, you can file a complaint and then apply to the Commissioner for Human Rights.",
+	"footer_accessibility": "Accessibility statement",
+	"footer_privacy": "Personal data"
 }

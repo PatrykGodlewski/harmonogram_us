@@ -14,6 +14,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AccountRouteImport } from './routes/account'
+import { Route as AccessibilityRouteImport } from './routes/accessibility'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TicketsRegistrationIdRouteImport } from './routes/tickets/$registrationId'
 import { Route as JoinCodeRouteImport } from './routes/join/$code'
@@ -55,6 +56,11 @@ const LoginRoute = LoginRouteImport.update({
 const AccountRoute = AccountRouteImport.update({
   id: '/account',
   path: '/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccessibilityRoute = AccessibilityRouteImport.update({
+  id: '/accessibility',
+  path: '/accessibility',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -150,6 +156,7 @@ const ApiCalendarEventEventIdRoute = ApiCalendarEventEventIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/accessibility': typeof AccessibilityRoute
   '/account': typeof AccountRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
@@ -174,6 +181,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/accessibility': typeof AccessibilityRoute
   '/account': typeof AccountRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
@@ -199,6 +207,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/accessibility': typeof AccessibilityRoute
   '/account': typeof AccountRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
@@ -225,6 +234,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/accessibility'
     | '/account'
     | '/login'
     | '/logout'
@@ -249,6 +259,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/accessibility'
     | '/account'
     | '/login'
     | '/logout'
@@ -273,6 +284,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/accessibility'
     | '/account'
     | '/login'
     | '/logout'
@@ -298,6 +310,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccessibilityRoute: typeof AccessibilityRoute
   AccountRoute: typeof AccountRoute
   LoginRoute: typeof LoginRoute
   LogoutRoute: typeof LogoutRoute
@@ -356,6 +369,13 @@ declare module '@tanstack/react-router' {
       path: '/account'
       fullPath: '/account'
       preLoaderRoute: typeof AccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/accessibility': {
+      id: '/accessibility'
+      path: '/accessibility'
+      fullPath: '/accessibility'
+      preLoaderRoute: typeof AccessibilityRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -482,6 +502,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccessibilityRoute: AccessibilityRoute,
   AccountRoute: AccountRoute,
   LoginRoute: LoginRoute,
   LogoutRoute: LogoutRoute,

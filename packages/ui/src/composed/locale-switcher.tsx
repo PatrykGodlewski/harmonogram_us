@@ -14,7 +14,8 @@ export function LocaleSwitcher() {
 			size="sm"
 			onClick={() => setLocale(nextLocale)}
 			className="h-7 gap-1 px-2 text-xs font-medium uppercase tracking-wide text-muted-foreground"
-			aria-label={m.language_label()}
+			// The spoken name includes the visible "PL"/"EN" (WCAG 2.5.3, label in name).
+			aria-label={`${m.language_label()}: ${currentLocale.toUpperCase()}`}
 			title={m.language_label()}
 		>
 			<svg

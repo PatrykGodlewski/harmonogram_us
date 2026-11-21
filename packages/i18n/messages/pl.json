@@ -678,5 +678,15 @@
 	"admin_field_certificate_issuer": "Wystawca zaświadczenia",
 	"admin_field_certificate_signer": "Podpis na zaświadczeniu",
 	"admin_field_certificate_note": "Dodatkowa informacja",
-	"admin_field_certificate_hint": "Np. „Wydział Fizyki”, „dr Jan Nowak, kierownik” i „Liczba godzin: 4”. Puste pola pomijamy."
+	"admin_field_certificate_hint": "Np. „Wydział Fizyki”, „dr Jan Nowak, kierownik” i „Liczba godzin: 4”. Puste pola pomijamy.",
+	"a11y_title": "Deklaracja dostępności",
+	"a11y_intro": "Uczelnia zobowiązuje się zapewnić dostępność tego serwisu zgodnie z ustawą z dnia 4 kwietnia 2019 r. o dostępności cyfrowej stron internetowych i aplikacji mobilnych podmiotów publicznych.",
+	"a11y_status": "Serwis jest częściowo zgodny z wytycznymi WCAG 2.1 na poziomie AA. Każdy ekran uczestnika i organizatora sprawdzamy automatycznie (axe-core); pełny audyt ekspercki jeszcze się nie odbył.",
+	"a11y_known": "Znane ograniczenia: skaner biletów wymaga kamery — obecność można też zaznaczyć ręcznie na liście; pliki PDF (bilety, zaświadczenia, listy obecności) nie mają jeszcze struktury znaczników.",
+	"a11y_prepared": "Deklarację sporządzono 21 listopada 2026 r. na podstawie samooceny.",
+	"a11y_contact": "Problemy z dostępnością zgłoś na adres: {email}. Odpowiemy najpóźniej w ciągu 7 dni.",
+	"a11y_contact_generic": "Problemy z dostępnością zgłoś administratorowi serwisu. Odpowiemy najpóźniej w ciągu 7 dni.",
+	"a11y_complaint": "Jeśli odmówimy zapewnienia dostępności, możesz złożyć skargę, a następnie wniosek do Rzecznika Praw Obywatelskich.",
+	"footer_accessibility": "Deklaracja dostępności",
+	"footer_privacy": "Dane osobowe"
 }
