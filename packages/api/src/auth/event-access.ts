@@ -4,6 +4,7 @@ import {
 	canCreateEvents,
 	canManageEvent,
 } from "@repo/db/queries/event-organizers";
+import { getQuestionEventId } from "@repo/db/queries/event-questions";
 import { getEventStatus } from "@repo/db/queries/events";
 import { appError } from "../errors";
 import type { AuthenticatedUser } from "./user";
@@ -64,4 +65,16 @@ export async function assertCanDeleteEvent(
 	if ((await getEventStatus(eventId)) !== "draft") {
 		throw appError("FORBIDDEN");
 	}
+}
+
+/** NOT_FOUND for an unknown question; FORBIDDEN unless the user manages its event. */
+export async function assertCanManageQuestion(
+	user: AuthenticatedUser,
+	questionId: string,
+): Promise<void> {
+	const eventId = await getQuestionEventId(questionId);
+	if (!eventId) {
+		throw appError("NOT_FOUND");
+	}
+	await assertCanManageEvent(user, eventId);
 }

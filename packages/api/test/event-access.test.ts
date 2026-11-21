@@ -119,11 +119,12 @@ describe("panel server functions check event access", () => {
 		"../src/admin/event-message.ts",
 		"../src/admin/check-in.ts",
 		"../src/admin/invitations.ts",
+		"../src/admin/questions.ts",
 	];
 	/** Panel-wide reads that are not about one event. */
 	const panelWide = ["fetchAdminEventFilterOptionsServer"];
 	const checks =
-		/assertCanManageEvent|assertCanCheckIn|assertCanManageAgendaItem|assertCanCreateEvents|assertCanDeleteEvent|listManagedEventIds/;
+		/assertCanManageEvent|assertCanCheckIn|assertCanManageAgendaItem|assertCanManageQuestion|assertCanCreateEvents|assertCanDeleteEvent|listManagedEventIds/;
 
 	for (const file of files) {
 		const source = readFileSync(new URL(file, import.meta.url), "utf8");

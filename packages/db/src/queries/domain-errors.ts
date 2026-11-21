@@ -35,6 +35,9 @@ export const DOMAIN_ERROR_CODES = [
 	"LAST_ADMIN",
 	"APPROVAL_REQUIRED",
 	"EVENT_NOT_PUBLISHED",
+	"QUESTION_OPTIONS",
+	"QUESTION_NOT_FOUND",
+	"ANSWERS_INVALID",
 ] as const;
 
 export type DomainErrorCode = (typeof DOMAIN_ERROR_CODES)[number];
