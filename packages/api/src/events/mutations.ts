@@ -24,6 +24,8 @@ const registerForAgendaItemSchema = agendaItemIdSchema.extend({
 export const registerForEventInputSchema = z.object({
 	eventId: z.string().min(1),
 	invite: inviteSchema,
+	/** Answers to the event's questions, by question id (checked against them on the server). */
+	answers: z.record(z.string(), z.string().max(2000)).optional(),
 	/** UI language, for the registrant's e-mails (server functions have no locale prefix). */
 	locale: z.enum(["pl", "en"]),
 });
@@ -55,6 +57,7 @@ export const registerForEventServer = createServerFn({ method: "POST" })
 				session.user.id,
 				data.locale,
 				registrationEmailHooks,
+				{ answers: data.answers },
 			);
 		} catch (error) {
 			if (error instanceof DomainError) {

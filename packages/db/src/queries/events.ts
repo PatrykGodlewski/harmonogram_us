@@ -26,6 +26,7 @@ import {
 	mapConstraintError,
 } from "./domain-errors";
 import { missingForPublish } from "./event-completeness";
+import { type EventQuestion, listEventQuestions } from "./event-questions";
 import {
 	type EventWhenWhere,
 	effectiveEventEndSql,
@@ -84,6 +85,8 @@ export type EventWithRelations = {
 	visibility: EventVisibility;
 	requiresApproval: boolean;
 	certificatesEnabled: boolean;
+	/** Registering asks questions (the list sends people to the event page to answer). */
+	hasQuestions: boolean;
 	/** End, else the end of its last agenda item, else a day after the start. */
 	effectiveEndsAt: Date;
 	createdAt: Date;
@@ -243,6 +246,7 @@ async function queryEvents(
 			visibility: events.visibility,
 			requiresApproval: events.requiresApproval,
 			certificatesEnabled: events.certificatesEnabled,
+			hasQuestions: sql<boolean>`exists (select 1 from event_questions q where q.event_id = "events"."id")`,
 			effectiveEndsAt:
 				sql<Date>`${effectiveEventEndSql(sql`"events"`)}`.mapWith(
 					(value: string | Date) => new Date(value),
@@ -535,17 +539,21 @@ export async function deleteEvent(id: string) {
 	return event ?? null;
 }
 
-export type EventDetails = EventWithRelations & { agenda: AgendaItem[] };
+export type EventDetails = EventWithRelations & {
+	agenda: AgendaItem[];
+	questions: EventQuestion[];
+};
 
 export async function getEventById(
 	id: string,
 	audience: EventAudience,
 ): Promise<EventDetails | null> {
-	const [[event], agenda] = await Promise.all([
+	const [[event], agenda, questions] = await Promise.all([
 		queryEvents({ audience }, id),
 		listAgendaItems(id),
+		listEventQuestions(id),
 	]);
-	return event ? { ...event, agenda } : null;
+	return event ? { ...event, agenda, questions } : null;
 }
 
 /** Makes a draft public. EVENT_INCOMPLETE without a place or link; EVENT_NOT_DRAFT if already public. */

@@ -18,7 +18,7 @@ export function useEventDetailsRegistrations(
 		waitlistPosition: mine?.waitlistPosition ?? null,
 		approval: approvalOf(mine?.state),
 		isBusy: actions.hasPending,
-		registerEvent: () => actions.register(eventId),
+		registerEvent: (answers) => actions.register(eventId, answers),
 		unregisterEvent: () => actions.unregister(eventId),
 		registerItem: (item) => actions.registerItem(eventId, item),
 		unregisterItem: (item) => actions.unregisterItem(eventId, item),

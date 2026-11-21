@@ -651,5 +651,12 @@
 	"questions_saved": "Zapisano pytanie",
 	"error_question_options": "Pytanie z listą potrzebuje co najmniej dwóch różnych odpowiedzi.",
 	"error_question_not_found": "To pytanie już nie istnieje.",
-	"error_answers_invalid": "Uzupełnij wymagane odpowiedzi."
+	"error_answers_invalid": "Uzupełnij wymagane odpowiedzi.",
+	"answers_title": "Kilka pytań od organizatora",
+	"answers_required": "Ta odpowiedź jest wymagana.",
+	"answers_optional": "(opcjonalnie)",
+	"answers_yes": "Tak",
+	"answers_no": "Nie",
+	"answers_choose": "Wybierz",
+	"answers_cancel": "Anuluj"
 }

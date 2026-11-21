@@ -2,6 +2,7 @@ import { and, asc, count, eq, sql } from "drizzle-orm";
 import { db } from "../client";
 import { agendaItemRegistrations, agendaItems } from "../schema/agenda";
 import { authUsers } from "../schema/better-auth";
+import { eventQuestions, registrationAnswers } from "../schema/event-questions";
 import { eventRegistrations } from "../schema/event-registrations";
 import { events } from "../schema/events";
 import { registrationGroups } from "../schema/groups";
@@ -22,6 +23,7 @@ export type AccountDataExport = {
 		checkedInAt: string | null;
 		event: { id: string; title: string; date: string };
 		agendaItems: string[];
+		answers: { question: string; answer: string }[];
 	}[];
 	groups: {
 		name: string | null;
@@ -46,7 +48,7 @@ export async function exportAccountData(
 	if (!profile) {
 		throw new DomainError("USER_NOT_FOUND");
 	}
-	const [registrations, items, groups] = await Promise.all([
+	const [registrations, items, groups, answers] = await Promise.all([
 		db
 			.select({
 				id: eventRegistrations.id,
@@ -83,6 +85,23 @@ export async function exportAccountData(
 			.from(registrationGroups)
 			.innerJoin(events, eq(events.id, registrationGroups.eventId))
 			.where(eq(registrationGroups.ownerUserId, userId)),
+		db
+			.select({
+				registrationId: registrationAnswers.registrationId,
+				question: eventQuestions.label,
+				answer: registrationAnswers.value,
+			})
+			.from(registrationAnswers)
+			.innerJoin(
+				eventQuestions,
+				eq(eventQuestions.id, registrationAnswers.questionId),
+			)
+			.innerJoin(
+				eventRegistrations,
+				eq(eventRegistrations.id, registrationAnswers.registrationId),
+			)
+			.where(eq(eventRegistrations.userId, userId))
+			.orderBy(asc(eventQuestions.position)),
 	]);
 	return {
 		exportedAt: new Date().toISOString(),
@@ -103,6 +122,9 @@ export async function exportAccountData(
 			agendaItems: items
 				.filter((item) => item.registrationId === row.id)
 				.map((item) => item.title),
+			answers: answers
+				.filter((answer) => answer.registrationId === row.id)
+				.map(({ question, answer }) => ({ question, answer })),
 		})),
 		groups: groups.map((row) => ({
 			name: row.name,

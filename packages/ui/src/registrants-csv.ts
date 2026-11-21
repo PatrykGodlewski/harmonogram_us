@@ -37,10 +37,18 @@ function cell(value: string): string {
  * The registrant list as rows (header first) in the UI language: one source
  * for the CSV and the XLSX export, so both always carry the same columns.
  */
+/** A registration question, as a column of the export. */
+export type ExportQuestion = {
+	id: string;
+	label: string;
+	kind: "text" | "choice" | "yesno";
+};
+
 export function registrantRows(
 	registrants: EventRegistrant[],
 	agenda: { id: string; title: string }[],
 	locale: Locale,
+	questions: ExportQuestion[] = [],
 ): string[][] {
 	const options = { locale };
 	const titleById = new Map(agenda.map((item) => [item.id, item.title]));
@@ -52,7 +60,14 @@ export function registrantRows(
 		csv_header_group({}, options),
 		csv_header_items({}, options),
 		csv_header_attendance({}, options),
+		...questions.map((question) => question.label),
 	];
+	const answerText = (question: ExportQuestion, value: string | undefined) =>
+		value === undefined
+			? ""
+			: question.kind === "yesno"
+				? (value === "yes" ? csv_yes : csv_no)({}, options)
+				: value;
 	const rows = registrants.map((registrant) => [
 		registrant.name ?? "",
 		registrant.email,
@@ -64,6 +79,9 @@ export function registrantRows(
 			.filter(Boolean)
 			.join(", "),
 		registrant.checkedInAt ? csv_yes({}, options) : csv_no({}, options),
+		...questions.map((question) =>
+			answerText(question, registrant.answers[question.id]),
+		),
 	]);
 	return [header, ...rows];
 }
@@ -77,8 +95,9 @@ export function toRegistrantsCsv(
 	registrants: EventRegistrant[],
 	agenda: { id: string; title: string }[],
 	locale: Locale,
+	questions: ExportQuestion[] = [],
 ): string {
-	return `\uFEFF${registrantRows(registrants, agenda, locale)
+	return `\uFEFF${registrantRows(registrants, agenda, locale, questions)
 		.map((row) => row.map(cell).join(";"))
 		.join("\r\n")}`;
 }

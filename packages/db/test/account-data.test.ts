@@ -32,6 +32,18 @@ describe("account data", () => {
 		});
 	});
 
+	it("exports the answers given at registration", async () => {
+		const { createEventQuestion } = await import("../src/queries/event-questions");
+		const userId = await createUser();
+		const eventId = await createEvent();
+		const question = await createEventQuestion({ eventId, label: "Kierunek", kind: "text" });
+		await registerForEvent(eventId, userId, "pl", undefined, {
+			answers: { [question.id]: "Fizyka" },
+		});
+		const data = await exportAccountData(userId);
+		expect(data.registrations[0]?.answers).toEqual([{ question: "Kierunek", answer: "Fizyka" }]);
+	});
+
 	it("deleting an account frees its place for the waitlist, then removes the user", async () => {
 		const eventId = await createEvent({ maxSeats: 1 });
 		const leaving = await createUser();

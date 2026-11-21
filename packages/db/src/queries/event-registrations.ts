@@ -15,6 +15,11 @@ import {
 	REGISTRATION_ERRORS,
 } from "./domain-errors";
 import { lockEvent } from "./locks";
+import {
+	type Answers,
+	hasRequiredQuestions,
+	saveAnswers,
+} from "./registration-answers";
 import { getCurrentTxId } from "./txid";
 import { findAccountByEmail } from "./users";
 
@@ -282,7 +287,10 @@ export async function registerForEvent(
 	userId: string,
 	locale: "pl" | "en",
 	hooks?: RegistrationHooks,
-	{ byOrganizer = false }: { byOrganizer?: boolean } = {},
+	{
+		byOrganizer = false,
+		answers = {},
+	}: { byOrganizer?: boolean; answers?: Answers } = {},
 ): Promise<{ state: RegistrationState; txid: number }> {
 	try {
 		return await db.transaction(async (tx) => {
@@ -303,6 +311,10 @@ export async function registerForEvent(
 				state,
 				locale,
 			);
+			// An organiser may add someone before they answered; the person can fill in later.
+			await saveAnswers(tx, registrationId, eventId, answers, {
+				requireAll: !byOrganizer,
+			});
 			await notify(tx, hooks, [
 				{ registrationId, change: CHANGE_FOR_NEW_STATE[state] },
 			]);
@@ -383,6 +395,10 @@ export async function registerForAgendaItem(
 				(!registration && (await requiresApproval(tx, item.eventId)))
 			) {
 				throw new DomainError("APPROVAL_REQUIRED");
+			}
+			// Registering for the event through an item would skip its required questions.
+			if (!registration && (await hasRequiredQuestions(tx, item.eventId))) {
+				throw new DomainError("ANSWERS_INVALID");
 			}
 			let eventRegistrationId = registration?.id ?? null;
 			const eventRegistered = eventRegistrationId === null;
@@ -644,6 +660,8 @@ export type EventRegistrant = {
 	groupId: string | null;
 	groupName: string | null;
 	checkedInAt: Date | null;
+	/** Answers to the event's questions, by question id. */
+	answers: Answers;
 };
 
 export async function getEventRegistrants(
@@ -660,6 +678,11 @@ export async function getEventRegistrants(
 			groupId: eventRegistrations.groupId,
 			groupName: registrationGroups.name,
 			checkedInAt: eventRegistrations.checkedInAt,
+			answers: sql<Answers>`coalesce(
+				(SELECT jsonb_object_agg(a.question_id, a.value) FROM registration_answers a
+					WHERE a.registration_id = ${eventRegistrations.id}),
+				'{}'::jsonb
+			)`,
 			agendaItemIds: sql<string[]>`coalesce(
 				array_agg(${agendaItemRegistrations.agendaItemId})
 					filter (where ${agendaItemRegistrations.agendaItemId} is not null),

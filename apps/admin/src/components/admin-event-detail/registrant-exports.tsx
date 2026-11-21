@@ -6,13 +6,18 @@ import {
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { Button } from "@repo/ui/components/button";
-import { registrantRows, toRegistrantsCsv } from "@repo/ui/registrants-csv";
+import {
+	type ExportQuestion,
+	registrantRows,
+	toRegistrantsCsv,
+} from "@repo/ui/registrants-csv";
 import { toEventDateInput } from "@repo/ui/time";
 
 type RegistrantExportsProps = {
 	eventTitle: string;
 	registrants: EventRegistrant[];
 	agenda: AgendaItem[];
+	questions: ExportQuestion[];
 };
 
 /** CSV and XLSX downloads of the registrant list (built in the browser from the same rows). */
@@ -20,22 +25,26 @@ export function RegistrantExports({
 	eventTitle,
 	registrants,
 	agenda,
+	questions,
 }: RegistrantExportsProps) {
 	const baseName = `${admin_registrants_csv_file()}-${slugify(eventTitle)}-${toEventDateInput(new Date())}`;
 
 	const handleCsv = () =>
 		download(
 			`${baseName}.csv`,
-			new Blob([toRegistrantsCsv(registrants, agenda, getLocale())], {
-				type: "text/csv;charset=utf-8",
-			}),
+			new Blob(
+				[toRegistrantsCsv(registrants, agenda, getLocale(), questions)],
+				{
+					type: "text/csv;charset=utf-8",
+				},
+			),
 		);
 
 	const handleXlsx = async () => {
 		// Loaded on demand: most visits never export.
 		const { default: writeXlsxFile } = await import("write-excel-file/browser");
 		await writeXlsxFile(
-			registrantRows(registrants, agenda, getLocale()),
+			registrantRows(registrants, agenda, getLocale(), questions),
 		).toFile(`${baseName}.xlsx`);
 	};
 

@@ -651,5 +651,12 @@
 	"questions_saved": "Question saved",
 	"error_question_options": "A choice question needs at least two different answers.",
 	"error_question_not_found": "This question no longer exists.",
-	"error_answers_invalid": "Fill in the required answers."
+	"error_answers_invalid": "Fill in the required answers.",
+	"answers_title": "A few questions from the organiser",
+	"answers_required": "This answer is required.",
+	"answers_optional": "(optional)",
+	"answers_yes": "Yes",
+	"answers_no": "No",
+	"answers_choose": "Choose",
+	"answers_cancel": "Cancel"
 }

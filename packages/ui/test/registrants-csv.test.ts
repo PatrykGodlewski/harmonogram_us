@@ -13,6 +13,7 @@ const base: EventRegistrant = {
 	groupId: null,
 	groupName: null,
 	checkedInAt: null,
+	answers: {},
 };
 
 describe("toRegistrantsCsv", () => {
@@ -54,6 +55,22 @@ describe("toRegistrantsCsv", () => {
 		);
 		expect(csv).toContain('"Czeka na akceptację"');
 		expect(csv).toContain('"Odrzucone"');
+	});
+
+	it("adds a column per question, yes/no in words", () => {
+		const csv = toRegistrantsCsv(
+			[{ ...base, answers: { q1: "Fizyka", q2: "yes" } }],
+			[],
+			"pl",
+			[
+				{ id: "q1", label: "Kierunek", kind: "text" },
+				{ id: "q2", label: "Zdjęcia", kind: "yesno" },
+				{ id: "q3", label: "Rozmiar", kind: "choice" },
+			],
+		);
+		const [header, row] = csv.slice(1).split("\r\n");
+		expect(header).toMatch(/"Kierunek";"Zdjęcia";"Rozmiar"$/);
+		expect(row).toMatch(/"Fizyka";"tak";""$/);
 	});
 
 	it("marks attendance", () => {

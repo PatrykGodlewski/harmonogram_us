@@ -23,7 +23,7 @@ export type EventDetailsRegistrations = {
 	approval: Approval;
 	/** An action on this page is in flight (buttons wait for it). */
 	isBusy: boolean;
-	registerEvent: () => void;
+	registerEvent: (answers?: Record<string, string>) => void;
 	unregisterEvent: () => void;
 	registerItem: (item: AgendaItemRef) => void;
 	unregisterItem: (item: AgendaItemRef) => void;

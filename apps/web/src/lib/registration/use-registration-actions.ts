@@ -34,13 +34,14 @@ import { showRegistrationErrorToast } from "~/lib/event-registration/errors";
 export type AgendaItemTarget = { id: string; title: string };
 
 type RegistrationAction =
-	| { type: "register"; eventId: string }
+	| { type: "register"; eventId: string; answers?: Record<string, string> }
 	| { type: "unregister"; eventId: string }
 	| { type: "registerItem"; eventId: string; item: AgendaItemTarget }
 	| { type: "unregisterItem"; eventId: string; item: AgendaItemTarget };
 
 export type RegistrationActions = {
-	register: (eventId: string) => void;
+	/** `answers`: to the event's questions, by question id (events with questions). */
+	register: (eventId: string, answers?: Record<string, string>) => void;
 	unregister: (eventId: string) => void;
 	registerItem: (eventId: string, item: AgendaItemTarget) => void;
 	unregisterItem: (eventId: string, item: AgendaItemTarget) => void;
@@ -73,7 +74,12 @@ function runAction(action: RegistrationAction, invite: string | undefined) {
 	switch (action.type) {
 		case "register":
 			return registerForEventServer({
-				data: { eventId: action.eventId, locale: getLocale(), invite },
+				data: {
+					eventId: action.eventId,
+					locale: getLocale(),
+					invite,
+					answers: action.answers,
+				},
 			});
 		case "unregister":
 			return unregisterFromEventServer({ data: { eventId: action.eventId } });
@@ -190,7 +196,7 @@ export function useRegistrationActions(): RegistrationActions {
 	};
 
 	return {
-		register: (eventId) => run({ type: "register", eventId }),
+		register: (eventId, answers) => run({ type: "register", eventId, answers }),
 		unregister: (eventId) => run({ type: "unregister", eventId }),
 		registerItem: (eventId, item) =>
 			run({ type: "registerItem", eventId, item }),

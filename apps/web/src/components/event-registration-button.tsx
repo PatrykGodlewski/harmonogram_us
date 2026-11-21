@@ -21,6 +21,8 @@ type EventRegistrationButtonProps = {
 	interactive: boolean;
 	seatsRemaining: number;
 	requiresApproval: boolean;
+	/** Registering asks questions: the button leads to the event page. */
+	hasQuestions: boolean;
 	registrations: EventRegistrationActions;
 };
 
@@ -30,6 +32,7 @@ export function EventRegistrationButton({
 	interactive,
 	seatsRemaining,
 	requiresApproval,
+	hasQuestions,
 	registrations,
 }: EventRegistrationButtonProps) {
 	const isRegistered = registrations.isRegistered(eventId);
@@ -104,6 +107,20 @@ export function EventRegistrationButton({
 		);
 	}
 
+	const label = requiresApproval
+		? events_request_registration()
+		: isFull
+			? events_join_waitlist()
+			: events_register();
+	if (hasQuestions) {
+		return (
+			<Button size="sm" variant={isFull ? "secondary" : "default"} asChild>
+				<Link to="/events/$eventId" params={{ eventId }}>
+					{label}
+				</Link>
+			</Button>
+		);
+	}
 	return (
 		<Button
 			size="sm"
@@ -111,11 +128,7 @@ export function EventRegistrationButton({
 			disabled={!interactive || isRegisterPending}
 			onClick={() => registrations.register(eventId)}
 		>
-			{requiresApproval
-				? events_request_registration()
-				: isFull
-					? events_join_waitlist()
-					: events_register()}
+			{label}
 		</Button>
 	);
 }

@@ -1,5 +1,9 @@
 import { setCheckedInServer } from "@repo/api/admin/check-in";
 import type { AgendaItem, EventRegistrant } from "@repo/api/admin/queries";
+import {
+	type EventQuestion,
+	eventQuestionsQueryOptions,
+} from "@repo/api/admin/questions";
 import { removeRegistrantServer } from "@repo/api/admin/registrants";
 import {
 	admin_action_cancel,
@@ -31,6 +35,8 @@ import {
 	admin_registrants_removed,
 	admin_registrants_search,
 	admin_reject,
+	answers_no,
+	answers_yes,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import {
@@ -56,7 +62,7 @@ import {
 	SelectValue,
 } from "@repo/ui/components/select";
 import { formatEventDateTime } from "@repo/ui/time";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useId, useState } from "react";
 import { toast } from "sonner";
 import { formatMutationError } from "~/lib/format-mutation-error";
@@ -105,6 +111,11 @@ export function RegistrantsList({
 		? allRegistrants
 		: allRegistrants.filter(isAtDoor);
 	const approval = useApprovalActions(eventId, onChanged);
+	// Answers are for those who manage the event (helpers at the door don't need them).
+	const { data: questions = [] } = useQuery({
+		...eventQuestionsQueryOptions(eventId),
+		enabled: canManage,
+	});
 	const pendingCount = registrants.filter(
 		(registrant) => registrant.state === "pending",
 	).length;
@@ -179,6 +190,7 @@ export function RegistrantsList({
 							eventTitle={eventTitle}
 							registrants={registrants}
 							agenda={agenda}
+							questions={questions}
 						/>
 					) : null}
 				</div>
@@ -264,6 +276,7 @@ export function RegistrantsList({
 										eventId={eventId}
 										registrant={registrant}
 										titleById={titleById}
+										questions={questions}
 										selected={selected.has(registrant.registrationId)}
 										onSelectedChange={(isSelected) =>
 											handleSelect(registrant.registrationId, isSelected)
@@ -300,6 +313,7 @@ type RegistrantRowProps = {
 	eventId: string;
 	registrant: EventRegistrant;
 	titleById: Map<string, string>;
+	questions: EventQuestion[];
 	selected: boolean;
 	onSelectedChange: (selected: boolean) => void;
 	canManage: boolean;
@@ -311,6 +325,7 @@ function RegistrantRow({
 	eventId,
 	registrant,
 	titleById,
+	questions,
 	selected,
 	onSelectedChange,
 	canManage,
@@ -385,6 +400,10 @@ function RegistrantRow({
 						{registrant.name ? `${registrant.name} · ` : ""}
 						{formatEventDateTime(registrant.registeredAt, getLocale())}
 					</p>
+					<RegistrantAnswers
+						questions={questions}
+						answers={registrant.answers}
+					/>
 					{registrant.agendaItemIds.length > 0 ? (
 						<div className="flex flex-wrap gap-1">
 							{registrant.agendaItemIds.map((id) => (
@@ -462,5 +481,37 @@ function RegistrantRow({
 				) : null}
 			</div>
 		</li>
+	);
+}
+
+/** "Question: answer" lines for the questions this person answered. */
+function RegistrantAnswers({
+	questions,
+	answers,
+}: {
+	questions: EventQuestion[];
+	answers: Record<string, string>;
+}) {
+	const answered = questions.filter((question) => answers[question.id]);
+	if (answered.length === 0) {
+		return null;
+	}
+	return (
+		<ul className="text-sm">
+			{answered.map((question) => {
+				const value = answers[question.id] ?? "";
+				const text =
+					question.kind === "yesno"
+						? value === "yes"
+							? answers_yes()
+							: answers_no()
+						: value;
+				return (
+					<li key={question.id} className="break-words">
+						{question.label}: {text}
+					</li>
+				);
+			})}
+		</ul>
 	);
 }

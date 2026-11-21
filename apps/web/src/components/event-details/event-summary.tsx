@@ -27,12 +27,14 @@ import { Button } from "@repo/ui/components/button";
 import { AttendanceModeBadge } from "@repo/ui/composed/events/attendance-mode-badge";
 import { formatEventDateTime } from "@repo/ui/time";
 import { Link, useSearch } from "@tanstack/react-router";
+import { useState } from "react";
 import type {
 	EventDetailsData,
 	EventDetailsRegistrations,
 } from "~/lib/event-details/types";
 import type { EventSeatCount } from "~/lib/events/types";
 import { LoginToRegisterButton } from "./login-to-register-button";
+import { RegistrationAnswersDialog } from "./registration-answers-dialog";
 import { UnregisterEventDialog } from "./unregister-event-dialog";
 
 type EventSummaryProps = {
@@ -135,6 +137,7 @@ export function EventSummary({
 					isCancelled={isCancelled}
 					isFull={seatCount.seatsRemaining <= 0}
 					requiresApproval={event.requiresApproval}
+					questions={event.questions}
 					registrations={registrations}
 				/>
 			</div>
@@ -177,6 +180,7 @@ type EventRegistrationActionProps = {
 	isCancelled: boolean;
 	isFull: boolean;
 	requiresApproval: boolean;
+	questions: EventDetailsData["questions"];
 	registrations: EventDetailsRegistrations;
 };
 
@@ -188,9 +192,11 @@ function EventRegistrationAction({
 	isCancelled,
 	isFull,
 	requiresApproval,
+	questions,
 	registrations,
 }: EventRegistrationActionProps) {
 	const busy = !interactive || registrations.isBusy;
+	const [answering, setAnswering] = useState(false);
 
 	// Ended or cancelled: a record of what happened, nothing to click.
 	if (isClosed) {
@@ -280,20 +286,36 @@ function EventRegistrationAction({
 		);
 	}
 
+	const label = requiresApproval
+		? events_request_registration()
+		: isFull
+			? events_join_waitlist()
+			: events_register();
 	return (
-		<Button
-			size="sm"
-			variant={isFull ? "secondary" : "default"}
-			className="w-full sm:w-auto"
-			disabled={busy}
-			onClick={registrations.registerEvent}
-		>
-			{requiresApproval
-				? events_request_registration()
-				: isFull
-					? events_join_waitlist()
-					: events_register()}
-		</Button>
+		<>
+			<Button
+				size="sm"
+				variant={isFull ? "secondary" : "default"}
+				className="w-full sm:w-auto"
+				disabled={busy}
+				onClick={() =>
+					questions.length > 0
+						? setAnswering(true)
+						: registrations.registerEvent()
+				}
+			>
+				{label}
+			</Button>
+			{questions.length > 0 ? (
+				<RegistrationAnswersDialog
+					questions={questions}
+					open={answering}
+					onOpenChange={setAnswering}
+					submitLabel={label}
+					onSubmit={registrations.registerEvent}
+				/>
+			) : null}
+		</>
 	);
 }
 
