@@ -1,3 +1,4 @@
+import { indicoConfig, syncIndicoEvents } from "@repo/api/indico/sync";
 import { queueReadyCertificateEmails } from "@repo/api/notifications/certificates";
 import { queueDueReminderEmails } from "@repo/api/notifications/reminders";
 import { pruneExpiredGuestRequests } from "@repo/db/queries/guest-requests";
@@ -11,6 +12,7 @@ import {
 	EVENT_REMINDERS_CRON,
 	emailJob,
 	groupInvitationEmailPayload,
+	INDICO_SYNC_CRON,
 	JOBS_TIME_ZONE,
 	PRUNE_OLD_REGISTRATIONS_CRON,
 	PRUNE_RATE_LIMITS_CRON,
@@ -19,6 +21,7 @@ import {
 	QUEUE_EMAILS,
 	QUEUE_EVENT_REMINDERS,
 	QUEUE_GROUP_INVITATION_EMAIL,
+	QUEUE_INDICO_SYNC,
 	QUEUE_PRUNE_OLD_REGISTRATIONS,
 	QUEUE_PRUNE_RATE_LIMITS,
 } from "@repo/jobs/queues";
@@ -108,6 +111,23 @@ await boss.work(QUEUE_CERTIFICATE_EMAILS, async () => {
 await boss.schedule(QUEUE_CERTIFICATE_EMAILS, CERTIFICATE_EMAILS_CRON, null, {
 	tz: JOBS_TIME_ZONE,
 });
+
+async function syncIndico() {
+	const result = await syncIndicoEvents(indicoConfig());
+	if (result.status === "synced") {
+		console.log(`[worker] indico: ${result.count} event(s) copied`);
+	} else if (result.status === "failed") {
+		// The previous copy stays listed; the next run tries again.
+		console.error(`[worker] indico sync failed: ${result.error}`);
+	}
+}
+
+await boss.work(QUEUE_INDICO_SYNC, syncIndico);
+await boss.schedule(QUEUE_INDICO_SYNC, INDICO_SYNC_CRON, null, {
+	tz: JOBS_TIME_ZONE,
+});
+// A fresh deployment lists Indico's events without waiting for the first scheduled run.
+await syncIndico();
 
 console.log("[worker] worker started");
 

@@ -67,6 +67,18 @@ export const env = createEnv({
 		DOCUMENTS_URL: z.url().optional(),
 		DOCUMENTS_TOKEN: z.string().min(32).optional(),
 
+		/** The university's Indico (F16): events of these categories are listed read-only; off unless both are set. */
+		INDICO_URL: z.url().optional(),
+		INDICO_CATEGORY_IDS: z
+			.string()
+			.regex(
+				/^\d+(,\d+)*$/,
+				"INDICO_CATEGORY_IDS: category ids separated by commas",
+			)
+			.optional(),
+		/** Optional; Indico exports what this token's user may see, so use one with public access only. */
+		INDICO_API_TOKEN: z.string().min(1).optional(),
+
 		ELECTRIC_URL: z.url().optional().default("http://localhost:5133"),
 		ELECTRIC_SECRET: z.string().optional(),
 	},

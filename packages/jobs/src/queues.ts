@@ -18,6 +18,9 @@ export const CERTIFICATE_EMAILS_CRON = "*/15 * * * *";
 /** Reminders before events, checked every 5 minutes. */
 export const QUEUE_EVENT_REMINDERS = "event-reminders";
 export const EVENT_REMINDERS_CRON = "*/5 * * * *";
+/** Copy of the university Indico's events (F16), refreshed every 30 minutes. */
+export const QUEUE_INDICO_SYNC = "indico-sync";
+export const INDICO_SYNC_CRON = "*/30 * * * *";
 
 /** Every 5 minutes, in the installation time zone. */
 export const CLOSE_EXPIRED_GROUPS_CRON = "*/5 * * * *";
@@ -95,4 +98,5 @@ export const QUEUES = [
 	{ name: QUEUE_PRUNE_OLD_REGISTRATIONS, policy: "standard" },
 	{ name: QUEUE_EVENT_REMINDERS, policy: "standard" },
 	{ name: QUEUE_CERTIFICATE_EMAILS, policy: "standard" },
+	{ name: QUEUE_INDICO_SYNC, policy: "standard" },
 ] as const;
