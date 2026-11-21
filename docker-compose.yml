@@ -164,6 +164,8 @@ services:
       - "${PROMETHEUS_PORT:-9090}:9090"
     volumes:
       - prometheus_data:/prometheus
+    depends_on:
+      documents: { condition: service_started }
     restart: unless-stopped
 
   grafana:

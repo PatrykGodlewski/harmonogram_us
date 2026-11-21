@@ -1,4 +1,4 @@
-# Scrapes /api/metrics of the web and admin apps (bearer METRICS_TOKEN, mounted by compose)
+# Scrapes /api/metrics of the web and admin apps, /metrics of the documents service, (bearer METRICS_TOKEN, mounted by compose)
 # and receives k6 results by remote write (pnpm load).
 global:
   scrape_interval: 5s
@@ -17,3 +17,9 @@ scrape_configs:
       credentials_file: /etc/prometheus/metrics-token
     static_configs:
       - targets: ["admin:3000"]
+  - job_name: documents
+    metrics_path: /metrics
+    authorization:
+      credentials_file: /etc/prometheus/metrics-token
+    static_configs:
+      - targets: ["documents:9464"]
