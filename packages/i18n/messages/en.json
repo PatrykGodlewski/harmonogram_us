@@ -327,6 +327,7 @@
 	"tickets_print": "Print",
 	"tickets_holder": "Attendee",
 	"tickets_show_at_entry": "Show this code at the entrance.",
+	"documents_unavailable": "We couldn't prepare the file right now. Please try again in a moment.",
 	"tickets_back": "My account",
 	"reg_email_ticket": "Your ticket with a QR code:",
 	"reg_email_ticket_button": "Show ticket",

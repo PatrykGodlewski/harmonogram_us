@@ -1,10 +1,19 @@
 import jsQR from "jsqr";
 import { extractImages, extractText } from "unpdf";
+import { Code, ConnectError } from "@connectrpc/connect";
+import { documentsClient } from "@repo/rpc/documents";
 import { describe, expect, it } from "vitest";
-import { renderTicketPdf } from "../src/tickets/pdf";
+import { pdfResponse } from "../src/documents/http";
+import { type TicketPdfInput, ticketDocumentRequest } from "../src/tickets/document";
 import { ticketCodeFromQr } from "../src/tickets/qr";
 
-describe("renderTicketPdf", () => {
+// Renders through the documents service: `docker compose up -d documents`.
+async function renderTicketPdf(input: TicketPdfInput): Promise<Uint8Array> {
+	const { pdf } = await documentsClient().renderTicket(ticketDocumentRequest(input));
+	return pdf;
+}
+
+describe("ticket PDF (documents service)", () => {
 	it("names the holder, the event, its date and place", async () => {
 		const code = "a".repeat(32) + "b".repeat(32);
 		const pdf = await renderTicketPdf({
@@ -47,5 +56,45 @@ describe("renderTicketPdf", () => {
 		}
 		const decoded = jsQR(rgba, image.width, image.height);
 		expect(ticketCodeFromQr(decoded?.data ?? "")).toBe(code);
+	});
+});
+
+describe("pdfResponse", () => {
+	it("answers 503 with Retry-After when the service is busy", async () => {
+		const response = await pdfResponse(
+			() => Promise.reject(new ConnectError("down", Code.Unavailable)),
+			"bilet",
+			"pl",
+		);
+		expect(response.status).toBe(503);
+		expect(response.headers.get("retry-after")).toBe("5");
+		expect(response.headers.get("content-type")).toContain("text/plain");
+		expect(await response.text()).toBe(
+			"Nie udało się teraz przygotować pliku. Spróbuj ponownie za chwilę.",
+		);
+	});
+
+	it("serves the PDF as a private download", async () => {
+		const response = await pdfResponse(
+			() => Promise.resolve(new Uint8Array([37, 80, 68, 70])),
+			"bilet",
+			"pl",
+		);
+		expect(response.status).toBe(200);
+		expect(response.headers.get("content-type")).toBe("application/pdf");
+		expect(response.headers.get("content-disposition")).toBe(
+			'attachment; filename="bilet.pdf"',
+		);
+		expect(response.headers.get("cache-control")).toBe("private, no-store");
+	});
+
+	it("rethrows other errors", async () => {
+		await expect(
+			pdfResponse(
+				() => Promise.reject(new ConnectError("bad", Code.InvalidArgument)),
+				"bilet",
+				"pl",
+			),
+		).rejects.toThrow("bad");
 	});
 });
