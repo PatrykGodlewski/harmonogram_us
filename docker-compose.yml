@@ -133,8 +133,6 @@ services:
       db: { condition: service_healthy }
       mailpit: { condition: service_started }
 
-  # e2e only: a stand-in university sign-in server (e2e/oidc-mock). The browser and the
-  # app containers both reach it as oidc.localhost (Chrome maps *.localhost to this machine).
   # e2e only: a stand-in Indico export API (e2e/indico-mock), reached as indico.localhost.
   indico-mock:
     profiles: [e2e]
@@ -151,6 +149,8 @@ services:
       default:
         aliases: [indico.localhost]
 
+  # e2e only: a stand-in university sign-in server (e2e/oidc-mock). The browser and the
+  # app containers both reach it as oidc.localhost (Chrome maps *.localhost to this machine).
   oidc-mock:
     profiles: [e2e]
     image: node:22-alpine

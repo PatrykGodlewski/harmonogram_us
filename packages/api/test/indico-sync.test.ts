@@ -15,10 +15,13 @@ const EVENT: ImportedEvent = {
 };
 
 describe("syncIndicoEvents", () => {
-	it("is off without configuration", async () => {
-		const replace = vi.fn();
-		expect(await syncIndicoEvents(null, { replace })).toEqual({ status: "off" });
-		expect(replace).not.toHaveBeenCalled();
+	it("is off without configuration and clears the old copy", async () => {
+		const replace = vi.fn(async () => {});
+		const fetchEvents = vi.fn();
+		expect(await syncIndicoEvents(null, { fetchEvents, replace })).toEqual({ status: "off" });
+		expect(fetchEvents).not.toHaveBeenCalled();
+		// Switching the import off must not leave the last copy listed for good.
+		expect(replace).toHaveBeenCalledWith([]);
 	});
 
 	it("replaces the mirror with the fetched events", async () => {

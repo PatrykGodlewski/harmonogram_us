@@ -22,7 +22,7 @@ export function indicoConfig(): IndicoConfig | null {
 	};
 }
 
-/** Copies Indico's events into the mirror; a failed read keeps the previous copy. */
+/** Copies Indico's events into the mirror; a failed read keeps the previous copy, no configuration empties it. */
 export async function syncIndicoEvents(
 	config: IndicoConfig | null,
 	deps: {
@@ -30,11 +30,13 @@ export async function syncIndicoEvents(
 		replace?: (events: ImportedEvent[]) => Promise<void>;
 	} = {},
 ): Promise<IndicoSyncResult> {
-	if (!config) {
-		return { status: "off" };
-	}
 	const { fetchEvents = fetchIndicoEvents, replace = replaceIndicoEvents } =
 		deps;
+	if (!config) {
+		// Switched off: the last copy must not stay listed (and never refreshed).
+		await replace([]);
+		return { status: "off" };
+	}
 	let events: ImportedEvent[];
 	try {
 		events = await fetchEvents(config);
