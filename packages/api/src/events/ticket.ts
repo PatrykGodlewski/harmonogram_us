@@ -12,7 +12,7 @@ const ticketInputSchema = z.object({
 
 export const fetchTicketServer = createServerFn({ method: "GET" })
 	.middleware([authMiddleware])
-	.inputValidator(ticketInputSchema)
+	.validator(ticketInputSchema)
 	.handler(
 		async ({ data, context }): Promise<Ticket | null> =>
 			getMyTicket(data.registrationId, context.user.id),

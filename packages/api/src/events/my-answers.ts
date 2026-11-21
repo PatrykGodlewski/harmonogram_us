@@ -14,7 +14,7 @@ const eventIdSchema = z.object({ eventId: z.string().min(1) });
 
 export const fetchMyAnswersServer = createServerFn({ method: "GET" })
 	.middleware([authMiddleware])
-	.inputValidator((input: unknown) => eventIdSchema.parse(input))
+	.validator((input: unknown) => eventIdSchema.parse(input))
 	.handler(async ({ data, context }) =>
 		getMyAnswers(data.eventId, context.user.id),
 	);
@@ -28,7 +28,7 @@ export const myAnswersQueryOptions = (eventId: string) =>
 
 /** The signed-in person changes their answers while the event is open. */
 export const updateMyAnswersServer = protectedActionFn
-	.inputValidator((input: unknown) =>
+	.validator((input: unknown) =>
 		eventIdSchema.extend({ answers: answersSchema }).parse(input),
 	)
 	.handler(async ({ data, context }) => {

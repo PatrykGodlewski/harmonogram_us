@@ -185,9 +185,9 @@ export function useRegistrationActions(): RegistrationActions {
 	const run = (action: RegistrationAction) => {
 		// Read the cache, not render state: a second click before the re-render is still ignored.
 		const key = keyOf(action);
+		// isMutating counts only pending mutations.
 		const inFlight = queryClient.isMutating({
 			mutationKey: REGISTRATION_MUTATION_KEY,
-			status: "pending",
 			predicate: (mutation) => pendingKeyOf(mutation) === key,
 		});
 		if (inFlight === 0) {

@@ -10,11 +10,10 @@ import {
 import { localizeHref } from "@repo/i18n/paraglide/runtime";
 import { useMutation } from "@tanstack/react-query";
 import { createAuthClient } from "better-auth/client";
-import { genericOAuthClient } from "better-auth/client/plugins";
 import { Alert, AlertDescription, AlertTitle } from "../../components/alert";
 import { Button } from "../../components/button";
 
-const authClient = createAuthClient({ plugins: [genericOAuthClient()] });
+const authClient = createAuthClient();
 
 /** The university's button above the e-mail form; nothing when it is not configured. */
 export function UniversitySignInButton({
@@ -26,8 +25,8 @@ export function UniversitySignInButton({
 }) {
 	const signIn = useMutation({
 		mutationFn: async () => {
-			const { error } = await authClient.signIn.oauth2({
-				providerId: UNIVERSITY_PROVIDER_ID,
+			const { error } = await authClient.signIn.social({
+				provider: UNIVERSITY_PROVIDER_ID,
 				callbackURL: redirectTo,
 				newUserCallbackURL: redirectTo,
 				errorCallbackURL: localizeHref("/login"),

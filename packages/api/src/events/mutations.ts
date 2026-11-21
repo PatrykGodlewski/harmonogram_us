@@ -41,7 +41,7 @@ export type UnregisterFromEventInput = z.infer<
 >;
 
 export const registerForEventServer = createServerFn({ method: "POST" })
-	.inputValidator(registerForEventInputSchema)
+	.validator(registerForEventInputSchema)
 	.handler(async ({ data }) => {
 		const session = await getCurrentSession();
 		if (!session?.user) {
@@ -68,7 +68,7 @@ export const registerForEventServer = createServerFn({ method: "POST" })
 	});
 
 export const unregisterFromEventServer = createServerFn({ method: "POST" })
-	.inputValidator(unregisterFromEventInputSchema)
+	.validator(unregisterFromEventInputSchema)
 	.handler(async ({ data }) => {
 		const session = await getCurrentSession();
 		if (!session?.user) {
@@ -94,7 +94,7 @@ const protectedActionFn = createServerFn({ method: "POST" }).middleware([
 ]);
 
 export const registerForAgendaItemServer = protectedActionFn
-	.inputValidator(registerForAgendaItemSchema)
+	.validator(registerForAgendaItemSchema)
 	.handler(async ({ data, context }) => {
 		const eventId = await getAgendaItemEventId(data.agendaItemId);
 		if (
@@ -114,7 +114,7 @@ export const registerForAgendaItemServer = protectedActionFn
 	});
 
 export const unregisterFromAgendaItemServer = protectedActionFn
-	.inputValidator(agendaItemIdSchema)
+	.validator(agendaItemIdSchema)
 	.handler(async ({ data, context }) =>
 		withDomainErrors(() =>
 			unregisterFromAgendaItem(data.agendaItemId, context.user.id),

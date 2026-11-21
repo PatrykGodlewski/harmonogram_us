@@ -21,7 +21,7 @@ const sendInvitationsSchema = z.object({
 
 /** E-mails invitations to a published event (with the invite link when it is invite-only). */
 export const sendEventInvitationsServer = panelActionFn
-	.inputValidator((input: unknown) => sendInvitationsSchema.parse(input))
+	.validator((input: unknown) => sendInvitationsSchema.parse(input))
 	.handler(async ({ data, context }) => {
 		await assertCanManageEvent(context.user, data.eventId);
 		if ((await getEventStatus(data.eventId)) !== "published") {

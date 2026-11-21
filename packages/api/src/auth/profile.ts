@@ -27,5 +27,5 @@ const updateProfileSchema = z.object({
 
 /** The signed-in person's name and language (their e-mails follow it). */
 export const updateProfileServer = protectedActionFn
-	.inputValidator((input: unknown) => updateProfileSchema.parse(input))
+	.validator((input: unknown) => updateProfileSchema.parse(input))
 	.handler(async ({ data, context }) => updateProfile(context.user.id, data));

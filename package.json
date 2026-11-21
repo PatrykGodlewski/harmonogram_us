@@ -10,7 +10,7 @@
     "overrides": {
       "react": "^19.2.5",
       "react-dom": "^19.2.5",
-      "vite": "8.0.10",
+      "vite": "8.3.8",
       "@tanstack/db": "0.6.8"
     }
   },
@@ -43,9 +43,9 @@
     "load:documents": "pnpm --filter e2e load:documents"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.13",
-    "taze": "^19.11.0",
-    "turbo": "^2.9.6"
+    "@biomejs/biome": "^2.6.8",
+    "taze": "^19.17.2",
+    "turbo": "^2.11.13"
   },
   "packageManager": "pnpm@10.33.2",
   "engines": {

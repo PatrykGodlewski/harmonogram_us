@@ -71,12 +71,12 @@ describe("account safety", () => {
 		expect(user?.calendarToken).not.toBe("copied-by-stranger");
 	});
 
-	it("findMagicLinkEmail resolves hashed identifier", async () => {
-		const identifier = createHash("sha256").update("tok").digest("base64url");
+	it("findMagicLinkEmail resolves the hashed identifier (Better Auth 1.7 format)", async () => {
+		const hash = createHash("sha256").update("tok").digest("base64url");
 		await db.insert(authVerifications).values({
 			id: crypto.randomUUID(),
-			identifier,
-			value: JSON.stringify({ email: "a@x.test", attempt: 0 }),
+			identifier: `magic-link:${hash}`,
+			value: JSON.stringify({ type: "magic-link", email: "A@x.test" }),
 			expiresAt: new Date(Date.now() + 60_000),
 		});
 		expect(await findMagicLinkEmail("tok")).toBe("a@x.test");

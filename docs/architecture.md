@@ -32,11 +32,12 @@ Both apps have near-identical `vite.config.ts`, `router.tsx` and `server.ts` set
 - Event lifecycle: `events.status` is `draft | published | cancelled` (publishing needs a place and/or an online link for the attendance mode; cancelling is irreversible, keeps registrations and e-mails everyone). `events.visibility` `authenticated` hides an event from anonymous visitors; its page redirects to login. Public reads use `getEventById/getEventPage` with `audience: { kind: "public", signedIn }` (no drafts, no meeting link); the panel uses `{ kind: "manage" }`. The meeting link reaches only registered people (`getEventOnlineUrl` after `isRegisteredForEvent`).
 - Both roots render `HydrationMarker` (`<html data-hydrated="true">`); e2e waits for it before interacting.
 - `packages/api/src/procedures.ts` provides `publicQueryFn` (GET) and `protectedActionFn` (POST + `authMiddleware`); some mutations check `getCurrentSession()` inline.
+- Server functions validate input with `.validator()` (TanStack Start v1). `errorStatusMiddleware` sets an app error's 4xx status only for browser calls (`/_serverFn/…`); during server rendering it would override the loader's redirect.
 - Rethrow domain errors as `appError(CODE)`. Add each code to `@repo/db/queries/domain-errors` and map it to Polish/English messages in `@repo/ui/app-errors`.
 
 ## Auth and localisation
 
-Better Auth configuration: `packages/api/src/auth/better-auth.ts`. It uses the Drizzle adapter, magic links, optional social providers, Postgres rate limiting (`app_rate_limits`, `consumeRateLimit`), disposable-email and HIBP password checks, Nodemailer and react-email. Production refuses to start without `TURNSTILE_SECRET_KEY`.
+Better Auth (1.7) configuration: `packages/api/src/auth/better-auth.ts`. It uses the Drizzle adapter, magic links, the university's OpenID Connect provider (`genericOAuth`; the client signs in with `signIn.social`, callback `/api/auth/callback/university`), Postgres rate limiting (`app_rate_limits`, `consumeRateLimit`, keyed by IP and e-mail; Better Auth's own per-IP, per-process limiter is off because a campus network shares one address), disposable-email and HIBP password checks, Nodemailer and react-email. A verified university address may join an account nobody verified (`requireLocalEmailVerified: false`), after the account hook removes the stranger's password and sessions. Production refuses to start without `TURNSTILE_SECRET_KEY`.
 
 Every locale is URL-prefixed (`/pl/...`, `/en/...`). URL patterns and route strategies in `packages/i18n/*.js` are shared by both Vite configs and `scripts/compile-paraglide.mjs`; keep them in sync. Edit both message JSON files and run `pnpm messages:compile`, not generated Paraglide output.
 

@@ -29,7 +29,7 @@ const deleteMyAccountSchema = z.object({
 });
 
 export const deleteMyAccountServer = protectedActionFn
-	.inputValidator((input: unknown) => deleteMyAccountSchema.parse(input))
+	.validator((input: unknown) => deleteMyAccountSchema.parse(input))
 	.handler(async ({ data, context }) => {
 		if (data.confirmEmail.toLowerCase() !== context.user.email.toLowerCase()) {
 			throw appError("FORBIDDEN");

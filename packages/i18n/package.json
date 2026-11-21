@@ -20,10 +20,10 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.13",
-    "@inlang/paraglide-js": "^2.16.1",
-    "@inlang/plugin-m-function-matcher": "^2.2.5",
-    "@inlang/plugin-message-format": "^4.4.0",
+    "@biomejs/biome": "^2.6.8",
+    "@inlang/paraglide-js": "^2.29.3",
+    "@inlang/plugin-m-function-matcher": "^2.4.3",
+    "@inlang/plugin-message-format": "^4.6.0",
     "@repo/config": "workspace:*",
     "typescript": "^6.0.3"
   }

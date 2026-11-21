@@ -69,7 +69,7 @@ function formatFieldError(error: unknown): string {
 }
 
 const setPasswordWithSessionFn = createServerFn({ method: "POST" })
-	.inputValidator((input: unknown) => setPasswordInputSchema.parse(input))
+	.validator((input: unknown) => setPasswordInputSchema.parse(input))
 	.handler(async ({ data }) => {
 		const headers = getRequestHeaders();
 		await setPasswordForCurrentSession(headers, data.newPassword);

@@ -9,53 +9,33 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SignupRouteImport } from './routes/signup'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as LogoutRouteImport } from './routes/logout'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as AccountRouteImport } from './routes/account'
-import { Route as AccessibilityRouteImport } from './routes/accessibility'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as TicketsRegistrationIdRouteImport } from './routes/tickets/$registrationId'
-import { Route as JoinCodeRouteImport } from './routes/join/$code'
-import { Route as InviteTokenRouteImport } from './routes/invite/$token'
-import { Route as GroupsGroupIdRouteImport } from './routes/groups/$groupId'
-import { Route as EventsEventIdRouteImport } from './routes/events/$eventId'
+import { Route as AccessibilityRouteImport } from './routes/accessibility'
+import { Route as AccountRouteImport } from './routes/account'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as LogoutRouteImport } from './routes/logout'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ApiMetricsRouteImport } from './routes/api/metrics'
-import { Route as ApiElectricEventSeatCountsRouteImport } from './routes/api/electric/event-seat-counts'
-import { Route as ApiElectricCancelledEventsRouteImport } from './routes/api/electric/cancelled-events'
-import { Route as ApiElectricAgendaItemSeatCountsRouteImport } from './routes/api/electric/agenda-item-seat-counts'
-import { Route as ApiCertificatesRegistrationIdRouteImport } from './routes/api/certificates/$registrationId'
-import { Route as ApiCalendarEventsRouteImport } from './routes/api/calendar/events'
+import { Route as EventsEventIdRouteImport } from './routes/events/$eventId'
+import { Route as GroupsGroupIdRouteImport } from './routes/groups/$groupId'
+import { Route as InviteTokenRouteImport } from './routes/invite/$token'
+import { Route as JoinCodeRouteImport } from './routes/join/$code'
+import { Route as TicketsRegistrationIdRouteImport } from './routes/tickets/$registrationId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
-import { Route as EventsEventIdGroupsNewRouteImport } from './routes/events/$eventId_.groups.new'
-import { Route as ApiTicketsRegistrationIdPdfRouteImport } from './routes/api/tickets/$registrationId/pdf'
-import { Route as ApiCalendarMyTokenRouteImport } from './routes/api/calendar/my/$token'
+import { Route as ApiCalendarEventsRouteImport } from './routes/api/calendar/events'
+import { Route as ApiCertificatesRegistrationIdRouteImport } from './routes/api/certificates/$registrationId'
+import { Route as ApiElectricAgendaItemSeatCountsRouteImport } from './routes/api/electric/agenda-item-seat-counts'
+import { Route as ApiElectricCancelledEventsRouteImport } from './routes/api/electric/cancelled-events'
+import { Route as ApiElectricEventSeatCountsRouteImport } from './routes/api/electric/event-seat-counts'
 import { Route as ApiCalendarEventEventIdRouteImport } from './routes/api/calendar/event/$eventId'
+import { Route as ApiCalendarMyTokenRouteImport } from './routes/api/calendar/my/$token'
+import { Route as ApiTicketsRegistrationIdPdfRouteImport } from './routes/api/tickets/$registrationId/pdf'
+import { Route as EventsEventIdGroupsNewRouteImport } from './routes/events/$eventId_.groups.new'
 
-const SignupRoute = SignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LogoutRoute = LogoutRouteImport.update({
-  id: '/logout',
-  path: '/logout',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AccountRoute = AccountRouteImport.update({
-  id: '/account',
-  path: '/account',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AccessibilityRoute = AccessibilityRouteImport.update({
@@ -63,34 +43,29 @@ const AccessibilityRoute = AccessibilityRouteImport.update({
   path: '/accessibility',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TicketsRegistrationIdRoute = TicketsRegistrationIdRouteImport.update({
-  id: '/tickets/$registrationId',
-  path: '/tickets/$registrationId',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const JoinCodeRoute = JoinCodeRouteImport.update({
-  id: '/join/$code',
-  path: '/join/$code',
+const LogoutRoute = LogoutRouteImport.update({
+  id: '/logout',
+  path: '/logout',
   getParentRoute: () => rootRouteImport,
 } as any)
-const InviteTokenRoute = InviteTokenRouteImport.update({
-  id: '/invite/$token',
-  path: '/invite/$token',
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GroupsGroupIdRoute = GroupsGroupIdRouteImport.update({
-  id: '/groups/$groupId',
-  path: '/groups/$groupId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EventsEventIdRoute = EventsEventIdRouteImport.update({
-  id: '/events/$eventId',
-  path: '/events/$eventId',
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiMetricsRoute = ApiMetricsRouteImport.update({
@@ -98,16 +73,45 @@ const ApiMetricsRoute = ApiMetricsRouteImport.update({
   path: '/api/metrics',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiElectricEventSeatCountsRoute =
-  ApiElectricEventSeatCountsRouteImport.update({
-    id: '/api/electric/event-seat-counts',
-    path: '/api/electric/event-seat-counts',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiElectricCancelledEventsRoute =
-  ApiElectricCancelledEventsRouteImport.update({
-    id: '/api/electric/cancelled-events',
-    path: '/api/electric/cancelled-events',
+const EventsEventIdRoute = EventsEventIdRouteImport.update({
+  id: '/events/$eventId',
+  path: '/events/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GroupsGroupIdRoute = GroupsGroupIdRouteImport.update({
+  id: '/groups/$groupId',
+  path: '/groups/$groupId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InviteTokenRoute = InviteTokenRouteImport.update({
+  id: '/invite/$token',
+  path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JoinCodeRoute = JoinCodeRouteImport.update({
+  id: '/join/$code',
+  path: '/join/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TicketsRegistrationIdRoute = TicketsRegistrationIdRouteImport.update({
+  id: '/tickets/$registrationId',
+  path: '/tickets/$registrationId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCalendarEventsRoute = ApiCalendarEventsRouteImport.update({
+  id: '/api/calendar/events',
+  path: '/api/calendar/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCertificatesRegistrationIdRoute =
+  ApiCertificatesRegistrationIdRouteImport.update({
+    id: '/api/certificates/$registrationId',
+    path: '/api/certificates/$registrationId',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiElectricAgendaItemSeatCountsRoute =
@@ -116,25 +120,26 @@ const ApiElectricAgendaItemSeatCountsRoute =
     path: '/api/electric/agenda-item-seat-counts',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiCertificatesRegistrationIdRoute =
-  ApiCertificatesRegistrationIdRouteImport.update({
-    id: '/api/certificates/$registrationId',
-    path: '/api/certificates/$registrationId',
+const ApiElectricCancelledEventsRoute =
+  ApiElectricCancelledEventsRouteImport.update({
+    id: '/api/electric/cancelled-events',
+    path: '/api/electric/cancelled-events',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiCalendarEventsRoute = ApiCalendarEventsRouteImport.update({
-  id: '/api/calendar/events',
-  path: '/api/calendar/events',
+const ApiElectricEventSeatCountsRoute =
+  ApiElectricEventSeatCountsRouteImport.update({
+    id: '/api/electric/event-seat-counts',
+    path: '/api/electric/event-seat-counts',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiCalendarEventEventIdRoute = ApiCalendarEventEventIdRouteImport.update({
+  id: '/api/calendar/event/$eventId',
+  path: '/api/calendar/event/$eventId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
-  id: '/api/auth/$',
-  path: '/api/auth/$',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EventsEventIdGroupsNewRoute = EventsEventIdGroupsNewRouteImport.update({
-  id: '/events/$eventId_/groups/new',
-  path: '/events/$eventId/groups/new',
+const ApiCalendarMyTokenRoute = ApiCalendarMyTokenRouteImport.update({
+  id: '/api/calendar/my/$token',
+  path: '/api/calendar/my/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiTicketsRegistrationIdPdfRoute =
@@ -143,14 +148,9 @@ const ApiTicketsRegistrationIdPdfRoute =
     path: '/api/tickets/$registrationId/pdf',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiCalendarMyTokenRoute = ApiCalendarMyTokenRouteImport.update({
-  id: '/api/calendar/my/$token',
-  path: '/api/calendar/my/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiCalendarEventEventIdRoute = ApiCalendarEventEventIdRouteImport.update({
-  id: '/api/calendar/event/$eventId',
-  path: '/api/calendar/event/$eventId',
+const EventsEventIdGroupsNewRoute = EventsEventIdGroupsNewRouteImport.update({
+  id: '/events/$eventId_/groups/new',
+  path: '/events/$eventId/groups/new',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -336,39 +336,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/logout': {
-      id: '/logout'
-      path: '/logout'
-      fullPath: '/logout'
-      preLoaderRoute: typeof LogoutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/account': {
-      id: '/account'
-      path: '/account'
-      fullPath: '/account'
-      preLoaderRoute: typeof AccountRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/accessibility': {
@@ -378,46 +350,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccessibilityRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/tickets/$registrationId': {
-      id: '/tickets/$registrationId'
-      path: '/tickets/$registrationId'
-      fullPath: '/tickets/$registrationId'
-      preLoaderRoute: typeof TicketsRegistrationIdRouteImport
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/join/$code': {
-      id: '/join/$code'
-      path: '/join/$code'
-      fullPath: '/join/$code'
-      preLoaderRoute: typeof JoinCodeRouteImport
+    '/logout': {
+      id: '/logout'
+      path: '/logout'
+      fullPath: '/logout'
+      preLoaderRoute: typeof LogoutRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/invite/$token': {
-      id: '/invite/$token'
-      path: '/invite/$token'
-      fullPath: '/invite/$token'
-      preLoaderRoute: typeof InviteTokenRouteImport
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/groups/$groupId': {
-      id: '/groups/$groupId'
-      path: '/groups/$groupId'
-      fullPath: '/groups/$groupId'
-      preLoaderRoute: typeof GroupsGroupIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/events/$eventId': {
-      id: '/events/$eventId'
-      path: '/events/$eventId'
-      fullPath: '/events/$eventId'
-      preLoaderRoute: typeof EventsEventIdRouteImport
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/metrics': {
@@ -427,39 +392,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMetricsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/electric/event-seat-counts': {
-      id: '/api/electric/event-seat-counts'
-      path: '/api/electric/event-seat-counts'
-      fullPath: '/api/electric/event-seat-counts'
-      preLoaderRoute: typeof ApiElectricEventSeatCountsRouteImport
+    '/events/$eventId': {
+      id: '/events/$eventId'
+      path: '/events/$eventId'
+      fullPath: '/events/$eventId'
+      preLoaderRoute: typeof EventsEventIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/electric/cancelled-events': {
-      id: '/api/electric/cancelled-events'
-      path: '/api/electric/cancelled-events'
-      fullPath: '/api/electric/cancelled-events'
-      preLoaderRoute: typeof ApiElectricCancelledEventsRouteImport
+    '/groups/$groupId': {
+      id: '/groups/$groupId'
+      path: '/groups/$groupId'
+      fullPath: '/groups/$groupId'
+      preLoaderRoute: typeof GroupsGroupIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/electric/agenda-item-seat-counts': {
-      id: '/api/electric/agenda-item-seat-counts'
-      path: '/api/electric/agenda-item-seat-counts'
-      fullPath: '/api/electric/agenda-item-seat-counts'
-      preLoaderRoute: typeof ApiElectricAgendaItemSeatCountsRouteImport
+    '/invite/$token': {
+      id: '/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof InviteTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/certificates/$registrationId': {
-      id: '/api/certificates/$registrationId'
-      path: '/api/certificates/$registrationId'
-      fullPath: '/api/certificates/$registrationId'
-      preLoaderRoute: typeof ApiCertificatesRegistrationIdRouteImport
+    '/join/$code': {
+      id: '/join/$code'
+      path: '/join/$code'
+      fullPath: '/join/$code'
+      preLoaderRoute: typeof JoinCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/calendar/events': {
-      id: '/api/calendar/events'
-      path: '/api/calendar/events'
-      fullPath: '/api/calendar/events'
-      preLoaderRoute: typeof ApiCalendarEventsRouteImport
+    '/tickets/$registrationId': {
+      id: '/tickets/$registrationId'
+      path: '/tickets/$registrationId'
+      fullPath: '/tickets/$registrationId'
+      preLoaderRoute: typeof TicketsRegistrationIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/auth/$': {
@@ -469,18 +434,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/events/$eventId_/groups/new': {
-      id: '/events/$eventId_/groups/new'
-      path: '/events/$eventId/groups/new'
-      fullPath: '/events/$eventId/groups/new'
-      preLoaderRoute: typeof EventsEventIdGroupsNewRouteImport
+    '/api/calendar/events': {
+      id: '/api/calendar/events'
+      path: '/api/calendar/events'
+      fullPath: '/api/calendar/events'
+      preLoaderRoute: typeof ApiCalendarEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/tickets/$registrationId/pdf': {
-      id: '/api/tickets/$registrationId/pdf'
-      path: '/api/tickets/$registrationId/pdf'
-      fullPath: '/api/tickets/$registrationId/pdf'
-      preLoaderRoute: typeof ApiTicketsRegistrationIdPdfRouteImport
+    '/api/certificates/$registrationId': {
+      id: '/api/certificates/$registrationId'
+      path: '/api/certificates/$registrationId'
+      fullPath: '/api/certificates/$registrationId'
+      preLoaderRoute: typeof ApiCertificatesRegistrationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/electric/agenda-item-seat-counts': {
+      id: '/api/electric/agenda-item-seat-counts'
+      path: '/api/electric/agenda-item-seat-counts'
+      fullPath: '/api/electric/agenda-item-seat-counts'
+      preLoaderRoute: typeof ApiElectricAgendaItemSeatCountsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/electric/cancelled-events': {
+      id: '/api/electric/cancelled-events'
+      path: '/api/electric/cancelled-events'
+      fullPath: '/api/electric/cancelled-events'
+      preLoaderRoute: typeof ApiElectricCancelledEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/electric/event-seat-counts': {
+      id: '/api/electric/event-seat-counts'
+      path: '/api/electric/event-seat-counts'
+      fullPath: '/api/electric/event-seat-counts'
+      preLoaderRoute: typeof ApiElectricEventSeatCountsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/calendar/event/$eventId': {
+      id: '/api/calendar/event/$eventId'
+      path: '/api/calendar/event/$eventId'
+      fullPath: '/api/calendar/event/$eventId'
+      preLoaderRoute: typeof ApiCalendarEventEventIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/calendar/my/$token': {
@@ -490,11 +483,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCalendarMyTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/calendar/event/$eventId': {
-      id: '/api/calendar/event/$eventId'
-      path: '/api/calendar/event/$eventId'
-      fullPath: '/api/calendar/event/$eventId'
-      preLoaderRoute: typeof ApiCalendarEventEventIdRouteImport
+    '/api/tickets/$registrationId/pdf': {
+      id: '/api/tickets/$registrationId/pdf'
+      path: '/api/tickets/$registrationId/pdf'
+      fullPath: '/api/tickets/$registrationId/pdf'
+      preLoaderRoute: typeof ApiTicketsRegistrationIdPdfRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events/$eventId_/groups/new': {
+      id: '/events/$eventId_/groups/new'
+      path: '/events/$eventId/groups/new'
+      fullPath: '/events/$eventId/groups/new'
+      preLoaderRoute: typeof EventsEventIdGroupsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
   }

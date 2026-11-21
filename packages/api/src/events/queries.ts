@@ -25,7 +25,7 @@ export const eventFilterOptionsQueryOptions = queryOptions({
 });
 
 export const fetchEventsServer = createServerFn({ method: "GET" })
-	.inputValidator((input: unknown) => eventFiltersSchema.parse(input))
+	.validator((input: unknown) => eventFiltersSchema.parse(input))
 	.handler(async ({ data: { limit, ...filters } }) => {
 		const session = await getCurrentSession();
 		return getEventPage(
@@ -61,7 +61,7 @@ export async function prefetchEventData(
 export type { EventDetails } from "@repo/db/queries/events";
 
 export const fetchEventDetailsServer = createServerFn({ method: "GET" })
-	.inputValidator((input: unknown) => eventPageSchema.parse(input))
+	.validator((input: unknown) => eventPageSchema.parse(input))
 	.handler(async ({ data }) => {
 		const session = await getCurrentSession();
 		const signedIn = Boolean(session?.user);

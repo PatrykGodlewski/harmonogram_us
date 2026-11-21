@@ -44,7 +44,7 @@ const adminQueryFn = createServerFn({ method: "GET" }).middleware([
 ]);
 
 export const fetchAdminEventsServer = panelQueryFn
-	.inputValidator((input: unknown) => adminEventsQuerySchema.parse(input))
+	.validator((input: unknown) => adminEventsQuerySchema.parse(input))
 	.handler(async ({ data, context }) => {
 		const [managed, managerOf] = await Promise.all([
 			listManagedEventIds(context.user),
@@ -124,7 +124,7 @@ export const adminEventFilterOptionsQueryOptions = queryOptions({
 });
 
 export const fetchAdminEventDetailsServer = panelQueryFn
-	.inputValidator((input: unknown) => adminEventIdSchema.parse(input))
+	.validator((input: unknown) => adminEventIdSchema.parse(input))
 	.handler(async ({ data, context }) => {
 		await assertCanCheckIn(context.user, data.eventId);
 		const event = await getEventById(data.eventId, { kind: "manage" });
@@ -154,7 +154,7 @@ export const adminEventDetailsQueryOptions = (eventId: string) =>
 	});
 
 export const fetchAdminEventRegistrantsServer = panelQueryFn
-	.inputValidator((input: unknown) => adminEventIdSchema.parse(input))
+	.validator((input: unknown) => adminEventIdSchema.parse(input))
 	.handler(async ({ data, context }) => {
 		await assertCanCheckIn(context.user, data.eventId);
 		// Answers may be sensitive (health, diet): only for those who manage the event.
@@ -170,7 +170,7 @@ export const adminEventRegistrantsQueryOptions = (eventId: string) =>
 	});
 
 export const fetchAdminEventGroupsServer = panelQueryFn
-	.inputValidator((input: unknown) => adminEventIdSchema.parse(input))
+	.validator((input: unknown) => adminEventIdSchema.parse(input))
 	.handler(async ({ data, context }) => {
 		await assertCanManageEvent(context.user, data.eventId);
 		return listGroupsForEvent(data.eventId);

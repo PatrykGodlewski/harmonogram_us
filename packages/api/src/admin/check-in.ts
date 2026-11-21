@@ -18,7 +18,7 @@ const setCheckedInSchema = z.object({
 });
 
 export const checkInServer = panelActionFn
-	.inputValidator((input: unknown) => checkInSchema.parse(input))
+	.validator((input: unknown) => checkInSchema.parse(input))
 	.handler(async ({ data, context }) => {
 		await assertCanCheckIn(context.user, data.eventId);
 		return withDomainErrors(() =>
@@ -27,7 +27,7 @@ export const checkInServer = panelActionFn
 	});
 
 export const setCheckedInServer = panelActionFn
-	.inputValidator((input: unknown) => setCheckedInSchema.parse(input))
+	.validator((input: unknown) => setCheckedInSchema.parse(input))
 	.handler(async ({ data, context }) => {
 		await assertCanCheckIn(context.user, data.eventId);
 		await withDomainErrors(() =>

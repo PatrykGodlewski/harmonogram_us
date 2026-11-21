@@ -24,7 +24,7 @@ const removeOrganizerSchema = z.object({
 });
 
 export const fetchEventOrganizersServer = panelQueryFn
-	.inputValidator((input: unknown) => adminEventIdSchema.parse(input))
+	.validator((input: unknown) => adminEventIdSchema.parse(input))
 	.handler(async ({ data, context }) => {
 		await assertCanManageEvent(context.user, data.eventId);
 		return listEventOrganizers(data.eventId);
@@ -37,7 +37,7 @@ export const eventOrganizersQueryOptions = (eventId: string) =>
 	});
 
 export const addEventOrganizerServer = panelActionFn
-	.inputValidator((input: unknown) => addOrganizerSchema.parse(input))
+	.validator((input: unknown) => addOrganizerSchema.parse(input))
 	.handler(async ({ data, context }) => {
 		await assertCanManageEvent(context.user, data.eventId);
 		return withDomainErrors(() =>
@@ -46,7 +46,7 @@ export const addEventOrganizerServer = panelActionFn
 	});
 
 export const removeEventOrganizerServer = panelActionFn
-	.inputValidator((input: unknown) => removeOrganizerSchema.parse(input))
+	.validator((input: unknown) => removeOrganizerSchema.parse(input))
 	.handler(async ({ data, context }) => {
 		await assertCanManageEvent(context.user, data.eventId);
 		await withDomainErrors(() =>

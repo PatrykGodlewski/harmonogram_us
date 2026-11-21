@@ -18,7 +18,7 @@ const setUserRoleSchema = z.object({
 
 export const searchUsersServer = createServerFn({ method: "GET" })
 	.middleware([adminMiddleware])
-	.inputValidator((input: unknown) => searchUsersSchema.parse(input))
+	.validator((input: unknown) => searchUsersSchema.parse(input))
 	.handler(async ({ data }) => searchUsers(data.query, USER_SEARCH_LIMIT));
 
 export const searchUsersQueryOptions = (query: string) =>
@@ -29,7 +29,7 @@ export const searchUsersQueryOptions = (query: string) =>
 
 export const setUserRoleServer = createServerFn({ method: "POST" })
 	.middleware([adminMiddleware])
-	.inputValidator((input: unknown) => setUserRoleSchema.parse(input))
+	.validator((input: unknown) => setUserRoleSchema.parse(input))
 	.handler(async ({ data, context }) => {
 		// An admin who demotes themselves could lock the instance out of its settings.
 		if (data.userId === context.user.id) {

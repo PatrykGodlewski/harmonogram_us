@@ -44,13 +44,14 @@ export async function resetUnverifiedAccount(userId: string): Promise<boolean> {
 }
 
 /**
- * Email behind a Better Auth magic-link token. The plugin (storeToken: "hashed")
- * stores base64url(sha256(token)) as the verification identifier.
+ * Email behind a Better Auth magic-link token. The plugin (1.7, storeToken: "hashed")
+ * stores `magic-link:` + base64url(sha256(token)) as the verification identifier and
+ * `{ type: "magic-link", email }` as the value.
  */
 export async function findMagicLinkEmail(
 	token: string,
 ): Promise<string | null> {
-	const identifier = createHash("sha256").update(token).digest("base64url");
+	const identifier = `magic-link:${createHash("sha256").update(token).digest("base64url")}`;
 	const [row] = await db
 		.select({ value: authVerifications.value })
 		.from(authVerifications)

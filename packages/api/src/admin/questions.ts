@@ -28,7 +28,7 @@ const eventIdSchema = z.object({ eventId: z.string().min(1) });
 const questionIdSchema = z.object({ id: z.string().min(1) });
 
 export const fetchEventQuestionsServer = panelQueryFn
-	.inputValidator((input: unknown) => eventIdSchema.parse(input))
+	.validator((input: unknown) => eventIdSchema.parse(input))
 	.handler(async ({ data, context }) => {
 		await assertCanManageEvent(context.user, data.eventId);
 		return listEventQuestions(data.eventId);
@@ -41,7 +41,7 @@ export const eventQuestionsQueryOptions = (eventId: string) =>
 	});
 
 export const createEventQuestionServer = panelActionFn
-	.inputValidator((input: unknown) =>
+	.validator((input: unknown) =>
 		eventIdSchema.extend(questionFields).parse(input),
 	)
 	.handler(async ({ data, context }) => {
@@ -50,7 +50,7 @@ export const createEventQuestionServer = panelActionFn
 	});
 
 export const updateEventQuestionServer = panelActionFn
-	.inputValidator((input: unknown) =>
+	.validator((input: unknown) =>
 		questionIdSchema
 			.extend(questionFields)
 			.partial({ label: true, kind: true })
@@ -62,14 +62,14 @@ export const updateEventQuestionServer = panelActionFn
 	});
 
 export const deleteEventQuestionServer = panelActionFn
-	.inputValidator((input: unknown) => questionIdSchema.parse(input))
+	.validator((input: unknown) => questionIdSchema.parse(input))
 	.handler(async ({ data, context }) => {
 		await assertCanManageQuestion(context.user, data.id);
 		await deleteEventQuestion(data.id);
 	});
 
 export const moveEventQuestionServer = panelActionFn
-	.inputValidator((input: unknown) =>
+	.validator((input: unknown) =>
 		questionIdSchema.extend({ direction: z.enum(["up", "down"]) }).parse(input),
 	)
 	.handler(async ({ data, context }) => {

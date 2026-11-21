@@ -242,6 +242,18 @@ export const auth = betterAuth({
 	baseURL: env.BETTER_AUTH_URL,
 	secret: env.BETTER_AUTH_SECRET,
 	trustedOrigins: [env.ADMIN_URL],
+	// Our limiter (limitAuth in hooks.before) is shared across instances (Postgres) and keyed
+	// by IP and e-mail. Better Auth's own is per process and per IP only: a campus network
+	// sends many students through one address, and they would lock each other out.
+	rateLimit: { enabled: false },
+	account: {
+		accountLinking: {
+			// A university sign-in with a verified address may join an account nobody verified:
+			// the account.create.before hook first removes the stranger's password and sessions
+			// (pre-hijacking protection). The university must still mark the address verified.
+			requireLocalEmailVerified: false,
+		},
+	},
 	database: drizzleAdapter(db, {
 		provider: "pg",
 		schema: {
@@ -257,13 +269,21 @@ export const auth = betterAuth({
 	databaseHooks: {
 		account: {
 			create: {
-				before: async (account) => {
+				before: async (account, ctx) => {
 					if (account.providerId !== UNIVERSITY_PROVIDER_ID) return;
 					// One university identity per account: an address the university gave
 					// to someone else must not open the previous owner's account.
 					if (
 						await hasProviderAccount(account.userId, UNIVERSITY_PROVIDER_ID)
 					) {
+						// From the sign-in callback: back to the login page, which explains
+						// (Better Auth would answer the browser with a bare 403).
+						if (ctx?.path.startsWith("/callback/")) {
+							const locale = resolveAuthLocaleFromHeaders(ctx.headers);
+							throw ctx.redirect(
+								`${env.BETTER_AUTH_URL}/${locale}/login?error=account_conflict`,
+							);
+						}
 						throw new APIError("FORBIDDEN", {
 							message: "Account is linked to another university identity.",
 						});
@@ -297,7 +317,7 @@ export const auth = betterAuth({
 			const locale = resolveAuthLocaleFromHeaders(ctx.headers);
 
 			if (
-				ctx.path.startsWith("/oauth2/callback/") &&
+				ctx.path.startsWith("/callback/") &&
 				typeof ctx.query?.error === "string"
 			) {
 				// The university refused or the person cancelled there: Better Auth would

@@ -1,11 +1,34 @@
 // A stand-in for the university's OpenID Connect server in the e2e stack.
 // The tester types the e-mail and name the university would send; "Anuluj" refuses.
-import { createHash, randomBytes } from "node:crypto";
+import {
+	createHash,
+	createSign,
+	generateKeyPairSync,
+	randomBytes,
+} from "node:crypto";
 import { createServer } from "node:http";
 
 const PORT = Number(process.env.PORT ?? 18080);
 const CLIENT_ID = process.env.CLIENT_ID ?? "";
 const CLIENT_SECRET = process.env.CLIENT_SECRET ?? "";
+
+/** Signs ID tokens (RS256) like a real provider; the public key is served at /jwks. */
+const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
+// A new key on every start: a new key id makes clients fetch /jwks again instead of
+// checking new tokens against the key they cached from the previous run.
+const KEY_ID = randomBytes(8).toString("hex");
+const JWK = { ...publicKey.export({ format: "jwk" }), kid: KEY_ID, alg: "RS256", use: "sig" };
+
+const base64url = (value) => Buffer.from(value).toString("base64url");
+
+function signIdToken(claims) {
+	const header = base64url(JSON.stringify({ alg: "RS256", typ: "JWT", kid: KEY_ID }));
+	const payload = base64url(JSON.stringify(claims));
+	const signature = createSign("RSA-SHA256")
+		.update(`${header}.${payload}`)
+		.sign(privateKey, "base64url");
+	return `${header}.${payload}.${signature}`;
+}
 
 /** code → person, access token → person; codes are single-use. */
 const codes = new Map();
@@ -46,7 +69,7 @@ function clientAuthorized(request, form) {
 }
 
 function loginPage(params) {
-	const hidden = ["redirect_uri", "state", "client_id"]
+	const hidden = ["redirect_uri", "state", "client_id", "nonce"]
 		.map(
 			(name) =>
 				`<input type="hidden" name="${name}" value="${escape(params.get(name) ?? "")}">`,
@@ -73,6 +96,8 @@ const server = createServer(async (request, response) => {
 			authorization_endpoint: `${issuer}/authorize`,
 			token_endpoint: `${issuer}/token`,
 			userinfo_endpoint: `${issuer}/userinfo`,
+			jwks_uri: `${issuer}/jwks`,
+			id_token_signing_alg_values_supported: ["RS256"],
 			response_types_supported: ["code"],
 			subject_types_supported: ["public"],
 			scopes_supported: ["openid", "email", "profile"],
@@ -81,6 +106,10 @@ const server = createServer(async (request, response) => {
 				"client_secret_post",
 			],
 		});
+	}
+
+	if (url.pathname === "/jwks") {
+		return send(response, 200, { keys: [JWK] });
 	}
 
 	if (url.pathname === "/authorize" && request.method === "GET") {
@@ -102,11 +131,14 @@ const server = createServer(async (request, response) => {
 		const email = (form.get("email") ?? "").trim().toLowerCase();
 		const code = randomBytes(16).toString("hex");
 		codes.set(code, {
-			sub: createHash("sha256").update(email).digest("hex").slice(0, 24),
-			email,
-			email_verified: true,
-			given_name: form.get("given_name") || undefined,
-			family_name: form.get("family_name") || undefined,
+			person: {
+				sub: createHash("sha256").update(email).digest("hex").slice(0, 24),
+				email,
+				email_verified: true,
+				given_name: form.get("given_name") || undefined,
+				family_name: form.get("family_name") || undefined,
+			},
+			nonce: form.get("nonce") || undefined,
 		});
 		back.searchParams.set("code", code);
 		return redirect(response, back);
@@ -117,16 +149,25 @@ const server = createServer(async (request, response) => {
 		if (!clientAuthorized(request, form)) {
 			return send(response, 401, { error: "invalid_client" });
 		}
-		const person = codes.get(form.get("code"));
+		const grant = codes.get(form.get("code"));
 		codes.delete(form.get("code"));
-		if (!person) return send(response, 400, { error: "invalid_grant" });
+		if (!grant) return send(response, 400, { error: "invalid_grant" });
 		const accessToken = randomBytes(24).toString("hex");
-		tokens.set(accessToken, person);
+		tokens.set(accessToken, grant.person);
+		const now = Math.floor(Date.now() / 1000);
 		return send(response, 200, {
 			access_token: accessToken,
 			token_type: "Bearer",
 			expires_in: 300,
 			scope: "openid email profile",
+			id_token: signIdToken({
+				...grant.person,
+				iss: issuer,
+				aud: CLIENT_ID,
+				iat: now,
+				exp: now + 300,
+				nonce: grant.nonce,
+			}),
 		});
 	}
 

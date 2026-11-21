@@ -20,7 +20,7 @@ const sendEventMessageSchema = z.object({
 
 /** E-mails the event's registrants; replies go to the organizer who sent it. */
 export const sendEventMessageServer = panelActionFn
-	.inputValidator((input: unknown) => sendEventMessageSchema.parse(input))
+	.validator((input: unknown) => sendEventMessageSchema.parse(input))
 	.handler(async ({ data, context }) => {
 		await assertCanManageEvent(context.user, data.eventId);
 		for (const key of eventMessageRateKeys(data.eventId, context.user.id)) {

@@ -29,7 +29,7 @@ const removeRegistrantSchema = z.object({
 });
 
 export const addRegistrantServer = panelActionFn
-	.inputValidator((input: unknown) => addRegistrantSchema.parse(input))
+	.validator((input: unknown) => addRegistrantSchema.parse(input))
 	.handler(async ({ data, context }) => {
 		await assertCanManageEvent(context.user, data.eventId);
 		return withDomainErrors(() =>
@@ -43,7 +43,7 @@ export const addRegistrantServer = panelActionFn
 	});
 
 export const removeRegistrantServer = panelActionFn
-	.inputValidator((input: unknown) => removeRegistrantSchema.parse(input))
+	.validator((input: unknown) => removeRegistrantSchema.parse(input))
 	.handler(async ({ data, context }) => {
 		await assertCanManageEvent(context.user, data.eventId);
 		return withDomainErrors(() =>
@@ -62,7 +62,7 @@ const bulkSchema = z.object({
 });
 
 export const removeRegistrantsServer = panelActionFn
-	.inputValidator((input: unknown) => bulkSchema.parse(input))
+	.validator((input: unknown) => bulkSchema.parse(input))
 	.handler(async ({ data, context }) => {
 		await assertCanManageEvent(context.user, data.eventId);
 		return withDomainErrors(() =>
@@ -75,7 +75,7 @@ export const removeRegistrantsServer = panelActionFn
 	});
 
 export const setCheckedInManyServer = panelActionFn
-	.inputValidator((input: unknown) =>
+	.validator((input: unknown) =>
 		bulkSchema.extend({ checkedIn: z.boolean() }).parse(input),
 	)
 	.handler(async ({ data, context }) => {
@@ -87,7 +87,7 @@ export const setCheckedInManyServer = panelActionFn
 
 /** Approves requests: free places first, then the waitlist (oldest request first). */
 export const approveRegistrationsServer = panelActionFn
-	.inputValidator((input: unknown) => bulkSchema.parse(input))
+	.validator((input: unknown) => bulkSchema.parse(input))
 	.handler(async ({ data, context }) => {
 		await assertCanManageEvent(context.user, data.eventId);
 		return withDomainErrors(() =>
@@ -100,7 +100,7 @@ export const approveRegistrationsServer = panelActionFn
 	});
 
 export const rejectRegistrationsServer = panelActionFn
-	.inputValidator((input: unknown) => bulkSchema.parse(input))
+	.validator((input: unknown) => bulkSchema.parse(input))
 	.handler(async ({ data, context }) => {
 		await assertCanManageEvent(context.user, data.eventId);
 		return withDomainErrors(() =>
@@ -114,7 +114,7 @@ export const rejectRegistrationsServer = panelActionFn
 
 /** An organiser corrects someone's answers (any time; required ones may stay empty). */
 export const updateRegistrantAnswersServer = panelActionFn
-	.inputValidator((input: unknown) =>
+	.validator((input: unknown) =>
 		removeRegistrantSchema.extend({ answers: answersSchema }).parse(input),
 	)
 	.handler(async ({ data, context }) => {

@@ -35,7 +35,7 @@ export const myGroupsQueryOptions = queryOptions({
 });
 
 export const fetchGroupDetailsServer = protectedQueryFn
-	.inputValidator(groupIdSchema)
+	.validator(groupIdSchema)
 	.handler(async ({ data, context }) =>
 		withDomainErrors(() =>
 			getGroupDetails(data.groupId, context.user.id, {
@@ -52,7 +52,7 @@ export const groupDetailsQueryOptions = (groupId: string) =>
 
 /** Public: what a join link shows before anyone signs in. */
 export const fetchJoinGroupInfoServer = createServerFn({ method: "GET" })
-	.inputValidator(joinCodeSchema)
+	.validator(joinCodeSchema)
 	.handler(async ({ data }) => {
 		const info = await getGroupByJoinCode(data.code);
 		if (!info) {
@@ -69,7 +69,7 @@ export const joinGroupInfoQueryOptions = (code: string) =>
 
 /** Public and read-only: the confirm page for an emailed invitation (safe for link scanners). */
 export const fetchInvitationServer = createServerFn({ method: "GET" })
-	.inputValidator(invitationTokenSchema)
+	.validator(invitationTokenSchema)
 	.handler(async ({ data }) => {
 		const invitation = await getInvitation(data.token);
 		if (!invitation) {
