@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@repo/env": "workspace:*",
-    "better-auth": "^1.6.9",
+    "better-auth": "^1.7.7",
     "drizzle-orm": "^0.45.2",
     "postgres": "^3.4.9",
     "zod": "^4.3.6"
