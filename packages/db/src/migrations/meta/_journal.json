@@ -225,6 +225,13 @@
       "when": 1795285292650,
       "tag": "0031_guest_requests",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1795295950921,
+      "tag": "0032_indico_events",
+      "breakpoints": true
     }
   ]
 }

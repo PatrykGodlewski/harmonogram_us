@@ -1,5 +1,17 @@
 import { env as clientEnv } from "@repo/env/client";
-import { and, asc, desc, eq, ilike, inArray, max, ne, sql } from "drizzle-orm";
+import {
+	and,
+	asc,
+	desc,
+	eq,
+	ilike,
+	inArray,
+	max,
+	ne,
+	type SQL,
+	type SQLWrapper,
+	sql,
+} from "drizzle-orm";
 import { db, type TransactionClient } from "../client";
 import { agendaItems } from "../schema/agenda";
 import {
@@ -62,6 +74,25 @@ export type EventFilters = {
 };
 
 const WHEN_DAYS = { today: 1, "7d": 7, "30d": 30 } as const;
+
+export type WhenFilter = NonNullable<EventFilters["whenFilter"]>;
+
+/** Conditions keeping `column` within the date filter (none for "all"). */
+export function whenFilterConditions(
+	column: SQLWrapper,
+	when: WhenFilter,
+): SQL[] {
+	if (when === "all") {
+		return [];
+	}
+	const zone = clientEnv.VITE_APP_TIME_ZONE;
+	// Day boundaries are computed in local time, so "7 days" stays 7 calendar days across DST.
+	const today = sql`date_trunc('day', now() AT TIME ZONE ${zone})`;
+	return [
+		sql`${column} >= (${today} AT TIME ZONE ${zone})`,
+		sql`${column} < ((${today} + make_interval(days => ${WHEN_DAYS[when]})) AT TIME ZONE ${zone})`,
+	];
+}
 
 export type EventWithRelations = {
 	id: string;
@@ -206,14 +237,8 @@ async function queryEvents(
 		conditions.push(eq(events.attendanceMode, filters.modeFilter));
 	}
 
-	if (filters.whenFilter && filters.whenFilter !== "all") {
-		const zone = clientEnv.VITE_APP_TIME_ZONE;
-		// Day boundaries are computed in local time, so "7 days" stays 7 calendar days across DST.
-		const today = sql`date_trunc('day', now() AT TIME ZONE ${zone})`;
-		conditions.push(
-			sql`${events.date} >= (${today} AT TIME ZONE ${zone})`,
-			sql`${events.date} < ((${today} + make_interval(days => ${WHEN_DAYS[filters.whenFilter]})) AT TIME ZONE ${zone})`,
-		);
+	if (filters.whenFilter) {
+		conditions.push(...whenFilterConditions(events.date, filters.whenFilter));
 	}
 
 	// The id breaks ties, so pages stay stable for events at the same time.
