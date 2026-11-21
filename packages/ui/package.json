@@ -21,7 +21,8 @@
     "./agenda": "./src/agenda.ts",
     "./tailwind": "./tailwind.css",
     "./app-errors": "./src/app-errors.ts",
-    "./registrants-csv": "./src/registrants-csv.ts"
+    "./registrants-csv": "./src/registrants-csv.ts",
+    "./registrant-stats": "./src/registrant-stats.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",
