@@ -75,7 +75,7 @@ These are facts about the implementation, not claims that it is better in genera
 | "Add to calendar" for one event | ✅ | ✅ |
 | Link previews when shared (Open Graph) | ✅ | not verified |
 | Month view | ❌ | ✅ category calendar |
-| Import of events from Indico | ❌ | — |
+| Import of events from Indico | ✅ read-only, in the list and the calendar feed, linking to Indico | — |
 
 #### Registration
 
@@ -169,7 +169,7 @@ These are facts about the implementation, not claims that it is better in genera
 
 ### Not built yet
 
-From the product spec, in no particular order: materials and file storage (F14), Indico import (F16), speaker files and directory (F19), surveys (F20), payments (F21), event web page (F22), video calls (F23), API and widget (F24), USOS integration (F25). Also missing compared with Indico: LDAP/SAML, user groups, category tree, form builder extras (file fields, several forms), CSV import, tags, e-mail placeholders, badges, wallet passes, timetable PDF, event lock, plugins.
+From the product spec, in no particular order: materials and file storage (F14), speaker files and directory (F19), surveys (F20), payments (F21), event web page (F22), video calls (F23), API and widget (F24), USOS integration (F25). Also missing compared with Indico: LDAP/SAML, user groups, category tree, form builder extras (file fields, several forms), CSV import, tags, e-mail placeholders, badges, wallet passes, timetable PDF, event lock, plugins.
 
 ### Known limitations
 

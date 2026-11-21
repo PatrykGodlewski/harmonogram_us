@@ -33,6 +33,7 @@ Planning references (not a live completion tracker):
 8. [Rust documents service, part 2: certificates, attendance sheets, pdf-lib removal](superpowers/plans/2026-11-21-rust-dokumenty-zaswiadczenia-listy.md) (plan 8; see its verification summary).
 9. [Statistics (F15)](superpowers/plans/2026-11-21-statystyki.md) (plan 9; see its verification summary).
 10. [Guests without an account (F17)](superpowers/plans/2026-11-21-goscie.md) (plan 10; see its verification summary).
+11. [Events from Indico (F16)](superpowers/plans/2026-11-21-indico.md) (plan 11; see its verification summary).
 11. Later priority-one work: profile language, campus calendar/ICS/Open Graph, accessibility and GDPR; consult the spec before planning.
 
 Historical implementation context moved out of `CLAUDE.md`: F5 capacity/waitlist/promotion and account registrations; F6 registration email with ticket links; F11 ticket QR (`ticket_code`, scanning handled by organiser plan); F18 list/calendar agenda with parallel sessions (`layoutAgenda` in `@repo/ui/agenda`); F26 teacher-led group registration; F27 agenda-item registration. Related account/ticket/agenda work: [plan](superpowers/plans/2026-11-19-moje-zapisy-bilety-agenda.md). These are inherited implementation notes, **not a claim that tests were rerun during the documentation refactor**. Verify current code and tests before deciding what remains.
