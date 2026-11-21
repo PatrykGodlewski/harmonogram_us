@@ -33,10 +33,6 @@ function cell(value: string): string {
 	return `"${safe.replaceAll('"', '""')}"`;
 }
 
-/**
- * The registrant list as rows (header first) in the UI language: one source
- * for the CSV and the XLSX export, so both always carry the same columns.
- */
 /** A registration question, as a column of the export. */
 export type ExportQuestion = {
 	id: string;
@@ -44,6 +40,10 @@ export type ExportQuestion = {
 	kind: "text" | "choice" | "yesno";
 };
 
+/**
+ * The registrant list as rows (header first) in the UI language: one source
+ * for the CSV and the XLSX export, so both always carry the same columns.
+ */
 export function registrantRows(
 	registrants: EventRegistrant[],
 	agenda: { id: string; title: string }[],

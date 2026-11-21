@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, max, type SQL, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, max, ne, type SQL, sql } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { type DbExecutor, db, type TransactionClient } from "../client";
 import { agendaItemRegistrations, agendaItems } from "../schema/agenda";
@@ -408,7 +408,7 @@ export async function registerForAgendaItem(
 			}
 			// Registering for the event through an item would skip its required questions.
 			if (!registration && (await hasRequiredQuestions(tx, item.eventId))) {
-				throw new DomainError("ANSWERS_INVALID");
+				throw new DomainError("REGISTER_EVENT_FIRST");
 			}
 			let eventRegistrationId = registration?.id ?? null;
 			const eventRegistered = eventRegistrationId === null;
@@ -674,8 +674,10 @@ export type EventRegistrant = {
 	answers: Answers;
 };
 
+/** `withAnswers: false` for people who only check in at the door (answers may be sensitive). */
 export async function getEventRegistrants(
 	eventId: string,
+	{ withAnswers = true }: { withAnswers?: boolean } = {},
 ): Promise<EventRegistrant[]> {
 	const rows = await db
 		.select({
@@ -688,7 +690,9 @@ export async function getEventRegistrants(
 			groupId: eventRegistrations.groupId,
 			groupName: registrationGroups.name,
 			checkedInAt: eventRegistrations.checkedInAt,
-			answers: answersOf(eventRegistrations.id),
+			answers: withAnswers
+				? answersOf(eventRegistrations.id)
+				: sql<Answers>`'{}'::jsonb`,
 			agendaItemIds: sql<string[]>`coalesce(
 				array_agg(${agendaItemRegistrations.agendaItemId})
 					filter (where ${agendaItemRegistrations.agendaItemId} is not null),
@@ -780,6 +784,8 @@ export async function getMyAnswers(
 			and(
 				eq(eventRegistrations.eventId, eventId),
 				eq(eventRegistrations.userId, userId),
+				// A declined request has nothing left to edit.
+				ne(eventRegistrations.state, "rejected"),
 			),
 		);
 	return row ?? null;

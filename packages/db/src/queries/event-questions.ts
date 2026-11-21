@@ -1,6 +1,10 @@
-import { and, asc, desc, eq, gt, lt, max } from "drizzle-orm";
+import { and, asc, desc, eq, gt, lt, max, notInArray } from "drizzle-orm";
 import { db } from "../client";
-import { eventQuestions, type QuestionKind } from "../schema/event-questions";
+import {
+	eventQuestions,
+	type QuestionKind,
+	registrationAnswers,
+} from "../schema/event-questions";
 import { DomainError } from "./domain-errors";
 
 export type EventQuestion = {
@@ -95,7 +99,7 @@ export async function createEventQuestion(
 	});
 }
 
-/** Changes a question; answers already given stay (a deleted option keeps old answers as text). */
+/** Changes a question; answers already given stay while they still fit it. */
 export async function updateEventQuestion(
 	id: string,
 	input: Partial<EventQuestionInput>,
@@ -122,6 +126,21 @@ export async function updateEventQuestion(
 			.returning(columns);
 		if (!row) {
 			throw new DomainError("QUESTION_NOT_FOUND");
+		}
+		// Answers that no longer fit go: all of them on a new kind, others outside the new options.
+		if (row.kind !== current.kind) {
+			await tx
+				.delete(registrationAnswers)
+				.where(eq(registrationAnswers.questionId, id));
+		} else if (row.kind === "choice") {
+			await tx
+				.delete(registrationAnswers)
+				.where(
+					and(
+						eq(registrationAnswers.questionId, id),
+						notInArray(registrationAnswers.value, row.options),
+					),
+				);
 		}
 		return row;
 	});

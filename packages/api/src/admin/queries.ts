@@ -157,7 +157,10 @@ export const fetchAdminEventRegistrantsServer = panelQueryFn
 	.inputValidator((input: unknown) => adminEventIdSchema.parse(input))
 	.handler(async ({ data, context }) => {
 		await assertCanCheckIn(context.user, data.eventId);
-		return getEventRegistrants(data.eventId);
+		// Answers may be sensitive (health, diet): only for those who manage the event.
+		return getEventRegistrants(data.eventId, {
+			withAnswers: await canManageEvent(context.user, data.eventId),
+		});
 	});
 
 export const adminEventRegistrantsQueryOptions = (eventId: string) =>

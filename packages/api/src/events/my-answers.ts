@@ -8,9 +8,9 @@ import { z } from "zod";
 import { authMiddleware } from "../auth/middleware";
 import { appError, withDomainErrors } from "../errors";
 import { protectedActionFn } from "../procedures";
+import { answersSchema } from "./schemas";
 
 const eventIdSchema = z.object({ eventId: z.string().min(1) });
-export const answersSchema = z.record(z.string(), z.string().max(2000));
 
 export const fetchMyAnswersServer = createServerFn({ method: "GET" })
 	.middleware([authMiddleware])

@@ -13,7 +13,7 @@ import { getCurrentSession } from "../auth/user";
 import { appError, withDomainErrors } from "../errors";
 import { registrationEmailHooks } from "../notifications/registration-hooks";
 import { canOpenEvent } from "./access";
-import { agendaItemIdSchema, inviteSchema } from "./schemas";
+import { agendaItemIdSchema, answersSchema, inviteSchema } from "./schemas";
 
 /** `locale` is the UI language for the confirmation e-mail (server functions have no locale prefix). */
 const registerForAgendaItemSchema = agendaItemIdSchema.extend({
@@ -25,7 +25,7 @@ export const registerForEventInputSchema = z.object({
 	eventId: z.string().min(1),
 	invite: inviteSchema,
 	/** Answers to the event's questions, by question id (checked against them on the server). */
-	answers: z.record(z.string(), z.string().max(2000)).optional(),
+	answers: answersSchema.optional(),
 	/** UI language, for the registrant's e-mails (server functions have no locale prefix). */
 	locale: z.enum(["pl", "en"]),
 });

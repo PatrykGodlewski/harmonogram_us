@@ -38,6 +38,7 @@ export const DOMAIN_ERROR_CODES = [
 	"QUESTION_OPTIONS",
 	"QUESTION_NOT_FOUND",
 	"ANSWERS_INVALID",
+	"REGISTER_EVENT_FIRST",
 ] as const;
 
 export type DomainErrorCode = (typeof DOMAIN_ERROR_CODES)[number];

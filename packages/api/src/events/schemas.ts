@@ -69,6 +69,11 @@ const onlineUrlSchema = z
 const attendanceModeSchema = z.enum(["onsite", "online", "hybrid"]);
 const visibilitySchema = z.enum(["public", "authenticated", "private"]);
 
+/** Answers by question id; bounded, and checked against the event's questions on the server. */
+export const answersSchema = z
+	.record(z.string().max(64), z.string().max(2000))
+	.refine((answers) => Object.keys(answers).length <= 100);
+
 /** The secret of an invite link (`?invite=`), as the URL carries it. */
 export const inviteSchema = z.string().min(1).max(128).optional();
 /** The reminder choices the form offers (hours before the start); null switches it off. */

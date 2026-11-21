@@ -115,6 +115,10 @@ test("[F10] wymagane pytanie blokuje zapis; odpowiedzi są na liście i w CSV @u
 	await expect(form.getByText("Ta odpowiedź jest wymagana.")).toBeVisible();
 	await form.getByLabel(/Kierunek studiów/).fill("Fizyka");
 	await form.getByRole("combobox", { name: /Rozmiar koszulki/ }).click();
+	// An optional choice can be left without an answer again
+	await expect(
+		visitor.getByRole("option", { name: "Bez odpowiedzi" }),
+	).toBeVisible();
 	await visitor.getByRole("option", { name: "M" }).click();
 	await form.getByRole("button", { name: "Zarejestruj się" }).click();
 	await expect(summary.getByText("Zarejestrowano")).toBeVisible();

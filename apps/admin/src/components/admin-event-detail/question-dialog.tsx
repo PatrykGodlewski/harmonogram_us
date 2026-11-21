@@ -9,6 +9,7 @@ import {
 	admin_error_generic,
 	questions_dialog_add,
 	questions_dialog_edit,
+	questions_edit_hint,
 	questions_kind,
 	questions_label,
 	questions_options,
@@ -169,6 +170,11 @@ export function QuestionDialog({
 						/>
 						<Label htmlFor={requiredId}>{questions_required_field()}</Label>
 					</div>
+					{question ? (
+						<p className="text-xs text-muted-foreground">
+							{questions_edit_hint()}
+						</p>
+					) : null}
 					<DialogFooter>
 						<Button
 							type="button"

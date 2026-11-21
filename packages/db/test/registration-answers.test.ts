@@ -60,7 +60,7 @@ describe("registration answers", () => {
 			registerForEvent(eventId, added, "pl", undefined, { byOrganizer: true }),
 		).resolves.toMatchObject({ state: "registered" });
 		expect(await rejectionCode(registerForAgendaItem(itemId, await createUser(), "pl"))).toBe(
-			"ANSWERS_INVALID",
+			"REGISTER_EVENT_FIRST",
 		);
 	});
 
@@ -98,5 +98,51 @@ describe("editing answers", () => {
 		).toBe("EVENT_ENDED");
 		await updateRegistrationAnswers(eventId, id, { [field.id]: "Biologia" }, { byOrganizer: true });
 		expect((await getEventRegistrants(eventId))[0]?.answers).toEqual({ [field.id]: "Biologia" });
+	});
+});
+
+describe("answers after a question changes", () => {
+	it("answers that no longer fit are removed: a removed option, a new kind", async () => {
+		const { updateEventQuestion } = await import("../src/queries/event-questions");
+		const { eventId, field, size } = await eventWithQuestions();
+		const user = await createUser();
+		await registerForEvent(eventId, user, "pl", undefined, {
+			answers: { [field.id]: "Fizyka", [size.id]: "S" },
+		});
+		await updateEventQuestion(size.id, { options: ["M", "L"] });
+		await updateEventQuestion(field.id, { kind: "yesno" });
+		expect((await getEventRegistrants(eventId))[0]?.answers).toEqual({});
+	});
+
+	it("answers that still fit stay when the label or other options change", async () => {
+		const { updateEventQuestion } = await import("../src/queries/event-questions");
+		const { eventId, field, size } = await eventWithQuestions();
+		const user = await createUser();
+		await registerForEvent(eventId, user, "pl", undefined, {
+			answers: { [field.id]: "Fizyka", [size.id]: "S" },
+		});
+		await updateEventQuestion(size.id, { label: "Rozmiar koszulki", options: ["S", "XL"] });
+		expect((await getEventRegistrants(eventId))[0]?.answers).toEqual({ [field.id]: "Fizyka", [size.id]: "S" });
+	});
+
+	it("registrants can be read without answers (door helpers)", async () => {
+		const { eventId, field } = await eventWithQuestions();
+		await registerForEvent(eventId, await createUser(), "pl", undefined, { answers: { [field.id]: "Fizyka" } });
+		expect((await getEventRegistrants(eventId, { withAnswers: false }))[0]?.answers).toEqual({});
+	});
+
+	it("a declined person has no answers to edit; a programme item asks to register first", async () => {
+		const { getMyAnswers } = await import("../src/queries/event-registrations");
+		const { db } = await import("../src/client");
+		const { eventRegistrations } = await import("../src/schema/event-registrations");
+		const { eventId, field } = await eventWithQuestions();
+		const user = await createUser();
+		await registerForEvent(eventId, user, "pl", undefined, { answers: { [field.id]: "Fizyka" } });
+		await db.update(eventRegistrations).set({ state: "rejected" });
+		expect(await getMyAnswers(eventId, user)).toBeNull();
+		const itemId = await createItem(eventId);
+		expect(await rejectionCode(registerForAgendaItem(itemId, await createUser(), "pl"))).toBe(
+			"REGISTER_EVENT_FIRST",
+		);
 	});
 });

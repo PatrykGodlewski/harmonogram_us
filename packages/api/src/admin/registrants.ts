@@ -13,6 +13,7 @@ import { z } from "zod";
 import { assertCanCheckIn, assertCanManageEvent } from "../auth/event-access";
 import { panelActionFn } from "../auth/panel-middleware";
 import { withDomainErrors } from "../errors";
+import { answersSchema } from "../events/schemas";
 import { registrationEmailHooks } from "../notifications/registration-hooks";
 
 const addRegistrantSchema = z.object({
@@ -114,9 +115,7 @@ export const rejectRegistrationsServer = panelActionFn
 /** An organiser corrects someone's answers (any time; required ones may stay empty). */
 export const updateRegistrantAnswersServer = panelActionFn
 	.inputValidator((input: unknown) =>
-		removeRegistrantSchema
-			.extend({ answers: z.record(z.string(), z.string().max(2000)) })
-			.parse(input),
+		removeRegistrantSchema.extend({ answers: answersSchema }).parse(input),
 	)
 	.handler(async ({ data, context }) => {
 		await assertCanManageEvent(context.user, data.eventId);

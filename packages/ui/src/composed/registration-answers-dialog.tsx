@@ -2,6 +2,7 @@ import {
 	answers_cancel,
 	answers_choose,
 	answers_no,
+	answers_none,
 	answers_optional,
 	answers_required,
 	answers_title,
@@ -158,6 +159,8 @@ function AnswerField({
 					{ value: "no", label: answers_no() },
 				]
 			: question.options.map((option) => ({ value: option, label: option }));
+	// Radix Select has no empty value: an optional question gets a "no answer" choice.
+	const NO_ANSWER = "__none__";
 
 	return (
 		<div className="flex flex-col gap-2">
@@ -173,7 +176,10 @@ function AnswerField({
 					onChange={(event) => onChange(event.target.value)}
 				/>
 			) : (
-				<Select value={value} onValueChange={onChange}>
+				<Select
+					value={value}
+					onValueChange={(next) => onChange(next === NO_ANSWER ? "" : next)}
+				>
 					<SelectTrigger
 						id={fieldId}
 						className="w-full"
@@ -184,6 +190,9 @@ function AnswerField({
 						<SelectValue placeholder={answers_choose()} />
 					</SelectTrigger>
 					<SelectContent>
+						{question.required ? null : (
+							<SelectItem value={NO_ANSWER}>{answers_none()}</SelectItem>
+						)}
 						{choices.map((choice) => (
 							<SelectItem key={choice.value} value={choice.value}>
 								{choice.label}
