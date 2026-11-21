@@ -699,7 +699,7 @@
 	"stats_present": "Obecni",
 	"stats_absent": "Nieobecni",
 	"stats_waitlisted": "Rezerwowi",
-	"stats_pending": "Czekają na akceptację",
+	"stats_pending": "Do akceptacji",
 	"stats_absent_share": "{share} nieobecnych",
 	"stats_absent_after_end": "Nieobecnych policzymy po zakończeniu wydarzenia.",
 	"activity_title": "Aktywność w ostatnich 12 miesiącach",

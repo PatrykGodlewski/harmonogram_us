@@ -192,6 +192,8 @@ test("[F8] ekrany administratora spełniają WCAG AA @organizator", async ({
 	await createTestUser(email, { role: "admin", password });
 
 	await signInAsAdmin(page, email, password);
+	// The home page carries the monthly activity table for administrators (F15).
+	await audit(page, adminUrl("/pl"), "panel: aktywność", PANEL);
 	for (const [path, title] of [
 		["/pl/users", "Użytkownicy"],
 		["/pl/event-types", "Typy wydarzeń"],

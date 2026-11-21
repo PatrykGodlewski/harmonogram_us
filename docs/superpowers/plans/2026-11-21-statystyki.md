@@ -80,3 +80,17 @@ i18n: `stats_title` "Statystyki"/"Statistics", `stats_registered` "Zapisani"/"Re
 ### Task 5: Docs and verification
 
 - [ ] Update the product spec F15 status, `docs/README.md` (plan 9), README feature table (Statistics row); run `pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm e2e:up && pnpm e2e`; write the verification summary; commit; push to `next`.
+
+---
+
+## Verification summary (21 November 2026)
+
+| Check | Result |
+| --- | --- |
+| `pnpm lint`, `pnpm typecheck`, `pnpm build` | exit 0 |
+| `pnpm test` | db 225 (3 new: monthly activity), ui 30 (3 new: `registrantStats`), api 111, worker 19, collections 8, rpc 3 — all passed |
+| `pnpm e2e:up && pnpm e2e` | 163 passed, 1 skipped (the admin activity data check runs on the desktop project only, by design) |
+| New `[F15]` tests | organiser card (4 registered, 3 present, 1 no-show = 25%, 1 waitlisted); admin monthly activity (+2 events, +3 registrations in the oldest month); organiser does not see platform activity |
+| WCAG | the admin home page with the activity table added to the F8 audit (axe, title, reflow 320 px) — passes on both projects |
+
+Rulings: the e2e moves its event into the past after registering (registration is refused for ended events); the admin data check counts the oldest month on one project because counts are global; the pending statistic is labelled "Do akceptacji" / "To approve" (F30's section already uses "Czekają na akceptację").

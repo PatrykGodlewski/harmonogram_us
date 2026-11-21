@@ -159,7 +159,7 @@ These are facts about the implementation, not claims that it is better in genera
 
 | Feature | Harmonogram US | Indico |
 |---|---|---|
-| Statistics for organisers | ❌ | ✅ Matomo plugin |
+| Statistics for organisers | ✅ per event: registered, present, no-shows and their share, waitlisted, awaiting approval; administrators see events and registrations per month for 12 months | ✅ Matomo plugin (page views and downloads) |
 | Event change log | ❌ | ✅ |
 | Surveys | ❌ | ✅ |
 | Video calls | ❌ (planned: Microsoft Teams) | ✅ Zoom plugin |
@@ -169,7 +169,7 @@ These are facts about the implementation, not claims that it is better in genera
 
 ### Not built yet
 
-From the product spec, in no particular order: materials and file storage (F14), statistics (F15), Indico import (F16), guests without an account (F17), speaker files and directory (F19), surveys (F20), payments (F21), event web page (F22), video calls (F23), API and widget (F24), USOS integration (F25). Also missing compared with Indico: LDAP/SAML, user groups, category tree, form builder extras (file fields, several forms), CSV import, tags, e-mail placeholders, badges, wallet passes, timetable PDF, event lock, plugins.
+From the product spec, in no particular order: materials and file storage (F14), Indico import (F16), guests without an account (F17), speaker files and directory (F19), surveys (F20), payments (F21), event web page (F22), video calls (F23), API and widget (F24), USOS integration (F25). Also missing compared with Indico: LDAP/SAML, user groups, category tree, form builder extras (file fields, several forms), CSV import, tags, e-mail placeholders, badges, wallet passes, timetable PDF, event lock, plugins.
 
 ### Known limitations
 
