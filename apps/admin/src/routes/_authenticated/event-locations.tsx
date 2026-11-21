@@ -12,12 +12,14 @@ import {
 	admin_event_locations_title,
 	admin_nav_event_locations,
 } from "@repo/i18n/paraglide/messages";
+import { adminPageHead } from "@repo/router-utils/metadata/page-head";
 import { createFileRoute } from "@tanstack/react-router";
 import { AdminLookupPage } from "~/components/admin-lookup-page";
 
 export const Route = createFileRoute("/_authenticated/event-locations")({
 	loader: ({ context: { queryClient } }) =>
 		queryClient.ensureQueryData(adminEventLocationsQueryOptions),
+	head: () => adminPageHead(admin_event_locations_title()),
 	component: AdminEventLocationsPage,
 });
 

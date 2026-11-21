@@ -1,4 +1,3 @@
-import { Turnstile } from "@marsidev/react-turnstile";
 import { env } from "@repo/env/client";
 import {
 	auth_error_try_again,
@@ -22,6 +21,7 @@ import { Button } from "../components/button";
 import { FormMessage } from "../components/form-message";
 import { Input } from "../components/input";
 import { Label } from "../components/label";
+import { Captcha } from "./auth/captcha";
 import { formatFieldError, usePasswordLogin } from "./auth/password-login";
 
 export interface AdminLoginProps {
@@ -74,7 +74,7 @@ export function AdminLogin({ redirectTo }: AdminLoginProps) {
 
 	return (
 		<div className="mx-auto max-w-sm rounded-lg border p-6">
-			<h2 className="mb-4 text-xl font-semibold">{auth_title_admin_login()}</h2>
+			<h1 className="mb-4 text-xl font-semibold">{auth_title_admin_login()}</h1>
 			<form
 				className="space-y-4"
 				onSubmit={(e) => {
@@ -134,16 +134,8 @@ export function AdminLogin({ redirectTo }: AdminLoginProps) {
 					)}
 				</form.Field>
 
-				{captchaEnabled ? (
-					<div className="flex justify-center">
-						<Turnstile
-							siteKey={captchaSiteKey ?? ""}
-							options={{ appearance: "always", size: "normal" }}
-							onSuccess={setCaptchaToken}
-							onExpire={() => setCaptchaToken(null)}
-							onError={() => setCaptchaToken(null)}
-						/>
-					</div>
+				{captchaSiteKey ? (
+					<Captcha siteKey={captchaSiteKey} onToken={setCaptchaToken} />
 				) : null}
 
 				<form.Subscribe selector={(s) => s.isSubmitting}>

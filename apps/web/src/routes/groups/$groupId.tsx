@@ -37,6 +37,7 @@ import {
 	groups_title,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
+import { studentsPageHead } from "@repo/router-utils/metadata/page-head";
 import { requireAuthenticatedUser } from "@repo/router-utils/require-auth";
 import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
@@ -56,6 +57,7 @@ export const Route = createFileRoute("/groups/$groupId")({
 	beforeLoad: ({ context, location }) => {
 		requireAuthenticatedUser(context, { loginRedirect: location.href });
 	},
+	head: () => studentsPageHead(groups_title()),
 	component: GroupPage,
 });
 

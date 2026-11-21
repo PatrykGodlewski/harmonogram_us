@@ -2,10 +2,12 @@ import {
 	admin_scan_back,
 	admin_scan_title,
 } from "@repo/i18n/paraglide/messages";
+import { adminPageHead } from "@repo/router-utils/metadata/page-head";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { TicketScanner } from "~/components/check-in/ticket-scanner";
 
 export const Route = createFileRoute("/_authenticated/events/$eventId_/scan")({
+	head: () => adminPageHead(admin_scan_title()),
 	component: ScanPage,
 });
 

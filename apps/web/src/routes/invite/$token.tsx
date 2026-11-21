@@ -12,6 +12,7 @@ import {
 	invite_title,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale, localizeHref } from "@repo/i18n/paraglide/runtime";
+import { studentsPageHead } from "@repo/router-utils/metadata/page-head";
 import { appErrorMessage } from "@repo/ui/app-errors";
 import { Button } from "@repo/ui/components/button";
 import { formatEventDateTime } from "@repo/ui/time";
@@ -30,6 +31,7 @@ export const Route = createFileRoute("/invite/$token")({
 		queryClient
 			.ensureQueryData(invitationQueryOptions(params.token))
 			.catch(() => null),
+	head: () => studentsPageHead(invite_title()),
 	component: InvitePage,
 });
 

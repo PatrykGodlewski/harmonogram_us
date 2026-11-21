@@ -32,6 +32,7 @@ import {
 	groups_open_group,
 	groups_summary,
 } from "@repo/i18n/paraglide/messages";
+import { studentsPageHead } from "@repo/router-utils/metadata/page-head";
 import { requireAuthenticatedUser } from "@repo/router-utils/require-auth";
 import { Alert, AlertDescription, AlertTitle } from "@repo/ui/components/alert";
 import { Button } from "@repo/ui/components/button";
@@ -85,6 +86,7 @@ export const Route = createFileRoute("/account")({
 			queryClient.ensureQueryData(myCalendarUrlQueryOptions),
 			queryClient.ensureQueryData(profileQueryOptions),
 		]),
+	head: () => studentsPageHead(account_title()),
 	component: AccountPage,
 });
 

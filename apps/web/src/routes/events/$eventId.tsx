@@ -10,6 +10,7 @@ import {
 	joined_toast,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
+import { studentsPageHead } from "@repo/router-utils/metadata/page-head";
 import { formatEventDateTime } from "@repo/ui/time";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import {
@@ -84,7 +85,7 @@ export const Route = createFileRoute("/events/$eventId")({
 	head: ({ loaderData }) => ({
 		meta: loaderData
 			? [
-					{ title: loaderData.preview.title },
+					...studentsPageHead(loaderData.preview.title).meta,
 					{ name: "description", content: loaderData.preview.description },
 					{ property: "og:type", content: "website" },
 					{ property: "og:title", content: loaderData.preview.title },

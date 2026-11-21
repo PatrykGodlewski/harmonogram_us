@@ -1,4 +1,6 @@
+import { auth_title_admin_login } from "@repo/i18n/paraglide/messages";
 import { localizeHref } from "@repo/i18n/paraglide/runtime";
+import { adminPageHead } from "@repo/router-utils/metadata/page-head";
 import { AdminLogin } from "@repo/ui/composed/admin-login";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { z } from "zod";
@@ -12,6 +14,7 @@ export const Route = createFileRoute("/login")({
 			throw redirect({ to: "/" });
 		}
 	},
+	head: () => adminPageHead(auth_title_admin_login()),
 	component: AdminLoginPage,
 });
 

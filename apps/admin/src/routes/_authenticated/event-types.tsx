@@ -12,12 +12,14 @@ import {
 	admin_event_types_title,
 	admin_nav_event_types,
 } from "@repo/i18n/paraglide/messages";
+import { adminPageHead } from "@repo/router-utils/metadata/page-head";
 import { createFileRoute } from "@tanstack/react-router";
 import { AdminLookupPage } from "~/components/admin-lookup-page";
 
 export const Route = createFileRoute("/_authenticated/event-types")({
 	loader: ({ context: { queryClient } }) =>
 		queryClient.ensureQueryData(adminEventTypesQueryOptions),
+	head: () => adminPageHead(admin_event_types_title()),
 	component: AdminEventTypesPage,
 });
 

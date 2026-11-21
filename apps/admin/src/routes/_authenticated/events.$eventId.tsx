@@ -9,7 +9,9 @@ import { eventQuestionsQueryOptions } from "@repo/api/admin/questions";
 import {
 	admin_error_generic,
 	admin_event_forbidden,
+	admin_events_title,
 } from "@repo/i18n/paraglide/messages";
+import { adminPageHead } from "@repo/router-utils/metadata/page-head";
 import { getAppErrorCode } from "@repo/ui/app-errors";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -29,7 +31,7 @@ export const Route = createFileRoute("/_authenticated/events/$eventId")({
 	// Fetched on the server with the page. A failure (e.g. no access) is left to
 	// the page, which shows it in place of the event.
 	loader: ({ context: { queryClient }, params: { eventId } }) => {
-		const settle = (load: Promise<unknown>) => load.catch(() => undefined);
+		const settle = <T,>(load: Promise<T>) => load.catch(() => undefined);
 		return Promise.all([
 			settle(
 				queryClient.ensureQueryData(adminEventDetailsQueryOptions(eventId)),
@@ -45,6 +47,8 @@ export const Route = createFileRoute("/_authenticated/events/$eventId")({
 			settle(queryClient.ensureQueryData(adminEventFilterOptionsQueryOptions)),
 		]);
 	},
+	head: ({ loaderData }) =>
+		adminPageHead(loaderData?.[0]?.title ?? admin_events_title()),
 	component: AdminEventDetailPage,
 });
 

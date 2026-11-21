@@ -42,7 +42,8 @@ export function UniversitySignInButton({
 			<Button
 				type="button"
 				variant="outline"
-				className="w-full"
+				// A long university name wraps instead of widening the page.
+				className="h-auto min-h-9 w-full whitespace-normal py-2"
 				disabled={signIn.isPending || signIn.isSuccess}
 				onClick={() => signIn.mutate()}
 			>

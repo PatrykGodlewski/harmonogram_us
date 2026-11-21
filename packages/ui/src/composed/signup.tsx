@@ -1,4 +1,3 @@
-import { Turnstile } from "@marsidev/react-turnstile";
 import type { UniversitySignIn } from "@repo/api/auth/university";
 import { env } from "@repo/env/client";
 import {
@@ -32,6 +31,7 @@ import { Button } from "../components/button";
 import { FormMessage } from "../components/form-message";
 import { Input } from "../components/input";
 import { Label } from "../components/label";
+import { Captcha } from "./auth/captcha";
 import { UniversitySignInButton } from "./auth/university-sign-in";
 
 const authClient = createAuthClient();
@@ -147,7 +147,7 @@ export function Signup({ redirectTo = "/account", university }: SignupProps) {
 
 	return (
 		<div className="mx-auto max-w-sm rounded-lg border p-6">
-			<h2 className="mb-4 text-xl font-semibold">{auth_title_signup()}</h2>
+			<h1 className="mb-4 text-xl font-semibold">{auth_title_signup()}</h1>
 			{university ? (
 				<div className="mb-4">
 					<UniversitySignInButton
@@ -225,16 +225,8 @@ export function Signup({ redirectTo = "/account", university }: SignupProps) {
 					}}
 				</form.Subscribe>
 
-				{captchaEnabled ? (
-					<div className="flex justify-center">
-						<Turnstile
-							siteKey={captchaSiteKey ?? ""}
-							options={{ appearance: "always", size: "normal" }}
-							onSuccess={(token) => setCaptchaToken(token)}
-							onExpire={() => setCaptchaToken(null)}
-							onError={() => setCaptchaToken(null)}
-						/>
-					</div>
+				{captchaSiteKey ? (
+					<Captcha siteKey={captchaSiteKey} onToken={setCaptchaToken} />
 				) : null}
 
 				{errorAlert ? (

@@ -1,4 +1,3 @@
-import { Turnstile } from "@marsidev/react-turnstile";
 import type { UniversitySignIn } from "@repo/api/auth/university";
 import { env } from "@repo/env/client";
 import {
@@ -31,6 +30,7 @@ import { Button } from "../components/button";
 import { FormMessage } from "../components/form-message";
 import { Input } from "../components/input";
 import { Label } from "../components/label";
+import { Captcha } from "./auth/captcha";
 import { formatFieldError, usePasswordLogin } from "./auth/password-login";
 import {
 	SignInFailed,
@@ -114,7 +114,7 @@ export function Login({ redirectTo, university, failed }: LoginProps) {
 
 	return (
 		<div className="mx-auto max-w-sm rounded-lg border p-6">
-			<h2 className="mb-4 text-xl font-semibold">{auth_title_login()}</h2>
+			<h1 className="mb-4 text-xl font-semibold">{auth_title_login()}</h1>
 			{failed ? (
 				<div className="mb-4">
 					<SignInFailed />
@@ -208,16 +208,8 @@ export function Login({ redirectTo, university, failed }: LoginProps) {
 					}
 				</form.Subscribe>
 
-				{captchaEnabled ? (
-					<div className="flex justify-center">
-						<Turnstile
-							siteKey={captchaSiteKey ?? ""}
-							options={{ appearance: "always", size: "normal" }}
-							onSuccess={(token) => setCaptchaToken(token)}
-							onExpire={() => setCaptchaToken(null)}
-							onError={() => setCaptchaToken(null)}
-						/>
-					</div>
+				{captchaSiteKey ? (
+					<Captcha siteKey={captchaSiteKey} onToken={setCaptchaToken} />
 				) : null}
 
 				<Button

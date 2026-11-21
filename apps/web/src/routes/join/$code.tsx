@@ -14,6 +14,7 @@ import {
 	join_title,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
+import { studentsPageHead } from "@repo/router-utils/metadata/page-head";
 import { appErrorMessage } from "@repo/ui/app-errors";
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
@@ -30,6 +31,7 @@ export const Route = createFileRoute("/join/$code")({
 		queryClient
 			.ensureQueryData(joinGroupInfoQueryOptions(params.code))
 			.catch(() => null),
+	head: () => studentsPageHead(join_title()),
 	component: JoinGroupPage,
 });
 

@@ -10,12 +10,14 @@ import {
 	privacy_what,
 	privacy_who,
 } from "@repo/i18n/paraglide/messages";
+import { studentsPageHead } from "@repo/router-utils/metadata/page-head";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/privacy")({
 	loader: ({ context: { queryClient } }) =>
 		queryClient.ensureQueryData(privacyInfoQueryOptions),
+	head: () => studentsPageHead(privacy_title()),
 	component: PrivacyPage,
 });
 

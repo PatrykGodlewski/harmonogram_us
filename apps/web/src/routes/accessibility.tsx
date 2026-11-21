@@ -10,12 +10,14 @@ import {
 	a11y_title,
 	privacy_back,
 } from "@repo/i18n/paraglide/messages";
+import { studentsPageHead } from "@repo/router-utils/metadata/page-head";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/accessibility")({
 	loader: ({ context: { queryClient } }) =>
 		queryClient.ensureQueryData(privacyInfoQueryOptions),
+	head: () => studentsPageHead(a11y_title()),
 	component: AccessibilityPage,
 });
 

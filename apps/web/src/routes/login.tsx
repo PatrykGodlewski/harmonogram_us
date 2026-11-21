@@ -1,5 +1,7 @@
 import { universitySignInQueryOptions } from "@repo/api/auth/sign-in-options";
+import { auth_title_login } from "@repo/i18n/paraglide/messages";
 import { localizeHref } from "@repo/i18n/paraglide/runtime";
+import { studentsPageHead } from "@repo/router-utils/metadata/page-head";
 import { Login } from "@repo/ui/composed/login";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, redirect } from "@tanstack/react-router";
@@ -18,6 +20,7 @@ export const Route = createFileRoute("/login")({
 	},
 	loader: ({ context }) =>
 		context.queryClient.ensureQueryData(universitySignInQueryOptions),
+	head: () => studentsPageHead(auth_title_login()),
 	component: LoginComp,
 });
 
@@ -31,7 +34,7 @@ function LoginComp() {
 			: localizeHref("/");
 
 	return (
-		<div className="flex min-h-[50vh] items-center justify-center p-8">
+		<div className="flex min-h-[50vh] items-center justify-center p-4 sm:p-8">
 			<Login
 				redirectTo={redirectTo}
 				university={university}

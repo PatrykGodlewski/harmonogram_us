@@ -18,6 +18,7 @@ import {
 	groups_new_title,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
+import { studentsPageHead } from "@repo/router-utils/metadata/page-head";
 import { requireAuthenticatedUser } from "@repo/router-utils/require-auth";
 import { appErrorMessage } from "@repo/ui/app-errors";
 import { Button } from "@repo/ui/components/button";
@@ -43,6 +44,12 @@ export const Route = createFileRoute("/events/$eventId_/groups/new")({
 	loader: ({ context: { queryClient }, params, deps }) =>
 		queryClient.ensureQueryData(
 			eventDetailsQueryOptions(params.eventId, deps.invite),
+		),
+	head: ({ loaderData }) =>
+		studentsPageHead(
+			loaderData
+				? `${groups_new_title()}: ${loaderData.title}`
+				: groups_new_title(),
 		),
 	component: NewGroupPage,
 });
