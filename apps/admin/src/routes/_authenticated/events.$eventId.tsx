@@ -17,6 +17,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { AgendaEditor } from "~/components/admin-event-detail/agenda-editor";
+import { EventStatsCard } from "~/components/admin-event-detail/event-stats-card";
 import { EventSummaryCard } from "~/components/admin-event-detail/event-summary-card";
 import { GroupsList } from "~/components/admin-event-detail/groups-list";
 import { OrganizersCard } from "~/components/admin-event-detail/organizers-card";
@@ -102,6 +103,10 @@ function AdminEventDetailPage() {
 		<div className="grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
 			<div className="flex flex-col gap-8">
 				<EventSummaryCard event={event} onChanged={handleChanged} />
+				<EventStatsCard
+					registrants={registrants}
+					ended={new Date(event.effectiveEndsAt).getTime() <= Date.now()}
+				/>
 				{canManage ? (
 					<AgendaEditor
 						eventId={event.id}

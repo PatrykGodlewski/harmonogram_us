@@ -693,5 +693,13 @@
 	"auth_or_email": "albo e-mailem",
 	"auth_magic_link_sent": "Wysłaliśmy link do logowania. Sprawdź skrzynkę.",
 	"auth_sign_in_failed_title": "Nie udało się zalogować",
-	"auth_sign_in_failed_body": "Spróbuj ponownie albo wybierz inny sposób logowania."
+	"auth_sign_in_failed_body": "Spróbuj ponownie albo wybierz inny sposób logowania.",
+	"stats_title": "Statystyki",
+	"stats_registered": "Zapisani",
+	"stats_present": "Obecni",
+	"stats_absent": "Nieobecni",
+	"stats_waitlisted": "Rezerwowi",
+	"stats_pending": "Czekają na akceptację",
+	"stats_absent_share": "{share} nieobecnych",
+	"stats_absent_after_end": "Nieobecnych policzymy po zakończeniu wydarzenia."
 }
