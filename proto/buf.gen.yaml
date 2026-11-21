@@ -1,5 +1,6 @@
 version: v2
 plugins:
   - local: protoc-gen-es
-    out: ../packages/rpc/src/gen
+    # Relative to where buf runs: packages/rpc (pnpm --filter @repo/rpc generate).
+    out: src/gen
     opt: target=ts

@@ -17,7 +17,7 @@
   "scripts": {
     "deps:bump": "taze major -r -f -l -w",
     "messages:compile": "pnpm --filter @repo/i18n run compile",
-    "prepare": "pnpm run messages:compile",
+    "prepare": "pnpm run messages:compile && pnpm --filter @repo/rpc generate",
     "dev": "turbo dev --filter=web --filter=admin --filter=worker",
     "build": "turbo build",
     "lint": "turbo lint",
@@ -36,14 +36,13 @@
     "load": "pnpm --filter e2e load",
     "load:stress": "pnpm --filter e2e load:stress",
     "observability:up": "docker compose -p harmonogram-e2e --env-file .env --env-file e2e/ports.env --profile app --profile observability up -d --wait prometheus grafana",
-    "proto:lint": "buf lint proto",
+    "proto:lint": "pnpm --filter @repo/rpc exec buf lint ../../proto",
     "rust:lint": "scripts/cargo.sh fmt --check && scripts/cargo.sh clippy --all-targets -- -D warnings",
     "rust:test": "scripts/cargo.sh test",
     "rust:build": "scripts/cargo.sh build --release"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.13",
-    "@bufbuild/buf": "^1.75.0",
     "taze": "^19.11.0",
     "turbo": "^2.9.6"
   },

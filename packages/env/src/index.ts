@@ -63,6 +63,10 @@ export const env = createEnv({
 		/** Bearer token Prometheus sends to /api/metrics; unset = the endpoint answers 404. */
 		METRICS_TOKEN: z.string().min(16).optional(),
 
+		/** The Rust documents service (gRPC) and the token it requires; used by web and admin. */
+		DOCUMENTS_URL: z.url().optional(),
+		DOCUMENTS_TOKEN: z.string().min(32).optional(),
+
 		ELECTRIC_URL: z.url().optional().default("http://localhost:5133"),
 		ELECTRIC_SECRET: z.string().optional(),
 	},
