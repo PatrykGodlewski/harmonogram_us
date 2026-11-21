@@ -38,6 +38,7 @@ use tonic::transport::Server;
 pub struct AppState {
     token: Arc<str>,
     documents: Documents,
+    readiness: metrics::Readiness,
 }
 
 impl AppState {
@@ -50,7 +51,13 @@ impl AppState {
                 admission,
                 metrics,
             },
+            readiness: Default::default(),
         }
+    }
+
+    /// Shared with `/healthz` on the metrics port.
+    pub fn readiness(&self) -> metrics::Readiness {
+        self.readiness.clone()
     }
 
     pub fn metrics(&self) -> Arc<Metrics> {
@@ -70,16 +77,24 @@ pub async fn serve(
         .set_service_status(SERVICE_NAME, tonic_health::ServingStatus::Serving)
         .await;
     let token = state.token;
+    let readiness = state.readiness;
     let documents = DocumentServiceServer::new(state.documents)
         .max_decoding_message_size(limits::MAX_MESSAGE_BYTES)
         .max_encoding_message_size(limits::MAX_MESSAGE_BYTES);
     let documents = InterceptedService::new(documents, move |request: tonic::Request<()>| {
         auth::check(request.metadata(), &token).map(|()| request)
     });
+    readiness.store(true, std::sync::atomic::Ordering::Relaxed);
     Server::builder()
         .add_service(health_service)
         .add_service(documents)
-        .serve_with_incoming_shutdown(TcpListenerStream::new(listener), shutdown)
+        .serve_with_incoming_shutdown(TcpListenerStream::new(listener), {
+            let readiness = readiness.clone();
+            async move {
+                shutdown.await;
+                readiness.store(false, std::sync::atomic::Ordering::Relaxed);
+            }
+        })
         .await
 }
 

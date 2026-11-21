@@ -11,5 +11,9 @@ watchPatterns = [
 ]
 
 [deploy]
+# HTTP health on the metrics port; Railway probes the port in the service's PORT variable,
+# so set PORT=9464 on this service (see .env.example).
+healthcheckPath = "/healthz"
+healthcheckTimeout = 60
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10

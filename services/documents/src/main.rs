@@ -33,7 +33,11 @@ async fn run(config: Config) -> Result<(), Box<dyn std::error::Error>> {
     let state = AppState::new(&config, Admission::for_this_machine());
     let grpc = TcpListener::bind(config.grpc_addr).await?;
     let metrics_listener = TcpListener::bind(config.metrics_addr).await?;
-    let router = metrics::router(state.metrics(), config.metrics_token.clone());
+    let router = metrics::router(
+        state.metrics(),
+        config.metrics_token.clone(),
+        state.readiness(),
+    );
     let (stop, mut stopped) = watch::channel(false);
     let metrics_server = tokio::spawn(async move {
         axum::serve(metrics_listener, router)

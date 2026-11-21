@@ -7,7 +7,7 @@ import {
 	certificate_title,
 } from "@repo/i18n/paraglide/messages";
 import type { RenderCertificateRequest } from "@repo/rpc/gen/harmonogram/documents/v1/documents_pb";
-import { formatLongDate } from "../pdf/document";
+import { formatLongDate } from "../documents/dates";
 
 export type CertificateInput = {
 	name: string;

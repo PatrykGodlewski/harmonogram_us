@@ -1,5 +1,6 @@
-//! Prometheus metrics on a separate HTTP port, behind `METRICS_TOKEN` like the apps'
-//! `/api/metrics` (unset: 404). Labels never carry names, IDs or other request data.
+//! The plain-HTTP side port: Prometheus metrics behind `METRICS_TOKEN` like the apps'
+//! `/api/metrics` (unset: 404), and `/healthz` for platforms whose health checks speak only
+//! HTTP (Railway). Labels never carry names, IDs or other request data.
 
 use axum::Router;
 use axum::extract::State;
@@ -14,6 +15,7 @@ use prometheus_client::metrics::gauge::Gauge;
 use prometheus_client::metrics::histogram::{Histogram, exponential_buckets};
 use prometheus_client::registry::Registry;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 use subtle::ConstantTimeEq;
 
@@ -108,13 +110,27 @@ pub fn code_label(code: tonic::Code) -> &'static str {
     }
 }
 
+/// Whether the gRPC server is serving: set once it listens, cleared when shutdown begins.
+pub type Readiness = Arc<AtomicBool>;
+
 type MetricsState = (Arc<Metrics>, Option<Arc<str>>);
 
-/// `GET /metrics`.
-pub fn router(metrics: Arc<Metrics>, token: Option<String>) -> Router {
+/// `GET /metrics` and `GET /healthz`.
+pub fn router(metrics: Arc<Metrics>, token: Option<String>, readiness: Readiness) -> Router {
     Router::new()
         .route("/metrics", get(scrape))
         .with_state((metrics, token.map(Arc::from)))
+        .route("/healthz", get(move || healthz(readiness.clone())))
+}
+
+/// 200 `ok` while serving; 503 before start-up and once shutdown begins. No token: it says
+/// nothing an outsider could use.
+async fn healthz(readiness: Readiness) -> Response {
+    if readiness.load(Ordering::Relaxed) {
+        (StatusCode::OK, "ok").into_response()
+    } else {
+        StatusCode::SERVICE_UNAVAILABLE.into_response()
+    }
 }
 
 async fn scrape(State((metrics, token)): State<MetricsState>, headers: HeaderMap) -> Response {

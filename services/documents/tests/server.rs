@@ -41,7 +41,11 @@ async fn start_with(admission: Admission, metrics_token: Option<&str>) -> Runnin
     let state = AppState::new(&config, admission);
     let metrics_listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let metrics_url = format!("http://{}/metrics", metrics_listener.local_addr().unwrap());
-    let router = documents::metrics::router(state.metrics(), config.metrics_token.clone());
+    let router = documents::metrics::router(
+        state.metrics(),
+        config.metrics_token.clone(),
+        state.readiness(),
+    );
     tokio::spawn(async move { axum::serve(metrics_listener, router).await });
     let task = tokio::spawn(serve(listener, state, async {
         let _ = stopped.await;
@@ -338,6 +342,38 @@ async fn oversize_person_is_invalid_argument() {
         "{}",
         status.message()
     );
+}
+
+fn healthz_url(server: &Running) -> String {
+    server.metrics_url.replace("/metrics", "/healthz")
+}
+
+/// The server starts in a spawned task: wait until it says it is serving.
+async fn healthz_eventually(url: &str, expected: u16) -> bool {
+    for _ in 0..100 {
+        if get(url, None).await.0 == expected {
+            return true;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+    }
+    false
+}
+
+#[tokio::test]
+async fn healthz_without_token() {
+    let server = start(Admission::new(2, 2)).await;
+    assert!(healthz_eventually(&healthz_url(&server), 200).await);
+    let (_, body) = get(&healthz_url(&server), None).await;
+    assert_eq!(body, "ok");
+}
+
+#[tokio::test]
+async fn healthz_unavailable_after_shutdown() {
+    let mut server = start(Admission::new(2, 2)).await;
+    assert!(healthz_eventually(&healthz_url(&server), 200).await);
+    let _ = server.stop.take().unwrap().send(());
+    let _ = (&mut server.task).await;
+    assert_eq!(get(&healthz_url(&server), None).await.0, 503);
 }
 
 impl Drop for Running {

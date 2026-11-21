@@ -8,7 +8,7 @@ import {
 	sheet_title,
 } from "@repo/i18n/paraglide/messages";
 import type { RenderAttendanceSheetRequest } from "@repo/rpc/gen/harmonogram/documents/v1/documents_pb";
-import { formatLongDateTime } from "../pdf/document";
+import { formatLongDateTime } from "../documents/dates";
 
 export type AttendanceSheetInput = {
 	eventTitle: string;
