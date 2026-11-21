@@ -1,8 +1,20 @@
 import { extractText } from "unpdf";
+import { documentsClient } from "@repo/rpc/documents";
 import { describe, expect, it } from "vitest";
-import { renderCertificatePdf } from "../src/certificates/pdf";
+import {
+	type CertificateInput,
+	certificateDocumentRequest,
+} from "../src/certificates/document";
 
-describe("renderCertificatePdf", () => {
+// Renders through the documents service: `docker compose up -d documents`.
+async function renderCertificatePdf(input: CertificateInput): Promise<Uint8Array> {
+	const { pdf } = await documentsClient().renderCertificate(
+		certificateDocumentRequest(input),
+	);
+	return pdf;
+}
+
+describe("certificate PDF (documents service)", () => {
 	it("names the person, the event and its date, with Polish letters", async () => {
 		const pdf = await renderCertificatePdf({
 			name: "Zażółć Gęślą Jaźń",

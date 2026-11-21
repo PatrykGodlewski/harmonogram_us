@@ -1,9 +1,11 @@
 /** Server-only: the certificate download for the API route (never import from components). */
 import { getCertificate } from "@repo/db/queries/certificates";
+import { documentsClient } from "@repo/rpc/documents";
 import { getCurrentSession } from "../auth/user";
-import { renderCertificatePdf } from "./pdf";
+import { pdfResponse } from "../documents/http";
+import { certificateDocumentRequest } from "./document";
 
-const FILENAMES = { pl: "zaswiadczenie.pdf", en: "certificate.pdf" } as const;
+const FILENAMES = { pl: "zaswiadczenie", en: "certificate" } as const;
 
 /** The signed-in user's certificate for one of their registrations; 404 when there is none. */
 export async function certificateResponse(
@@ -16,15 +18,13 @@ export async function certificateResponse(
 	if (!certificate) {
 		return new Response("Not found", { status: 404 });
 	}
-	const pdf = await renderCertificatePdf({
+	const request = certificateDocumentRequest({
 		...certificate,
 		reference: registrationId.slice(0, 8).toUpperCase(),
 	});
-	return new Response(Buffer.from(pdf), {
-		headers: {
-			"content-type": "application/pdf",
-			"content-disposition": `attachment; filename="${FILENAMES[certificate.locale]}"`,
-			"cache-control": "private, no-store",
-		},
-	});
+	return pdfResponse(
+		async () => (await documentsClient().renderCertificate(request)).pdf,
+		FILENAMES[certificate.locale],
+		certificate.locale,
+	);
 }
