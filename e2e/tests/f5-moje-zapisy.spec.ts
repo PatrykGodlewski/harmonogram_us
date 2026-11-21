@@ -52,14 +52,19 @@ test("[F5] konto pokazuje moje nadchodzące i minione zapisy @uczestnik", async 
 			.filter({ hasText: full.title })
 			.getByText("Lista rezerwowa (pozycja 1)"),
 	).toBeVisible();
-	const pastCard = page
-		.getByRole("region", { name: "Minione" })
+	// Past events are an archive: folded away, no actions but opening the event
+	const archive = page.locator("details").filter({ hasText: "Archiwum (1)" });
+	const pastCard = archive
 		.getByRole("listitem")
 		.filter({ hasText: past.title });
+	await expect(pastCard).toBeHidden();
+	await page.getByText("Archiwum (1)").click();
 	await expect(pastCard).toBeVisible();
+	await expect(pastCard.getByRole("button")).toHaveCount(0);
+	await expect(pastCard.getByRole("link", { name: "Bilet" })).toHaveCount(0);
 	await expect(
-		pastCard.getByRole("button", { name: "Wypisz się" }),
-	).toHaveCount(0);
+		pastCard.getByRole("link", { name: "Wydarzenie" }),
+	).toBeVisible();
 
 	// And withdrawing removes the upcoming registration
 	await upcomingCard.getByRole("button", { name: "Wypisz się" }).click();
@@ -110,4 +115,32 @@ test("[F5] awans z listy widać na otwartym koncie bez odświeżania @uczestnik"
 	// Then the row shows the place and the ticket without a reload
 	await expect(card.getByText("Zarejestrowano")).toBeVisible();
 	await expect(card.getByRole("link", { name: "Bilet" })).toBeVisible();
+});
+
+test("[F5] zakończone wydarzenie nie ma przycisków zapisu @uczestnik", async ({
+	page,
+}, testInfo) => {
+	// Given a user left on the waitlist of an event that ended yesterday
+	const email = uniqueEmail(testInfo);
+	const user = await createTestUser(email);
+	const other = await createTestUser(`other-${email}`);
+	const event = await createTestEvent({ startsInDays: 3, maxSeats: 1 });
+	await registerForEvent(event.id, other.id, "pl");
+	await registerForEvent(event.id, user.id, "pl");
+	const yesterday = new Date(Date.now() - 86_400_000);
+	await db
+		.update(events)
+		.set({ date: yesterday, endsAt: new Date(yesterday.getTime() + 3_600_000) })
+		.where(eq(events.id, event.id));
+
+	// When they open the event
+	await signInByEmail(page, email);
+	await open(page, `/pl/events/${event.id}`);
+
+	// Then it says the event took place, with nothing to click
+	const summary = page.locator("section").first();
+	await expect(
+		summary.getByText("To wydarzenie już się odbyło."),
+	).toBeVisible();
+	await expect(summary.getByRole("button")).toHaveCount(0);
 });

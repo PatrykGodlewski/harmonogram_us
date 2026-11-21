@@ -316,7 +316,6 @@
 	"reg_email_withdraw_hint": "If you can't come, withdraw on the event page so the next person gets the place.",
 	"account_my_registrations": "My registrations",
 	"account_upcoming": "Upcoming",
-	"account_past": "Past",
 	"account_registrations_empty": "You haven't registered for anything yet.",
 	"account_section_empty": "No events.",
 	"account_waitlisted": "Waitlist (position {position})",
@@ -620,5 +619,7 @@
 	"agenda_materials": "Materials",
 	"admin_material_url_required": "Enter the material's address.",
 	"admin_speaker_name_required": "Enter the speaker's name.",
-	"admin_event_status_ended": "Ended"
+	"admin_event_status_ended": "Ended",
+	"event_details_ended": "This event has already taken place.",
+	"account_archive": "Archive ({count})"
 }

@@ -30,7 +30,8 @@ export const eventSearchSchema = z.object({
 		.max(EVENT_PAGE_MAX)
 		.optional()
 		.catch(undefined),
-	search: z.string().max(200).optional(),
+	// The router parses `?search=2026` as a number: read it back as text.
+	search: z.coerce.string().max(200).optional(),
 	sortOrder: z.enum(["asc", "desc"]).optional().catch("desc"),
 	locationFilter: z.string().optional().catch("all"),
 	facultyFilter: z.string().optional().catch("all"),

@@ -316,7 +316,6 @@
 	"reg_email_withdraw_hint": "Jeśli nie możesz przyjść, wypisz się na stronie wydarzenia — miejsce dostanie następna osoba.",
 	"account_my_registrations": "Moje zapisy",
 	"account_upcoming": "Nadchodzące",
-	"account_past": "Minione",
 	"account_registrations_empty": "Nie masz jeszcze żadnych zapisów.",
 	"account_section_empty": "Brak wydarzeń.",
 	"account_waitlisted": "Lista rezerwowa (pozycja {position})",
@@ -620,5 +619,7 @@
 	"agenda_materials": "Materiały",
 	"admin_material_url_required": "Podaj adres materiału.",
 	"admin_speaker_name_required": "Podaj imię i nazwisko prelegenta.",
-	"admin_event_status_ended": "Zakończone"
+	"admin_event_status_ended": "Zakończone",
+	"event_details_ended": "To wydarzenie już się odbyło.",
+	"account_archive": "Archiwum ({count})"
 }

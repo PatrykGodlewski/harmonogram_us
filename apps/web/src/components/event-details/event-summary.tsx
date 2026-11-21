@@ -2,6 +2,7 @@ import {
 	calendar_add,
 	event_cancelled_banner,
 	event_details_closed,
+	event_details_ended,
 	event_details_places_left,
 	event_details_requires_approval,
 	event_join_online,
@@ -118,17 +119,20 @@ export function EventSummary({
 			) : null}
 
 			<div className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
-				<p className="tabular-nums" aria-live="polite" aria-atomic="true">
-					{event_details_places_left({
-						remaining: seatCount.seatsRemaining,
-						max: seatCount.maxSeats,
-					})}
-				</p>
+				{isClosed ? null : (
+					<p className="tabular-nums" aria-live="polite" aria-atomic="true">
+						{event_details_places_left({
+							remaining: seatCount.seatsRemaining,
+							max: seatCount.maxSeats,
+						})}
+					</p>
+				)}
 				<EventRegistrationAction
 					eventId={event.id}
 					user={user}
 					interactive={interactive}
 					isClosed={isClosed}
+					isCancelled={isCancelled}
 					isFull={seatCount.seatsRemaining <= 0}
 					requiresApproval={event.requiresApproval}
 					registrations={registrations}
@@ -170,6 +174,7 @@ type EventRegistrationActionProps = {
 	user: { id: string; email: string } | null;
 	interactive: boolean;
 	isClosed: boolean;
+	isCancelled: boolean;
 	isFull: boolean;
 	requiresApproval: boolean;
 	registrations: EventDetailsRegistrations;
@@ -180,29 +185,28 @@ function EventRegistrationAction({
 	user,
 	interactive,
 	isClosed,
+	isCancelled,
 	isFull,
 	requiresApproval,
 	registrations,
 }: EventRegistrationActionProps) {
 	const busy = !interactive || registrations.isBusy;
 
-	if (!user) {
-		return isClosed ? (
-			<p className="text-muted-foreground">{event_details_closed()}</p>
+	// Ended or cancelled: a record of what happened, nothing to click.
+	if (isClosed) {
+		const text = isCancelled ? event_details_closed() : event_details_ended();
+		return user && registrations.isEventRegistered ? (
+			<div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+				<Badge>{events_registered()} ✓</Badge>
+				<p className="text-sm text-muted-foreground">{text}</p>
+			</div>
 		) : (
-			<LoginToRegisterButton eventId={eventId} />
+			<p className="text-muted-foreground">{text}</p>
 		);
 	}
 
-	if (registrations.isEventRegistered && isClosed) {
-		return (
-			<div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-				<Badge>{events_registered()} ✓</Badge>
-				<p className="text-sm text-muted-foreground">
-					{event_details_closed()}
-				</p>
-			</div>
-		);
+	if (!user) {
+		return <LoginToRegisterButton eventId={eventId} />;
 	}
 
 	if (registrations.isEventRegistered) {
@@ -263,23 +267,17 @@ function EventRegistrationAction({
 		return (
 			<div className="flex flex-col gap-2 sm:flex-row sm:items-center">
 				<Badge variant="secondary">{events_pending_approval()}</Badge>
-				{isClosed ? null : (
-					<Button
-						size="sm"
-						variant="outline"
-						className="w-full sm:w-auto"
-						disabled={busy}
-						onClick={registrations.unregisterEvent}
-					>
-						{events_withdraw_request()}
-					</Button>
-				)}
+				<Button
+					size="sm"
+					variant="outline"
+					className="w-full sm:w-auto"
+					disabled={busy}
+					onClick={registrations.unregisterEvent}
+				>
+					{events_withdraw_request()}
+				</Button>
 			</div>
 		);
-	}
-
-	if (isClosed) {
-		return <p className="text-muted-foreground">{event_details_closed()}</p>;
 	}
 
 	return (

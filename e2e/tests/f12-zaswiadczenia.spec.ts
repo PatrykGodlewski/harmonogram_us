@@ -73,6 +73,7 @@ test("[F12] obecny pobiera zaświadczenie, nieobecny nie @uczestnik", async ({
 
 	await signInByEmail(page, `present-${base}`);
 	await open(page, "/pl/account");
+	await page.getByText(/^Archiwum \(\d+\)$/).click();
 	const row = page.getByRole("listitem").filter({ hasText: event.title });
 	const link = row.getByRole("link", { name: "Pobierz zaświadczenie" });
 	const href = await link.getAttribute("href");

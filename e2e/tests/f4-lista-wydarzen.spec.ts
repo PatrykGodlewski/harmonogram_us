@@ -66,7 +66,8 @@ test("[F4] HTML strony wydarzenia ma og:title i og:description", async ({
 test("[F4] filtry kiedy i forma zawężają listę @uczestnik", async ({
 	page,
 }) => {
-	const tag = crypto.randomUUID().slice(0, 6);
+	// All digits on purpose: the router reads `?search=123456` as a number.
+	const tag = String(100_000 + Math.floor(Math.random() * 900_000));
 	const soon = await createTestEvent({
 		title: `Wkrótce ${tag}`,
 		startsInDays: 3,

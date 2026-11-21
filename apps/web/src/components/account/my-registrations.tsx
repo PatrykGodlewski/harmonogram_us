@@ -1,9 +1,9 @@
 import { myRegistrationListQueryOptions } from "@repo/api/events/my-registration-list";
 import type { MyRegistrationListItem } from "@repo/db/queries/my-registrations";
 import {
+	account_archive,
 	account_my_registrations,
 	account_open_event,
-	account_past,
 	account_pending,
 	account_registrations_empty,
 	account_rejected,
@@ -61,11 +61,7 @@ export function MyRegistrations({ userId }: { userId: string }) {
 						rows={upcoming}
 						canWithdraw
 					/>
-					<RegistrationGroup
-						title={account_past()}
-						rows={past}
-						canWithdraw={false}
-					/>
+					{past.length > 0 ? <RegistrationArchive rows={past} /> : null}
 				</div>
 			)}
 		</section>
@@ -106,6 +102,27 @@ function RegistrationGroup({
 	);
 }
 
+/** Events that have ended: folded away, with no actions but opening the event (and a certificate). */
+function RegistrationArchive({ rows }: { rows: MyRegistrationListItem[] }) {
+	return (
+		<details className="group flex flex-col gap-2">
+			<summary className="cursor-pointer text-sm font-medium text-muted-foreground">
+				{account_archive({ count: rows.length })}
+			</summary>
+			<ul className="mt-2 divide-y">
+				{rows.map((row) => (
+					<RegistrationRow
+						key={row.registrationId}
+						row={row}
+						canWithdraw={false}
+						archived
+					/>
+				))}
+			</ul>
+		</details>
+	);
+}
+
 function stateLabel(row: MyRegistrationListItem): string {
 	switch (row.state) {
 		case "registered":
@@ -122,7 +139,9 @@ function stateLabel(row: MyRegistrationListItem): string {
 function RegistrationRow({
 	row,
 	canWithdraw,
+	archived = false,
 }: {
+	archived?: boolean;
 	row: MyRegistrationListItem;
 	canWithdraw: boolean;
 }) {
@@ -163,7 +182,7 @@ function RegistrationRow({
 						{account_open_event()}
 					</Link>
 				</Button>
-				{row.state === "registered" && !isCancelled ? (
+				{row.state === "registered" && !isCancelled && !archived ? (
 					<Button size="sm" variant="outline" asChild>
 						<Link
 							to="/tickets/$registrationId"

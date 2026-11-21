@@ -99,10 +99,13 @@ test("[F3] pełny cykl: admin tworzy, uczestnik się zapisuje, wydarzenie się k
 
 	// Then registration is closed and the event is in the participant's past events
 	await open(user, `/pl/events/${eventId}`);
-	await expect(user.getByText("Zapisy zamknięte").first()).toBeVisible();
-	await open(user, "/pl/account");
 	await expect(
-		user.getByRole("region", { name: "Minione" }).getByText(title),
+		user.getByText("To wydarzenie już się odbyło.").first(),
+	).toBeVisible();
+	await open(user, "/pl/account");
+	await user.getByText(/^Archiwum \(\d+\)$/).click();
+	await expect(
+		user.locator("details").filter({ hasText: "Archiwum" }).getByText(title),
 	).toBeVisible();
 
 	// When the admin deletes another event the participant registered for
