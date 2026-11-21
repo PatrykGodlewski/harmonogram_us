@@ -25,14 +25,13 @@ impl FontFace {
     }
 
     /// Width of `text` at `size` points (sum of advances, no kerning, like pdf-lib).
+    /// Characters the font lacks are drawn as its "missing" box (glyph 0) and measured so.
     pub fn width(&self, text: &str, size: f32) -> f32 {
         let units: u32 = text
             .chars()
             .map(|ch| {
-                self.face
-                    .glyph_index(ch)
-                    .and_then(|glyph| self.face.glyph_hor_advance(glyph))
-                    .map_or(0, u32::from)
+                let glyph = self.face.glyph_index(ch).unwrap_or(ttf_parser::GlyphId(0));
+                self.face.glyph_hor_advance(glyph).map_or(0, u32::from)
             })
             .sum();
         units as f32 * size / f32::from(self.face.units_per_em())
@@ -65,6 +64,13 @@ mod tests {
         let long = fonts.regular.width("Zażółć", 12.0);
         assert!(short > 0.0);
         assert!(long > short * 2.0);
+    }
+
+    #[test]
+    fn missing_glyphs_take_space() {
+        // Noto Sans has no CJK or emoji: they are drawn as boxes and must be measured too.
+        let fonts = Fonts::load();
+        assert!(fonts.regular.width("漢字", 12.0) > fonts.regular.width("a", 12.0));
     }
 
     #[test]

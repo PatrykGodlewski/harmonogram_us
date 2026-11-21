@@ -8,6 +8,8 @@ const MIN_TOKEN_BYTES: usize = 32;
 pub struct Config {
     /// Bearer token every caller must send (`DOCUMENTS_TOKEN`).
     pub token: String,
+    /// Default `[::]:50051`: IPv6 any, which also accepts IPv4 (Railway's private
+    /// network may be IPv6-only).
     pub grpc_addr: SocketAddr,
     pub metrics_addr: SocketAddr,
     /// Bearer token for `/metrics`; `None` hides the endpoint.
@@ -50,8 +52,8 @@ impl Config {
         };
         Ok(Self {
             token,
-            grpc_addr: addr("DOCUMENTS_GRPC_ADDR", "0.0.0.0:50051")?,
-            metrics_addr: addr("DOCUMENTS_METRICS_ADDR", "0.0.0.0:9464")?,
+            grpc_addr: addr("DOCUMENTS_GRPC_ADDR", "[::]:50051")?,
+            metrics_addr: addr("DOCUMENTS_METRICS_ADDR", "[::]:9464")?,
             metrics_token: get("METRICS_TOKEN").filter(|value| !value.is_empty()),
         })
     }
@@ -89,8 +91,9 @@ mod tests {
     #[test]
     fn defaults_ports() {
         let config = Config::from_env(env(&[("DOCUMENTS_TOKEN", TOKEN)])).unwrap();
-        assert_eq!(config.grpc_addr, "0.0.0.0:50051".parse().unwrap());
-        assert_eq!(config.metrics_addr, "0.0.0.0:9464".parse().unwrap());
+        // IPv6 any (also accepts IPv4): Railway's private network may be IPv6-only.
+        assert_eq!(config.grpc_addr, "[::]:50051".parse().unwrap());
+        assert_eq!(config.metrics_addr, "[::]:9464".parse().unwrap());
     }
 
     #[test]

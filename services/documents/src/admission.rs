@@ -58,17 +58,22 @@ impl Drop for Ticket {
 }
 
 impl Ticket {
-    /// Runs `work` on the blocking pool once a worker is free.
+    /// Runs `work` on the blocking pool once a worker is free. The place and the worker
+    /// stay taken until `work` returns, even if the caller gives up first (deadline,
+    /// disconnect), so abandoned renders still count against the bound.
     pub async fn run<T: Send + 'static>(self, work: impl FnOnce() -> T + Send + 'static) -> T {
-        let _worker = self
+        let worker = self
             .workers
             .clone()
             .acquire_owned()
             .await
             .expect("the worker semaphore is never closed");
-        tokio::task::spawn_blocking(work)
-            .await
-            .expect("rendering does not panic")
+        tokio::task::spawn_blocking(move || {
+            let _held = (self, worker);
+            work()
+        })
+        .await
+        .expect("rendering does not panic")
     }
 }
 
@@ -87,5 +92,32 @@ mod tests {
         drop(first);
         assert_eq!(admission.in_use().get(), 1);
         assert!(admission.try_enter().is_some());
+    }
+
+    #[tokio::test]
+    async fn cancelled_render_keeps_its_place_until_done() {
+        let admission = Admission::new(1, 0);
+        let ticket = admission.try_enter().unwrap();
+        let (started_tx, started_rx) = std::sync::mpsc::channel();
+        let (release_tx, release_rx) = std::sync::mpsc::channel::<()>();
+        let call = tokio::spawn(ticket.run(move || {
+            started_tx.send(()).unwrap();
+            release_rx.recv().unwrap();
+        }));
+        tokio::task::spawn_blocking(move || started_rx.recv().unwrap())
+            .await
+            .unwrap();
+        // The caller gives up (deadline, disconnect): the render is still running.
+        call.abort();
+        let _ = call.await;
+        assert!(admission.try_enter().is_none());
+        release_tx.send(()).unwrap();
+        for _ in 0..100 {
+            if admission.try_enter().is_some() {
+                return;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        }
+        panic!("the place was not freed after the render finished");
     }
 }
