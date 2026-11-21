@@ -701,5 +701,11 @@
 	"stats_waitlisted": "Waitlisted",
 	"stats_pending": "Awaiting approval",
 	"stats_absent_share": "{share} no-shows",
-	"stats_absent_after_end": "No-shows are counted after the event ends."
+	"stats_absent_after_end": "No-shows are counted after the event ends.",
+	"activity_title": "Activity in the last 12 months",
+	"activity_month": "Month",
+	"activity_events": "Events",
+	"activity_registrations": "Registrations",
+	"activity_total": "Total",
+	"activity_note": "Drafts and rejected registrations are not counted, nor registrations deleted for GDPR."
 }

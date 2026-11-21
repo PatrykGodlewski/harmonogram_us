@@ -701,5 +701,11 @@
 	"stats_waitlisted": "Rezerwowi",
 	"stats_pending": "Czekają na akceptację",
 	"stats_absent_share": "{share} nieobecnych",
-	"stats_absent_after_end": "Nieobecnych policzymy po zakończeniu wydarzenia."
+	"stats_absent_after_end": "Nieobecnych policzymy po zakończeniu wydarzenia.",
+	"activity_title": "Aktywność w ostatnich 12 miesiącach",
+	"activity_month": "Miesiąc",
+	"activity_events": "Wydarzenia",
+	"activity_registrations": "Zapisy",
+	"activity_total": "Razem",
+	"activity_note": "Bez szkiców i odrzuconych zapisów; zapisy usunięte zgodnie z RODO nie są liczone."
 }
