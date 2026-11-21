@@ -26,6 +26,7 @@ These are facts about the implementation, not claims that it is better in genera
 | Stack | TypeScript; React 19, TanStack Start/Router/Query, PostgreSQL with Drizzle, Better Auth, pg-boss job queue, Tailwind | Python (Flask, SQLAlchemy), PostgreSQL, Celery, React in parts |
 | Live updates | Seat counts, cancellations and waitlist promotions update open pages without reload (ElectricSQL) | Page reloads |
 | Background work | E-mails and reminders go through a queue with retries, written in the same database transaction as the change | Celery tasks |
+| Heavy work | PDFs (tickets, certificates, attendance sheets) are rendered by a separate Rust service called over gRPC, so a burst of downloads does not slow the website | Generated in the web process |
 | Tests | Playwright acceptance test per feature (desktop and phone), Vitest against a real PostgreSQL | Python unit tests |
 | Accessibility checks | Automated WCAG 2.1 and 2.2 AA audit in the e2e suite | not verified |
 | Operations | Docker images, Prometheus metrics endpoint, Grafana dashboard, k6 load tests, Railway configuration | Mature deployment guides, many production installations |
@@ -173,107 +174,54 @@ From the product spec, in no particular order: materials and file storage (F14),
 ### Known limitations
 
 - Invitation e-mails are written in the sender's language, not the invitee's.
-- PDFs do not render emoji or non-Latin scripts and are not tagged for screen readers.
+- PDFs use Noto Sans: characters it lacks (emoji, Chinese, Arabic and other non-Latin scripts) print as boxes, and PDFs are not tagged for screen readers.
 - The admin panel signs in with e-mail and password only.
 - The privacy page and the accessibility statement need confirmation by the university.
 - No expert accessibility audit, and no Safari/iOS browser in the automated tests.
 
 ## Development
 
-pnpm monorepo (Turbo) with React 19, TanStack Router/Query/Start, Drizzle ORM, and Tailwind.
+Full guide: [docs/development.md](docs/development.md). Architecture: [docs/architecture.md](docs/architecture.md).
 
 ### Prerequisites
 
-- **Node** ≥ 20  
-- **pnpm** 10.x (`corepack enable && corepack prepare pnpm@10.32.1 --activate`)
+- Node ≥ 22.12 and pnpm 10 (`corepack enable`)
+- Docker (Postgres, Mailpit, Electric and the Rust documents service run in Compose; no Rust toolchain needed)
 
 ### Setup
 
 ```bash
-pnpm install
-cp .env.example .env   # then fill in SESSION_SECRET, ENCRYPTION_KEY
-docker compose up -d
-pnpm db:generate
+pnpm install                 # also compiles translations and generates the gRPC client
+cp .env.example .env         # local defaults work; see the file for production values
+docker compose up -d         # Postgres, Mailpit (http://localhost:8025), Electric, documents
 pnpm db:migrate
+pnpm db:seed                 # sample events and accounts
+pnpm dev                     # web :3000, admin :3001, worker
 ```
 
-Put `.env` at the project root. Required vars: `SESSION_SECRET` (min 32 chars), `ENCRYPTION_KEY` (base64, 16 bytes). Use Postgres at `postgresql://postgres:postgres@localhost:5432/harmonogram_us`, or set `DATABASE_URL`.
+### Common commands
 
-### Database (Docker)
-
-This project uses PostgreSQL via Docker Compose.
-
-```bash
-# start database in background
-docker compose up -d
-
-# stop database
-docker compose stop
-
-# view database logs
-docker compose logs -f
-```
-
-Recommended DB workflow:
-
-```bash
-# after schema changes: generate migration files
-pnpm db:generate
-
-# apply generated migrations
-pnpm db:migrate
-```
-
-Quick local alternative (skip migration files and sync schema directly):
-
-```bash
-pnpm db:push
-```
-
-### Email testing (Docker Mailpit)
-
-Local email testing uses [Mailpit](https://github.com/axllent/mailpit) (SMTP sink + web UI), started by the same Docker Compose file.
-
-```bash
-# start services (db + mailpit)
-docker compose up -d
-
-# open Mailpit inbox UI
-# http://localhost:8025
-```
-
-Default local SMTP settings are already in `.env.example`:
-
-- `SMTP_HOST=localhost`
-- `SMTP_PORT=1025`
-- `SMTP_FROM="Harmonogram <noreply@harmonogram.local>"`
-
-When these are set, Nodemailer sends to Mailpit, and you can inspect messages in the local UI.
-
-To reset the local database container and data completely:
-
-```bash
-docker compose down -v
-docker compose up -d
-pnpm db:migrate
-```
-
-### Scripts
-
-| Command       | Description                          |
-|---------------|--------------------------------------|
-| `pnpm dev`    | Run `web` + `admin` dev servers      |
-| `pnpm build`  | Build all packages/apps              |
-| `pnpm lint`   | Lint                                 |
-| `pnpm db:generate` | Generate Drizzle SQL migrations |
-| `pnpm db:migrate`  | Run generated migrations         |
-| `pnpm db:push`     | Push schema directly to DB       |
-| `pnpm clean`  | Clean build artifacts + node_modules |
+| Command | Description |
+|---|---|
+| `pnpm lint` / `pnpm typecheck` / `pnpm build` | Biome, TypeScript, production builds |
+| `pnpm test` | Vitest (needs `docker compose up -d db documents`) |
+| `pnpm e2e:up && pnpm e2e` | Playwright against production images |
+| `pnpm load`, `pnpm load:documents` | k6 load tests against the e2e stack |
+| `pnpm rust:test`, `pnpm rust:lint` | Rust service checks (local cargo or Docker) |
+| `pnpm proto:lint` | gRPC contract lint |
+| `pnpm db:generate` / `pnpm db:migrate` | Create / apply migrations (no `db:push`) |
+| `pnpm messages:compile` | After editing `packages/i18n/messages/*.json` |
 
 ### Structure
 
 ```
-apps/       web, admin
-packages/   api, db, ui, config
+apps/            web (public site), admin (management panel), worker (queued jobs)
+packages/        api, db, env, ui, i18n, jobs, collections, router-utils, rpc (gRPC client), config
+services/        documents: Rust gRPC service that renders PDFs
+proto/           gRPC contracts shared by Rust and TypeScript (checked by buf)
+e2e/             Playwright tests, k6 load tests, test doubles (OIDC mock)
+observability/   Prometheus and Grafana configuration
+docs/            architecture, development, data flows, product spec and plans
 ```
+
 ![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/PatrykGodlewski/harmonogram_us?utm_source=oss&utm_medium=github&utm_campaign=PatrykGodlewski%2Fharmonogram_us&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
