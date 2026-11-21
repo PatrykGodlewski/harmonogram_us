@@ -13,7 +13,7 @@ export function AdminHeader({ user }: AdminHeaderProps) {
 	return (
 		<header className="border-b bg-background">
 			<nav className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-				<Link to="/" className="flex items-center gap-3">
+				<Link to="/" className="flex min-w-0 items-center gap-3">
 					<AdminLogo />
 				</Link>
 

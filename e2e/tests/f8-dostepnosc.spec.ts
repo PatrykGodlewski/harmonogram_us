@@ -267,3 +267,26 @@ test("[F8] okno otwarte dotknięciem oddaje fokus przyciskowi (Safari) @uczestni
 	await expect(page.getByRole("alertdialog")).toBeHidden();
 	await expect(trigger).toBeFocused();
 });
+
+test("[F8] nagłówek mieści się przy szerszej czcionce @uczestnik", async ({
+	page,
+}) => {
+	// Fonts differ between devices (CI's DejaVu Sans is wider than Liberation Sans, and the
+	// header overflowed there): at 320 px, wider text must shrink or wrap, never scroll sideways.
+	await page.setViewportSize({ width: 320, height: 800 });
+	for (const url of ["/pl/login", adminUrl("/pl/login")]) {
+		await open(page, url);
+		await page.addStyleTag({
+			content: "* { letter-spacing: 0.15em !important; }",
+		});
+		await expect
+			.poll(
+				() =>
+					page.evaluate(
+						() => document.documentElement.scrollWidth - window.innerWidth,
+					),
+				{ message: `${url}: sideways scroll with a wider font` },
+			)
+			.toBe(0);
+	}
+});

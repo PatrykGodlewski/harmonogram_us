@@ -21,7 +21,7 @@ export function AdminLogo({
 	showText = true,
 }: AdminLogoProps) {
 	return (
-		<div className={cn("flex items-center gap-3", className)}>
+		<div className={cn("flex min-w-0 items-center gap-3", className)}>
 			<LogoMark size={size} className={badgeClassName} />
 			{showText ? (
 				<div className={cn("min-w-0 leading-tight", textClassName)}>
