@@ -621,5 +621,11 @@
 	"admin_speaker_name_required": "Podaj imię i nazwisko prelegenta.",
 	"admin_event_status_ended": "Zakończone",
 	"event_details_ended": "To wydarzenie już się odbyło.",
-	"account_archive": "Archiwum ({count})"
+	"account_archive": "Archiwum ({count})",
+	"profile_title": "Profil",
+	"profile_name": "Imię i nazwisko",
+	"profile_language": "Język",
+	"profile_language_hint": "W tym języku zobaczysz stronę i dostaniesz e-maile.",
+	"profile_save": "Zapisz profil",
+	"profile_saved": "Zapisano profil"
 }

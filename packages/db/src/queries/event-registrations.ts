@@ -616,7 +616,10 @@ export async function getRegistrationForEmail(
 	const [row] = await db
 		.select({
 			state: eventRegistrations.state,
-			locale: eventRegistrations.locale,
+			// The profile language wins once the person has chosen one.
+			locale: sql<
+				"pl" | "en"
+			>`coalesce(${authUsers.locale}, ${eventRegistrations.locale})`,
 			email: authUsers.email,
 			eventId: events.id,
 			eventTitle: events.title,

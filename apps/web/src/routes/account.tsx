@@ -1,3 +1,4 @@
+import { profileQueryOptions } from "@repo/api/auth/profile";
 import { setPasswordForCurrentSession } from "@repo/api/auth/user";
 import { myCalendarUrlQueryOptions } from "@repo/api/calendar/my-calendar-url";
 import { myRegistrationListQueryOptions } from "@repo/api/events/my-registration-list";
@@ -47,6 +48,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { MyCalendar } from "~/components/account/my-calendar";
 import { MyData } from "~/components/account/my-data";
+import { MyProfile } from "~/components/account/my-profile";
 import { MyRegistrations } from "~/components/account/my-registrations";
 import { authClient } from "../lib/auth-client";
 
@@ -81,6 +83,7 @@ export const Route = createFileRoute("/account")({
 			queryClient.ensureQueryData(myRegistrationListQueryOptions),
 			ensureMyRegistrations(queryClient),
 			queryClient.ensureQueryData(myCalendarUrlQueryOptions),
+			queryClient.ensureQueryData(profileQueryOptions),
 		]),
 	component: AccountPage,
 });
@@ -175,6 +178,7 @@ function AccountPage() {
 						: account_password_status_missing()}
 				</p>
 			</div>
+			{user ? <MyProfile /> : null}
 			{user ? <MyRegistrations userId={user.id} /> : null}
 			<MyGroups />
 			<MyCalendar />

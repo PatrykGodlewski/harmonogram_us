@@ -621,5 +621,11 @@
 	"admin_speaker_name_required": "Enter the speaker's name.",
 	"admin_event_status_ended": "Ended",
 	"event_details_ended": "This event has already taken place.",
-	"account_archive": "Archive ({count})"
+	"account_archive": "Archive ({count})",
+	"profile_title": "Profile",
+	"profile_name": "Full name",
+	"profile_language": "Language",
+	"profile_language_hint": "You will see the site and get e-mails in this language.",
+	"profile_save": "Save profile",
+	"profile_saved": "Profile saved"
 }

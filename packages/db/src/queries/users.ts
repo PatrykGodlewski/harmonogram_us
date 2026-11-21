@@ -38,3 +38,24 @@ export async function findAccountByEmail(
 		.where(eq(sql`lower(${authUsers.email})`, email.trim().toLowerCase()));
 	return user ?? null;
 }
+
+export type Profile = { name: string; locale: "pl" | "en" | null };
+
+export async function getProfile(userId: string): Promise<Profile | null> {
+	const [row] = await db
+		.select({ name: authUsers.name, locale: authUsers.locale })
+		.from(authUsers)
+		.where(eq(authUsers.id, userId));
+	return row ?? null;
+}
+
+/** Saves the profile name and language (the language of the person's e-mails from now on). */
+export async function updateProfile(
+	userId: string,
+	profile: { name: string; locale: "pl" | "en" },
+): Promise<void> {
+	await db
+		.update(authUsers)
+		.set({ name: profile.name, locale: profile.locale, updatedAt: new Date() })
+		.where(eq(authUsers.id, userId));
+}

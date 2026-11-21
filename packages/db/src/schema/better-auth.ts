@@ -18,6 +18,8 @@ export const authUsers = pgTable(
 		image: text("image"),
 		/** "user" | "organizer" | "admin". Organizers create events; admins manage everything. */
 		role: text("role").notNull().default("user"),
+		/** Language chosen in the profile; null: none chosen (e-mails use the registration's). */
+		locale: text("locale").$type<"pl" | "en">(),
 		/** Secret part of the personal calendar feed URL ("my registrations"). */
 		calendarToken: text("calendar_token")
 			.notNull()
@@ -37,6 +39,7 @@ export const authUsers = pgTable(
 			"user_role_check",
 			sql`${table.role} IN ('user', 'organizer', 'admin')`,
 		),
+		check("user_locale_check", sql`${table.locale} IN ('pl', 'en')`),
 	],
 );
 
