@@ -39,7 +39,8 @@
     "proto:lint": "pnpm --filter @repo/rpc exec buf lint ../../proto",
     "rust:lint": "scripts/cargo.sh fmt --check && scripts/cargo.sh clippy --all-targets -- -D warnings",
     "rust:test": "scripts/cargo.sh test",
-    "rust:build": "scripts/cargo.sh build --release"
+    "rust:build": "scripts/cargo.sh build --release",
+    "load:documents": "pnpm --filter e2e load:documents"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.13",

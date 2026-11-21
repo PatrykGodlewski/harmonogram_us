@@ -1,7 +1,7 @@
 // Must run first: points the database at the e2e stack, not the dev database.
 import "../stack-env";
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { copyFileSync, existsSync, readFileSync } from "node:fs";
 import { userInfo } from "node:os";
 import { fileURLToPath } from "node:url";
 import { closeDb } from "@repo/db/client";
@@ -102,8 +102,10 @@ function report(name: string) {
 }
 
 const stress = process.argv.includes("--stress");
+const documents = process.argv.includes("--documents");
+const baseline = process.argv.includes("--baseline");
 const toPrometheus = await prometheusIsUp();
-const run = await setupLoadRun({ stress });
+const run = await setupLoadRun({ stress, documents });
 console.log(
 	`setup: spike ${run.spike.users.length} users → 1 event; steady ${run.steady.users.length} users → ${run.steady.eventIds.length} events` +
 		(run.stress ? `; stress up to ${run.stress.users.length} users` : "") +
@@ -111,7 +113,9 @@ console.log(
 );
 
 const problems: string[] = [];
-if (stress) {
+if (documents) {
+	problems.push(...compareDocuments(k6("documents.js", toPrometheus)));
+} else if (stress) {
 	// Informational: how far the ramp got before latency or errors crossed the limits.
 	const stressOk = k6("stress.js", toPrometheus);
 	report("stress");
@@ -137,6 +141,50 @@ if (stress) {
 	if (!spikeOk) problems.push("spike: k6 thresholds failed");
 	if (!steadyOk) problems.push("steady: k6 thresholds failed");
 }
+/** p95 of a tagged request group in a k6 summary. */
+function p95(file: URL, name: string): number {
+	const summary = JSON.parse(readFileSync(file, "utf8")) as Summary;
+	return summary.metrics[`http_req_duration{name:${name}}`]?.["p(95)"] ?? 0;
+}
+
+/**
+ * Documents burst: `--baseline` saves this run as the reference; otherwise browse p95 may be
+ * at most `documentsBrowseMargin` × the baseline's (the spec's "not worse than today").
+ */
+function compareDocuments(thresholdsOk: boolean): string[] {
+	const current = new URL("documents-summary.json", LOAD.runDir);
+	const saved = new URL("documents-baseline.json", LOAD.runDir);
+	const now = {
+		browse: p95(current, "browse"),
+		pdf: p95(current, "ticket-pdf"),
+	};
+	console.log(
+		`documents: ticket p95 ${Math.round(now.pdf)} ms, browse p95 during the burst ${Math.round(now.browse)} ms`,
+	);
+	const problems = thresholdsOk ? [] : ["documents: k6 thresholds failed"];
+	if (baseline) {
+		copyFileSync(current, saved);
+		console.log("documents: saved as the baseline");
+		return problems;
+	}
+	if (!existsSync(saved)) {
+		return [...problems, "documents: no baseline (run with --baseline first)"];
+	}
+	const before = {
+		browse: p95(saved, "browse"),
+		pdf: p95(saved, "ticket-pdf"),
+	};
+	console.log(
+		`documents baseline: ticket p95 ${Math.round(before.pdf)} ms, browse p95 ${Math.round(before.browse)} ms`,
+	);
+	if (now.browse > before.browse * LOAD.documentsBrowseMargin) {
+		problems.push(
+			`documents: browse p95 ${Math.round(now.browse)} ms is worse than the baseline ${Math.round(before.browse)} ms`,
+		);
+	}
+	return problems;
+}
+
 await closeDb();
 
 console.log(`Reports: ${fileURLToPath(LOAD.runDir)}*-report.html`);

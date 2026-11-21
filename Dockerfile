@@ -33,6 +33,8 @@ COPY --from=pruner /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 RUN pnpm install --frozen-lockfile --ignore-scripts
 
 COPY --from=pruner /app/out/full/ .
+# The gRPC contract is not a workspace package, so turbo prune leaves it out; @repo/rpc generates from it.
+COPY proto ./proto
 
 ENV VITE_TURNSTILE_SITE_KEY=${VITE_TURNSTILE_SITE_KEY}
 ENV VITE_APP_TIME_ZONE=${VITE_APP_TIME_ZONE}

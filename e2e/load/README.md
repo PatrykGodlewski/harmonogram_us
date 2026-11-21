@@ -25,6 +25,12 @@ After the spike the runner waits for the worker to send every queued confirmatio
 users; it stops at the step where errors pass 5% or p95 passes 2 s. Informational: the step it
 reached is the result.
 
+**Documents** (`pnpm load:documents`, `k6/documents.js`): 200 people download their ticket PDF
+within ~10 s while 50 others browse the list and an event page. Pass: every download is a PDF.
+`pnpm load:documents --baseline` saves the run as the reference; a later run fails when browse
+p95 during the burst is more than 10% worse than that baseline. It measures whether rendering
+PDFs slows the rest of the site (the Rust documents service, Plan 7).
+
 **Reports and Prometheus.** Every scenario writes an HTML report (k6 web dashboard) and a JSON
 summary to `load/.run/`. With `pnpm observability:up` running, k6 also streams its metrics to
 Prometheus (remote write), next to the apps' own metrics, and Grafana shows both on the
