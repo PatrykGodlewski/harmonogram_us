@@ -70,12 +70,16 @@ export const GUEST_REQUEST_LIMIT: RateLimit = {
 	durationSeconds: 60 * 60,
 };
 
+/** Generous: a campus network sends many guests through one address. */
 export const GUEST_REQUEST_IP_LIMIT: RateLimit = {
-	points: 20,
+	points: 200,
 	durationSeconds: 60 * 60,
 };
 
-/** Confirming a guest registration (token guessing is hopeless; this caps noise). */
+/**
+ * Confirming a guest registration, per token like invitations: tokens are 256-bit, so a
+ * per-IP limit would only block people sharing a network.
+ */
 export const GUEST_CONFIRM_LIMIT: RateLimit = {
 	points: 10,
 	durationSeconds: FIFTEEN_MINUTES,

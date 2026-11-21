@@ -389,10 +389,12 @@ export const auth = betterAuth({
 			}
 
 			if (ctx.path === "/guest-registration/confirm") {
+				const token: unknown = (ctx.body as { token?: unknown } | undefined)
+					?.token;
 				await limitAuth(
 					"auth:guest-confirm",
 					GUEST_CONFIRM_LIMIT,
-					ip,
+					typeof token === "string" ? invitationAcceptRateKey(token) : ip,
 					"Too many attempts. Please try again later.",
 				);
 				return;
