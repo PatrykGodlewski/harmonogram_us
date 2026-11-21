@@ -1,15 +1,193 @@
 # Harmonogram US
 
-Campus event registration for universities (Polish and English). What it does, what is missing and how it compares with Indico: [FEATURES.md](FEATURES.md).
+Campus event registration for universities, in Polish and English.
+
+## Features
+
+What Harmonogram US does today, what it does not do yet, and how it compares with [Indico](https://getindico.io), the event system most universities use for this.
+
+- **Snapshot:** 21 November 2026, branch `next`. There is no tagged release yet.
+- **Indico side:** taken from the Indico source (`master` at `f20ab92`, release 3.3.15), its changelog and learn.getindico.io. The detailed, sourced comparison is in [docs/indico-comparison.md](docs/indico-comparison.md).
+- **Our side:** every feature marked ✅ has a passing Playwright acceptance test named `[Fn] …` in `e2e/tests` (156 tests on desktop and 360 px phone viewports at this snapshot). Feature status and acceptance criteria are in the [product spec](docs/superpowers/specs/2026-11-19-produkt-design.md).
+
+**Legend:** ✅ works · 🟡 partly · ❌ not built · ⏸ deliberately postponed. In the Indico column, ✅ means Indico has it.
+
+### Scope
+
+Harmonogram US is for campus events: talks, workshops, open days, school visits. One installation serves one university. It does not try to cover everything Indico does; conference management (abstracts, peer review, room booking) is out of scope for now.
+
+### How it is built
+
+These are facts about the implementation, not claims that it is better in general.
+
+| | Harmonogram US | Indico |
+|---|---|---|
+| Primary target | Phones first: every participant and organiser screen is tested at 360 px | Desktop web application |
+| Stack | TypeScript; React 19, TanStack Start/Router/Query, PostgreSQL with Drizzle, Better Auth, pg-boss job queue, Tailwind | Python (Flask, SQLAlchemy), PostgreSQL, Celery, React in parts |
+| Live updates | Seat counts, cancellations and waitlist promotions update open pages without reload (ElectricSQL) | Page reloads |
+| Background work | E-mails and reminders go through a queue with retries, written in the same database transaction as the change | Celery tasks |
+| Tests | Playwright acceptance test per feature (desktop and phone), Vitest against a real PostgreSQL | Python unit tests |
+| Accessibility checks | Automated WCAG 2.1 and 2.2 AA audit in the e2e suite | not verified |
+| Operations | Docker images, Prometheus metrics endpoint, Grafana dashboard, k6 load tests, Railway configuration | Mature deployment guides, many production installations |
+| Languages | Polish and English interface and e-mails | Many interface languages |
+| Maturity | Early, no release, no production deployment yet | Developed at CERN for many years, used by many institutions |
+
+### Feature comparison
+
+#### Accounts and access
+
+| Feature | Harmonogram US | Indico |
+|---|---|---|
+| Sign in with an e-mail link (no password) | ✅ | not verified |
+| Local account with password | ✅ with breached-password check and CAPTCHA | ✅ |
+| University single sign-on | ✅ OpenID Connect (Entra ID, CAS 6+, Keycloak, Shibboleth through an OIDC proxy); joins an existing account with the same verified e-mail | ✅ LDAP, SAML, OAuth/OIDC |
+| LDAP or direct SAML | ❌ | ✅ |
+| Single sign-on in the admin panel | ❌ password only | ✅ |
+| Profile name and language; e-mails follow the language | ✅ | ✅ |
+| Roles | 🟡 user, organiser, admin; co-organisers per event; check-in helpers per event | ✅ category and event access lists with users, groups, e-mails, IP networks, fine-grained permissions |
+| Events for signed-in users only | ✅ | ❌ no built-in option |
+| Invite-only events (hidden, open with an invite link or e-mail invitation) | ✅ | ✅ protected events, access keys |
+| User groups | ❌ | ✅ |
+| Guests without an account | ❌ | 🟡 depends on the form |
+
+#### Events
+
+| Feature | Harmonogram US | Indico |
+|---|---|---|
+| Draft, then publish | ✅ with a checklist that shows what is missing and fixes it in place | ❌ no event-level draft (admin-enabled "unlisted" events) |
+| Cancel an event | ✅ closes registration, e-mails everyone registered or waitlisted, keeps history | 🟡 a "cancelled" label, nobody is told |
+| Notice when date or place changes | ✅ e-mail with old and new values | ❌ |
+| Duplicate an event | ✅ once, weekly or monthly (up to 12 drafts), keeps local time across DST | ✅ once, at intervals or by pattern, more choice of what to copy |
+| Lock an event | ❌ | ✅ |
+| Category tree | ❌ flat event types, units and places | ✅ |
+| Event web page with custom layout and pages | ❌ | ✅ |
+| Event content in two languages | ❌ | not verified |
+
+#### Campus calendar
+
+| Feature | Harmonogram US | Indico |
+|---|---|---|
+| Public list with search and filters | ✅ date, format, unit, type, place | ✅ category pages and search |
+| Live free-seat counts | ✅ | ❌ |
+| ICS feed of all events | ✅ cancelled events stay in the feed, marked cancelled | ✅ iCal |
+| Private ICS feed of my registrations | ✅ | not verified |
+| "Add to calendar" for one event | ✅ | ✅ |
+| Link previews when shared (Open Graph) | ✅ | not verified |
+| Month view | ❌ | ✅ category calendar |
+| Import of events from Indico | ❌ | — |
+
+#### Registration
+
+| Feature | Harmonogram US | Indico |
+|---|---|---|
+| Register in one tap when there are no questions | ✅ | not verified |
+| Capacity limit | ✅ | ✅ |
+| Automatic waitlist with promotion | ✅ safe under concurrent sign-ups | ❌ |
+| Organiser approval | ✅ approving on a full event puts the person on the waitlist | ✅ moderation |
+| Custom questions | 🟡 text, choice, yes/no; required or optional; checked on the server | ✅ full form builder |
+| File upload fields in the form | ❌ | ✅ |
+| Conditional fields | ❌ | not verified |
+| Several registration forms per event | ❌ | ✅ |
+| Change my answers after registering | ✅ while the event is open | ✅ |
+| Group registration (teacher holds places, students confirm) | ✅ with e-mail invitations and a join link | ❌ |
+| Registration for single programme items | ✅ | ❌ |
+| Payments | ❌ | ✅ manual, PayPal, Stripe |
+
+#### E-mails
+
+| Feature | Harmonogram US | Indico |
+|---|---|---|
+| Confirmation, waitlist, promotion | ✅ | 🟡 confirmation (no waitlist) |
+| Approval and rejection | ✅ | ✅ |
+| Reminder before the event | ✅ a day before by default; 1 hour, 2 days or off | ✅ configurable |
+| Cancellation and change notices | ✅ | ❌ |
+| Organiser message to everyone or to selected people | ✅ | ✅ with placeholders |
+| Placeholders in organiser e-mails | ❌ | ✅ |
+
+#### Registrant management
+
+| Feature | Harmonogram US | Indico |
+|---|---|---|
+| Search and filter by state | ✅ | ✅ more filters and columns |
+| Add and remove people (waitlist moves up) | ✅ | ✅ (no waitlist) |
+| Bulk actions: check in, message, remove, approve, decline | ✅ | ✅ |
+| Answers on the list | ✅ | ✅ |
+| CSV and XLSX export, a column per question | ✅ | ✅ |
+| PDF attendance sheet with signature column | ✅ | ✅ PDF export |
+| CSV import | ❌ | ✅ |
+| Tags | ❌ | ✅ |
+
+#### Tickets, check-in, certificates
+
+| Feature | Harmonogram US | Indico |
+|---|---|---|
+| Ticket page with QR code | ✅ | ✅ |
+| PDF ticket | ✅ with QR | ✅ |
+| Google or Apple Wallet pass | ❌ | 🟡 experimental |
+| Camera scanner in the browser | ✅ in the organiser panel | ✅ check-in PWA |
+| Manual and bulk check-in with time | ✅ | ✅ |
+| Check-in-only helper role | ✅ | ✅ |
+| Badges | ❌ | ✅ |
+| Attendance certificates | ✅ PDF for attendees of ended events, organiser's issuer, signer and note, e-mailed automatically | ✅ document templates generated by the organiser |
+| Certificate logo or custom layout | ❌ | ✅ |
+
+#### Programme and speakers
+
+| Feature | Harmonogram US | Indico |
+|---|---|---|
+| Programme as list and calendar, parallel sessions, rooms, several days | ✅ with a live "now" line | ✅ timetable |
+| Speakers with affiliation | ✅ | ✅ |
+| Links to materials per programme item | ✅ | ✅ |
+| Uploaded files and folders | ❌ | ✅ |
+| Speaker directory | ❌ | not verified |
+| Timetable PDF | ❌ | ✅ |
+| Abstracts and peer review | ⏸ | ✅ |
+| Room booking | ⏸ | ✅ |
+
+#### Personal data and accessibility
+
+| Feature | Harmonogram US | Indico |
+|---|---|---|
+| Privacy notice at sign-up and privacy page (controller, basis, retention, rights) | ✅ text to be confirmed by the university's data protection officer | ✅ privacy settings |
+| Automatic deletion of registrations after a retention period | ✅ | ✅ data retention |
+| Export and delete my own data | ✅ | not verified |
+| WCAG 2.1 AA | 🟡 automated audit of every participant and organiser screen and the main dialogs (axe with 2.1 and 2.2 AA rules, page titles, reflow at 320 px, keyboard-only flows, visible focus, focus return); no expert audit; PDFs are not tagged | 🟡 partial |
+| Accessibility statement | ✅ Polish and English; to be confirmed by the university | not verified |
+
+#### Integrations and reporting
+
+| Feature | Harmonogram US | Indico |
+|---|---|---|
+| Statistics for organisers | ❌ | ✅ Matomo plugin |
+| Event change log | ❌ | ✅ |
+| Surveys | ❌ | ✅ |
+| Video calls | ❌ (planned: Microsoft Teams) | ✅ Zoom plugin |
+| HTTP API and embeddable widget | ❌ | ✅ HTTP API |
+| USOS integration (faculty limits, timetable clashes) | ❌ | ❌ |
+| Plugin system | ❌ | ✅ |
+
+### Not built yet
+
+From the product spec, in no particular order: materials and file storage (F14), statistics (F15), Indico import (F16), guests without an account (F17), speaker files and directory (F19), surveys (F20), payments (F21), event web page (F22), video calls (F23), API and widget (F24), USOS integration (F25). Also missing compared with Indico: LDAP/SAML, user groups, category tree, form builder extras (file fields, several forms), CSV import, tags, e-mail placeholders, badges, wallet passes, timetable PDF, event lock, plugins.
+
+### Known limitations
+
+- Invitation e-mails are written in the sender's language, not the invitee's.
+- PDFs do not render emoji or non-Latin scripts and are not tagged for screen readers.
+- The admin panel signs in with e-mail and password only.
+- The privacy page and the accessibility statement need confirmation by the university.
+- No expert accessibility audit, and no Safari/iOS browser in the automated tests.
+
+## Development
 
 pnpm monorepo (Turbo) with React 19, TanStack Router/Query/Start, Drizzle ORM, and Tailwind.
 
-## Prerequisites
+### Prerequisites
 
 - **Node** ≥ 20  
 - **pnpm** 10.x (`corepack enable && corepack prepare pnpm@10.32.1 --activate`)
 
-## Setup
+### Setup
 
 ```bash
 pnpm install
@@ -21,7 +199,7 @@ pnpm db:migrate
 
 Put `.env` at the project root. Required vars: `SESSION_SECRET` (min 32 chars), `ENCRYPTION_KEY` (base64, 16 bytes). Use Postgres at `postgresql://postgres:postgres@localhost:5432/harmonogram_us`, or set `DATABASE_URL`.
 
-## Database (Docker)
+### Database (Docker)
 
 This project uses PostgreSQL via Docker Compose.
 
@@ -52,7 +230,7 @@ Quick local alternative (skip migration files and sync schema directly):
 pnpm db:push
 ```
 
-## Email testing (Docker Mailpit)
+### Email testing (Docker Mailpit)
 
 Local email testing uses [Mailpit](https://github.com/axllent/mailpit) (SMTP sink + web UI), started by the same Docker Compose file.
 
@@ -80,7 +258,7 @@ docker compose up -d
 pnpm db:migrate
 ```
 
-## Scripts
+### Scripts
 
 | Command       | Description                          |
 |---------------|--------------------------------------|
@@ -92,7 +270,7 @@ pnpm db:migrate
 | `pnpm db:push`     | Push schema directly to DB       |
 | `pnpm clean`  | Clean build artifacts + node_modules |
 
-## Structure
+### Structure
 
 ```
 apps/       web, admin
