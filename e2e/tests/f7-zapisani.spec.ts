@@ -80,3 +80,57 @@ test("[F7] organizator dodaje i usuwa osobę, szuka i pobiera CSV @organizator",
 		),
 	).toBe(true);
 });
+
+test("[F7] lista obecności PDF z podpisami @organizator", async ({
+	page,
+}, testInfo) => {
+	const base = uniqueEmail(testInfo);
+	const password = randomBytes(18).toString("base64url");
+	const organizer = await createTestUser(`org-${base}`, {
+		role: "organizer",
+		password,
+	});
+	const event = await createTestEvent({
+		organizerId: organizer.id,
+		title: `Lista ${base.slice(0, 6)}`,
+	});
+	const { registerForEvent } = await import(
+		"@repo/db/queries/event-registrations"
+	);
+	const { ensureAccount } = await import("@repo/db/seed/accounts");
+	for (const [index, name] of ["Zofia Wójcik", "Jan Kowalski"].entries()) {
+		const { id } = await ensureAccount({
+			email: `p${index}-${base}`,
+			name,
+			role: "user",
+		});
+		await registerForEvent(event.id, id, "pl");
+	}
+
+	await signInAsAdmin(page, `org-${base}`, password);
+	await open(page, adminUrl(`/pl/events/${event.id}`));
+	const href = await page
+		.getByRole("link", { name: "Lista obecności (PDF)" })
+		.getAttribute("href");
+	const response = await page.request.get(adminUrl(href ?? ""));
+	expect(response.headers()["content-type"]).toContain("application/pdf");
+	const { extractText } = await import("unpdf");
+	const { text } = await extractText(new Uint8Array(await response.body()), {
+		mergePages: true,
+	});
+	expect(text).toContain(event.title);
+	expect(text).toContain("Podpis");
+	// Alphabetical by surname: Kowalski before Wójcik
+	expect(text.indexOf("Jan Kowalski")).toBeLessThan(
+		text.indexOf("Zofia Wójcik"),
+	);
+
+	// Not for someone who does not manage or help at the event
+	const stranger = `s-${base}`;
+	await createTestUser(stranger, { role: "organizer", password });
+	const other = await (await page.context().browser()?.newContext())?.newPage();
+	if (!other) throw new Error("no browser");
+	await signInAsAdmin(other, stranger, password);
+	const refused = await other.request.get(adminUrl(href ?? ""));
+	expect(refused.status()).toBe(403);
+});

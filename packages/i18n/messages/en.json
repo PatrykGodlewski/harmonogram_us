@@ -667,5 +667,12 @@
 	"tickets_pdf_code": "Ticket code (if the scanner fails):",
 	"error_register_event_first": "Register for the event first (the organiser asks questions), then pick programme items.",
 	"answers_none": "No answer",
-	"questions_edit_hint": "Answers that no longer fit the question (another type, a removed option) will be deleted."
+	"questions_edit_hint": "Answers that no longer fit the question (another type, a removed option) will be deleted.",
+	"sheet_title": "Attendance sheet",
+	"sheet_no": "No.",
+	"sheet_name": "Name",
+	"sheet_email": "E-mail",
+	"sheet_signature": "Signature",
+	"sheet_page": "Page {page} of {pages}",
+	"sheet_download": "Attendance sheet (PDF)"
 }

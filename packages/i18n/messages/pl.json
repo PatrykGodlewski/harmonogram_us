@@ -667,5 +667,12 @@
 	"tickets_pdf_code": "Kod biletu (gdyby skaner nie działał):",
 	"error_register_event_first": "Najpierw zapisz się na wydarzenie (organizator zadaje pytania), potem wybierz punkty programu.",
 	"answers_none": "Bez odpowiedzi",
-	"questions_edit_hint": "Odpowiedzi, które przestaną pasować do pytania (inny rodzaj, usunięta opcja), zostaną usunięte."
+	"questions_edit_hint": "Odpowiedzi, które przestaną pasować do pytania (inny rodzaj, usunięta opcja), zostaną usunięte.",
+	"sheet_title": "Lista obecności",
+	"sheet_no": "Lp.",
+	"sheet_name": "Imię i nazwisko",
+	"sheet_email": "E-mail",
+	"sheet_signature": "Podpis",
+	"sheet_page": "Strona {page} z {pages}",
+	"sheet_download": "Lista obecności (PDF)"
 }

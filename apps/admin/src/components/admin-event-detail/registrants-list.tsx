@@ -37,6 +37,7 @@ import {
 	admin_reject,
 	answers_no,
 	answers_yes,
+	sheet_download,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import {
@@ -186,6 +187,15 @@ export function RegistrantsList({
 					{canManage ? (
 						<AddRegistrantDialog eventId={eventId} onAdded={onChanged} />
 					) : null}
+					{/* Helpers at the door use the paper sheet too. */}
+					<Button size="sm" variant="outline" asChild>
+						<a
+							href={`/api/events/${eventId}/attendance?lang=${getLocale()}`}
+							download
+						>
+							{sheet_download()}
+						</a>
+					</Button>
 					{canManage ? (
 						<RegistrantExports
 							eventTitle={eventTitle}
