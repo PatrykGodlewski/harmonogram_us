@@ -369,6 +369,7 @@
 	"admin_field_status": "Status",
 	"admin_event_status_published": "Published",
 	"event_join_online": "Join online",
+	"indico_badge": "From Indico",
 	"event_status_cancelled": "Cancelled",
 	"reg_email_cancelled_subject": "Cancelled: {event}",
 	"reg_email_cancelled_intro": "The event {event} ({date}) has been cancelled. Sorry for the trouble.",

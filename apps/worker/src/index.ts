@@ -112,22 +112,26 @@ await boss.schedule(QUEUE_CERTIFICATE_EMAILS, CERTIFICATE_EMAILS_CRON, null, {
 	tz: JOBS_TIME_ZONE,
 });
 
-async function syncIndico() {
+await boss.work(QUEUE_INDICO_SYNC, async () => {
 	const result = await syncIndicoEvents(indicoConfig());
+	if (result.status === "failed") {
+		// The previous copy stays listed; pg-boss retries the job.
+		throw new Error(`indico sync failed: ${result.error}`);
+	}
 	if (result.status === "synced") {
 		console.log(`[worker] indico: ${result.count} event(s) copied`);
-	} else if (result.status === "failed") {
-		// The previous copy stays listed; the next run tries again.
-		console.error(`[worker] indico sync failed: ${result.error}`);
 	}
-}
-
-await boss.work(QUEUE_INDICO_SYNC, syncIndico);
+});
 await boss.schedule(QUEUE_INDICO_SYNC, INDICO_SYNC_CRON, null, {
 	tz: JOBS_TIME_ZONE,
 });
-// A fresh deployment lists Indico's events without waiting for the first scheduled run.
-await syncIndico();
+// A fresh deployment lists Indico's events without waiting for the schedule; retried
+// while Indico or the database (migrations still running) isn't ready.
+await boss.send(QUEUE_INDICO_SYNC, null, {
+	retryLimit: 5,
+	retryDelay: 30,
+	retryBackoff: true,
+});
 
 console.log("[worker] worker started");
 
