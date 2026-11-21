@@ -658,5 +658,9 @@
 	"answers_yes": "Yes",
 	"answers_no": "No",
 	"answers_choose": "Choose",
-	"answers_cancel": "Cancel"
+	"answers_cancel": "Cancel",
+	"answers_edit": "Change answers",
+	"answers_save": "Save answers",
+	"answers_saved": "Answers saved",
+	"admin_answers_edit": "Edit answers"
 }

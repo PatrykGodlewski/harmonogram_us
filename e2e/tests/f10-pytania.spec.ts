@@ -136,3 +136,58 @@ test("[F10] wymagane pytanie blokuje zapis; odpowiedzi są na liście i w CSV @u
 	expect(header).toContain('"Kierunek studiów";"Rozmiar koszulki"');
 	expect(first).toContain('"Fizyka";"M"');
 });
+
+test("[F10] uczestnik i organizator zmieniają odpowiedzi @uczestnik", async ({
+	browser,
+	page,
+}, testInfo) => {
+	const base = uniqueEmail(testInfo);
+	const password = randomBytes(18).toString("base64url");
+	const organizer = await createTestUser(`org-${base}`, {
+		role: "organizer",
+		password,
+	});
+	const event = await createTestEvent({ organizerId: organizer.id });
+	const { createEventQuestion } = await import(
+		"@repo/db/queries/event-questions"
+	);
+	const { registerForEvent } = await import(
+		"@repo/db/queries/event-registrations"
+	);
+	const question = await createEventQuestion({
+		eventId: event.id,
+		label: "Kierunek studiów",
+		kind: "text",
+		required: true,
+	});
+	const participant = `p-${base}`;
+	const user = await createTestUser(participant);
+	await registerForEvent(event.id, user.id, "pl", undefined, {
+		answers: { [question.id]: "Fizyka" },
+	});
+
+	// The participant changes their answer on the event page
+	const visitor = await (await browser.newContext()).newPage();
+	await signInByEmail(visitor, participant);
+	await open(visitor, `/pl/events/${event.id}`);
+	await visitor.getByRole("button", { name: "Zmień odpowiedzi" }).click();
+	const form = visitor.getByRole("dialog");
+	await expect(form.getByLabel(/Kierunek studiów/)).toHaveValue("Fizyka");
+	await form.getByLabel(/Kierunek studiów/).fill("Chemia");
+	await form.getByRole("button", { name: "Zapisz odpowiedzi" }).click();
+	await expect(visitor.getByText("Zapisano odpowiedzi")).toBeVisible();
+
+	// The organiser sees it and corrects it from the list
+	await signInAsAdmin(page, `org-${base}`, password);
+	await open(page, adminUrl(`/pl/events/${event.id}`));
+	const row = page
+		.getByRole("listitem")
+		.filter({ hasText: participant })
+		.first();
+	await expect(row.getByText("Kierunek studiów: Chemia")).toBeVisible();
+	await row.getByRole("button", { name: "Edytuj odpowiedzi" }).click();
+	const adminForm = page.getByRole("dialog");
+	await adminForm.getByLabel(/Kierunek studiów/).fill("Biologia");
+	await adminForm.getByRole("button", { name: "Zapisz odpowiedzi" }).click();
+	await expect(row.getByText("Kierunek studiów: Biologia")).toBeVisible();
+});

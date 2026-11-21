@@ -25,6 +25,7 @@ import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
 import { AttendanceModeBadge } from "@repo/ui/composed/events/attendance-mode-badge";
+import { RegistrationAnswersDialog } from "@repo/ui/composed/registration-answers-dialog";
 import { formatEventDateTime } from "@repo/ui/time";
 import { Link, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
@@ -33,8 +34,8 @@ import type {
 	EventDetailsRegistrations,
 } from "~/lib/event-details/types";
 import type { EventSeatCount } from "~/lib/events/types";
+import { EditAnswersButton } from "./edit-answers-button";
 import { LoginToRegisterButton } from "./login-to-register-button";
-import { RegistrationAnswersDialog } from "./registration-answers-dialog";
 import { UnregisterEventDialog } from "./unregister-event-dialog";
 
 type EventSummaryProps = {
@@ -141,6 +142,18 @@ export function EventSummary({
 					registrations={registrations}
 				/>
 			</div>
+			{user &&
+			!isClosed &&
+			event.questions.length > 0 &&
+			(registrations.isEventRegistered ||
+				registrations.waitlistPosition !== null ||
+				registrations.approval === "pending") ? (
+				<EditAnswersButton
+					eventId={event.id}
+					questions={event.questions}
+					interactive={interactive}
+				/>
+			) : null}
 			{event.requiresApproval && !isClosed ? (
 				<p className="text-sm text-muted-foreground">
 					{event_details_requires_approval()}

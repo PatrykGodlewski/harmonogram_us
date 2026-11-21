@@ -1,4 +1,5 @@
 import { and, asc, eq, inArray, max, type SQL, sql } from "drizzle-orm";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { type DbExecutor, db, type TransactionClient } from "../client";
 import { agendaItemRegistrations, agendaItems } from "../schema/agenda";
 import { authUsers } from "../schema/better-auth";
@@ -276,6 +277,15 @@ export async function requiresApproval(
 		.from(events)
 		.where(eq(events.id, eventId));
 	return row?.requiresApproval ?? false;
+}
+
+/** A registration's answers as `{ questionId: value }` (for selects over registrations). */
+function answersOf(registrationId: AnyPgColumn): SQL<Answers> {
+	return sql<Answers>`coalesce(
+		(SELECT jsonb_object_agg(a.question_id, a.value) FROM registration_answers a
+			WHERE a.registration_id = ${registrationId}),
+		'{}'::jsonb
+	)`;
 }
 
 /**
@@ -678,11 +688,7 @@ export async function getEventRegistrants(
 			groupId: eventRegistrations.groupId,
 			groupName: registrationGroups.name,
 			checkedInAt: eventRegistrations.checkedInAt,
-			answers: sql<Answers>`coalesce(
-				(SELECT jsonb_object_agg(a.question_id, a.value) FROM registration_answers a
-					WHERE a.registration_id = ${eventRegistrations.id}),
-				'{}'::jsonb
-			)`,
+			answers: answersOf(eventRegistrations.id),
 			agendaItemIds: sql<string[]>`coalesce(
 				array_agg(${agendaItemRegistrations.agendaItemId})
 					filter (where ${agendaItemRegistrations.agendaItemId} is not null),
@@ -723,4 +729,58 @@ export async function isRegisteredForEvent(
 		)
 		.limit(1);
 	return Boolean(row);
+}
+
+/**
+ * Changes the answers of a registration of `eventId`. The person may do it
+ * while the event is open and must keep required answers; an organiser may fix
+ * them any time (and leave required ones empty, as when adding someone).
+ */
+export async function updateRegistrationAnswers(
+	eventId: string,
+	registrationId: string,
+	answers: Answers,
+	{ byOrganizer }: { byOrganizer: boolean },
+): Promise<void> {
+	await db.transaction(async (tx) => {
+		const [row] = await tx
+			.select({ id: eventRegistrations.id })
+			.from(eventRegistrations)
+			.where(
+				and(
+					eq(eventRegistrations.id, registrationId),
+					eq(eventRegistrations.eventId, eventId),
+				),
+			)
+			.for("update");
+		if (!row) {
+			throw new DomainError("NOT_REGISTERED");
+		}
+		if (!byOrganizer) {
+			await assertEventOpen(tx, eventId);
+		}
+		await saveAnswers(tx, registrationId, eventId, answers, {
+			requireAll: !byOrganizer,
+		});
+	});
+}
+
+/** The user's registration id and answers for the event; null when not registered. */
+export async function getMyAnswers(
+	eventId: string,
+	userId: string,
+): Promise<{ registrationId: string; answers: Answers } | null> {
+	const [row] = await db
+		.select({
+			registrationId: eventRegistrations.id,
+			answers: answersOf(eventRegistrations.id),
+		})
+		.from(eventRegistrations)
+		.where(
+			and(
+				eq(eventRegistrations.eventId, eventId),
+				eq(eventRegistrations.userId, userId),
+			),
+		);
+	return row ?? null;
 }

@@ -68,6 +68,7 @@ import { toast } from "sonner";
 import { formatMutationError } from "~/lib/format-mutation-error";
 import { AddRegistrantDialog } from "./add-registrant-dialog";
 import { BulkActionsBar } from "./bulk-actions-bar";
+import { EditAnswers } from "./edit-answers-dialog";
 import { RegistrantExports } from "./registrant-exports";
 import { useApprovalActions } from "./use-approval-actions";
 
@@ -416,6 +417,15 @@ function RegistrantRow({
 				</div>
 			</div>
 			<div className="flex flex-wrap items-center gap-3 self-start">
+				{canManage && questions.length > 0 ? (
+					<EditAnswers
+						eventId={eventId}
+						registrationId={registrant.registrationId}
+						questions={questions}
+						answers={registrant.answers}
+						onSaved={onChanged}
+					/>
+				) : null}
 				{canManage && isRequest(registrant) ? (
 					<>
 						<Button

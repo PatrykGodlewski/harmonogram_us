@@ -3,6 +3,7 @@ import {
 	addRegistrantByEmail,
 	removeRegistrant,
 	removeRegistrants,
+	updateRegistrationAnswers,
 } from "@repo/db/queries/event-registrations";
 import {
 	approveRegistrations,
@@ -106,6 +107,27 @@ export const rejectRegistrationsServer = panelActionFn
 				data.eventId,
 				data.registrationIds,
 				registrationEmailHooks,
+			),
+		);
+	});
+
+/** An organiser corrects someone's answers (any time; required ones may stay empty). */
+export const updateRegistrantAnswersServer = panelActionFn
+	.inputValidator((input: unknown) =>
+		removeRegistrantSchema
+			.extend({ answers: z.record(z.string(), z.string().max(2000)) })
+			.parse(input),
+	)
+	.handler(async ({ data, context }) => {
+		await assertCanManageEvent(context.user, data.eventId);
+		return withDomainErrors(() =>
+			updateRegistrationAnswers(
+				data.eventId,
+				data.registrationId,
+				data.answers,
+				{
+					byOrganizer: true,
+				},
 			),
 		);
 	});

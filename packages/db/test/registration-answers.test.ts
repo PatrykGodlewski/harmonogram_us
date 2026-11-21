@@ -71,3 +71,32 @@ describe("registration answers", () => {
 		});
 	});
 });
+
+describe("editing answers", () => {
+	it("the participant must keep required answers; the organiser may change them after the event", async () => {
+		const { updateRegistrationAnswers } = await import("../src/queries/event-registrations");
+		const { db } = await import("../src/client");
+		const { events } = await import("../src/schema/events");
+		const { eq } = await import("drizzle-orm");
+		const { eventId, field } = await eventWithQuestions();
+		const user = await createUser();
+		await registerForEvent(eventId, user, "pl", undefined, { answers: { [field.id]: "Fizyka" } });
+		const [registrant] = await getEventRegistrants(eventId);
+		const id = registrant?.registrationId ?? "";
+		expect(
+			await rejectionCode(updateRegistrationAnswers(eventId, id, { [field.id]: "" }, { byOrganizer: false })),
+		).toBe("ANSWERS_INVALID");
+		await updateRegistrationAnswers(eventId, id, { [field.id]: "Chemia" }, { byOrganizer: false });
+		expect((await getEventRegistrants(eventId))[0]?.answers).toEqual({ [field.id]: "Chemia" });
+
+		await db
+			.update(events)
+			.set({ date: new Date(Date.now() - 3 * 86_400_000), endsAt: new Date(Date.now() - 2 * 86_400_000) })
+			.where(eq(events.id, eventId));
+		expect(
+			await rejectionCode(updateRegistrationAnswers(eventId, id, { [field.id]: "X" }, { byOrganizer: false })),
+		).toBe("EVENT_ENDED");
+		await updateRegistrationAnswers(eventId, id, { [field.id]: "Biologia" }, { byOrganizer: true });
+		expect((await getEventRegistrants(eventId))[0]?.answers).toEqual({ [field.id]: "Biologia" });
+	});
+});

@@ -1,4 +1,3 @@
-import type { EventDetails } from "@repo/api/events/queries";
 import {
 	answers_cancel,
 	answers_choose,
@@ -8,27 +7,35 @@ import {
 	answers_title,
 	answers_yes,
 } from "@repo/i18n/paraglide/messages";
-import { Button } from "@repo/ui/components/button";
+import { type FormEvent, useEffect, useId, useState } from "react";
+import { Button } from "../components/button";
 import {
 	Dialog,
 	DialogContent,
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-} from "@repo/ui/components/dialog";
-import { FormMessage } from "@repo/ui/components/form-message";
-import { Input } from "@repo/ui/components/input";
-import { Label } from "@repo/ui/components/label";
+} from "../components/dialog";
+import { FormMessage } from "../components/form-message";
+import { Input } from "../components/input";
+import { Label } from "../components/label";
 import {
 	Select,
 	SelectContent,
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from "@repo/ui/components/select";
-import { type FormEvent, useEffect, useId, useState } from "react";
+} from "../components/select";
 
-type Question = EventDetails["questions"][number];
+/** A registration question as the form needs it. */
+export type AnswerQuestion = {
+	id: string;
+	label: string;
+	kind: "text" | "choice" | "yesno";
+	options: string[];
+	required: boolean;
+};
+type Question = AnswerQuestion;
 export type Answers = Record<string, string>;
 
 type RegistrationAnswersDialogProps = {
