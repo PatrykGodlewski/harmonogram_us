@@ -51,3 +51,88 @@ describe("requestGuestRegistration", () => {
 		expect(await queuedEmails()).toHaveLength(0);
 	});
 });
+
+describe("POST /guest-registration/confirm", () => {
+	async function guestToken(eventId: string, email = "gosc@x.test") {
+		const { createGuestRequest } = await import("@repo/db/queries/guest-requests");
+		const { token } = await createGuestRequest({
+			eventId,
+			email,
+			name: "Gość Testowy",
+			locale: "pl",
+			answers: {},
+		});
+		return token;
+	}
+
+	async function confirm(token: string) {
+		const { auth } = await import("../src/auth/better-auth");
+		return auth.handler(
+			new Request(`${env.BETTER_AUTH_URL}/api/auth/guest-registration/confirm`, {
+				method: "POST",
+				headers: { "content-type": "application/json", origin: env.BETTER_AUTH_URL },
+				body: JSON.stringify({ token }),
+			}),
+		);
+	}
+
+	async function registrationOf(eventId: string, email: string) {
+		const { eventRegistrations } = await import("@repo/db/schema/event-registrations");
+		const { authUsers } = await import("@repo/db/schema/better-auth");
+		const [row] = await db
+			.select({ state: eventRegistrations.state, name: authUsers.name })
+			.from(eventRegistrations)
+			.innerJoin(authUsers, eq(authUsers.id, eventRegistrations.userId))
+			.where(eq(authUsers.email, email));
+		return row && { ...row, eventId };
+	}
+
+	it("registers once and signs the guest in", async () => {
+		const eventId = await createEvent();
+		const token = await guestToken(eventId);
+
+		const first = await confirm(token);
+		expect(first.status).toBe(200);
+		expect(first.headers.get("set-cookie")).toContain("session_token");
+		expect(await first.json()).toMatchObject({ eventId, state: "registered" });
+		expect(await registrationOf(eventId, "gosc@x.test")).toMatchObject({
+			state: "registered",
+			name: "Gość Testowy",
+		});
+
+		const second = await confirm(token);
+		expect(second.status).toBe(400);
+		expect(await second.json()).toMatchObject({ code: "GUEST_LINK_INVALID" });
+	});
+
+	it("puts the guest on the waitlist when the event filled up meanwhile", async () => {
+		const { createUser } = await import("../../db/test/helpers");
+		const { registerForEvent } = await import("@repo/db/queries/event-registrations");
+		const eventId = await createEvent({ maxSeats: 1 });
+		const token = await guestToken(eventId);
+		await registerForEvent(eventId, await createUser(), "pl");
+
+		const response = await confirm(token);
+		expect(await response.json()).toMatchObject({ state: "waitlisted" });
+	});
+
+	it("removes a stranger's password from an unverified account first", async () => {
+		const { createUser, credentialHash } = await import("../../db/test/helpers");
+		const { authAccounts, authUsers } = await import("@repo/db/schema/better-auth");
+		const squatter = await createUser("owner@x.test");
+		await db.update(authUsers).set({ emailVerified: false }).where(eq(authUsers.id, squatter));
+		await db.insert(authAccounts).values({
+			id: crypto.randomUUID(),
+			accountId: squatter,
+			providerId: "credential",
+			userId: squatter,
+			password: "hash",
+		});
+		const eventId = await createEvent();
+
+		const response = await confirm(await guestToken(eventId, "owner@x.test"));
+		expect(response.status).toBe(200);
+		expect(await credentialHash(squatter)).toBe("");
+		expect((await registrationOf(eventId, "owner@x.test"))?.state).toBe("registered");
+	});
+});
