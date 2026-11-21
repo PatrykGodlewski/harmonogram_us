@@ -27,7 +27,7 @@ import { enqueueEmails } from "@repo/jobs/client";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
-import { captcha, magicLink } from "better-auth/plugins";
+import { captcha, genericOAuth, magicLink } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { z } from "zod";
 import {
@@ -45,40 +45,15 @@ import {
 	SIGN_UP_LIMIT,
 } from "../security/rate-limits";
 import { groupInvitation } from "./group-invitation-plugin";
-import { enabledSocialProviders } from "./social-providers";
+import { universityProviderConfig } from "./university";
+import { UNIVERSITY_PROVIDER_ID } from "./university-provider";
 
 const MAGIC_LINK_EXPIRATION_SECONDS = 15 * 60;
 const magicLinkMetadataSchema = z.object({
 	locale: z.string().optional(),
 });
 
-const socialProviderConfigs = {
-	google:
-		env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
-			? {
-					clientId: env.GOOGLE_CLIENT_ID,
-					clientSecret: env.GOOGLE_CLIENT_SECRET,
-				}
-			: undefined,
-} as const;
-
-const socialProviders = Object.fromEntries(
-	enabledSocialProviders
-		.map((provider) => {
-			const config = socialProviderConfigs[provider];
-			return config ? [provider, config] : undefined;
-		})
-		.filter(
-			(
-				entry,
-			): entry is [
-				keyof typeof socialProviderConfigs,
-				NonNullable<
-					(typeof socialProviderConfigs)[keyof typeof socialProviderConfigs]
-				>,
-			] => Boolean(entry),
-		),
-);
+const universityProvider = universityProviderConfig();
 
 const PASSWORD_MIN_LENGTH = 8;
 
@@ -278,6 +253,24 @@ export const auth = betterAuth({
 	emailAndPassword: {
 		enabled: true,
 	},
+	account: {
+		// The university vouches for its addresses: signing in with it joins the
+		// account someone already has under that e-mail.
+		accountLinking: { trustedProviders: [UNIVERSITY_PROVIDER_ID] },
+	},
+	databaseHooks: {
+		account: {
+			create: {
+				before: async (account) => {
+					// Joining an unverified account: a password someone set without proving
+					// the address must not outlive the university's proof (as with magic links).
+					if (account.providerId === UNIVERSITY_PROVIDER_ID) {
+						await resetUnverifiedAccount(account.userId);
+					}
+				},
+			},
+		},
+	},
 	emailVerification: {
 		sendOnSignUp: true,
 		sendVerificationEmail: async ({ user, url }, request) => {
@@ -298,6 +291,18 @@ export const auth = betterAuth({
 			const email = getBodyValueAsString(ctx.body, "email");
 			const password = getBodyValueAsString(ctx.body, "password");
 			const locale = resolveAuthLocaleFromHeaders(ctx.headers);
+
+			if (
+				ctx.path.startsWith("/oauth2/callback/") &&
+				typeof ctx.query?.error === "string"
+			) {
+				// The university refused or the person cancelled there: Better Auth would
+				// show its bare error page, so return to the login page, which explains.
+				const error = encodeURIComponent(ctx.query.error);
+				throw ctx.redirect(
+					`${env.BETTER_AUTH_URL}/${locale}/login?error=${error}`,
+				);
+			}
 
 			if (ctx.path === "/sign-up/email") {
 				await limitAuth(
@@ -377,8 +382,10 @@ export const auth = betterAuth({
 			}
 		}),
 	},
-	socialProviders,
 	plugins: [
+		...(universityProvider
+			? [genericOAuth({ config: [universityProvider] })]
+			: []),
 		...(env.TURNSTILE_SECRET_KEY
 			? [
 					captcha({

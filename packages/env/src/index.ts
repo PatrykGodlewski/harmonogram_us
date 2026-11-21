@@ -44,8 +44,12 @@ export const env = createEnv({
 		PRIVACY_CONTROLLER: z.string().min(1).optional(),
 		PRIVACY_CONTACT_EMAIL: z.email().optional(),
 
-		GOOGLE_CLIENT_ID: z.string().optional(),
-		GOOGLE_CLIENT_SECRET: z.string().optional(),
+		/** University sign-in (OpenID Connect); on when the URL, ID and secret are all set. */
+		UNIVERSITY_SSO_DISCOVERY_URL: z.url().optional(),
+		UNIVERSITY_SSO_CLIENT_ID: z.string().min(1).optional(),
+		UNIVERSITY_SSO_CLIENT_SECRET: z.string().min(1).optional(),
+		/** Shown on the sign-in button, e.g. "Uniwersytet Śląski". */
+		UNIVERSITY_SSO_NAME: z.string().min(1).optional(),
 
 		SMTP_HOST: z.string().optional(),
 		SMTP_PORT: z.coerce.number().int().positive().optional(),

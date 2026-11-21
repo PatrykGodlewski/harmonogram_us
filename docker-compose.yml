@@ -11,6 +11,11 @@ x-app-env: &app-env
   SMTP_PORT: "1025"
   BETTER_AUTH_URL: http://localhost:${WEB_PORT:-3000}
   ADMIN_URL: http://localhost:${ADMIN_PORT:-3001}
+  # University sign-in (OpenID Connect); set in .env, or by e2e/ports.env for the mock.
+  UNIVERSITY_SSO_DISCOVERY_URL: ${UNIVERSITY_SSO_DISCOVERY_URL:-}
+  UNIVERSITY_SSO_CLIENT_ID: ${UNIVERSITY_SSO_CLIENT_ID:-}
+  UNIVERSITY_SSO_CLIENT_SECRET: ${UNIVERSITY_SSO_CLIENT_SECRET:-}
+  UNIVERSITY_SSO_NAME: ${UNIVERSITY_SSO_NAME:-}
 
 x-app-build: &app-build
   context: .
@@ -104,6 +109,25 @@ services:
     depends_on:
       db: { condition: service_healthy }
       mailpit: { condition: service_started }
+
+  # e2e only: a stand-in university sign-in server (e2e/oidc-mock). The browser and the
+  # app containers both reach it as oidc.localhost (Chrome maps *.localhost to this machine).
+  oidc-mock:
+    profiles: [e2e]
+    image: node:22-alpine
+    command: ["node", "/srv/server.mjs"]
+    volumes:
+      - ./e2e/oidc-mock/server.mjs:/srv/server.mjs:ro
+    environment:
+      PORT: ${OIDC_PORT:-18080}
+      CLIENT_ID: ${UNIVERSITY_SSO_CLIENT_ID:-}
+      CLIENT_SECRET: ${UNIVERSITY_SSO_CLIENT_SECRET:-}
+    ports:
+      - "${OIDC_PORT:-18080}:${OIDC_PORT:-18080}"
+    networks:
+      default:
+        aliases: [oidc.localhost]
+    restart: unless-stopped
 
   prometheus:
     profiles: [observability]

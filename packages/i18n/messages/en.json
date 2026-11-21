@@ -91,7 +91,6 @@
 	"auth_toggle_show_password_login": "Show password login",
 	"auth_toggle_hide_password_login": "Hide password login",
 	"auth_button_password_login": "Log in with password",
-	"auth_button_continue_google": "Continue with Google",
 	"auth_hint_login_methods": "Passwordless login is preferred. You can also use Google or password below.",
 	"auth_feedback_admin_login": "Email and password are required for admin access.",
 	"auth_success_logged_in_title": "Logged in",
@@ -687,5 +686,11 @@
 	"a11y_contact_generic": "Report accessibility problems to the site administrator. We will reply within 7 days at the latest.",
 	"a11y_complaint": "If we refuse to provide accessibility, you can file a complaint and then apply to the Commissioner for Human Rights.",
 	"footer_accessibility": "Accessibility statement",
-	"footer_privacy": "Personal data"
+	"footer_privacy": "Personal data",
+	"auth_university_button": "Sign in with {name}",
+	"auth_university_button_generic": "Sign in with your university account",
+	"auth_or_email": "or with e-mail",
+	"auth_magic_link_sent": "We sent you a sign-in link. Check your inbox.",
+	"auth_sign_in_failed_title": "Sign-in failed",
+	"auth_sign_in_failed_body": "Try again or choose another way to sign in."
 }

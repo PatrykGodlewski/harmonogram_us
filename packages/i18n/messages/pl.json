@@ -91,7 +91,6 @@
 	"auth_toggle_show_password_login": "Pokaż logowanie hasłem",
 	"auth_toggle_hide_password_login": "Ukryj logowanie hasłem",
 	"auth_button_password_login": "Zaloguj się hasłem",
-	"auth_button_continue_google": "Kontynuuj z Google",
 	"auth_hint_login_methods": "Preferowane jest logowanie bez hasła. Poniżej możesz też użyć Google lub hasła.",
 	"auth_feedback_admin_login": "Dostęp dla administratorów wymaga adresu e-mail i hasła.",
 	"auth_success_logged_in_title": "Zalogowano",
@@ -687,5 +686,11 @@
 	"a11y_contact_generic": "Problemy z dostępnością zgłoś administratorowi serwisu. Odpowiemy najpóźniej w ciągu 7 dni.",
 	"a11y_complaint": "Jeśli odmówimy zapewnienia dostępności, możesz złożyć skargę, a następnie wniosek do Rzecznika Praw Obywatelskich.",
 	"footer_accessibility": "Deklaracja dostępności",
-	"footer_privacy": "Dane osobowe"
+	"footer_privacy": "Dane osobowe",
+	"auth_university_button": "Zaloguj się kontem: {name}",
+	"auth_university_button_generic": "Zaloguj się kontem uczelni",
+	"auth_or_email": "albo e-mailem",
+	"auth_magic_link_sent": "Wysłaliśmy link do logowania. Sprawdź skrzynkę.",
+	"auth_sign_in_failed_title": "Nie udało się zalogować",
+	"auth_sign_in_failed_body": "Spróbuj ponownie albo wybierz inny sposób logowania."
 }
