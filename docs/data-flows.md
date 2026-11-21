@@ -22,6 +22,8 @@ Foreign-key insertion takes a key-share lock on the parent: lock parents first. 
 
 Only `published` events take registrations or promote from the waitlist (`assertEventOpen`: drafts are `EVENT_NOT_FOUND`, cancelled ones `EVENT_CANCELLED`); a cancelled event can't be edited. Organiser add/remove (`addRegistrantByEmail`, `removeRegistrant`) follow the same rules and share `withdraw()` with self-service. Attendance is `event_registrations.checked_in_at`, set by `checkInByTicketCode` (first scan wins; a re-scan reports the original time) or the manual switch.
 
+Registration questions (`event_questions`) and answers (`registration_answers`, cascade with the registration and the question): `registerForEvent(…, { answers })` validates them in the transaction (`saveAnswers`: required, choice in options, yes/no); organiser-added people and group members may skip required answers; editing a question removes answers that no longer fit; `getEventRegistrants(…, { withAnswers })` hides answers from check-in helpers. E-mails use `coalesce(user.locale, registration.locale)`.
+
 Invite-only events (`visibility = 'private'`, CHECK: `invite_token` not null) are never listed or in feeds; `canOpenEvent` (`packages/api/src/events/access.ts`) opens them for the current invite link, a non-declined registration, or organisers, and is checked by the event page, registration, agenda-item registration, group creation and the single-event ICS.
 
 ## Electric → TanStack DB → UI

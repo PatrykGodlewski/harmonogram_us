@@ -64,8 +64,11 @@ export async function renderAttendanceSheetPdf(
 		`${sheet_title({}, { locale })} — ${input.eventTitle}`,
 	);
 	const pages = pageRows(input.people.length, FIRST_PAGE_ROWS, PAGE_ROWS);
-	const fit = (text: string, width: number) =>
-		fitLines(text, measure(regular), width, [10, 9, 8], 1).lines[0] ?? "";
+	/** One line in a column: the largest size that fits (drawn at that size). */
+	const cell = (text: string, width: number, sizes: number[]) => {
+		const fitted = fitLines(text, measure(regular), width, sizes, 1);
+		return { text: fitted.lines[0] ?? "", size: fitted.size };
+	};
 
 	let index = 0;
 	for (const [pageIndex, rows] of pages.entries()) {
@@ -79,18 +82,19 @@ export async function renderAttendanceSheetPdf(
 				font: bold,
 				color: NAVY,
 			});
-			for (const line of fitLines(
+			const title = fitLines(
 				input.eventTitle,
 				measure(bold),
 				PAGE.width - 2 * MARGIN,
 				[13, 11],
 				2,
-			).lines) {
+			);
+			for (const line of title.lines) {
 				y -= 18;
 				page.drawText(line, {
 					x: MARGIN,
 					y,
-					size: 13,
+					size: title.size,
 					font: bold,
 					color: NAVY,
 				});
@@ -133,17 +137,27 @@ export async function renderAttendanceSheetPdf(
 				font: regular,
 				color: NAVY,
 			});
-			page.drawText(fit(person.name, COLUMNS.email - COLUMNS.name - 8), {
+			const name = cell(
+				person.name,
+				COLUMNS.email - COLUMNS.name - 8,
+				[10, 9, 8],
+			);
+			page.drawText(name.text, {
 				x: COLUMNS.name,
 				y: textY,
-				size: 10,
+				size: name.size,
 				font: regular,
 				color: NAVY,
 			});
-			page.drawText(fit(person.email, COLUMNS.signature - COLUMNS.email - 8), {
+			const email = cell(
+				person.email,
+				COLUMNS.signature - COLUMNS.email - 8,
+				[9, 8],
+			);
+			page.drawText(email.text, {
 				x: COLUMNS.email,
 				y: textY,
-				size: 9,
+				size: email.size,
 				font: regular,
 				color: GREY,
 			});

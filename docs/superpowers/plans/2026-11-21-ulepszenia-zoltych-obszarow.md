@@ -75,3 +75,21 @@ Tests: the scan spec itself (red first).
 ### Task 9: Docs, final review, full verification
 
 Spec statuses, `docs/indico-comparison.md`, `docs/data-flows.md`, this plan's verification summary; `pnpm lint`, `typecheck`, `test`, `build`, `e2e` all green; fresh whole-plan review, fixes test-first; push to `next`.
+
+## Verification summary (21 November)
+
+All nine tasks done on `next` (`fa566dd..`). Final checks after the last fix pass: `pnpm lint` 0, `pnpm typecheck` 0, `pnpm test` (db 221, api 108, worker 19, ui 27, collections 8) green, `pnpm build` 0, `pnpm e2e` 134/134.
+
+Reviews: a per-feature review of F10 (three Important: answers that no longer fit blocked saving, helpers received answers, optional choices could not be cleared) and a final whole-plan review (one Critical: the PDF ticket's QR lacked the scanner's prefix; Important: attendance-sheet text drawn larger than fitted, a printed fallback code with nowhere to type it). Every Critical/Important finding was fixed with a test seen failing first; the PDF QR is now decoded in a unit test.
+
+Rulings (decisions delegated by the user):
+- Profile language switches the site and governs e-mails and certificates; the header switch stays per visit.
+- Questions ordered with up/down buttons; choice needs two or more options; editing a question removes answers that no longer fit; deleting removes its answers.
+- Answers are checked on the server; organiser-added people and group members may skip required answers; list cards of events with questions open the event page.
+- Participants edit answers while the event is open; organisers any time.
+- PDF ticket: A6 with QR (shared format with the web ticket and scanner); no printed code (no place to type it — manual check-in is on the list).
+- Attendance sheet: people with a place, by surname, signature column, for check-in helpers too.
+- Certificate text: issuer, signer (with a signature line), extra line; a long name takes two lines instead of being cut.
+- Accessibility statement says "partially compliant" (automated checks only) and must be confirmed by the university.
+
+Deferred minors: group and event invitations use the sender's language, not the invitee's profile language; characters outside Noto (CJK, emoji, RTL) are not shaped in PDFs; the attendance sheet loads the full event and all registrants; the answer dialog closes before the server answers; helpers prefetch questions (refused, ignored); no focus move to the first missing answer; speaker files, CSV import, tags, wallet passes and badges remain out of scope.

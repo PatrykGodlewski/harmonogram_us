@@ -26,3 +26,30 @@ describe("attendance sheet", () => {
 		expect(text).toContain("Osoba 45 Żółć");
 	});
 });
+
+describe("attendance sheet layout", () => {
+	it("a very long name and title stay inside their column and the page", async () => {
+		const { getDocumentProxy } = await import("unpdf");
+		const longName = "Aleksandra Konstancja Maria Wiśniewska-Brzęczyszczykiewicz-Nowak";
+		const pdf = await renderAttendanceSheetPdf({
+			eventTitle: "Bardzo długi tytuł wydarzenia ".repeat(6).trim(),
+			eventDate: new Date("2026-12-01T09:00:00Z"),
+			people: [{ name: longName, email: "a@x.test" }],
+			locale: "pl",
+		});
+		const document = await getDocumentProxy(new Uint8Array(pdf));
+		const page = await document.getPage(1);
+		const { items } = await page.getTextContent();
+		const texts = items.filter(
+			(item): item is { str: string; width: number; transform: number[] } =>
+				"str" in item && item.str.trim() !== "",
+		);
+		const pageWidth = page.view[2] ?? 595;
+		for (const item of texts) {
+			expect(item.transform[4] + item.width, item.str).toBeLessThanOrEqual(pageWidth - 40 + 1);
+		}
+		// The name column ends where the e-mail column starts (x = 250).
+		const name = texts.find((item) => item.str.startsWith("Aleksandra"));
+		expect((name?.transform[4] ?? 0) + (name?.width ?? 0)).toBeLessThanOrEqual(250);
+	});
+});

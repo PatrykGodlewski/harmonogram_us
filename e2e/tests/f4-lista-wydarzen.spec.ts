@@ -86,6 +86,11 @@ test("[F4] filtry kiedy i forma zawężają listę @uczestnik", async ({
 	await open(page, `/pl?search=${tag}`);
 	await expect(page.getByText(later.title)).toBeVisible();
 
+	// Each filter announces its name and its current value to screen readers
+	await expect(
+		page.getByRole("combobox", { name: /Każdy termin/ }),
+	).toBeVisible();
+
 	// When: the next 7 days
 	await page.getByRole("combobox").filter({ hasText: "Każdy termin" }).click();
 	await page.getByRole("option", { name: "Najbliższe 7 dni" }).click();

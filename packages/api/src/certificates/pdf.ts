@@ -68,14 +68,18 @@ export async function renderCertificatePdf(
 	y -= 56;
 	drawCentered(page, certificate_person({}, { locale }), y, regular, 13, GREY);
 	y -= 34;
+	// A name is never cut: it shrinks, then takes a second line.
 	const name = fitLines(
 		input.name,
 		measure(bold),
 		TEXT_WIDTH,
 		[26, 22, 18, 14],
-		1,
+		2,
 	);
-	drawCentered(page, name.lines[0] ?? "", y, bold, name.size);
+	for (const [index, line] of name.lines.entries()) {
+		if (index > 0) y -= name.size + 6;
+		drawCentered(page, line, y, bold, name.size);
+	}
 	y -= 46;
 	drawCentered(page, certificate_intro({}, { locale }), y, regular, 13, GREY);
 	// At most three lines, so the date never reaches the footer.

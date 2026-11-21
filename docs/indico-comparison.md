@@ -1,6 +1,6 @@
 # Indico comparison
 
-Snapshot: 2026-11-21, branch `next` (updated after plan 4; first snapshot at `e209a1e`). Indico is inspiration, not a parity target ([product spec](superpowers/specs/2026-11-19-produkt-design.md)); this page shows where we stand and where the gaps are.
+Snapshot: 2026-11-21, branch `next` (updated after plan 5; first snapshot at `e209a1e`). Indico is inspiration, not a parity target ([product spec](superpowers/specs/2026-11-19-produkt-design.md)); this page shows where we stand and where the gaps are.
 
 **Sources.** Our side: code and the passing `[Fn]` e2e tests named below (`pnpm e2e`, 77/77 at `e209a1e`). Indico side: the Indico source (`master` at `f20ab92`, latest release 3.3.15) and its changelog (`CHANGES.rst`), learn.getindico.io, the check-in PWA repository, and the source-derived inventory in [`superpowers/parity/inwentarz-indico.json`](superpowers/parity/inwentarz-indico.json). Nothing here comes from memory alone.
 
@@ -10,18 +10,18 @@ Snapshot: 2026-11-21, branch `next` (updated after plan 4; first snapshot at `e2
 
 | Area | Indico | Us | Verdict |
 |---|---|---|---|
-| Accounts and sign-in | Local accounts, LDAP, SAML, OAuth, SSO | Magic link and password, captcha, breached-password check; no profile language, no university sign-in | 🟡 |
+| Accounts and sign-in | Local accounts, LDAP, SAML, OAuth, SSO | Magic link and password, captcha, breached-password check, profile name and language (site and e-mails follow it); no university sign-in | 🟡 (✅ on profile) |
 | Roles and permissions | Category permissions; event ACLs with users, groups, e-mails, IP networks, roles; fine-grained permissions (registration: all / moderation only / check-in only); protection modes; access keys | Roles user / organiser / admin, co-organisers by e-mail, check-in helpers per event (scanner and attendance only), "signed-in users only" and invite-only events, server-side access checks | 🟡 (✅ on the check-in-only helper and invite-only events) |
 | Event lifecycle: draft and publishing | No event-level draft; "unlisted events" (admin opt-in, 3.1) | Draft → publish with a checklist that says what is missing and fixes it in place | ✅+ |
 | Event lifecycle: cancellation | No cancel action; a "cancelled" label (2.2.7) that stops reminders | Cancel closes registration, e-mails everyone registered or waitlisted, flips open pages live, keeps history | ✅+ |
 | Event lifecycle: cloning, lock, video | Clone once, at intervals or by pattern, choosing what to copy (ACLs, materials, registration forms, registrations…); lock; videoconference rooms (Zoom plugin) | Duplicate once or weekly/monthly up to 12 drafts, keeping local time across DST, choosing programme and organisers; settings (approval, certificates, visibility with a fresh invite link) copied; no lock, no video integration | 🟡 (✅ on recurring copies) |
 | Panel event list | 25 per page, sortable, "show all"; search module | 50 per page with "show more", server-side search, data with the page | ✅ |
 | Campus calendar | Category calendars, search, iCal | Paged list with search and filters (date: today / 7 / 30 days, format, unit, type, place), live seat counts, ICS feeds (all events; my registrations behind a private link), "add to calendar", Open Graph link previews; cancelled events stay in feeds marked cancelled; no month view | ✅+ |
-| Registration | Custom forms, moderation (approval), registration limit; **no waitlist** | One tap, capacity with an automatic waitlist that survives concurrent sign-ups, groups (F26), per-agenda-item registration (F27), approval (approving on a full event puts people on the waitlist); no custom questions | 🟡 (✅+ on capacity and approval) |
+| Registration | Custom forms, moderation (approval), registration limit; **no waitlist** | One tap without questions; custom questions (text, choice, yes/no; required or optional) checked on the server; capacity with an automatic waitlist that survives concurrent sign-ups, groups (F26), per-agenda-item registration (F27), approval (approving on a full event puts people on the waitlist); no file uploads or conditional fields | ✅ (✅+ on capacity and approval) |
 | E-mails | Registration emails to registrants and managers, approval/rejection, configurable reminders; **no cancellation or change notices** | Confirmation, waitlist, promotion, cancellation, change of date/place (old → new), reminders (a day before by default; 1 h / 2 days / off), organiser messages to a group or to selected people | ✅+ |
-| Registrant list | Filters and columns, CSV/XLSX/PDF export, CSV import, create/edit/delete/withdraw, approve/reject, bulk actions, tags, e-mail to selected people with placeholders | Search and state filter (incl. waiting / declined), "N waiting" prompt, add/remove (waitlist moves up), approve/decline one or many, bulk check-in / message / remove, CSV and XLSX, attendance; no PDF, import, tags or editing a registration (waits for custom questions) | 🟡 (✅ on approval, bulk actions and exports) |
-| Tickets and check-in | PDF ticket with QR, Google/Apple Wallet (experimental), check-in PWA with the phone camera, manual and bulk check-in with time, badges | Ticket page with QR, camera scanner in the panel, manual and bulk check-in with time, check-in helpers, attendance in the CSV; no PDF ticket, wallet or badges | ✅ core, 🟡 extras |
-| Certificates | Document templates (organiser generates) | PDF for attendees of ended events (per-event switch), downloaded from the account and e-mailed automatically; no custom templates | ✅ (✅+ on automatic delivery, 🟡 on templates) |
+| Registrant list | Filters and columns, CSV/XLSX/PDF export, CSV import, create/edit/delete/withdraw, approve/reject, bulk actions, tags, e-mail to selected people with placeholders | Search and state filter (incl. waiting / declined), "N waiting" prompt, add/remove (waitlist moves up), approve/decline one or many, bulk check-in / message / remove, answers on the list, CSV and XLSX with a column per question, PDF attendance sheet with signatures, editing answers; no CSV import, tags or e-mail placeholders | ✅ (🟡 on import and tags) |
+| Tickets and check-in | PDF ticket with QR, Google/Apple Wallet (experimental), check-in PWA with the phone camera, manual and bulk check-in with time, badges | Ticket page with QR and a PDF ticket (QR plus the code in writing), camera scanner in the panel, manual and bulk check-in with time, check-in helpers, paper attendance sheet, attendance in the CSV; no wallet passes or badges | ✅ (🟡 on wallet and badges) |
+| Certificates | Document templates (organiser generates) | PDF for attendees of ended events (per-event switch) with the organiser's issuer, signer and note, downloaded from the account and e-mailed automatically; no logo or custom layout | ✅ (✅+ on automatic delivery) |
 | Materials | Files, links, folders | — | ❌ |
 | Statistics and logs | Event log, Matomo plugin | — | ❌ |
 | Programme | Sessions, contributions, editor, PDF | List and calendar, parallel sessions, live "now" line, rooms, days, speakers with affiliation, material links; no PDF | ✅ |
@@ -32,7 +32,7 @@ Snapshot: 2026-11-21, branch `next` (updated after plan 4; first snapshot at `e2
 | Video calls | Zoom plugin | — (spec targets Teams) | ❌ |
 | API and widgets | HTTP API, iCal | — | ❌ |
 | Personal data (GDPR) | Privacy settings, data retention | Notice at sign-up, privacy page (controller, basis, retention, rights), automatic deletion after the retention period, export and delete my data (with safeguards for the last admin and sole organisers) | ✅ |
-| Accessibility | Partial | Polish and English, no audit | 🟡 |
+| Accessibility | Partial | Polish and English; automated WCAG 2.1 A/AA scan of every participant and organiser screen; accessibility statement in both languages; no expert audit, PDFs not tagged | ✅ (🟡 on expert audit) |
 | Private / invite-only events | Protected events with access lists, access keys | Invite-only events: not listed or in feeds; open with an invite link (copy, change to revoke), to registrants and organisers; invitations by e-mail (up to 50 at once) | ✅ |
 | Guests without accounts | Depends on the form | — | ❌ |
 | Abstracts and peer review | Full workflow | — | ⏸ |
@@ -57,13 +57,17 @@ GDPR (F9), reminders and change notices (F13), calendar feeds and link previews 
 
 Approval (F30), invite-only events (F32), certificates (F12), recurring copies (F31) and speakers with material links (F18/F19) close gaps 3 (approval), 5, 6 and 7. Verified by the e2e tests named in the spec.
 
+## Changes in plan 5 (21 November)
+
+Profile language (F1), custom registration questions with editing (F10), PDF attendance sheet (F7), PDF ticket (F11), certificate text (F12) and the accessibility scan with statement (F8) lift the accounts, registration, registrant list, tickets, certificates and accessibility rows. Verified by the e2e tests named in the spec.
+
 ## Biggest gaps, in suggested order
 
 1. ~~Personal data (F9)~~ done in plan 3.
 2. ~~Reminders and change notices (F13)~~ done in plan 3.
-3. Registrant management extras: editing a registration remains (needs custom questions, F10); approval, bulk actions, XLSX and a check-in helper are done.
+3. ~~Registrant management extras~~ done in plans 4–5 (CSV import and tags remain).
 4. ~~Campus calendar subscription and link previews (F4)~~ done in plan 3.
 5. ~~Certificates (F12)~~ done in plan 4 (available until retention deletes the registration).
 6. ~~Cloning options (F31)~~ done in plan 4.
 7. ~~Speakers (F18/F19)~~ done in plan 4; speaker files wait for file storage (F14).
-8. Custom registration questions (F10), materials and files (F14), statistics (F15).
+8. ~~Custom registration questions (F10)~~ done in plan 5; next: materials and files (F14), statistics (F15).

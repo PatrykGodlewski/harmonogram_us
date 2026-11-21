@@ -51,4 +51,19 @@ describe("renderCertificatePdf", () => {
 		expect(text).toContain("dr Jan Nowak, kierownik warsztatów");
 		expect(text).toContain("Liczba godzin: 4");
 	});
+
+	it("keeps a very long name whole (on two lines) instead of cutting it", async () => {
+		const name =
+			"Aleksandra Konstancja Maria Józefina Wiśniewska-Brzęczyszczykiewicz von Hohenzollern-Sigmaringen zu Schwarzenberg-Lichtenstein";
+		const pdf = await renderCertificatePdf({
+			name,
+			eventTitle: "Warsztaty",
+			eventDate: new Date("2026-12-01T09:30:00Z"),
+			reference: "ab12cd34",
+			locale: "pl",
+		});
+		const { text } = await extractText(new Uint8Array(pdf), { mergePages: true });
+		expect(text).not.toContain("…");
+		expect(text.replace(/\s+/g, " ")).toContain(name);
+	});
 });

@@ -74,7 +74,7 @@ import {
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useId, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { formatFieldError } from "../lib/format-field-error";
@@ -104,6 +104,13 @@ function parseDateTimeLocal(value: string) {
 }
 
 const VISIBILITIES = ["public", "authenticated", "private"] as const;
+
+/** The optional lines an organiser may put on certificates. */
+const CERTIFICATE_FIELDS = [
+	["certificateIssuer", admin_field_certificate_issuer],
+	["certificateSigner", admin_field_certificate_signer],
+	["certificateNote", admin_field_certificate_note],
+] as const;
 
 const VISIBILITY_LABELS: Record<EventVisibility, () => string> = {
 	public: admin_visibility_public,
@@ -195,6 +202,7 @@ export function EventFormDialog({
 	onSaved,
 }: EventFormDialogProps) {
 	const navigate = useNavigate();
+	const certificateHintId = useId();
 	const eventSchema = useMemo(
 		() =>
 			z.object({
@@ -731,68 +739,31 @@ export function EventFormDialog({
 				{(enabled) =>
 					enabled ? (
 						<fieldset className="flex flex-col gap-3 rounded-md border p-3">
-							<form.Field name="certificateIssuer">
-								{(field) => (
-									<div>
-										<Label htmlFor={field.name}>
-											{admin_field_certificate_issuer()}
-										</Label>
-										<Input
-											id={field.name}
-											className="mt-1"
-											maxLength={200}
-											aria-describedby="certificate-hint"
-											disabled={saveMutation.isPending}
-											value={field.state.value}
-											onChange={(event) =>
-												field.handleChange(event.target.value)
-											}
-										/>
-									</div>
-								)}
-							</form.Field>
-							<form.Field name="certificateSigner">
-								{(field) => (
-									<div>
-										<Label htmlFor={field.name}>
-											{admin_field_certificate_signer()}
-										</Label>
-										<Input
-											id={field.name}
-											className="mt-1"
-											maxLength={200}
-											aria-describedby="certificate-hint"
-											disabled={saveMutation.isPending}
-											value={field.state.value}
-											onChange={(event) =>
-												field.handleChange(event.target.value)
-											}
-										/>
-									</div>
-								)}
-							</form.Field>
-							<form.Field name="certificateNote">
-								{(field) => (
-									<div>
-										<Label htmlFor={field.name}>
-											{admin_field_certificate_note()}
-										</Label>
-										<Input
-											id={field.name}
-											className="mt-1"
-											maxLength={200}
-											aria-describedby="certificate-hint"
-											disabled={saveMutation.isPending}
-											value={field.state.value}
-											onChange={(event) =>
-												field.handleChange(event.target.value)
-											}
-										/>
-									</div>
-								)}
-							</form.Field>
+							<legend className="px-1 text-sm font-medium">
+								{admin_field_certificates()}
+							</legend>
+							{CERTIFICATE_FIELDS.map(([name, label]) => (
+								<form.Field key={name} name={name}>
+									{(field) => (
+										<div>
+											<Label htmlFor={field.name}>{label()}</Label>
+											<Input
+												id={field.name}
+												className="mt-1"
+												maxLength={200}
+												aria-describedby={certificateHintId}
+												disabled={saveMutation.isPending}
+												value={field.state.value}
+												onChange={(event) =>
+													field.handleChange(event.target.value)
+												}
+											/>
+										</div>
+									)}
+								</form.Field>
+							))}
 							<p
-								id="certificate-hint"
+								id={certificateHintId}
 								className="text-xs text-muted-foreground"
 							>
 								{admin_field_certificate_hint()}

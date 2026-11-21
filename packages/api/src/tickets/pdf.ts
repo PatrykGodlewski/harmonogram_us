@@ -1,7 +1,6 @@
 /** Server-only: the printable ticket (never import from components). */
 import {
 	tickets_holder,
-	tickets_pdf_code,
 	tickets_show_at_entry,
 	tickets_title,
 } from "@repo/i18n/paraglide/messages";
@@ -15,6 +14,7 @@ import {
 	NAVY,
 } from "../pdf/document";
 import { fitLines } from "../pdf/layout";
+import { ticketQrText } from "./qr";
 
 export type TicketPdfInput = {
 	holderName: string;
@@ -30,7 +30,7 @@ const PAGE = { width: 298, height: 420 };
 const TEXT_WIDTH = PAGE.width - 40;
 const QR_SIZE = 150;
 
-/** One page: event, holder, the QR code the scanner reads, and the code in writing. */
+/** One page: event, holder and the QR code the door scanner reads. */
 export async function renderTicketPdf(
 	input: TicketPdfInput,
 ): Promise<Uint8Array> {
@@ -68,7 +68,10 @@ export async function renderTicketPdf(
 	}
 
 	const qr = await pdf.embedPng(
-		await QRCode.toBuffer(input.ticketCode, { margin: 1, width: 600 }),
+		await QRCode.toBuffer(ticketQrText(input.ticketCode), {
+			margin: 1,
+			width: 600,
+		}),
 	);
 	y -= QR_SIZE + 14;
 	page.drawImage(qr, {
@@ -99,16 +102,5 @@ export async function renderTicketPdf(
 	);
 	drawCentered(page, holder.lines[0] ?? "", y, bold, holder.size, NAVY);
 
-	// The code in two lines of small monospace-like text, for typing it in by hand.
-	y -= 22;
-	drawCentered(page, tickets_pdf_code({}, { locale }), y, regular, 7, GREY);
-	const half = Math.ceil(input.ticketCode.length / 2);
-	for (const part of [
-		input.ticketCode.slice(0, half),
-		input.ticketCode.slice(half),
-	]) {
-		y -= 10;
-		drawCentered(page, part, y, regular, 7, GREY);
-	}
 	return pdf.save();
 }

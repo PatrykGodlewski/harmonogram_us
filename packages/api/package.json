@@ -43,6 +43,7 @@
     "@types/nodemailer": "^8.0.0",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.2.14",
+    "jsqr": "^1.4.0",
     "typescript": "^6.0.3",
     "unpdf": "^2.2.1",
     "vitest": "^5.1.1"

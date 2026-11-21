@@ -664,7 +664,6 @@
 	"answers_saved": "Zapisano odpowiedzi",
 	"admin_answers_edit": "Edytuj odpowiedzi",
 	"tickets_pdf": "Pobierz PDF",
-	"tickets_pdf_code": "Kod biletu (gdyby skaner nie działał):",
 	"error_register_event_first": "Najpierw zapisz się na wydarzenie (organizator zadaje pytania), potem wybierz punkty programu.",
 	"answers_none": "Bez odpowiedzi",
 	"questions_edit_hint": "Odpowiedzi, które przestaną pasować do pytania (inny rodzaj, usunięta opcja), zostaną usunięte.",

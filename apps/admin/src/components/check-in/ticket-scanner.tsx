@@ -1,4 +1,5 @@
 import { checkInServer } from "@repo/api/admin/check-in";
+import { ticketCodeFromQr } from "@repo/api/tickets/qr";
 import {
 	admin_error_generic,
 	admin_scan_already,
@@ -14,7 +15,6 @@ import jsQR from "jsqr";
 import { useEffect, useRef, useState } from "react";
 
 /** What the ticket QR code holds (see the ticket page). */
-const TICKET_PREFIX = "harmonogram-ticket:";
 /** How often a camera frame is decoded. */
 const SCAN_INTERVAL_MS = 250;
 /** The same code is not sent again within this time (it stays in front of the camera). */
@@ -53,13 +53,14 @@ export function TicketScanner({ eventId }: { eventId: string }) {
 				return;
 			}
 			lastSeen.set(text, now);
-			if (!text.startsWith(TICKET_PREFIX)) {
+			const ticketCode = ticketCodeFromQr(text);
+			if (!ticketCode) {
 				setResult({ kind: "error", message: admin_scan_not_ticket() });
 				return;
 			}
 			try {
 				const checkIn = await checkInServer({
-					data: { eventId, ticketCode: text.slice(TICKET_PREFIX.length) },
+					data: { eventId, ticketCode },
 				});
 				const time = formatEventTime(checkIn.checkedInAt, getLocale());
 				setResult(

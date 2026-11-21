@@ -1,4 +1,5 @@
 import type { Ticket } from "@repo/api/events/ticket";
+import { ticketQrText } from "@repo/api/tickets/qr";
 import {
 	events_pending_approval,
 	events_rejected,
@@ -14,11 +15,6 @@ import { Button } from "@repo/ui/components/button";
 import { formatEventDateTime } from "@repo/ui/time";
 import QRCode from "qrcode";
 import * as React from "react";
-
-/** What the ticket's QR code encodes; an organiser's scanner reads it back. */
-function ticketQrText(ticketCode: string): string {
-	return `harmonogram-ticket:${ticketCode}`;
-}
 
 /** Why a ticket without a place shows no QR code. */
 const NO_PLACE_MESSAGE = {

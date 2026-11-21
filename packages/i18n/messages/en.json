@@ -664,7 +664,6 @@
 	"answers_saved": "Answers saved",
 	"admin_answers_edit": "Edit answers",
 	"tickets_pdf": "Download PDF",
-	"tickets_pdf_code": "Ticket code (if the scanner fails):",
 	"error_register_event_first": "Register for the event first (the organiser asks questions), then pick programme items.",
 	"answers_none": "No answer",
 	"questions_edit_hint": "Answers that no longer fit the question (another type, a removed option) will be deleted.",
