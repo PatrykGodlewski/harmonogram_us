@@ -28,5 +28,5 @@ tonic-prost-build = "0.14"
 [dev-dependencies]
 proptest = "1"
 rqrr = "0.10"
-lopdf = "0.38"
+lopdf = "0.42"
 reqwest = { version = "0.12", default-features = false }

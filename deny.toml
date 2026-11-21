@@ -3,6 +3,12 @@
 [advisories]
 version = 2
 yanked = "deny"
+ignore = [
+	# ttf-parser is unmaintained (no known vulnerability). krilla needs it through rustybuzz for
+	# text shaping, so it cannot be dropped; it only ever parses the fonts embedded in the binary,
+	# never request data. Revisit when krilla moves off rustybuzz.
+	{ id = "RUSTSEC-2026-0192", reason = "unmaintained, no vulnerability; parses only our embedded fonts" },
+]
 
 [licenses]
 version = 2
