@@ -42,3 +42,6 @@ e2e/.fake-camera/
 
 # Load test run data (sessions, payloads, k6 summaries)
 e2e/load/.run/
+
+# Rust
+/target

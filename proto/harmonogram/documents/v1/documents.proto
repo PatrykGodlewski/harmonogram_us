@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package harmonogram.documents.v1;
+
+// Renders the app's PDFs. Callers send display-ready text (translated and formatted);
+// the service only lays it out.
+service DocumentService {
+  rpc RenderTicket(RenderTicketRequest) returns (RenderTicketResponse);
+}
+
+message RenderTicketRequest {
+  // PDF metadata title, e.g. "Bilet — Koncert jesienny".
+  string document_title = 1;
+  // Small heading above the event title, e.g. "Bilet".
+  string heading = 2;
+  string event_title = 3;
+  // Formatted start, e.g. "1 grudnia 2026, 18:00".
+  string date_text = 4;
+  optional string place = 5;
+  // The full QR payload the door scanner reads.
+  string qr_text = 6;
+  string show_at_entry = 7;
+  string holder_label = 8;
+  string holder_name = 9;
+}
+
+message RenderTicketResponse {
+  bytes pdf = 1;
+}
