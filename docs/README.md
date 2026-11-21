@@ -7,6 +7,7 @@ Shared agent rules live in [AGENTS.md](../AGENTS.md). Claude imports that file t
 | Product scope and acceptance criteria                                      | [Product spec](superpowers/specs/2026-11-19-produkt-design.md), then the relevant approved plan |
 | Package boundaries, API/auth, routing, i18n, config, metrics, deployment   | [Architecture](architecture.md)                                                                 |
 | Capacity, registration, groups, waitlists, Electric or queued jobs         | [Data-flow invariants](data-flows.md)                                                           |
+| Security process, licence, dependency and CI controls                      | [Security](security.md)                                                                         |
 | Plan creation/reconciliation, execution, resuming, completion, Superpowers | [Workflow](workflow.md)                                                                         |
 | Test selection, test-writing standards and when to run checks              | [Testing](testing.md)                                                                           |
 | Evidence, review findings, blockers and completion reports                 | [Reporting](reporting.md)                                                                       |

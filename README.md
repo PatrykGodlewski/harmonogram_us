@@ -224,4 +224,15 @@ observability/   Prometheus and Grafana configuration
 docs/            architecture, development, data flows, product spec and plans
 ```
 
+## Licence and contributing
+
+Harmonogram US is licensed under the [Functional Source License, FSL-1.1-ALv2](LICENSE.md), the licence
+Sentry uses. You may use, change and self-host it for any purpose except offering it as a competing
+commercial product or service; every version becomes Apache-2.0 two years after it is published. It is
+source-available ("fair source"), not OSI open source.
+
+Contributions are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md) and the
+[Code of Conduct](CODE_OF_CONDUCT.md). Report vulnerabilities privately as described in
+[SECURITY.md](SECURITY.md); the security process is in [docs/security.md](docs/security.md).
+
 ![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/PatrykGodlewski/harmonogram_us?utm_source=oss&utm_medium=github&utm_campaign=PatrykGodlewski%2Fharmonogram_us&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
