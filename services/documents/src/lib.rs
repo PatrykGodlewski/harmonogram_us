@@ -2,6 +2,8 @@
 #![forbid(unsafe_code)]
 
 pub mod config;
+pub mod fonts;
+pub mod layout;
 
 /// Generated from `proto/harmonogram/documents/v1/documents.proto`.
 pub mod proto {
