@@ -1,6 +1,9 @@
 import { DomainError } from "@repo/db/queries/domain-errors";
 import { registerForEvent } from "@repo/db/queries/event-registrations";
-import { takeGuestRequest } from "@repo/db/queries/guest-requests";
+import {
+	assertGuestRequestStillValid,
+	takeGuestRequest,
+} from "@repo/db/queries/guest-requests";
 import type { BetterAuthPlugin } from "better-auth";
 import { APIError, createAuthEndpoint } from "better-auth/api";
 import { setSessionCookie } from "better-auth/cookies";
@@ -58,6 +61,15 @@ export const guestRegistration = () =>
 					const request = await takeGuestRequest(ctx.body.token);
 					if (!request) {
 						throw guestError("GUEST_LINK_INVALID");
+					}
+					// The invite link may have been revoked, or the event closed to guests, since.
+					try {
+						await assertGuestRequestStillValid(request);
+					} catch (error) {
+						if (error instanceof DomainError) {
+							throw guestError(error.code);
+						}
+						throw error;
 					}
 					// The link reached this inbox: it proves the address, like a magic link.
 					const user = await ensureVerifiedUser(

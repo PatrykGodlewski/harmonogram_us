@@ -1,7 +1,4 @@
-import {
-	getRegistrationForEmail,
-	removeRegistrant,
-} from "@repo/db/queries/event-registrations";
+import { withdrawRegistrationByLink } from "@repo/db/queries/event-registrations";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { appError, withDomainErrors } from "../errors";
@@ -24,16 +21,8 @@ export const withdrawByLinkServer = createServerFn({ method: "POST" })
 		if (!isWithdrawTokenValid(data.registrationId, data.token)) {
 			throw appError("WITHDRAW_LINK_INVALID");
 		}
-		const registration = await getRegistrationForEmail(data.registrationId);
-		if (!registration) {
-			throw appError("NOT_REGISTERED");
-		}
 		await withDomainErrors(() =>
-			removeRegistrant(
-				registration.eventId,
-				data.registrationId,
-				registrationEmailHooks,
-			),
+			withdrawRegistrationByLink(data.registrationId, registrationEmailHooks),
 		);
 		return { ok: true as const };
 	});

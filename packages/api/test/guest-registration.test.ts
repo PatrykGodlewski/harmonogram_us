@@ -105,6 +105,34 @@ describe("POST /guest-registration/confirm", () => {
 		expect(await second.json()).toMatchObject({ code: "GUEST_LINK_INVALID" });
 	});
 
+	it("re-checks access at confirmation: a revoked invite link or a signed-in-only switch", async () => {
+		const { createGuestRequest } = await import("@repo/db/queries/guest-requests");
+		const inviteOnly = await createEvent();
+		await db
+			.update(events)
+			.set({ visibility: "private", inviteToken: "old-link" })
+			.where(eq(events.id, inviteOnly));
+		const { token: invited } = await createGuestRequest({
+			eventId: inviteOnly,
+			email: "invited@x.test",
+			name: "Zaproszony",
+			locale: "pl",
+			answers: {},
+			inviteToken: "old-link",
+		});
+		await db.update(events).set({ inviteToken: "new-link" }).where(eq(events.id, inviteOnly));
+		const revoked = await confirm(invited);
+		expect(revoked.status).toBe(400);
+		expect(await revoked.json()).toMatchObject({ code: "EVENT_NOT_FOUND" });
+
+		const publicEvent = await createEvent();
+		const token = await guestToken(publicEvent, "later@x.test");
+		await db.update(events).set({ visibility: "authenticated" }).where(eq(events.id, publicEvent));
+		const switched = await confirm(token);
+		expect(await switched.json()).toMatchObject({ code: "GUESTS_NOT_ALLOWED" });
+		expect(await registrationOf(publicEvent, "later@x.test")).toBeUndefined();
+	});
+
 	it("puts the guest on the waitlist when the event filled up meanwhile", async () => {
 		const { createUser } = await import("../../db/test/helpers");
 		const { registerForEvent } = await import("@repo/db/queries/event-registrations");

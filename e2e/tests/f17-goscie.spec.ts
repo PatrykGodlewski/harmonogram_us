@@ -163,3 +163,28 @@ async function stateOf(eventId: string, email: string) {
 		);
 	return row?.state ?? null;
 }
+
+test("[F17] po odmowie gość poprawia adres i wysyła ponownie @uczestnik", async ({
+	page,
+}, testInfo) => {
+	const email = uniqueEmail(testInfo);
+	const event = await createTestEvent({});
+	await open(page, `/pl/events/${event.id}`);
+	await page.getByRole("button", { name: "Zapisz się bez konta" }).click();
+	const dialog = page.getByRole("dialog");
+	await dialog.getByLabel("Imię i nazwisko").fill("Gość Testowy");
+	// A throwaway address is refused by the server…
+	await dialog.getByLabel("E-mail").fill("gosc@mailinator.com");
+	await waitForCaptcha(page);
+	await dialog
+		.getByRole("button", { name: "Wyślij link potwierdzenia" })
+		.click();
+	await expect(dialog.getByRole("alert")).toBeVisible();
+	// …and after correcting it the form works again (a fresh CAPTCHA token).
+	await dialog.getByLabel("E-mail").fill(email);
+	await waitForCaptcha(page);
+	await dialog
+		.getByRole("button", { name: "Wyślij link potwierdzenia" })
+		.click();
+	await expect(dialog).toContainText("Sprawdź skrzynkę");
+});

@@ -29,6 +29,54 @@ function sameSecret(given: string, expected: string): boolean {
 }
 
 /**
+ * Whether a guest may join the event now: open (EVENT_NOT_FOUND / _CANCELLED / _ENDED),
+ * not signed-in only (GUESTS_NOT_ALLOWED), and for invite-only events the current invite
+ * link (EVENT_NOT_FOUND). Checked when asking and again when confirming (a link can be
+ * revoked or the event changed within the 24 hours).
+ */
+async function assertGuestsMayJoin(
+	tx: TransactionClient,
+	eventId: string,
+	inviteToken: string | null,
+): Promise<{ title: string }> {
+	await assertEventOpen(tx, eventId);
+	const [event] = await tx
+		.select({
+			title: events.title,
+			visibility: events.visibility,
+			inviteToken: events.inviteToken,
+		})
+		.from(events)
+		.where(eq(events.id, eventId));
+	if (!event) {
+		throw new DomainError("EVENT_NOT_FOUND");
+	}
+	if (event.visibility === "authenticated") {
+		throw new DomainError("GUESTS_NOT_ALLOWED");
+	}
+	if (
+		event.visibility === "private" &&
+		!(
+			inviteToken &&
+			event.inviteToken &&
+			sameSecret(inviteToken, event.inviteToken)
+		)
+	) {
+		throw new DomainError("EVENT_NOT_FOUND");
+	}
+	return { title: event.title };
+}
+
+/** The confirm-time check for a taken request (see assertGuestsMayJoin). */
+export async function assertGuestRequestStillValid(
+	request: Pick<GuestRequest, "eventId" | "inviteToken">,
+): Promise<void> {
+	await db.transaction((tx) =>
+		assertGuestsMayJoin(tx, request.eventId, request.inviteToken),
+	);
+}
+
+/**
  * Stores a guest's request and returns the token for the confirmation link (only its hash
  * is kept). Refuses events a guest cannot join: not open (EVENT_NOT_FOUND / _CANCELLED /
  * _ENDED), signed-in only (GUESTS_NOT_ALLOWED), invite-only without its link
@@ -44,28 +92,11 @@ export async function createGuestRequest(
 	) => Promise<void>,
 ): Promise<{ token: string }> {
 	return db.transaction(async (tx) => {
-		await assertEventOpen(tx, input.eventId);
-		const [event] = await tx
-			.select({
-				title: events.title,
-				visibility: events.visibility,
-				inviteToken: events.inviteToken,
-			})
-			.from(events)
-			.where(eq(events.id, input.eventId));
-		if (event?.visibility === "authenticated") {
-			throw new DomainError("GUESTS_NOT_ALLOWED");
-		}
-		if (
-			event?.visibility === "private" &&
-			!(
-				input.inviteToken &&
-				event.inviteToken &&
-				sameSecret(input.inviteToken, event.inviteToken)
-			)
-		) {
-			throw new DomainError("EVENT_NOT_FOUND");
-		}
+		const event = await assertGuestsMayJoin(
+			tx,
+			input.eventId,
+			input.inviteToken ?? null,
+		);
 		await assertAnswersValid(tx, input.eventId, input.answers);
 
 		const token = randomBytes(32).toString("base64url");
@@ -79,7 +110,7 @@ export async function createGuestRequest(
 			inviteToken: input.inviteToken ?? null,
 			expiresAt: new Date(Date.now() + REQUEST_LIFETIME_MS),
 		});
-		await onCreated?.(tx, token, { title: event?.title ?? "" });
+		await onCreated?.(tx, token, { title: event.title });
 		return { token };
 	});
 }

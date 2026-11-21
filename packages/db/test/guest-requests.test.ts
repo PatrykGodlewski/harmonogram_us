@@ -120,3 +120,33 @@ describe("guest registration requests", () => {
 		expect(await db.select().from(guestRegistrationRequests)).toHaveLength(1);
 	});
 });
+
+describe("withdrawing by link", () => {
+	it("withdraws a registration and refuses a rejected one (it must not ask again)", async () => {
+		const { registerForEvent } = await import("../src/queries/event-registrations");
+		const { rejectRegistrations } = await import("../src/queries/registration-approval");
+		const { withdrawRegistrationByLink } = await import("../src/queries/event-registrations");
+		const { createUser, stateOf } = await import("./helpers");
+		const { eventRegistrations } = await import("../src/schema/event-registrations");
+		const eventId = await createEvent({ requiresApproval: true });
+		const kept = await createUser("kept@x.test");
+		const rejected = await createUser("rejected@x.test");
+		await registerForEvent(eventId, kept, "pl");
+		await registerForEvent(eventId, rejected, "pl");
+		const idOf = async (userId: string) =>
+			(
+				await db
+					.select({ id: eventRegistrations.id })
+					.from(eventRegistrations)
+					.where(eq(eventRegistrations.userId, userId))
+			)[0]?.id ?? "";
+		const rejectedId = await idOf(rejected);
+		await rejectRegistrations(eventId, [rejectedId]);
+
+		expect(await rejectionCode(withdrawRegistrationByLink(rejectedId))).toBe("NOT_REGISTERED");
+		expect(await stateOf(eventId, rejected)).toBe("rejected");
+
+		await withdrawRegistrationByLink(await idOf(kept));
+		expect(await stateOf(eventId, kept)).toBeNull();
+	});
+});

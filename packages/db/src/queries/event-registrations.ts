@@ -508,6 +508,33 @@ async function withdraw(
 	return { txid: await getCurrentTxId(tx) };
 }
 
+/**
+ * The person withdraws through the signed link in their e-mail (F17): the same rules as
+ * withdrawing on the site, so a rejected request stays (it cannot be asked again).
+ */
+export async function withdrawRegistrationByLink(
+	registrationId: string,
+	hooks?: RegistrationHooks,
+): Promise<{ txid: number }> {
+	return db.transaction(async (tx) => {
+		const [found] = await tx
+			.select({ eventId: eventRegistrations.eventId })
+			.from(eventRegistrations)
+			.where(eq(eventRegistrations.id, registrationId));
+		if (!found) {
+			throw new DomainError("NOT_REGISTERED");
+		}
+		await lockEvent(tx, found.eventId);
+		// Re-read under the event lock: it may have changed or gone meanwhile.
+		const [row] = await tx
+			.select({ id: eventRegistrations.id, state: eventRegistrations.state })
+			.from(eventRegistrations)
+			.where(eq(eventRegistrations.id, registrationId));
+		const id = !row || row.state === "rejected" ? null : row.id;
+		return withdraw(tx, found.eventId, id, hooks);
+	});
+}
+
 /** An organizer removes someone from the event (same rules as withdrawing). */
 export async function removeRegistrant(
 	eventId: string,
