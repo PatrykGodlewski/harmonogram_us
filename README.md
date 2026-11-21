@@ -1,5 +1,7 @@
 # Harmonogram US
 
+Campus event registration for universities (Polish and English). What it does, what is missing and how it compares with Indico: [FEATURES.md](FEATURES.md).
+
 pnpm monorepo (Turbo) with React 19, TanStack Router/Query/Start, Drizzle ORM, and Tailwind.
 
 ## Prerequisites
