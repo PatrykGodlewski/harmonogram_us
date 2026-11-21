@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import { db } from "../client";
+import { newInviteToken } from "../queries/events";
 import { agendaItems } from "../schema/agenda";
 import { events } from "../schema/events";
 import { agendaItemSeeds, eventSeeds } from "./data";
@@ -28,6 +29,10 @@ export async function seedEvents() {
 				facultyId: event.facultyId,
 				status: "published",
 				publishedAt: now,
+				requiresApproval: event.requiresApproval ?? false,
+				certificatesEnabled: event.certificatesEnabled ?? false,
+				visibility: event.visibility ?? "public",
+				inviteToken: event.visibility === "private" ? newInviteToken() : null,
 			})
 			.onConflictDoUpdate({
 				target: events.id,
@@ -38,6 +43,11 @@ export async function seedEvents() {
 					typeId: sql`excluded.type_id`,
 					locationId: sql`excluded.location_id`,
 					facultyId: sql`excluded.faculty_id`,
+					requiresApproval: sql`excluded.requires_approval`,
+					certificatesEnabled: sql`excluded.certificates_enabled`,
+					visibility: sql`excluded.visibility`,
+					// Re-seeding keeps an invite link that was already shared.
+					inviteToken: sql`CASE WHEN excluded.visibility = 'private' THEN coalesce(${events.inviteToken}, excluded.invite_token) END`,
 					updatedAt: new Date(),
 				},
 			});
@@ -68,6 +78,8 @@ export async function seedAgenda() {
 				locationId: item.locationId,
 				maxSeats: item.maxSeats,
 				requiresRegistration: item.requiresRegistration,
+				speakers: item.speakers ?? [],
+				materials: item.materials ?? [],
 			})
 			.onConflictDoUpdate({
 				target: agendaItems.id,
@@ -78,6 +90,8 @@ export async function seedAgenda() {
 					locationId: sql`excluded.location_id`,
 					maxSeats: sql`excluded.max_seats`,
 					requiresRegistration: sql`excluded.requires_registration`,
+					speakers: sql`excluded.speakers`,
+					materials: sql`excluded.materials`,
 					updatedAt: new Date(),
 				},
 			});

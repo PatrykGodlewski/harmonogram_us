@@ -15,7 +15,7 @@ try {
 		nodeEnv: env.NODE_ENV,
 	});
 	console.log(
-		"Database seeded. Test accounts (password: SEED_ACCOUNT_PASSWORD): admin@harmonogram.local (admin), nauczyciel@ and nauczyciel2@harmonogram.local (group owners), student1..5@harmonogram.local; gosc@harmonogram.local signs in with an e-mail link.",
+		"Database seeded. Test accounts (password: SEED_ACCOUNT_PASSWORD): admin@harmonogram.local (admin), organizator@harmonogram.local (organiser of the showcase events: certificates, approval, invite-only), nauczyciel@ and nauczyciel2@harmonogram.local (group owners), student1..5@harmonogram.local (student1 has a certificate); gosc@harmonogram.local signs in with an e-mail link.",
 	);
 	await closeDb();
 } catch (error) {

@@ -1,6 +1,11 @@
 import { seedAgenda, seedEvents } from "./events";
 import { seedEventLookups } from "./lookups";
-import { seedAccounts, seedGroups, seedRegistrations } from "./people";
+import {
+	seedAccounts,
+	seedGroups,
+	seedRegistrations,
+	seedShowcase,
+} from "./people";
 
 /** Seeds sample data and local test accounts. Idempotent; refuses to touch production. */
 export async function seedDatabase(options: {
@@ -16,4 +21,5 @@ export async function seedDatabase(options: {
 	const accounts = await seedAccounts(options.password);
 	await seedRegistrations(accounts);
 	await seedGroups(accounts);
+	await seedShowcase(accounts);
 }
