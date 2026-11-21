@@ -33,6 +33,7 @@ Both apps have near-identical `vite.config.ts`, `router.tsx` and `server.ts` set
 - Both roots render `HydrationMarker` (`<html data-hydrated="true">`); e2e waits for it before interacting.
 - `packages/api/src/procedures.ts` provides `publicQueryFn` (GET) and `protectedActionFn` (POST + `authMiddleware`); some mutations check `getCurrentSession()` inline.
 - Server functions validate input with `.validator()` (TanStack Start v1). `errorStatusMiddleware` sets an app error's 4xx status only for browser calls (`/_serverFn/…`); during server rendering it would override the loader's redirect.
+- Guests (F17) register through Better Auth plugin endpoints (`guest-registration-plugin.ts`: `/guest-registration/request` under CAPTCHA and `limitAuth`, `/guest-registration/confirm` signs the guest in), like group invitations. Pages that act on e-mail links (`/guest/confirm`, `/registrations/:id/withdraw`) need a button press: mail scanners fetch links.
 - Rethrow domain errors as `appError(CODE)`. Add each code to `@repo/db/queries/domain-errors` and map it to Polish/English messages in `@repo/ui/app-errors`.
 
 ## Auth and localisation

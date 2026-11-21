@@ -49,7 +49,7 @@ These are facts about the implementation, not claims that it is better in genera
 | Events for signed-in users only | ✅ | ❌ no built-in option |
 | Invite-only events (hidden, open with an invite link or e-mail invitation) | ✅ | ✅ protected events, access keys |
 | User groups | ❌ | ✅ |
-| Guests without an account | ❌ | 🟡 depends on the form |
+| Guests without an account | ✅ name and e-mail, confirmed by a link (nothing reserved until then); withdraw by a signed link in every registration e-mail | 🟡 depends on the form |
 
 #### Events
 
@@ -169,7 +169,7 @@ These are facts about the implementation, not claims that it is better in genera
 
 ### Not built yet
 
-From the product spec, in no particular order: materials and file storage (F14), Indico import (F16), guests without an account (F17), speaker files and directory (F19), surveys (F20), payments (F21), event web page (F22), video calls (F23), API and widget (F24), USOS integration (F25). Also missing compared with Indico: LDAP/SAML, user groups, category tree, form builder extras (file fields, several forms), CSV import, tags, e-mail placeholders, badges, wallet passes, timetable PDF, event lock, plugins.
+From the product spec, in no particular order: materials and file storage (F14), Indico import (F16), speaker files and directory (F19), surveys (F20), payments (F21), event web page (F22), video calls (F23), API and widget (F24), USOS integration (F25). Also missing compared with Indico: LDAP/SAML, user groups, category tree, form builder extras (file fields, several forms), CSV import, tags, e-mail placeholders, badges, wallet passes, timetable PDF, event lock, plugins.
 
 ### Known limitations
 

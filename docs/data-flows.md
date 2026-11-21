@@ -24,6 +24,8 @@ Only `published` events take registrations or promote from the waitlist (`assert
 
 Registration questions (`event_questions`) and answers (`registration_answers`, cascade with the registration and the question): `registerForEvent(…, { answers })` validates them in the transaction (`saveAnswers`: required, choice in options, yes/no); organiser-added people and group members may skip required answers; editing a question removes answers that no longer fit; `getEventRegistrants(…, { withAnswers })` hides answers from check-in helpers. E-mails use `coalesce(user.locale, registration.locale)`.
 
+Guest requests (F17, `guest_registration_requests`: hashed token, 24 h) are **not registrations and hold no place**: `createGuestRequest` validates the event (open, not signed-in only, invite link for invite-only) and the answers, and queues the confirmation e-mail in its transaction; confirming (`/api/auth/guest-registration/confirm`) takes the request once, finds or creates a verified account (`ensureVerifiedUser`, which removes a stranger's unverified password) and calls `registerForEvent`, so capacity, waitlist and approval rules apply unchanged. Expired requests go in the daily prune job. Withdraw links in registration e-mails are an HMAC of the registration id (`withdraw-link.ts`) and withdraw through `removeRegistrant` (waitlist promoted).
+
 Invite-only events (`visibility = 'private'`, CHECK: `invite_token` not null) are never listed or in feeds; `canOpenEvent` (`packages/api/src/events/access.ts`) opens them for the current invite link, a non-declined registration, or organisers, and is checked by the event page, registration, agenda-item registration, group creation and the single-event ICS.
 
 ## Electric → TanStack DB → UI

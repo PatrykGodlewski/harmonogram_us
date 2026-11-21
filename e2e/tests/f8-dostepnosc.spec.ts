@@ -41,6 +41,25 @@ test("[F8] publiczne ekrany spełniają WCAG AA @uczestnik", async ({ page }) =>
 		"statement",
 		"Accessibility statement",
 	);
+
+	// Guests (F17): the form on the event page, the confirm and withdraw pages.
+	await open(page, `/pl/events/${event.id}`);
+	await page.getByRole("button", { name: "Zapisz się bez konta" }).click();
+	await page.getByRole("dialog").waitFor();
+	await expectAccessibleOverlay(page, "zapis bez konta");
+	await page.keyboard.press("Escape");
+	await audit(
+		page,
+		"/pl/guest/confirm?token=x",
+		"potwierdzenie gościa",
+		"Potwierdzenie zapisu",
+	);
+	await audit(
+		page,
+		"/pl/registrations/x/withdraw?token=x",
+		"rezygnacja z linku",
+		"Rezygnacja z zapisu",
+	);
 });
 
 test("[F8] ekrany zalogowanego uczestnika spełniają WCAG AA @uczestnik", async ({
