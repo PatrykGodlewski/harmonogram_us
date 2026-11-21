@@ -24,6 +24,9 @@ export type Certificate = {
 	eventTitle: string;
 	eventDate: Date;
 	locale: "pl" | "en";
+	issuer: string | null;
+	signer: string | null;
+	note: string | null;
 };
 
 /** The certificate of the user's own registration; null when there is none to give. */
@@ -36,8 +39,12 @@ export async function getCertificate(
 		title: string;
 		date: string;
 		locale: "pl" | "en";
+		issuer: string | null;
+		signer: string | null;
+		note: string | null;
 	}>(sql`
-		SELECT u.name, e.title, e.date, r.locale
+		SELECT u.name, e.title, e.date, coalesce(u.locale, r.locale) AS locale,
+			e.certificate_issuer AS issuer, e.certificate_signer AS signer, e.certificate_note AS note
 		FROM event_registrations r
 		JOIN events e ON e.id = r.event_id
 		JOIN "user" u ON u.id = r.user_id
@@ -50,6 +57,9 @@ export async function getCertificate(
 				eventTitle: row.title,
 				eventDate: new Date(row.date),
 				locale: row.locale,
+				issuer: row.issuer,
+				signer: row.signer,
+				note: row.note,
 			}
 		: null;
 }

@@ -34,4 +34,21 @@ describe("renderCertificatePdf", () => {
 		expect(text).toContain("Certificate of attendance");
 		expect(text).toContain("1 December 2026");
 	});
+
+	it("shows the organiser's issuer, signer and note", async () => {
+		const pdf = await renderCertificatePdf({
+			name: "Ada Lovelace",
+			eventTitle: "Warsztaty",
+			eventDate: new Date("2026-12-01T09:30:00Z"),
+			reference: "ab12cd34",
+			locale: "pl",
+			issuer: "Wydział Nauk Ścisłych i Technicznych",
+			signer: "dr Jan Nowak, kierownik warsztatów",
+			note: "Liczba godzin: 4",
+		});
+		const { text } = await extractText(new Uint8Array(pdf), { mergePages: true });
+		expect(text).toContain("Wydział Nauk Ścisłych i Technicznych");
+		expect(text).toContain("dr Jan Nowak, kierownik warsztatów");
+		expect(text).toContain("Liczba godzin: 4");
+	});
 });

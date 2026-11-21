@@ -108,6 +108,9 @@ async function copyEvent(
 			reminderHoursBefore: source.reminderHoursBefore,
 			requiresApproval: source.requiresApproval,
 			certificatesEnabled: source.certificatesEnabled,
+			certificateIssuer: source.certificateIssuer,
+			certificateSigner: source.certificateSigner,
+			certificateNote: source.certificateNote,
 			status: "draft",
 		})
 		.returning({ id: events.id });

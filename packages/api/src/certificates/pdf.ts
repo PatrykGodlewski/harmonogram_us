@@ -23,6 +23,10 @@ export type CertificateInput = {
 	/** A short code that identifies the registration on paper. */
 	reference: string;
 	locale: "pl" | "en";
+	/** Set by the organiser: who issues it, a signer line, an extra line. */
+	issuer?: string | null;
+	signer?: string | null;
+	note?: string | null;
 };
 
 /** A4 landscape, in PDF points. */
@@ -49,6 +53,16 @@ export async function renderCertificatePdf(
 		borderWidth: 2,
 	});
 
+	if (input.issuer) {
+		const issuer = fitLines(
+			input.issuer,
+			measure(regular),
+			TEXT_WIDTH,
+			[13, 11],
+			1,
+		);
+		drawCentered(page, issuer.lines[0] ?? "", 515, regular, issuer.size, GREY);
+	}
 	let y = 470;
 	drawCentered(page, certificate_title({}, { locale }), y, bold, 34);
 	y -= 56;
@@ -84,6 +98,35 @@ export async function renderCertificatePdf(
 		regular,
 		14,
 	);
+	if (input.note) {
+		const note = fitLines(
+			input.note,
+			measure(regular),
+			TEXT_WIDTH,
+			[12, 10],
+			1,
+		);
+		drawCentered(page, note.lines[0] ?? "", y - 22, regular, note.size);
+	}
+	if (input.signer) {
+		// A line to sign above the signer's name, bottom right.
+		const signer = fitLines(input.signer, measure(regular), 260, [11, 9], 1);
+		const right = PAGE.width - 80;
+		page.drawLine({
+			start: { x: right - 260, y: 104 },
+			end: { x: right, y: 104 },
+			color: GREY,
+			thickness: 0.75,
+		});
+		const text = signer.lines[0] ?? "";
+		page.drawText(text, {
+			x: right - regular.widthOfTextAtSize(text, signer.size),
+			y: 88,
+			size: signer.size,
+			font: regular,
+			color: NAVY,
+		});
+	}
 	drawCentered(
 		page,
 		certificate_footer({ reference: input.reference }, { locale }),

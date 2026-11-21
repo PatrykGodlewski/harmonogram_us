@@ -13,6 +13,10 @@ import {
 	admin_dialog_edit_title,
 	admin_error_generic,
 	admin_field_attendance_mode,
+	admin_field_certificate_hint,
+	admin_field_certificate_issuer,
+	admin_field_certificate_note,
+	admin_field_certificate_signer,
 	admin_field_certificates,
 	admin_field_certificates_hint,
 	admin_field_date,
@@ -142,6 +146,9 @@ const EMPTY_VALUES = {
 	visibility: "public" as EventVisibility,
 	requiresApproval: false,
 	certificatesEnabled: false,
+	certificateIssuer: "",
+	certificateSigner: "",
+	certificateNote: "",
 	onlineUrl: "",
 };
 
@@ -165,6 +172,9 @@ function toFormValues(event: EventWithRelations): EventFormValues {
 		visibility: event.visibility,
 		requiresApproval: event.requiresApproval,
 		certificatesEnabled: event.certificatesEnabled,
+		certificateIssuer: event.certificateIssuer ?? "",
+		certificateSigner: event.certificateSigner ?? "",
+		certificateNote: event.certificateNote ?? "",
 		onlineUrl: event.onlineUrl ?? "",
 	};
 }
@@ -204,6 +214,9 @@ export function EventFormDialog({
 				visibility: z.enum(VISIBILITIES),
 				requiresApproval: z.boolean(),
 				certificatesEnabled: z.boolean(),
+				certificateIssuer: z.string().max(200),
+				certificateSigner: z.string().max(200),
+				certificateNote: z.string().max(200),
 				onlineUrl: z.union([
 					z.literal(""),
 					z.url({ protocol: /^https$/ }).max(2000),
@@ -237,6 +250,9 @@ export function EventFormDialog({
 				visibility: values.visibility,
 				requiresApproval: values.requiresApproval,
 				certificatesEnabled: values.certificatesEnabled,
+				certificateIssuer: values.certificateIssuer.trim() || null,
+				certificateSigner: values.certificateSigner.trim() || null,
+				certificateNote: values.certificateNote.trim() || null,
 				onlineUrl:
 					values.attendanceMode === "onsite" || !values.onlineUrl.trim()
 						? null
@@ -710,6 +726,81 @@ export function EventFormDialog({
 					</div>
 				)}
 			</form.Field>
+
+			<form.Subscribe selector={(state) => state.values.certificatesEnabled}>
+				{(enabled) =>
+					enabled ? (
+						<fieldset className="flex flex-col gap-3 rounded-md border p-3">
+							<form.Field name="certificateIssuer">
+								{(field) => (
+									<div>
+										<Label htmlFor={field.name}>
+											{admin_field_certificate_issuer()}
+										</Label>
+										<Input
+											id={field.name}
+											className="mt-1"
+											maxLength={200}
+											aria-describedby="certificate-hint"
+											disabled={saveMutation.isPending}
+											value={field.state.value}
+											onChange={(event) =>
+												field.handleChange(event.target.value)
+											}
+										/>
+									</div>
+								)}
+							</form.Field>
+							<form.Field name="certificateSigner">
+								{(field) => (
+									<div>
+										<Label htmlFor={field.name}>
+											{admin_field_certificate_signer()}
+										</Label>
+										<Input
+											id={field.name}
+											className="mt-1"
+											maxLength={200}
+											aria-describedby="certificate-hint"
+											disabled={saveMutation.isPending}
+											value={field.state.value}
+											onChange={(event) =>
+												field.handleChange(event.target.value)
+											}
+										/>
+									</div>
+								)}
+							</form.Field>
+							<form.Field name="certificateNote">
+								{(field) => (
+									<div>
+										<Label htmlFor={field.name}>
+											{admin_field_certificate_note()}
+										</Label>
+										<Input
+											id={field.name}
+											className="mt-1"
+											maxLength={200}
+											aria-describedby="certificate-hint"
+											disabled={saveMutation.isPending}
+											value={field.state.value}
+											onChange={(event) =>
+												field.handleChange(event.target.value)
+											}
+										/>
+									</div>
+								)}
+							</form.Field>
+							<p
+								id="certificate-hint"
+								className="text-xs text-muted-foreground"
+							>
+								{admin_field_certificate_hint()}
+							</p>
+						</fieldset>
+					) : null
+				}
+			</form.Subscribe>
 
 			<form.Field name="facultyId">
 				{(field) => (

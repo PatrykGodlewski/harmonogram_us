@@ -69,6 +69,9 @@ const onlineUrlSchema = z
 const attendanceModeSchema = z.enum(["onsite", "online", "hybrid"]);
 const visibilitySchema = z.enum(["public", "authenticated", "private"]);
 
+/** An optional line on the certificate (null clears it). */
+const certificateTextSchema = z.string().trim().max(200).nullable().optional();
+
 /** Answers by question id; bounded, and checked against the event's questions on the server. */
 export const answersSchema = z
 	.record(z.string().max(64), z.string().max(2000))
@@ -108,6 +111,9 @@ export const createEventSchema = z.object({
 	reminderHoursBefore: reminderHoursSchema,
 	requiresApproval: z.boolean().optional(),
 	certificatesEnabled: z.boolean().optional(),
+	certificateIssuer: certificateTextSchema,
+	certificateSigner: certificateTextSchema,
+	certificateNote: certificateTextSchema,
 });
 
 export type CreateEventParams = z.infer<typeof createEventSchema>;
@@ -130,6 +136,9 @@ export const updateEventSchema = z.object({
 	reminderHoursBefore: reminderHoursSchema,
 	requiresApproval: z.boolean().optional(),
 	certificatesEnabled: z.boolean().optional(),
+	certificateIssuer: certificateTextSchema,
+	certificateSigner: certificateTextSchema,
+	certificateNote: certificateTextSchema,
 });
 
 export type UpdateEventParams = z.infer<typeof updateEventSchema>;

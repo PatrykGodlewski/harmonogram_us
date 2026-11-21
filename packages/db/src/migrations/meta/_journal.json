@@ -211,6 +211,13 @@
       "when": 1795225029149,
       "tag": "0029_event_questions",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1795227130111,
+      "tag": "0030_certificate_text",
+      "breakpoints": true
     }
   ]
 }

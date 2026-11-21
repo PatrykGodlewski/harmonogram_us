@@ -85,6 +85,9 @@ export type EventWithRelations = {
 	visibility: EventVisibility;
 	requiresApproval: boolean;
 	certificatesEnabled: boolean;
+	certificateIssuer: string | null;
+	certificateSigner: string | null;
+	certificateNote: string | null;
 	/** Registering asks questions (the list sends people to the event page to answer). */
 	hasQuestions: boolean;
 	/** End, else the end of its last agenda item, else a day after the start. */
@@ -246,6 +249,9 @@ async function queryEvents(
 			visibility: events.visibility,
 			requiresApproval: events.requiresApproval,
 			certificatesEnabled: events.certificatesEnabled,
+			certificateIssuer: events.certificateIssuer,
+			certificateSigner: events.certificateSigner,
+			certificateNote: events.certificateNote,
 			hasQuestions: sql<boolean>`exists (select 1 from event_questions q where q.event_id = "events"."id")`,
 			effectiveEndsAt:
 				sql<Date>`${effectiveEventEndSql(sql`"events"`)}`.mapWith(
@@ -293,6 +299,9 @@ export type CreateEventInput = {
 	reminderHoursBefore?: number | null;
 	requiresApproval?: boolean;
 	certificatesEnabled?: boolean;
+	certificateIssuer?: string | null;
+	certificateSigner?: string | null;
+	certificateNote?: string | null;
 	/** Becomes the event's first organizer; null for events only admins manage (seed data). */
 	organizerId: string | null;
 };
@@ -321,6 +330,9 @@ export async function createEvent(input: CreateEventInput) {
 				room: input.room ?? null,
 				requiresApproval: input.requiresApproval ?? false,
 				certificatesEnabled: input.certificatesEnabled ?? false,
+				certificateIssuer: input.certificateIssuer ?? null,
+				certificateSigner: input.certificateSigner ?? null,
+				certificateNote: input.certificateNote ?? null,
 				...(input.reminderHoursBefore !== undefined
 					? { reminderHoursBefore: input.reminderHoursBefore }
 					: {}),
@@ -432,6 +444,9 @@ export type UpdateEventInput = {
 	reminderHoursBefore?: number | null;
 	requiresApproval?: boolean;
 	certificatesEnabled?: boolean;
+	certificateIssuer?: string | null;
+	certificateSigner?: string | null;
+	certificateNote?: string | null;
 };
 
 /** Updates an event; raising the limit promotes waitlisted people into the new places. */

@@ -51,6 +51,10 @@ export const events = pgTable(
 		certificatesEnabled: boolean("certificates_enabled")
 			.notNull()
 			.default(false),
+		/** Who issues the certificate ("Wydział Fizyki"), a signer line and an extra line; all optional. */
+		certificateIssuer: text("certificate_issuer"),
+		certificateSigner: text("certificate_signer"),
+		certificateNote: text("certificate_note"),
 		/** Registrations wait as `pending` until an organiser approves them. */
 		requiresApproval: boolean("requires_approval").notNull().default(false),
 		attendanceMode: text("attendance_mode")

@@ -674,5 +674,9 @@
 	"sheet_email": "E-mail",
 	"sheet_signature": "Signature",
 	"sheet_page": "Page {page} of {pages}",
-	"sheet_download": "Attendance sheet (PDF)"
+	"sheet_download": "Attendance sheet (PDF)",
+	"admin_field_certificate_issuer": "Certificate issuer",
+	"admin_field_certificate_signer": "Signature on the certificate",
+	"admin_field_certificate_note": "Extra information",
+	"admin_field_certificate_hint": "E.g. “Faculty of Physics”, “Dr Jan Nowak, head” and “Hours: 4”. Empty fields are left out."
 }

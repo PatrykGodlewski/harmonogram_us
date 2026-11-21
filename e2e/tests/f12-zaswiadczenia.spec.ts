@@ -26,17 +26,30 @@ test("[F12] organizator włącza zaświadczenia @organizator", async ({
 	await page.getByRole("button", { name: "Edytuj wydarzenie" }).click();
 	const dialog = page.getByRole("dialog");
 	await dialog.getByLabel("Zaświadczenia dla obecnych").check();
+	await dialog.getByLabel("Wystawca zaświadczenia").fill("Wydział Fizyki");
+	await dialog.getByLabel("Podpis na zaświadczeniu").fill("dr Jan Nowak");
+	await dialog.getByLabel("Dodatkowa informacja").fill("Liczba godzin: 4");
 	await dialog.getByRole("button", { name: "Zapisz" }).click();
 	await expect(dialog).toBeHidden();
 	await expect
 		.poll(async () => {
 			const [row] = await db
-				.select({ on: events.certificatesEnabled })
+				.select({
+					on: events.certificatesEnabled,
+					issuer: events.certificateIssuer,
+					signer: events.certificateSigner,
+					note: events.certificateNote,
+				})
 				.from(events)
 				.where(eq(events.id, event.id));
-			return row?.on;
+			return row;
 		})
-		.toBe(true);
+		.toEqual({
+			on: true,
+			issuer: "Wydział Fizyki",
+			signer: "dr Jan Nowak",
+			note: "Liczba godzin: 4",
+		});
 });
 
 test("[F12] obecny pobiera zaświadczenie, nieobecny nie @uczestnik", async ({
