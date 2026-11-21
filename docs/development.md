@@ -23,6 +23,8 @@ pnpm db:account --email a@b.pl --role admin
 
 Creates/updates an account and prints a generated password unless `--password` or `--link-only` is used.
 
+University sign-in is OpenID Connect, configured only through `UNIVERSITY_SSO_*` in `.env` (see `.env.example`; redirect URI `<BETTER_AUTH_URL>/api/auth/oauth2/callback/university`). The public site's login and signup show the button only when it is configured; the admin panel keeps e-mail and password (the callback lands on the public site's origin). A university sign-in joins the account with the same e-mail and counts the address as verified. The e2e stack runs a stand-in server (`e2e/oidc-mock`, compose profile `e2e`) reachable as `oidc.localhost:18080` from both the browser and the containers.
+
 ## Common commands
 
 ```bash

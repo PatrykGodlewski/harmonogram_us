@@ -10,7 +10,7 @@ Snapshot: 2026-11-21, branch `next` (updated after plan 5; first snapshot at `e2
 
 | Area | Indico | Us | Verdict |
 |---|---|---|---|
-| Accounts and sign-in | Local accounts, LDAP, SAML, OAuth, SSO | Magic link and password, captcha, breached-password check, profile name and language (site and e-mails follow it); no university sign-in | 🟡 (✅ on profile) |
+| Accounts and sign-in | Local accounts, LDAP, SAML, OAuth, SSO | Magic link and password, captcha, breached-password check, profile name and language (site and e-mails follow it); university sign-in through OpenID Connect (Entra ID, CAS, Keycloak, Shibboleth via proxy) joining existing accounts by e-mail; no LDAP or direct SAML; admin panel password only | ✅ |
 | Roles and permissions | Category permissions; event ACLs with users, groups, e-mails, IP networks, roles; fine-grained permissions (registration: all / moderation only / check-in only); protection modes; access keys | Roles user / organiser / admin, co-organisers by e-mail, check-in helpers per event (scanner and attendance only), "signed-in users only" and invite-only events, server-side access checks | 🟡 (✅ on the check-in-only helper and invite-only events) |
 | Event lifecycle: draft and publishing | No event-level draft; "unlisted events" (admin opt-in, 3.1) | Draft → publish with a checklist that says what is missing and fixes it in place | ✅+ |
 | Event lifecycle: cancellation | No cancel action; a "cancelled" label (2.2.7) that stops reminders | Cancel closes registration, e-mails everyone registered or waitlisted, flips open pages live, keeps history | ✅+ |
@@ -32,7 +32,7 @@ Snapshot: 2026-11-21, branch `next` (updated after plan 5; first snapshot at `e2
 | Video calls | Zoom plugin | — (spec targets Teams) | ❌ |
 | API and widgets | HTTP API, iCal | — | ❌ |
 | Personal data (GDPR) | Privacy settings, data retention | Notice at sign-up, privacy page (controller, basis, retention, rights), automatic deletion after the retention period, export and delete my data (with safeguards for the last admin and sole organisers) | ✅ |
-| Accessibility | Partial | Polish and English; automated WCAG 2.1 A/AA scan of every participant and organiser screen; accessibility statement in both languages; no expert audit, PDFs not tagged | ✅ (🟡 on expert audit) |
+| Accessibility | Partial | Polish and English; automated WCAG 2.1 and 2.2 AA audit of every participant and organiser screen and dialog (axe, page titles, reflow at 320 px, keyboard-only flows, visible focus, focus returns after dialogs); accessibility statement in both languages; no expert audit, PDFs not tagged | ✅ (🟡 on expert audit) |
 | Private / invite-only events | Protected events with access lists, access keys | Invite-only events: not listed or in feeds; open with an invite link (copy, change to revoke), to registrants and organisers; invitations by e-mail (up to 50 at once) | ✅ |
 | Guests without accounts | Depends on the form | — | ❌ |
 | Abstracts and peer review | Full workflow | — | ⏸ |

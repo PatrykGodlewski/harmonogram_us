@@ -679,7 +679,7 @@
 	"admin_field_certificate_hint": "E.g. “Faculty of Physics”, “Dr Jan Nowak, head” and “Hours: 4”. Empty fields are left out.",
 	"a11y_title": "Accessibility statement",
 	"a11y_intro": "The university is committed to making this service accessible in line with the Polish Act of 4 April 2019 on the digital accessibility of public bodies' websites and mobile applications.",
-	"a11y_status": "The service is partially compliant with WCAG 2.1 level AA. Every participant and organiser screen is checked automatically (axe-core); a full expert audit has not taken place yet.",
+	"a11y_status": "The service is partially compliant with WCAG 2.1 level AA. Every participant and organiser screen and dialog is checked automatically: WCAG 2.1 and 2.2 AA rules (axe-core), page titles, reflow at 320 px, keyboard use and visible focus. A full expert audit has not taken place yet.",
 	"a11y_known": "Known limitations: the ticket scanner needs a camera — attendance can also be marked by hand on the list; PDF files (tickets, certificates, attendance sheets) are not tagged yet.",
 	"a11y_prepared": "This statement was prepared on 21 November 2026 by self-assessment.",
 	"a11y_contact": "Report accessibility problems to: {email}. We will reply within 7 days at the latest.",
