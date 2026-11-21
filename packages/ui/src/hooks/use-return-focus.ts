@@ -17,9 +17,14 @@ export function useReturnFocus({
 	const opener = React.useRef<HTMLElement | null>(null);
 	return {
 		onOpenAutoFocus: (event) => {
-			// Runs before focus moves into the dialog: the opener still has it.
+			// Runs before focus moves into the dialog: the opener still has it. Safari
+			// does not focus buttons on click, leaving <body>: then Radix's own
+			// return to its Trigger is the right one.
 			const active = document.activeElement;
-			opener.current = active instanceof HTMLElement ? active : null;
+			opener.current =
+				active instanceof HTMLElement && active !== document.body
+					? active
+					: null;
 			onOpenAutoFocus?.(event);
 		},
 		onCloseAutoFocus: (event) => {

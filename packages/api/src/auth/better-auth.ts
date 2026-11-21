@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { db } from "@repo/db/client";
 import {
 	findMagicLinkEmail,
+	hasProviderAccount,
 	resetUnverifiedAccount,
 } from "@repo/db/queries/account-safety";
 import {
@@ -253,20 +254,23 @@ export const auth = betterAuth({
 	emailAndPassword: {
 		enabled: true,
 	},
-	account: {
-		// The university vouches for its addresses: signing in with it joins the
-		// account someone already has under that e-mail.
-		accountLinking: { trustedProviders: [UNIVERSITY_PROVIDER_ID] },
-	},
 	databaseHooks: {
 		account: {
 			create: {
 				before: async (account) => {
+					if (account.providerId !== UNIVERSITY_PROVIDER_ID) return;
+					// One university identity per account: an address the university gave
+					// to someone else must not open the previous owner's account.
+					if (
+						await hasProviderAccount(account.userId, UNIVERSITY_PROVIDER_ID)
+					) {
+						throw new APIError("FORBIDDEN", {
+							message: "Account is linked to another university identity.",
+						});
+					}
 					// Joining an unverified account: a password someone set without proving
 					// the address must not outlive the university's proof (as with magic links).
-					if (account.providerId === UNIVERSITY_PROVIDER_ID) {
-						await resetUnverifiedAccount(account.userId);
-					}
+					await resetUnverifiedAccount(account.userId);
 				},
 			},
 		},

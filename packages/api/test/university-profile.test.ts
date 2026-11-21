@@ -18,6 +18,14 @@ describe("universityProfileToUser", () => {
 		);
 	});
 
+	it("trusts the address unless the university says it is unverified", () => {
+		expect(universityProfileToUser({ name: "A" }).emailVerified).toBe(true);
+		expect(
+			universityProfileToUser({ name: "A", email_verified: false })
+				.emailVerified,
+		).toBe(false);
+	});
+
 	it("falls back to the e-mail", () => {
 		expect(
 			universityProfileToUser({ email: "ala@uni.example", name: "  " }).name,

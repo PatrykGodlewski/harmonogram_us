@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "../client";
 import {
 	authAccounts,
@@ -11,7 +11,8 @@ import {
 /**
  * Before an email is proven through another channel (invitation or magic link),
  * an unverified account may have been created by someone else with a password.
- * Remove its password and sessions so nobody else keeps access. Returns whether it reset.
+ * Remove its password and sessions, and give it a new calendar feed address, so nobody
+ * else keeps access. Returns whether it reset.
  */
 export async function resetUnverifiedAccount(userId: string): Promise<boolean> {
 	return db.transaction(async (tx) => {
@@ -32,6 +33,12 @@ export async function resetUnverifiedAccount(userId: string): Promise<boolean> {
 				),
 			);
 		await tx.delete(authSessions).where(eq(authSessions.userId, userId));
+		await tx
+			.update(authUsers)
+			.set({
+				calendarToken: sql`replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '')`,
+			})
+			.where(eq(authUsers.id, userId));
 		return true;
 	});
 }
@@ -61,4 +68,22 @@ export async function findMagicLinkEmail(
 	} catch {
 		return null;
 	}
+}
+
+/** Whether the user already signs in through this provider (e.g. the university). */
+export async function hasProviderAccount(
+	userId: string,
+	providerId: string,
+): Promise<boolean> {
+	const [row] = await db
+		.select({ id: authAccounts.id })
+		.from(authAccounts)
+		.where(
+			and(
+				eq(authAccounts.userId, userId),
+				eq(authAccounts.providerId, providerId),
+			),
+		)
+		.limit(1);
+	return Boolean(row);
 }

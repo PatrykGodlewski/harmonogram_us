@@ -9,15 +9,17 @@ export type UniversityProfile = {
 	name?: string;
 	given_name?: string;
 	family_name?: string;
+	email_verified?: boolean;
 };
 
 /**
  * Not every university sends `name`: fall back to given + family name, then the e-mail.
- * The university vouches for its addresses, so they count as verified.
+ * The university vouches for its addresses unless it says otherwise (Entra ID sends no
+ * `email_verified`), so they count as verified.
  */
 export function universityProfileToUser(profile: UniversityProfile): {
 	name: string;
-	emailVerified: true;
+	emailVerified: boolean;
 } {
 	const fullName = [profile.given_name, profile.family_name]
 		.map((part) => part?.trim())
@@ -25,7 +27,7 @@ export function universityProfileToUser(profile: UniversityProfile): {
 		.join(" ");
 	return {
 		name: profile.name?.trim() || fullName || profile.email || "",
-		emailVerified: true,
+		emailVerified: profile.email_verified !== false,
 	};
 }
 

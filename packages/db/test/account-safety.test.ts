@@ -55,6 +55,22 @@ describe("account safety", () => {
 		expect(await counts(verified)).toEqual({ accounts: 1, sessions: 1 });
 	});
 
+	it("resetUnverifiedAccount drops the calendar feed a stranger could have copied", async () => {
+		const unverified = await createUser();
+		await db
+			.update(authUsers)
+			.set({ emailVerified: false, calendarToken: "copied-by-stranger" })
+			.where(eq(authUsers.id, unverified));
+
+		await resetUnverifiedAccount(unverified);
+
+		const [user] = await db
+			.select({ calendarToken: authUsers.calendarToken })
+			.from(authUsers)
+			.where(eq(authUsers.id, unverified));
+		expect(user?.calendarToken).not.toBe("copied-by-stranger");
+	});
+
 	it("findMagicLinkEmail resolves hashed identifier", async () => {
 		const identifier = createHash("sha256").update("tok").digest("base64url");
 		await db.insert(authVerifications).values({

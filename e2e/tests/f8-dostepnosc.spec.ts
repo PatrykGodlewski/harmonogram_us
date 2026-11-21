@@ -157,14 +157,18 @@ test("[F8] ekrany organizatora spełniają WCAG AA @organizator", async ({
 		["Wyślij wiadomość", "wiadomość do zapisanych"],
 		["Zaproś e-mailem", "zaproszenia"],
 		["Dodaj punkt", "punkt programu"],
+		["Edytuj odpowiedzi", "odpowiedzi uczestnika"],
+		["Duplikuj", "duplikowanie"],
+		["Odwołaj wydarzenie", "odwołanie wydarzenia"],
 		["Dodaj osobę", "dodawanie osoby"],
 	] as const) {
 		const trigger = page.getByRole("button", { name: button, exact: true });
+		const overlay = page.locator('[role="dialog"], [role="alertdialog"]');
 		await trigger.click();
-		await page.getByRole("dialog").waitFor();
+		await overlay.waitFor();
 		await expectAccessibleOverlay(page, `panel: ${screen}`);
 		await page.keyboard.press("Escape");
-		await expect(page.getByRole("dialog")).toBeHidden();
+		await expect(overlay).toBeHidden();
 		// WCAG 2.4.3: closing returns focus to what opened it.
 		await expect(trigger, `${screen}: focus back on the button`).toBeFocused();
 	}
@@ -196,6 +200,9 @@ test("[F8] ekrany administratora spełniają WCAG AA @organizator", async ({
 	] as const) {
 		await audit(page, adminUrl(path), `panel: ${title}`, title);
 	}
+	await page.getByRole("button", { name: "Dodaj", exact: true }).click();
+	await page.getByRole("dialog").waitFor();
+	await expectAccessibleOverlay(page, "panel: nowy wydział");
 });
 
 test("[F8] zapis i bilet obsługiwane samą klawiaturą @uczestnik", async ({
@@ -241,4 +248,22 @@ test("[F8] panel organizatora obsługiwany klawiaturą @organizator", async ({
 	await expect(
 		page.getByRole("button", { name: "Dodaj pytanie" }),
 	).toBeFocused();
+});
+
+test("[F8] okno otwarte dotknięciem oddaje fokus przyciskowi (Safari) @uczestnik", async ({
+	page,
+}, testInfo) => {
+	const email = uniqueEmail(testInfo);
+	await createTestUser(email);
+	await signInByEmail(page, email);
+	await open(page, "/pl/account");
+
+	// Safari and iOS do not focus a button on click or tap: open it the same way.
+	const trigger = page.getByRole("button", { name: "Usuń konto", exact: true });
+	await trigger.dispatchEvent("click");
+	await expect(page.getByRole("alertdialog")).toBeVisible();
+	await expectAccessibleOverlay(page, "usuwanie konta");
+	await page.keyboard.press("Escape");
+	await expect(page.getByRole("alertdialog")).toBeHidden();
+	await expect(trigger).toBeFocused();
 });

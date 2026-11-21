@@ -67,6 +67,39 @@ test("[F1] hasło ustawione przez kogoś obcego przestaje działać po logowaniu
 	expect(passwords).toEqual([]);
 });
 
+test("[F1] adres przekazany innej osobie na uczelni nie otwiera starego konta @uczestnik", async ({
+	page,
+}, testInfo) => {
+	// A graduate's account is tied to their university identity; the university
+	// later gives the same address to someone else (another subject id).
+	const email = uniqueEmail(testInfo);
+	const graduate = await createTestUser(email);
+	await db.insert(authAccounts).values({
+		id: crypto.randomUUID(),
+		accountId: "graduate-subject",
+		providerId: "university",
+		userId: graduate.id,
+	});
+
+	await open(page, "/pl/login?redirect=/account");
+	await signInAtUniversity(page, { email });
+
+	await expect(page).toHaveURL(/\/pl\/login/);
+	await expect(page.getByRole("alert")).toContainText(
+		"Nie udało się zalogować",
+	);
+	const links = await db
+		.select({ accountId: authAccounts.accountId })
+		.from(authAccounts)
+		.where(
+			and(
+				eq(authAccounts.userId, graduate.id),
+				eq(authAccounts.providerId, "university"),
+			),
+		);
+	expect(links).toEqual([{ accountId: "graduate-subject" }]);
+});
+
 test("[F1] nowe konto z uczelni dostaje imię i nazwisko @uczestnik", async ({
 	page,
 }, testInfo) => {

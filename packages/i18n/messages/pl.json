@@ -679,7 +679,7 @@
 	"admin_field_certificate_hint": "Np. „Wydział Fizyki”, „dr Jan Nowak, kierownik” i „Liczba godzin: 4”. Puste pola pomijamy.",
 	"a11y_title": "Deklaracja dostępności",
 	"a11y_intro": "Uczelnia zobowiązuje się zapewnić dostępność tego serwisu zgodnie z ustawą z dnia 4 kwietnia 2019 r. o dostępności cyfrowej stron internetowych i aplikacji mobilnych podmiotów publicznych.",
-	"a11y_status": "Serwis jest częściowo zgodny z wytycznymi WCAG 2.1 na poziomie AA. Każdy ekran i okno dialogowe uczestnika i organizatora sprawdzamy automatycznie: reguły WCAG 2.1 i 2.2 AA (axe-core), tytuły stron, dopasowanie do szerokości 320 px, obsługę klawiaturą i widoczny fokus. Pełny audyt ekspercki jeszcze się nie odbył.",
+	"a11y_status": "Serwis jest częściowo zgodny z wytycznymi WCAG 2.1 na poziomie AA. Każdy ekran uczestnika i organizatora oraz główne okna dialogowe sprawdzamy automatycznie: reguły WCAG 2.1 i 2.2 AA (axe-core), tytuły stron, dopasowanie do szerokości 320 px, obsługę klawiaturą i widoczny fokus. Pełny audyt ekspercki jeszcze się nie odbył.",
 	"a11y_known": "Znane ograniczenia: skaner biletów wymaga kamery — obecność można też zaznaczyć ręcznie na liście; pliki PDF (bilety, zaświadczenia, listy obecności) nie mają jeszcze struktury znaczników.",
 	"a11y_prepared": "Deklarację sporządzono 21 listopada 2026 r. na podstawie samooceny.",
 	"a11y_contact": "Problemy z dostępnością zgłoś na adres: {email}. Odpowiemy najpóźniej w ciągu 7 dni.",
