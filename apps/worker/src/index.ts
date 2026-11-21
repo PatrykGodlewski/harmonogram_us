@@ -1,5 +1,6 @@
 import { queueReadyCertificateEmails } from "@repo/api/notifications/certificates";
 import { queueDueReminderEmails } from "@repo/api/notifications/reminders";
+import { pruneExpiredGuestRequests } from "@repo/db/queries/guest-requests";
 import { pruneRateLimits } from "@repo/db/queries/rate-limits";
 import { pruneOldRegistrations } from "@repo/db/queries/retention";
 import { env } from "@repo/env";
@@ -74,6 +75,9 @@ await boss.work(QUEUE_PRUNE_OLD_REGISTRATIONS, async () => {
 		env.REGISTRATION_RETENTION_DAYS,
 	);
 	console.log(`[worker] deleted ${deleted} registration(s) past retention`);
+	// Guest confirmation links nobody used (F17) carry names and addresses too.
+	const guests = await pruneExpiredGuestRequests();
+	console.log(`[worker] deleted ${guests} expired guest request(s)`);
 });
 
 await boss.schedule(
