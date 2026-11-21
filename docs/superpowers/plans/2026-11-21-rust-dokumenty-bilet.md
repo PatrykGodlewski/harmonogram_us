@@ -211,3 +211,35 @@ CI: `checks` gains `pnpm proto:lint` and `buf breaking proto --against '.git#bra
 - [ ] **Step 3: Run** the final checks: `pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm rust:lint && pnpm rust:test && pnpm proto:lint && pnpm e2e:up && pnpm e2e` — Expected: all exit 0; e2e all passed.
 - [ ] **Step 4: Write** the verification summary in this plan: commands and results, baseline vs. after numbers, image size, start time, and open items: Railway deploy **not verified** (needs an owner deploy), Grafana row and certificate/sheet in plan 8.
 - [ ] **Step 5: Commit** `ci: Rust, proto and documents service checks` and `docs: plan 7 verification summary`; push to `next`.
+
+---
+
+## Verification summary (21 November 2026)
+
+Executed inline on `next`; ledger rulings are listed in the final report and below.
+
+| Check | Result |
+| --- | --- |
+| `pnpm lint`, `pnpm typecheck`, `pnpm build` | exit 0 (16/16, 16/16, 6/6 Turbo tasks) |
+| `pnpm test` (dev Postgres + documents service running) | db 222, api 115, worker 19, ui 27, collections 8, rpc 3 — all passed |
+| `pnpm rust:lint`, `pnpm rust:test` | fmt and clippy `-D warnings` clean; 17 unit + 11 server tests passed |
+| `pnpm proto:lint` | clean |
+| `cargo deny check licenses bans sources` (Docker) | ok; advisories not run locally (no git in the slim image) — CI job runs them |
+| `pnpm e2e:up && pnpm e2e` | 156/156 passed (includes `[F11] bilet PDF do pobrania`) |
+| Image | 131 MB; build+start to healthy 28 s with a warm cache; `docker compose stop -t 10` → exit 0 in 0.3 s |
+
+**Load comparison** (`pnpm load:documents`, local e2e stack, 200 ticket downloads within ~10 s while 50 people browse):
+
+| Run | Ticket PDF p95 | Browse p95 during the burst |
+| --- | --- | --- |
+| Baseline 1 (pdf-lib in web) | 6 220 ms | 7 434 ms |
+| Baseline 2 (pdf-lib in web, saved) | 5 858 ms | 8 184 ms |
+| After 1 (documents service) | 220 ms | 333 ms |
+| After 2 (documents service) | 186 ms | 279 ms |
+
+Measured on one developer machine, not CI hardware; every download returned a PDF in all runs.
+
+**Open items**
+- Railway: `services/documents/railway.toml` and the variables in `.env.example` are configuration only, **not verified on Railway** (needs an owner deploy). Railway health checks are HTTP-only, so the service has none there; it restarts on failure.
+- CI jobs (`rust`, `buf breaking`, documents in `unit`) were written but have not run yet; the first push to `next` is their first run.
+- Plan 8: certificates and attendance sheets, removal of pdf-lib, Grafana "documents" row.

@@ -7,9 +7,9 @@ Read [workflow](workflow.md) for planning/resuming/completion and Superpowers us
 ## Setup and local services
 
 ```bash
-pnpm install                 # prepare hook compiles Paraglide messages
+pnpm install                 # prepare hook compiles Paraglide messages, generates @repo/rpc
 cp .env.example .env         # shared root env; fill required values
-docker compose up -d         # Postgres (wal_level=logical), Mailpit, Electric
+docker compose up -d         # Postgres (wal_level=logical), Mailpit, Electric, documents (Rust PDFs)
 pnpm db:migrate
 pnpm db:seed                 # idempotent sample events, waitlist, group, accounts
 pnpm dev                     # web :3000, admin :3001, pg-boss worker
@@ -24,6 +24,19 @@ pnpm db:account --email a@b.pl --role admin
 Creates/updates an account and prints a generated password unless `--password` or `--link-only` is used.
 
 University sign-in is OpenID Connect, configured only through `UNIVERSITY_SSO_*` in `.env` (see `.env.example`; redirect URI `<BETTER_AUTH_URL>/api/auth/oauth2/callback/university`). The public site's login and signup show the button only when it is configured; the admin panel keeps e-mail and password (the callback lands on the public site's origin). A university sign-in joins the account with the same e-mail and counts the address as verified. The e2e stack runs a stand-in server (`e2e/oidc-mock`, compose profile `e2e`) reachable as `oidc.localhost:18080` from both the browser and the containers.
+
+### Rust documents service
+
+PDFs (the ticket so far) are rendered by `services/documents`, a Rust gRPC service; the contract is `proto/` and the generated TypeScript client is `@repo/rpc`. You need only Docker: `docker compose up -d` builds and starts it, and the apps and `@repo/api`/`@repo/rpc` tests reach it at `DOCUMENTS_URL` with `DOCUMENTS_TOKEN` (both in `.env.example`). After changing the renderer or `proto/`, run `docker compose up -d --build documents`.
+
+```bash
+pnpm rust:test               # cargo test (local cargo, else the pinned rust image in Docker)
+pnpm rust:lint               # cargo fmt --check + clippy -D warnings
+pnpm proto:lint              # buf lint proto/
+pnpm --filter @repo/rpc generate   # after editing proto/
+```
+
+Contract changes must stay backwards compatible (CI runs `buf breaking` against `main`); a breaking change needs a new package version (`v2`).
 
 ## Common commands
 
@@ -48,7 +61,7 @@ Schema changes must use migrations (`pnpm db:generate`, inspect generated SQL, t
 
 DB integration tests auto-create/migrate `harmonogram_us_test` and truncate its tables. **Never point destructive test setup at the development database.** Start Postgres with `docker compose up -d db` if only DB tests are needed.
 
-CI (`.github/workflows/ci.yml`) runs lint, typecheck, build, Vitest and Playwright. Its configuration and package scripts are the executable sources of truth; report which checks actually ran.
+CI (`.github/workflows/ci.yml`) runs lint, `buf` lint and breaking checks, typecheck, build, Vitest (with Postgres and the documents service), the Rust checks (fmt, clippy, test, cargo-deny) and Playwright. Its configuration and package scripts are the executable sources of truth; report which checks actually ran.
 
 ## Playwright and load testing
 
