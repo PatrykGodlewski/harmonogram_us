@@ -145,3 +145,27 @@ Layout (port of `certificates/pdf.ts`): border rect; issuer [13,11] 1 line at y 
 - [ ] **Step 1: Run** `pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm rust:lint && pnpm rust:test && pnpm proto:lint && pnpm e2e:up && pnpm e2e && pnpm load:documents` — Expected: all exit 0; e2e all passed (F11 ticket, F12 certificate, F7/F19 attendance sheet downloads included); load comparison still passes.
 - [ ] **Step 2: Write** the verification summary (commands, results, open items: Railway still not verified by a deploy).
 - [ ] **Step 3: Commit** `docs: plan 8 verification summary`; push to `next`.
+
+---
+
+## Verification summary (21 November 2026)
+
+Executed inline on `next`. Task 3 needed no separate work: each RPC's handler, limits and server tests landed with its renderer (Tasks 1–2), because a new RPC must be implemented for the crate to compile.
+
+| Check | Result |
+| --- | --- |
+| `pnpm lint`, `pnpm typecheck`, `pnpm build` | exit 0 |
+| `pnpm test` (dev Postgres + documents) | db 222, api 111, worker 19, ui 27, collections 8, rpc 3 — all passed (api lost 4 `fitLines` tests and 1 `pageRows` test, now covered in Rust) |
+| `pnpm rust:lint`, `pnpm rust:test`, `pnpm proto:lint` | clean; 26 unit + 18 server tests passed |
+| `pnpm e2e:up && pnpm e2e` | 156/156 passed (ticket, certificate and attendance sheet downloads included) |
+| `pnpm load:documents` (vs Plan 7's pdf-lib baseline) | passed: ticket p95 218 ms, browse p95 309 ms (baseline 5 858 / 8 184 ms) |
+| 2 000-person attendance sheet | 75 pages, rendered and parsed in 206 ms |
+| Prometheus | `up{job="documents"} = 1`; `documents_rpc_requests_total{method="RenderTicket",code="ok"} = 200` after the load run |
+| pdf-lib | no `pdf-lib`/`@pdf-lib/fontkit` in any `package.json`; `packages/api/src/pdf/` deleted |
+
+Sample certificate and ticket were rendered through the service and checked visually.
+
+**Open items**
+- Railway: still configuration only, **not verified by a deploy** (set `PORT=9464` on the documents service for `/healthz`).
+- CI: the `rust` and `buf breaking` jobs ran for the first time with Plan 7's push; check that run.
+- Deferred minors from Plan 7's review still stand (see that plan's final report).

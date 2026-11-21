@@ -54,9 +54,9 @@ Server functions have no locale prefix: `getLocale()` there returns the base loc
 
 Internal services talk gRPC; the contracts live in `proto/` (checked by `buf`, no breaking changes in place). Design: [Rust services over gRPC](superpowers/specs/2026-11-21-rust-grpc-uslugi-design.md).
 
-- `services/documents` (Rust, tonic) renders PDFs. Stateless: no database; TypeScript keeps permission checks and queries and sends **display-ready text** (Paraglide, `Intl`), so translations stay in one place. Today it renders the ticket; certificates and attendance sheets still use pdf-lib in `@repo/api` until Plan 8.
+- `services/documents` (Rust, tonic) renders every PDF: tickets, certificates, attendance sheets (pdf-lib is gone). Stateless: no database; TypeScript keeps permission checks and queries and sends **display-ready text** (Paraglide, `Intl`; `@repo/api/documents/dates` for long dates), so translations stay in one place. Labels with numbers only the service knows (the sheet's "Strona X z Y") go as templates with `{page}`/`{pages}`.
 - Callers use `documentsClient()` from `@repo/rpc/documents` (Connect-ES gRPC transport, bearer `DOCUMENTS_TOKEN`, 5 s deadline, one retry when unreachable). `pdfResponse` (`@repo/api/documents/http`) turns "busy" errors (unavailable, deadline, overloaded) into 503 + `Retry-After`.
-- The service listens on 50051 (gRPC, health `grpc.health.v1`) and 9464 (`/metrics` behind `METRICS_TOKEN`, unset = 404); refuses to start without a 32-byte token; rejects fields over 2 000 characters; renders on a bounded pool and answers `RESOURCE_EXHAUSTED` when full. Generated TypeScript (`packages/rpc/src/gen`) is gitignored and produced by `prepare` and `@repo/rpc`'s build.
+- The service listens on 50051 (gRPC, health `grpc.health.v1`) and 9464 (`/metrics` behind `METRICS_TOKEN`, unset = 404; `/healthz` without a token for Railway, 503 once shutdown begins); refuses to start without a 32-byte token; rejects fields over 2 000 characters; renders on a bounded pool and answers `RESOURCE_EXHAUSTED` when full. Generated TypeScript (`packages/rpc/src/gen`) is gitignored and produced by `prepare` and `@repo/rpc`'s build.
 
 ## Observability and SSR pitfalls
 

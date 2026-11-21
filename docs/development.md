@@ -27,7 +27,7 @@ University sign-in is OpenID Connect, configured only through `UNIVERSITY_SSO_*`
 
 ### Rust documents service
 
-PDFs (the ticket so far) are rendered by `services/documents`, a Rust gRPC service; the contract is `proto/` and the generated TypeScript client is `@repo/rpc`. You need only Docker: `docker compose up -d` builds and starts it, and the apps and `@repo/api`/`@repo/rpc` tests reach it at `DOCUMENTS_URL` with `DOCUMENTS_TOKEN` (both in `.env.example`). After changing the renderer or `proto/`, run `docker compose up -d --build documents`.
+PDFs (tickets, certificates, attendance sheets) are rendered by `services/documents`, a Rust gRPC service; the contract is `proto/` and the generated TypeScript client is `@repo/rpc`. You need only Docker: `docker compose up -d` builds and starts it, and the apps and `@repo/api`/`@repo/rpc` tests reach it at `DOCUMENTS_URL` with `DOCUMENTS_TOKEN` (both in `.env.example`). After changing the renderer or `proto/`, run `docker compose up -d --build documents`.
 
 ```bash
 pnpm rust:test               # cargo test (local cargo, else the pinned rust image in Docker)
