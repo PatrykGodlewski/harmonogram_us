@@ -49,3 +49,24 @@ Tests: "[F8] zapis i bilet obsługiwane samą klawiaturą" (Tab/Enter from the l
 ### Task 5: Docs, final review, full verification
 
 Spec statuses (F1, F8, K1), `docs/indico-comparison.md`, `docs/development.md` (how to configure the university), accessibility statement text, this plan's verification summary; `pnpm lint`, `typecheck`, `test`, `build`, `e2e` all green; fresh whole-plan review, fixes test-first; push to `next`.
+
+## Verification summary (21 November)
+
+All five tasks done on `next` (`169351d..`). Final checks after the review fix pass: `pnpm lint` 0, `pnpm typecheck` 0, `pnpm test` (db 222, api 112, worker 19, ui 27, collections 8) green, `pnpm build` 0, `pnpm e2e` 156/156. The run before the fix pass had one failure (`[F1] rejestracja konta hasłem wysyła e-mail weryfikacyjny`, e-mail not delivered right after the stack rebuild); it passed 9/9 on rerun and in the final run. The worker has no healthcheck, so `e2e:up --wait` does not wait for it (likely cause, not fixed).
+
+Final whole-plan review (fresh reviewer): no Critical; four Important, all fixed test-first:
+- `useReturnFocus` took `<body>` as the opener in Safari/iOS (buttons are not focused on tap) and overrode Radix's return to its Trigger — `[F8] okno otwarte dotknięciem oddaje fokus przyciskowi (Safari)` RED→GREEN.
+- An address the university reassigns could open the previous owner's account (link by e-mail to an account that already has another university identity) — `[F1] adres przekazany innej osobie na uczelni nie otwiera starego konta` RED→GREEN; `email_verified: false` is now respected and `trustedProviders` dropped (unit test RED→GREEN).
+- Account reset kept the calendar feed token a stranger could have copied — db test RED→GREEN (token rotated).
+- F8 status claimed every dialog — more dialogs audited (duplicate, cancel, edit answers, dictionary form, delete account) and the status narrowed to "main dialogs".
+
+Rulings (decisions delegated by the user):
+- University sign-in is generic OpenID Connect (`UNIVERSITY_SSO_*`), covering Entra ID, CAS 6+, Keycloak, Shibboleth via an OIDC proxy; USOS as an identity provider (OAuth 1.0a) is out of scope.
+- The always-shown, unconfigured Google button is removed.
+- The admin panel keeps password sign-in (the OAuth callback lands on the public site's origin).
+- Provider errors return to `/<Accept-Language>/login?error=` (Better Auth ignores the per-request error URL there; Paraglide has no cookie strategy).
+- A university sign-in joins the account with the same e-mail when the address is verified (missing `email_verified` counts as verified); one university identity per account; joining an unverified account drops its password, sessions and calendar feed.
+- Page titles "<page> · <site>"; home pages keep the site title.
+- Audit tags include WCAG 2.2 AA; Turnstile is compact on phones; the university button wraps; dialogs return focus to their opener (shared `useReturnFocus`).
+
+Deferred minors: login after an error loses the `redirect` destination and shows one generic message for all error codes; Better Auth's own state errors still reach `/api/auth/error`; linking through `POST /oauth2/link` while signed in resets an unverified user without verifying them (no UI uses it); the university button stays disabled after Back from the provider (bfcache); phones briefly render the full-size captcha before the compact one; the focus check ignores outline colour and the reflow check uses `innerWidth`; the OIDC mock does not check PKCE or `redirect_uri`; no test that a verified password user keeps the password after linking; focus shown after a toast hands focus back is not visible; not every AlertDialog and the member sheet are audited open; e2e has no WebKit project; the event page has no link to the ticket after registering.
