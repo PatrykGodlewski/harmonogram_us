@@ -37,3 +37,17 @@ export function registrantStats(
 		absentShare: absent !== null && registered > 0 ? absent / registered : null,
 	};
 }
+
+/**
+ * Whether no-shows can be counted: the event took place (not cancelled) and has ended.
+ * Before that, people not checked in are simply "not yet"; a cancelled event has none.
+ */
+export function noShowsCounted(
+	event: { status: string; effectiveEndsAt: Date | string },
+	now: Date = new Date(),
+): boolean {
+	return (
+		event.status !== "cancelled" &&
+		new Date(event.effectiveEndsAt).getTime() <= now.getTime()
+	);
+}

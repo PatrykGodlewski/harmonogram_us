@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { registrantStats } from "../src/registrant-stats";
+import { noShowsCounted, registrantStats } from "../src/registrant-stats";
 
 const at = new Date("2026-12-01T10:00:00Z");
 
@@ -41,5 +41,21 @@ describe("registrantStats", () => {
 			absent: 0,
 			absentShare: null,
 		});
+	});
+});
+
+describe("noShowsCounted", () => {
+	const past = new Date("2026-11-01T10:00:00Z");
+	const now = new Date("2026-11-21T10:00:00Z");
+
+	it("counts no-shows once a held event has ended", () => {
+		expect(noShowsCounted({ status: "published", effectiveEndsAt: past }, now)).toBe(true);
+		expect(
+			noShowsCounted({ status: "published", effectiveEndsAt: "2026-12-01T10:00:00Z" }, now),
+		).toBe(false);
+	});
+
+	it("never counts no-shows for a cancelled event", () => {
+		expect(noShowsCounted({ status: "cancelled", effectiveEndsAt: past }, now)).toBe(false);
 	});
 });

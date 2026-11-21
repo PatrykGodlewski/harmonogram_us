@@ -13,6 +13,7 @@ import {
 } from "@repo/i18n/paraglide/messages";
 import { adminPageHead } from "@repo/router-utils/metadata/page-head";
 import { getAppErrorCode } from "@repo/ui/app-errors";
+import { noShowsCounted } from "@repo/ui/registrant-stats";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
@@ -105,7 +106,7 @@ function AdminEventDetailPage() {
 				<EventSummaryCard event={event} onChanged={handleChanged} />
 				<EventStatsCard
 					registrants={registrants}
-					ended={new Date(event.effectiveEndsAt).getTime() <= Date.now()}
+					ended={noShowsCounted(event)}
 				/>
 				{canManage ? (
 					<AgendaEditor

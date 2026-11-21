@@ -88,9 +88,17 @@ test("[F15] administrator widzi wydarzenia i zapisy w czasie @organizator", asyn
 		const person = await createTestUser(`a${n}-${email}`);
 		await registerForEvent(first.id, person.id, "pl");
 	}
-	const then = new Date();
-	then.setUTCMonth(then.getUTCMonth() - 11, 15);
-	then.setUTCHours(12, 0, 0, 0);
+	// The server groups by month in the university's time zone (e2e: Europe/Warsaw), which
+	// can already be next month near midnight UTC: pick the month there, not in UTC.
+	const [year, month] = new Intl.DateTimeFormat("en-CA", {
+		timeZone: "Europe/Warsaw",
+		year: "numeric",
+		month: "2-digit",
+	})
+		.format(new Date())
+		.split("-")
+		.map(Number);
+	const then = new Date(Date.UTC(year ?? 1970, (month ?? 1) - 1 - 11, 15, 12));
 	await db
 		.update(events)
 		.set({ date: then, endsAt: then })

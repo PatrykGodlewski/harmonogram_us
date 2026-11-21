@@ -45,10 +45,10 @@
 
 **Interfaces:** Produces `registrantStats(registrants: { state: RegistrationState; checkedInAt: Date | string | null }[], ended: boolean): { registered: number; present: number; waitlisted: number; pending: number; absent: number | null; absentShare: number | null }` — `absent`/`absentShare` are null before the end; `absentShare` is null when nobody is registered; share in 0..1.
 
-- [ ] **Step 1:** tests `counts by state` (2 registered of which 1 checked in, 1 waitlisted, 1 pending, 1 rejected → 2/1/1/1), `no-shows only after the end` (ended false → null; true → absent 1, share 0.5), `nobody registered` (ended true → absent 0, share null).
-- [ ] **Step 2:** `pnpm --filter @repo/ui test -- registrant-stats` — FAIL (module missing).
-- [ ] **Step 3:** implement.
-- [ ] **Step 4:** test passes; commit `feat(ui): registrant statistics`.
+- [x] **Step 1:** tests `counts by state` (2 registered of which 1 checked in, 1 waitlisted, 1 pending, 1 rejected → 2/1/1/1), `no-shows only after the end` (ended false → null; true → absent 1, share 0.5), `nobody registered` (ended true → absent 0, share null).
+- [x] **Step 2:** `pnpm --filter @repo/ui test -- registrant-stats` — FAIL (module missing).
+- [x] **Step 3:** implement.
+- [x] **Step 4:** test passes; commit `feat(ui): registrant statistics`.
 
 ### Task 2: Event statistics card
 
@@ -56,10 +56,10 @@
 
 i18n: `stats_title` "Statystyki"/"Statistics", `stats_registered` "Zapisani"/"Registered", `stats_present` "Obecni"/"Present", `stats_absent` "Nieobecni"/"No-shows", `stats_waitlisted` "Rezerwowi"/"Waitlisted", `stats_pending` "Czekają na akceptację"/"Awaiting approval", `stats_absent_share` "{share} nieobecnych"/"{share} no-shows", `stats_absent_after_end` "Nieobecnych policzymy po zakończeniu."/"No-shows are counted after the event ends.".
 
-- [ ] **Step 1:** `[F15] organizator widzi zapisanych, obecnych i nieobecnych @organizator`: organiser's event that ended (`startsInDays: -1`), 4 registered (3 checked in via `checkInRegistration`/db update), 1 waitlisted → the region "Statystyki" shows Zapisani 4, Obecni 3, Nieobecni 1, "25% nieobecnych", Rezerwowi 1.
-- [ ] **Step 2:** run — FAIL.
-- [ ] **Step 3:** card: definition list in a Card (`role="region"`, `aria-labelledby` title), percent with `Intl.NumberFormat(locale, { style: "percent" })`; placed after the summary card for both access levels.
-- [ ] **Step 4:** test passes on komputer and telefon; f8 accessibility spec stays green; commit `feat(admin): event statistics`.
+- [x] **Step 1:** `[F15] organizator widzi zapisanych, obecnych i nieobecnych @organizator`: organiser's event that ended (`startsInDays: -1`), 4 registered (3 checked in via `checkInRegistration`/db update), 1 waitlisted → the region "Statystyki" shows Zapisani 4, Obecni 3, Nieobecni 1, "25% nieobecnych", Rezerwowi 1.
+- [x] **Step 2:** run — FAIL.
+- [x] **Step 3:** card: definition list in a Card (`role="region"`, `aria-labelledby` title), percent with `Intl.NumberFormat(locale, { style: "percent" })`; placed after the summary card for both access levels.
+- [x] **Step 4:** test passes on komputer and telefon; f8 accessibility spec stays green; commit `feat(admin): event statistics`.
 
 ### Task 3: Monthly activity query
 
@@ -67,19 +67,19 @@ i18n: `stats_title` "Statystyki"/"Statistics", `stats_registered` "Zapisani"/"Re
 
 **Interfaces:** Produces `getMonthlyActivity(months: number, timeZone: string, now?: Date): Promise<{ month: string; events: number; registrations: number }[]>` (`month` = `YYYY-MM`, oldest first, exactly `months` rows).
 
-- [ ] **Step 1:** tests `counts events and registrations per month` (published + cancelled counted, draft not; rejected not), `fills empty months with zeros` (length 12, oldest first), `buckets in the given time zone` (registration at `2026-10-31T23:30:00Z` counts as `2026-11` in `Europe/Warsaw`).
-- [ ] **Step 2:** FAIL. **Step 3:** one query with `generate_series` of month starts in the time zone, left-joined counts. **Step 4:** pass; commit `feat(db): monthly activity`.
+- [x] **Step 1:** tests `counts events and registrations per month` (published + cancelled counted, draft not; rejected not), `fills empty months with zeros` (length 12, oldest first), `buckets in the given time zone` (registration at `2026-10-31T23:30:00Z` counts as `2026-11` in `Europe/Warsaw`).
+- [x] **Step 2:** FAIL. **Step 3:** one query with `generate_series` of month starts in the time zone, left-joined counts. **Step 4:** pass; commit `feat(db): monthly activity`.
 
 ### Task 4: Activity on the panel home
 
 **Files:** Create `packages/api/src/admin/activity.ts` (`adminActivityServer` with `adminMiddleware`, `adminActivityQueryOptions`); create `apps/admin/src/components/admin-activity.tsx`; modify `apps/admin/src/routes/_authenticated/index.tsx`, i18n (`activity_title` "Aktywność w ostatnich 12 miesiącach"/"Activity in the last 12 months", `activity_month` "Miesiąc"/"Month", `activity_events` "Wydarzenia"/"Events", `activity_registrations` "Zapisy"/"Registrations", `activity_total` "Razem"/"Total", `activity_note` "Bez szkiców i odrzuconych zapisów; dane usunięte zgodnie z RODO nie są liczone."/"Drafts and rejected registrations are not counted, nor data deleted for GDPR.").
 
-- [ ] **Step 1:** `[F15] administrator widzi wydarzenia i zapisy w czasie @organizator`: admin opens the home page, reads the current month's row, creates 2 published events this month (one with 3 registrations), reloads → events +2, registrations +3; an organiser's home page has no "Aktywność" heading.
-- [ ] **Step 2:** FAIL. **Step 3:** implement (month label `Intl.DateTimeFormat(locale, { month: "long", year: "numeric" })`; table with caption; bar `div` width = value / max). **Step 4:** pass; commit `feat(admin): monthly activity for administrators`.
+- [x] **Step 1:** `[F15] administrator widzi wydarzenia i zapisy w czasie @organizator`: admin opens the home page, reads the current month's row, creates 2 published events this month (one with 3 registrations), reloads → events +2, registrations +3; an organiser's home page has no "Aktywność" heading.
+- [x] **Step 2:** FAIL. **Step 3:** implement (month label `Intl.DateTimeFormat(locale, { month: "long", year: "numeric" })`; table with caption; bar `div` width = value / max). **Step 4:** pass; commit `feat(admin): monthly activity for administrators`.
 
 ### Task 5: Docs and verification
 
-- [ ] Update the product spec F15 status, `docs/README.md` (plan 9), README feature table (Statistics row); run `pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm e2e:up && pnpm e2e`; write the verification summary; commit; push to `next`.
+- [x] Update the product spec F15 status, `docs/README.md` (plan 9), README feature table (Statistics row); run `pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm e2e:up && pnpm e2e`; write the verification summary; commit; push to `next`.
 
 ---
 
@@ -94,3 +94,5 @@ i18n: `stats_title` "Statystyki"/"Statistics", `stats_registered` "Zapisani"/"Re
 | WCAG | the admin home page with the activity table added to the F8 audit (axe, title, reflow 320 px) — passes on both projects |
 
 Rulings: the e2e moves its event into the past after registering (registration is refused for ended events); the admin data check counts the oldest month on one project because counts are global; the pending statistic is labelled "Do akceptacji" / "To approve" (F30's section already uses "Czekają na akceptację").
+
+**Final review** (fresh reviewer): no critical findings. Fixed: a cancelled event no longer shows everyone as a no-show (`noShowsCounted`, unit test RED→GREEN); the admin activity e2e picks its month in Warsaw time (it would fail near midnight UTC at month ends). Suite after fixes: lint, typecheck, unit (ui 32, db 225, api 111, worker 19, collections 8, rpc 3), e2e 163 passed / 1 skipped. Deferred minors: no server-side test that organisers get FORBIDDEN from `adminActivityServer` (same pattern as `admin/users.ts`); no indexes on `events.date` / `event_registrations.created_at` (fine at current scale); the activity note does not mention withdrawn registrations; "12" in the title is not tied to the constant; helpers see the pending count; an empty paragraph after an ended event with no registrants; narrow total column for very large numbers.
