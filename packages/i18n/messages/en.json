@@ -712,5 +712,18 @@
 	"error_guest_link_invalid": "This link has expired or was already used. Please register again.",
 	"guest_email_subject": "Confirm your registration: {title}",
 	"guest_email_intro": "Someone (probably you) registered this address for \"{title}\". To confirm, open the link (valid for 24 hours):",
-	"guest_email_ignore": "If this wasn't you, ignore this message — without confirmation you won't be registered."
+	"guest_email_ignore": "If this wasn't you, ignore this message — without confirmation you won't be registered.",
+	"guest_register_button": "Register without an account",
+	"guest_dialog_title": "Register without an account",
+	"guest_dialog_description": "Enter your name and e-mail. We'll send a link — you're registered once you confirm it.",
+	"guest_field_name": "Full name",
+	"guest_field_email": "E-mail",
+	"guest_submit": "Send confirmation link",
+	"guest_sent_title": "Check your inbox",
+	"guest_sent_body": "We sent a link to {email}. Open it within 24 hours to confirm your registration.",
+	"guest_error_generic": "We couldn't send the link. Please try again.",
+	"guest_confirm_title": "Confirm your registration",
+	"guest_confirm_body": "Press the button to confirm your registration for the event.",
+	"guest_confirm_button": "Confirm registration",
+	"title_guest_confirm": "Confirm registration"
 }

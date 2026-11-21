@@ -1,6 +1,7 @@
 import {
 	renderEventChangeEmail,
 	renderEventMessageEmail,
+	renderGuestConfirmationEmail,
 	renderRegistrationEmail,
 	sendTransactionalEmail,
 } from "@repo/api/notifications/email";
@@ -49,12 +50,18 @@ export async function handleEmailJob(
 			return;
 		}
 		case "guest-confirmation": {
-			const { subject, text } = guestConfirmationEmail(
-				job.url,
-				job.eventTitle,
-				job.locale,
-			);
-			await deps.send({ to: job.to, subject, text });
+			const props = {
+				url: job.url,
+				eventTitle: job.eventTitle,
+				locale: job.locale,
+			};
+			const { subject, text } = guestConfirmationEmail(props);
+			await deps.send({
+				to: job.to,
+				subject,
+				text,
+				html: await renderGuestConfirmationEmail(props),
+			});
 			return;
 		}
 		case "registration": {

@@ -125,7 +125,7 @@ export function RegistrationAnswersDialog({
 	);
 }
 
-function AnswerField({
+export function AnswerField({
 	question,
 	value,
 	isMissing,

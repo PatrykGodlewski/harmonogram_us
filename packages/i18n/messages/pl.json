@@ -712,5 +712,18 @@
 	"error_guest_link_invalid": "Link wygasł albo został już użyty. Zapisz się jeszcze raz.",
 	"guest_email_subject": "Potwierdź zapis: {title}",
 	"guest_email_intro": "Ktoś (zapewne Ty) zapisał ten adres na wydarzenie „{title}”. Aby potwierdzić zapis, otwórz link (ważny 24 godziny):",
-	"guest_email_ignore": "Jeśli to nie Ty, zignoruj tę wiadomość — bez potwierdzenia nie zapiszemy Cię."
+	"guest_email_ignore": "Jeśli to nie Ty, zignoruj tę wiadomość — bez potwierdzenia nie zapiszemy Cię.",
+	"guest_register_button": "Zapisz się bez konta",
+	"guest_dialog_title": "Zapis bez konta",
+	"guest_dialog_description": "Podaj imię i e-mail. Wyślemy link — zapis będzie gotowy, gdy go potwierdzisz.",
+	"guest_field_name": "Imię i nazwisko",
+	"guest_field_email": "E-mail",
+	"guest_submit": "Wyślij link potwierdzenia",
+	"guest_sent_title": "Sprawdź skrzynkę",
+	"guest_sent_body": "Wysłaliśmy link na adres {email}. Otwórz go w ciągu 24 godzin, aby potwierdzić zapis.",
+	"guest_error_generic": "Nie udało się wysłać linku. Spróbuj ponownie.",
+	"guest_confirm_title": "Potwierdź zapis",
+	"guest_confirm_body": "Naciśnij przycisk, aby potwierdzić zapis na wydarzenie.",
+	"guest_confirm_button": "Potwierdź zapis",
+	"title_guest_confirm": "Potwierdzenie zapisu"
 }

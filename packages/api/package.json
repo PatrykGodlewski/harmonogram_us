@@ -9,7 +9,8 @@
     "./notifications/email": "./src/notifications/email.tsx",
     "./notifications/registration-email": "./src/notifications/registration-email.tsx",
     "./notifications/event-message-email": "./src/notifications/event-message-email.tsx",
-    "./notifications/event-change-email": "./src/notifications/event-change-email.tsx"
+    "./notifications/event-change-email": "./src/notifications/event-change-email.tsx",
+    "./notifications/guest-confirmation-email": "./src/notifications/guest-confirmation-email.tsx"
   },
   "dependencies": {
     "@connectrpc/connect": "^2.3.0",

@@ -35,6 +35,7 @@ import type {
 } from "~/lib/event-details/types";
 import type { EventSeatCount } from "~/lib/events/types";
 import { EditAnswersButton } from "./edit-answers-button";
+import { GuestRegistrationDialog } from "./guest-registration-dialog";
 import { LoginToRegisterButton } from "./login-to-register-button";
 import { UnregisterEventDialog } from "./unregister-event-dialog";
 
@@ -225,7 +226,18 @@ function EventRegistrationAction({
 	}
 
 	if (!user) {
-		return <LoginToRegisterButton eventId={eventId} />;
+		// Sign in, or register as a guest with a confirmation link (F17); signed-in-only
+		// events never reach anonymous visitors (their page sends them to sign in).
+		return (
+			<div className="flex flex-col gap-2 sm:flex-row">
+				<LoginToRegisterButton eventId={eventId} />
+				<GuestRegistrationDialog
+					eventId={eventId}
+					questions={questions}
+					interactive={interactive}
+				/>
+			</div>
+		);
 	}
 
 	if (registrations.isEventRegistered) {

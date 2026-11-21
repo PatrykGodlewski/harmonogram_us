@@ -19,6 +19,7 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ApiMetricsRouteImport } from './routes/api/metrics'
 import { Route as EventsEventIdRouteImport } from './routes/events/$eventId'
 import { Route as GroupsGroupIdRouteImport } from './routes/groups/$groupId'
+import { Route as GuestConfirmRouteImport } from './routes/guest.confirm'
 import { Route as InviteTokenRouteImport } from './routes/invite/$token'
 import { Route as JoinCodeRouteImport } from './routes/join/$code'
 import { Route as TicketsRegistrationIdRouteImport } from './routes/tickets/$registrationId'
@@ -81,6 +82,11 @@ const EventsEventIdRoute = EventsEventIdRouteImport.update({
 const GroupsGroupIdRoute = GroupsGroupIdRouteImport.update({
   id: '/groups/$groupId',
   path: '/groups/$groupId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuestConfirmRoute = GuestConfirmRouteImport.update({
+  id: '/guest/confirm',
+  path: '/guest/confirm',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InviteTokenRoute = InviteTokenRouteImport.update({
@@ -165,6 +171,7 @@ export interface FileRoutesByFullPath {
   '/api/metrics': typeof ApiMetricsRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/groups/$groupId': typeof GroupsGroupIdRoute
+  '/guest/confirm': typeof GuestConfirmRoute
   '/invite/$token': typeof InviteTokenRoute
   '/join/$code': typeof JoinCodeRoute
   '/tickets/$registrationId': typeof TicketsRegistrationIdRoute
@@ -190,6 +197,7 @@ export interface FileRoutesByTo {
   '/api/metrics': typeof ApiMetricsRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/groups/$groupId': typeof GroupsGroupIdRoute
+  '/guest/confirm': typeof GuestConfirmRoute
   '/invite/$token': typeof InviteTokenRoute
   '/join/$code': typeof JoinCodeRoute
   '/tickets/$registrationId': typeof TicketsRegistrationIdRoute
@@ -216,6 +224,7 @@ export interface FileRoutesById {
   '/api/metrics': typeof ApiMetricsRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/groups/$groupId': typeof GroupsGroupIdRoute
+  '/guest/confirm': typeof GuestConfirmRoute
   '/invite/$token': typeof InviteTokenRoute
   '/join/$code': typeof JoinCodeRoute
   '/tickets/$registrationId': typeof TicketsRegistrationIdRoute
@@ -243,6 +252,7 @@ export interface FileRouteTypes {
     | '/api/metrics'
     | '/events/$eventId'
     | '/groups/$groupId'
+    | '/guest/confirm'
     | '/invite/$token'
     | '/join/$code'
     | '/tickets/$registrationId'
@@ -268,6 +278,7 @@ export interface FileRouteTypes {
     | '/api/metrics'
     | '/events/$eventId'
     | '/groups/$groupId'
+    | '/guest/confirm'
     | '/invite/$token'
     | '/join/$code'
     | '/tickets/$registrationId'
@@ -293,6 +304,7 @@ export interface FileRouteTypes {
     | '/api/metrics'
     | '/events/$eventId'
     | '/groups/$groupId'
+    | '/guest/confirm'
     | '/invite/$token'
     | '/join/$code'
     | '/tickets/$registrationId'
@@ -319,6 +331,7 @@ export interface RootRouteChildren {
   ApiMetricsRoute: typeof ApiMetricsRoute
   EventsEventIdRoute: typeof EventsEventIdRoute
   GroupsGroupIdRoute: typeof GroupsGroupIdRoute
+  GuestConfirmRoute: typeof GuestConfirmRoute
   InviteTokenRoute: typeof InviteTokenRoute
   JoinCodeRoute: typeof JoinCodeRoute
   TicketsRegistrationIdRoute: typeof TicketsRegistrationIdRoute
@@ -404,6 +417,13 @@ declare module '@tanstack/react-router' {
       path: '/groups/$groupId'
       fullPath: '/groups/$groupId'
       preLoaderRoute: typeof GroupsGroupIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guest/confirm': {
+      id: '/guest/confirm'
+      path: '/guest/confirm'
+      fullPath: '/guest/confirm'
+      preLoaderRoute: typeof GuestConfirmRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/invite/$token': {
@@ -511,6 +531,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMetricsRoute: ApiMetricsRoute,
   EventsEventIdRoute: EventsEventIdRoute,
   GroupsGroupIdRoute: GroupsGroupIdRoute,
+  GuestConfirmRoute: GuestConfirmRoute,
   InviteTokenRoute: InviteTokenRoute,
   JoinCodeRoute: JoinCodeRoute,
   TicketsRegistrationIdRoute: TicketsRegistrationIdRoute,

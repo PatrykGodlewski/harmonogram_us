@@ -18,6 +18,10 @@ import {
 	GroupInvitationEmail,
 	type GroupInvitationEmailProps,
 } from "./group-invitation-email";
+import {
+	GuestConfirmationEmail,
+	type GuestConfirmationEmailProps,
+} from "./guest-confirmation-email";
 import { MagicLinkEmail } from "./magic-link-email";
 import {
 	RegistrationEmail,
@@ -67,6 +71,12 @@ export async function renderGroupInvitationEmail(
 	props: GroupInvitationEmailProps,
 ) {
 	return render(<GroupInvitationEmail {...props} />);
+}
+
+export async function renderGuestConfirmationEmail(
+	props: GuestConfirmationEmailProps,
+) {
+	return render(<GuestConfirmationEmail {...props} />);
 }
 
 export async function renderRegistrationEmail(props: RegistrationEmailProps) {
