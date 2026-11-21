@@ -40,6 +40,24 @@ describe("handleEmailJob", () => {
 });
 
 describe("registration e-mails", () => {
+	it("guest confirmation sends the event title and the link", async () => {
+		const { sent, deps } = capture();
+		await handleEmailJob(
+			{
+				kind: "guest-confirmation",
+				to: "gosc@x.test",
+				url: "https://app.test/pl/guest/confirm?token=abc",
+				eventTitle: "Koncert jesienny",
+				locale: "pl",
+			},
+			deps,
+		);
+		expect(sent).toHaveLength(1);
+		expect(sent[0]?.to).toBe("gosc@x.test");
+		expect(sent[0]?.subject).toContain("Koncert jesienny");
+		expect(sent[0]?.text).toContain("https://app.test/pl/guest/confirm?token=abc");
+	});
+
 	it("confirmed registration sends the event link in the registrant's language", async () => {
 		const { createEvent, createUser, resetDb } = await import("../../../packages/db/test/helpers");
 		const { registerForEvent } = await import("@repo/db/queries/event-registrations");

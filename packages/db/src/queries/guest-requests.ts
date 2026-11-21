@@ -1,8 +1,11 @@
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { and, eq, gt, lte } from "drizzle-orm";
 import { db, type TransactionClient } from "../client";
+import { events } from "../schema/events";
 import { guestRegistrationRequests } from "../schema/guest-requests";
-import type { Answers } from "./registration-answers";
+import { DomainError } from "./domain-errors";
+import { assertEventOpen } from "./event-registrations";
+import { type Answers, assertAnswersValid } from "./registration-answers";
 
 /** How long a confirmation link works. */
 const REQUEST_LIFETIME_MS = 24 * 3_600_000;
@@ -19,23 +22,66 @@ export type GuestRequest = {
 const hashToken = (token: string) =>
 	createHash("sha256").update(token).digest("base64url");
 
-/** Stores a request and returns the token for the confirmation link (only its hash is kept). */
+function sameSecret(given: string, expected: string): boolean {
+	const a = Buffer.from(given);
+	const b = Buffer.from(expected);
+	return a.length === b.length && timingSafeEqual(a, b);
+}
+
+/**
+ * Stores a guest's request and returns the token for the confirmation link (only its hash
+ * is kept). Refuses events a guest cannot join: not open (EVENT_NOT_FOUND / _CANCELLED /
+ * _ENDED), signed-in only (GUESTS_NOT_ALLOWED), invite-only without its link
+ * (EVENT_NOT_FOUND), and answers that miss a required question (ANSWERS_INVALID).
+ * `onCreated` runs in the same transaction (queue the confirmation e-mail there).
+ */
 export async function createGuestRequest(
 	input: Omit<GuestRequest, "inviteToken"> & { inviteToken?: string | null },
-	tx: TransactionClient | typeof db = db,
+	onCreated?: (
+		tx: TransactionClient,
+		token: string,
+		event: { title: string },
+	) => Promise<void>,
 ): Promise<{ token: string }> {
-	const token = randomBytes(32).toString("base64url");
-	await tx.insert(guestRegistrationRequests).values({
-		tokenHash: hashToken(token),
-		eventId: input.eventId,
-		email: input.email.trim().toLowerCase(),
-		name: input.name.trim(),
-		locale: input.locale,
-		answers: input.answers,
-		inviteToken: input.inviteToken ?? null,
-		expiresAt: new Date(Date.now() + REQUEST_LIFETIME_MS),
+	return db.transaction(async (tx) => {
+		await assertEventOpen(tx, input.eventId);
+		const [event] = await tx
+			.select({
+				title: events.title,
+				visibility: events.visibility,
+				inviteToken: events.inviteToken,
+			})
+			.from(events)
+			.where(eq(events.id, input.eventId));
+		if (event?.visibility === "authenticated") {
+			throw new DomainError("GUESTS_NOT_ALLOWED");
+		}
+		if (
+			event?.visibility === "private" &&
+			!(
+				input.inviteToken &&
+				event.inviteToken &&
+				sameSecret(input.inviteToken, event.inviteToken)
+			)
+		) {
+			throw new DomainError("EVENT_NOT_FOUND");
+		}
+		await assertAnswersValid(tx, input.eventId, input.answers);
+
+		const token = randomBytes(32).toString("base64url");
+		await tx.insert(guestRegistrationRequests).values({
+			tokenHash: hashToken(token),
+			eventId: input.eventId,
+			email: input.email.trim().toLowerCase(),
+			name: input.name.trim(),
+			locale: input.locale,
+			answers: input.answers,
+			inviteToken: input.inviteToken ?? null,
+			expiresAt: new Date(Date.now() + REQUEST_LIFETIME_MS),
+		});
+		await onCreated?.(tx, token, { title: event?.title ?? "" });
+		return { token };
 	});
-	return { token };
 }
 
 /** Removes and returns the request behind a link, once; null if unknown, used or expired. */

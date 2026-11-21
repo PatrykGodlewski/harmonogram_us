@@ -41,6 +41,13 @@ export const emailJob = z.discriminatedUnion("kind", [
 		locale: z.enum(["pl", "en"]),
 	}),
 	z.object({
+		kind: z.literal("guest-confirmation"),
+		to: z.email(),
+		url: z.url(),
+		eventTitle: z.string(),
+		locale: z.enum(["pl", "en"]),
+	}),
+	z.object({
 		kind: z.literal("registration"),
 		registrationId: z.string().min(1),
 		change: z.enum([

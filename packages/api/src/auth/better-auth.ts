@@ -39,6 +39,9 @@ import { getClientIp } from "../security/client-ip";
 import { checkEmails } from "../security/email-policy";
 import { consumeRateLimit, type RateLimit } from "../security/rate-limit";
 import {
+	GUEST_CONFIRM_LIMIT,
+	GUEST_REQUEST_IP_LIMIT,
+	GUEST_REQUEST_LIMIT,
 	INVITATION_ACCEPT_LIMIT,
 	invitationAcceptRateKey,
 	MAGIC_LINK_LIMIT,
@@ -46,6 +49,7 @@ import {
 	SIGN_UP_LIMIT,
 } from "../security/rate-limits";
 import { groupInvitation } from "./group-invitation-plugin";
+import { guestRegistration } from "./guest-registration-plugin";
 import { universityProviderConfig } from "./university";
 import { UNIVERSITY_PROVIDER_ID } from "./university-provider";
 
@@ -365,6 +369,35 @@ export const auth = betterAuth({
 				return;
 			}
 
+			if (ctx.path === "/guest-registration/request") {
+				await limitAuth(
+					"auth:guest-request-ip",
+					GUEST_REQUEST_IP_LIMIT,
+					ip,
+					"Too many registration requests. Please try again later.",
+				);
+				await limitAuth(
+					"auth:guest-request",
+					GUEST_REQUEST_LIMIT,
+					`${ip}:${email ?? "unknown-email"}`,
+					"Too many registration requests. Please try again later.",
+				);
+				if (email) {
+					await assertEmailIsAllowed(email);
+				}
+				return;
+			}
+
+			if (ctx.path === "/guest-registration/confirm") {
+				await limitAuth(
+					"auth:guest-confirm",
+					GUEST_CONFIRM_LIMIT,
+					ip,
+					"Too many attempts. Please try again later.",
+				);
+				return;
+			}
+
 			if (ctx.path === "/group-invitation/accept") {
 				const token: unknown = (ctx.body as { token?: unknown } | undefined)
 					?.token;
@@ -419,6 +452,7 @@ export const auth = betterAuth({
 							"/sign-up/email",
 							"/sign-in/email",
 							"/sign-in/magic-link",
+							"/guest-registration/request",
 						],
 					}),
 				]
@@ -442,6 +476,7 @@ export const auth = betterAuth({
 			},
 		}),
 		groupInvitation(),
+		guestRegistration(),
 		tanstackStartCookies(),
 	],
 });

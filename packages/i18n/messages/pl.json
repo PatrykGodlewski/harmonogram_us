@@ -707,5 +707,10 @@
 	"activity_events": "Wydarzenia",
 	"activity_registrations": "Zapisy",
 	"activity_total": "Razem",
-	"activity_note": "Bez szkiców i odrzuconych zapisów; zapisy usunięte zgodnie z RODO nie są liczone."
+	"activity_note": "Bez szkiców i odrzuconych zapisów; zapisy usunięte zgodnie z RODO nie są liczone.",
+	"error_guests_not_allowed": "To wydarzenie jest tylko dla zalogowanych.",
+	"error_guest_link_invalid": "Link wygasł albo został już użyty. Zapisz się jeszcze raz.",
+	"guest_email_subject": "Potwierdź zapis: {title}",
+	"guest_email_intro": "Ktoś (zapewne Ty) zapisał ten adres na wydarzenie „{title}”. Aby potwierdzić zapis, otwórz link (ważny 24 godziny):",
+	"guest_email_ignore": "Jeśli to nie Ty, zignoruj tę wiadomość — bez potwierdzenia nie zapiszemy Cię."
 }

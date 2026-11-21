@@ -707,5 +707,10 @@
 	"activity_events": "Events",
 	"activity_registrations": "Registrations",
 	"activity_total": "Total",
-	"activity_note": "Drafts and rejected registrations are not counted, nor registrations deleted for GDPR."
+	"activity_note": "Drafts and rejected registrations are not counted, nor registrations deleted for GDPR.",
+	"error_guests_not_allowed": "This event is for signed-in people only.",
+	"error_guest_link_invalid": "This link has expired or was already used. Please register again.",
+	"guest_email_subject": "Confirm your registration: {title}",
+	"guest_email_intro": "Someone (probably you) registered this address for \"{title}\". To confirm, open the link (valid for 24 hours):",
+	"guest_email_ignore": "If this wasn't you, ignore this message — without confirmation you won't be registered."
 }

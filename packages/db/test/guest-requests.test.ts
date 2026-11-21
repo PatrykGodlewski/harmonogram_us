@@ -8,18 +8,21 @@ import {
 	takeGuestRequest,
 } from "../src/queries/guest-requests";
 import { guestRegistrationRequests } from "../src/schema/guest-requests";
-import { createEvent, resetDb } from "./helpers";
+import { eventQuestions } from "../src/schema/event-questions";
+import { events } from "../src/schema/events";
+import { createEvent, rejectionCode, resetDb } from "./helpers";
 
 const hash = (token: string) =>
 	createHash("sha256").update(token).digest("base64url");
 
-async function request(eventId: string) {
+async function request(eventId: string, extra: { answers?: Record<string, string>; inviteToken?: string } = {}) {
 	return createGuestRequest({
 		eventId,
 		email: "Gosc@X.test",
 		name: "Gość Testowy",
 		locale: "pl",
-		answers: { q1: "Informatyka" },
+		answers: extra.answers ?? { q1: "Informatyka" },
+		inviteToken: extra.inviteToken,
 	});
 }
 
@@ -61,6 +64,48 @@ describe("guest registration requests", () => {
 			.set({ expiresAt: new Date(Date.now() - 1000) })
 			.where(eq(guestRegistrationRequests.tokenHash, hash(token)));
 		expect(await takeGuestRequest(token)).toBeNull();
+	});
+
+	it("runs the hook in the same transaction, with the token", async () => {
+		const eventId = await createEvent();
+		let seen = "";
+		const { token } = await createGuestRequest(
+			{ eventId, email: "a@x.test", name: "A", locale: "en", answers: {} },
+			async (_tx, hookToken) => {
+				seen = hookToken;
+			},
+		);
+		expect(seen).toBe(token);
+	});
+
+	it("refuses events guests cannot join", async () => {
+		const signedInOnly = await createEvent();
+		await db.update(events).set({ visibility: "authenticated" }).where(eq(events.id, signedInOnly));
+		expect(await rejectionCode(request(signedInOnly))).toBe("GUESTS_NOT_ALLOWED");
+
+		const draft = await createEvent();
+		await db.update(events).set({ status: "draft" }).where(eq(events.id, draft));
+		expect(await rejectionCode(request(draft))).toBe("EVENT_NOT_FOUND");
+
+		const inviteOnly = await createEvent();
+		await db.update(events).set({ visibility: "private", inviteToken: "secret-link" }).where(eq(events.id, inviteOnly));
+		expect(await rejectionCode(request(inviteOnly))).toBe("EVENT_NOT_FOUND");
+		expect(await rejectionCode(request(inviteOnly, { inviteToken: "secret-link" }))).toBe("RESOLVED");
+		expect(await db.select().from(guestRegistrationRequests)).toHaveLength(1);
+	});
+
+	it("refuses a missing required answer", async () => {
+		const eventId = await createEvent();
+		await db.insert(eventQuestions).values({
+			id: "q-required",
+			eventId,
+			label: "Kierunek",
+			kind: "text",
+			required: true,
+			position: 0,
+		});
+		expect(await rejectionCode(request(eventId, { answers: {} }))).toBe("ANSWERS_INVALID");
+		expect(await rejectionCode(request(eventId, { answers: { "q-required": "Fizyka" } }))).toBe("RESOLVED");
 	});
 
 	it("prune removes only expired requests", async () => {

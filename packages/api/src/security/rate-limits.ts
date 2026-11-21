@@ -63,3 +63,20 @@ export function eventMessageRateKeys(
 ): string[] {
 	return [`event:${eventId}`, `user:${userId}`];
 }
+
+/** Guest registration requests (F17): per address from one network, and per network. */
+export const GUEST_REQUEST_LIMIT: RateLimit = {
+	points: 5,
+	durationSeconds: 60 * 60,
+};
+
+export const GUEST_REQUEST_IP_LIMIT: RateLimit = {
+	points: 20,
+	durationSeconds: 60 * 60,
+};
+
+/** Confirming a guest registration (token guessing is hopeless; this caps noise). */
+export const GUEST_CONFIRM_LIMIT: RateLimit = {
+	points: 10,
+	durationSeconds: FIFTEEN_MINUTES,
+};

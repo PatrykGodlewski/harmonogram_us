@@ -6,6 +6,7 @@ import {
 } from "@repo/api/notifications/email";
 import { eventChangeEmailText } from "@repo/api/notifications/event-change-email";
 import { eventMessageEmailText } from "@repo/api/notifications/event-message-email";
+import { guestConfirmationEmail } from "@repo/api/notifications/guest-confirmation-email";
 import { registrationEmailText } from "@repo/api/notifications/registration-email";
 import { verificationEmail } from "@repo/api/notifications/verification-email";
 import { getRegistrationForEmail } from "@repo/db/queries/event-registrations";
@@ -44,6 +45,15 @@ export async function handleEmailJob(
 	switch (job.kind) {
 		case "verification": {
 			const { subject, text } = verificationEmail(job.url, job.locale);
+			await deps.send({ to: job.to, subject, text });
+			return;
+		}
+		case "guest-confirmation": {
+			const { subject, text } = guestConfirmationEmail(
+				job.url,
+				job.eventTitle,
+				job.locale,
+			);
 			await deps.send({ to: job.to, subject, text });
 			return;
 		}

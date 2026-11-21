@@ -104,3 +104,14 @@ export async function saveAnswers(
 			.values(kept.map((answer) => ({ registrationId, ...answer })));
 	}
 }
+
+/** ANSWERS_INVALID unless the answers satisfy the event's questions (all required ones given). */
+export async function assertAnswersValid(
+	tx: TransactionClient,
+	eventId: string,
+	answers: Answers,
+): Promise<void> {
+	normalizeAnswers(await questionRules(tx, eventId), answers, {
+		requireAll: true,
+	});
+}
