@@ -64,8 +64,8 @@ export async function publicEventsResponse(
 	const { limit, faculty, type, lang } = parsed.data;
 	const events = await deps.list(new Date(), {
 		limit,
-		...(faculty ? { facultyId: faculty } : {}),
-		...(type ? { typeId: type } : {}),
+		...(faculty ? { facultySlug: faculty } : {}),
+		...(type ? { typeSlug: type } : {}),
 	});
 	const locale = lang ?? baseLocale;
 	return json({ events: events.map((event) => toJson(event, locale)) });

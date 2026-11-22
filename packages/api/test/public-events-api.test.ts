@@ -11,7 +11,7 @@ const EVENT: PublicEvent = {
 	endsAt: new Date("2026-12-01T11:00:00Z"),
 	place: "Aula · B105",
 	attendanceMode: "onsite",
-	faculty: { id: "fiz", label: "Wydział Fizyki" },
+	faculty: { slug: "fiz", label: "Wydział Fizyki" },
 	type: null,
 	seatsRemaining: 7,
 };
@@ -35,7 +35,7 @@ describe("public events API", () => {
 		expect(res.headers.get("access-control-allow-origin")).toBe("*");
 		expect(res.headers.get("cache-control")).toBe("public, max-age=60");
 		expect(res.headers.get("content-type")).toContain("application/json");
-		expect(calls).toEqual([{ limit: 3, facultyId: "fiz", typeId: "wyklad" }]);
+		expect(calls).toEqual([{ limit: 3, facultySlug: "fiz", typeSlug: "wyklad" }]);
 		expect(await res.json()).toEqual({
 			events: [
 				{
@@ -45,7 +45,7 @@ describe("public events API", () => {
 					endsAt: "2026-12-01T11:00:00.000Z",
 					place: "Aula · B105",
 					attendanceMode: "onsite",
-					faculty: { id: "fiz", label: "Wydział Fizyki" },
+					faculty: { slug: "fiz", label: "Wydział Fizyki" },
 					type: null,
 					seatsRemaining: 7,
 					url: `${env.BETTER_AUTH_URL}/en/events/ev-1`,

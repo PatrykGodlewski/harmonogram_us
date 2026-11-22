@@ -9,8 +9,8 @@ Read when another site (a faculty page, a portal, a digital sign) should show th
 | Parameter | Values | Default |
 | --- | --- | --- |
 | `limit` | 1–50 | 20 |
-| `faculty` | faculty id (as in the site's faculty filter, `?facultyFilter=`) | all |
-| `type` | event type id (`?eventTypeFilter=`) | all |
+| `faculty` | faculty slug: the value the site's faculty filter puts in `?facultyFilter=` | all |
+| `type` | event type slug (`?eventTypeFilter=`) | all |
 | `lang` | `pl`, `en`: the language of the `url` links | base locale |
 
 Bad values answer `400` with `{ "error": [...] }`. Responses carry `access-control-allow-origin: *` (any site's JavaScript may read them) and `cache-control: public, max-age=60`.
@@ -25,8 +25,8 @@ Bad values answer `400` with `{ "error": [...] }`. Responses carry `access-contr
       "endsAt": "2026-12-01T11:00:00.000Z",
       "place": "Aula · B105",
       "attendanceMode": "onsite",
-      "faculty": { "id": "wydzial-fizyki", "label": "Wydział Fizyki" },
-      "type": { "id": "seminarium", "label": "Seminarium" },
+      "faculty": { "slug": "wydzial-fizyki", "label": "Wydział Fizyki" },
+      "type": { "slug": "seminarium", "label": "Seminarium" },
       "seatsRemaining": 12,
       "url": "https://events.example.edu/pl/events/…"
     }
@@ -48,4 +48,4 @@ An `<iframe>` with the next events as a list. Each title opens the event on this
 ></iframe>
 ```
 
-Use `/en/widget` for English. Parameters: `limit` 1–10 (default 5), `faculty`, `type` (the same ids as the API). Malformed values fall back to the defaults. The host sets the height: about 360 px fits three events on a phone.
+Use `/en/widget` for English. Parameters: `limit` 1–10 (default 5), `faculty`, `type` (the same slugs as the API). Malformed values fall back to the defaults. The host sets the height: about 360 px fits three events on a phone.

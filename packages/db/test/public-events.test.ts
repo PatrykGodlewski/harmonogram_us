@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "../src/client";
 import { registerForEvent } from "../src/queries/event-registrations";
 import { listUpcomingPublicEvents } from "../src/queries/public-events";
-import { eventFaculties, eventLocations } from "../src/schema/event-lookups";
+import { eventFaculties, eventLocations, eventTypes } from "../src/schema/event-lookups";
 import { events } from "../src/schema/events";
 import { createEvent, createUser, resetDb } from "./helpers";
 
@@ -39,22 +39,24 @@ describe("listUpcomingPublicEvents", () => {
 		expect(listed.map((e) => e.title)).toEqual(["Running", "Sooner", "Later"]);
 	});
 
-	it("filters by faculty and type and respects the limit", async () => {
-		await db.insert(eventFaculties).values({ id: "fiz", slug: "fiz", label: "Wydział Fizyki" });
-		await event("Physics 1", 1, { facultyId: "fiz" });
-		await event("Physics 2", 2, { facultyId: "fiz" });
+	it("filters by faculty and type slug (as the site's filters do) and respects the limit", async () => {
+		// Created in the panel: a generated id, a slug from the name
+		await db.insert(eventFaculties).values({ id: "0b6d-uuid", slug: "fiz", label: "Wydział Fizyki" });
+		await db.insert(eventTypes).values({ id: "4f1e-uuid", slug: "wyklad", label: "Wykład" });
+		await event("Physics 1", 1, { facultyId: "0b6d-uuid" });
+		await event("Physics 2", 2, { facultyId: "0b6d-uuid", typeId: "4f1e-uuid" });
 		await event("Other", 3);
 
-		const physics = await listUpcomingPublicEvents(new Date(), { limit: 20, facultyId: "fiz" });
+		const physics = await listUpcomingPublicEvents(new Date(), { limit: 20, facultySlug: "fiz" });
 		expect(physics.map((e) => e.title)).toEqual(["Physics 1", "Physics 2"]);
-		expect(physics[0]?.faculty).toEqual({ id: "fiz", label: "Wydział Fizyki" });
+		expect(physics[0]?.faculty).toEqual({ slug: "fiz", label: "Wydział Fizyki" });
+		expect(await listUpcomingPublicEvents(new Date(), { limit: 20, facultySlug: "0b6d-uuid" })).toEqual([]);
+		const lectures = await listUpcomingPublicEvents(new Date(), { limit: 20, typeSlug: "wyklad" });
+		expect(lectures.map((e) => e.title)).toEqual(["Physics 2"]);
+		expect(lectures[0]?.type).toEqual({ slug: "wyklad", label: "Wykład" });
 		expect((await listUpcomingPublicEvents(new Date(), { limit: 1 })).map((e) => e.title)).toEqual([
 			"Physics 1",
 		]);
-		expect(await listUpcomingPublicEvents(new Date(), { limit: 20, typeId: "nope" })).toEqual([]);
-		expect(
-			(await listUpcomingPublicEvents(new Date(), { limit: 20, typeId: "test-type" })).length,
-		).toBe(3);
 	});
 
 	it("gives the place, mode and seats left", async () => {
@@ -68,7 +70,7 @@ describe("listUpcomingPublicEvents", () => {
 			title: "Seminar",
 			place: "Aula · B105",
 			attendanceMode: "onsite",
-			type: { id: "test-type", label: "Test" },
+			type: { slug: "test-type", label: "Test" },
 			faculty: null,
 			seatsRemaining: 9,
 		});

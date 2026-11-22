@@ -17,15 +17,16 @@ export type PublicEvent = {
 	endsAt: Date;
 	place: string | null;
 	attendanceMode: AttendanceMode;
-	faculty: { id: string; label: string } | null;
-	type: { id: string; label: string } | null;
+	faculty: { slug: string; label: string } | null;
+	type: { slug: string; label: string } | null;
 	seatsRemaining: number;
 };
 
+/** Faculty and type by slug, the key the site's own filters use (`?facultyFilter=`). */
 export type PublicEventFilters = {
 	limit: number;
-	facultyId?: string;
-	typeId?: string;
+	facultySlug?: string;
+	typeSlug?: string;
 };
 
 /**
@@ -41,8 +42,10 @@ export async function listUpcomingPublicEvents(
 		eq(events.status, "published"),
 		eq(events.visibility, "public"),
 		gt(end, now.toISOString()),
-		filters.facultyId ? eq(events.facultyId, filters.facultyId) : undefined,
-		filters.typeId ? eq(events.typeId, filters.typeId) : undefined,
+		filters.facultySlug
+			? eq(eventFaculties.slug, filters.facultySlug)
+			: undefined,
+		filters.typeSlug ? eq(eventTypes.slug, filters.typeSlug) : undefined,
 	];
 	const rows = await db
 		.select({
@@ -53,9 +56,9 @@ export async function listUpcomingPublicEvents(
 			location: eventLocations.label,
 			room: events.room,
 			attendanceMode: events.attendanceMode,
-			facultyId: eventFaculties.id,
+			facultySlug: eventFaculties.slug,
 			facultyLabel: eventFaculties.label,
-			typeId: eventTypes.id,
+			typeSlug: eventTypes.slug,
 			typeLabel: eventTypes.label,
 			maxSeats: events.maxSeats,
 			seatsRemaining: eventSeatCounts.seatsRemaining,
@@ -77,12 +80,12 @@ export async function listUpcomingPublicEvents(
 		place: [row.location, row.room].filter(Boolean).join(" · ") || null,
 		attendanceMode: row.attendanceMode,
 		faculty:
-			row.facultyId && row.facultyLabel
-				? { id: row.facultyId, label: row.facultyLabel }
+			row.facultySlug && row.facultyLabel
+				? { slug: row.facultySlug, label: row.facultyLabel }
 				: null,
 		type:
-			row.typeId && row.typeLabel
-				? { id: row.typeId, label: row.typeLabel }
+			row.typeSlug && row.typeLabel
+				? { slug: row.typeSlug, label: row.typeLabel }
 				: null,
 		seatsRemaining: row.seatsRemaining ?? row.maxSeats,
 	}));

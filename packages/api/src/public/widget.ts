@@ -21,8 +21,8 @@ export const fetchWidgetEventsServer = createServerFn({ method: "GET" })
 		({ data }): Promise<PublicEvent[]> =>
 			listUpcomingPublicEvents(new Date(), {
 				limit: data.limit,
-				...(data.faculty ? { facultyId: data.faculty } : {}),
-				...(data.type ? { typeId: data.type } : {}),
+				...(data.faculty ? { facultySlug: data.faculty } : {}),
+				...(data.type ? { typeSlug: data.type } : {}),
 			}),
 	);
 
