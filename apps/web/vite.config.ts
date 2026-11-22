@@ -51,6 +51,9 @@ export default defineConfig({
 			strategy: ["url", "baseLocale"],
 			urlPatterns: paraglideUrlPatterns,
 			routeStrategies: paraglideRouteStrategies,
+			// web and admin dev servers compile into the same outdir at the same time: cleaning it
+			// races (one deletes while the other writes) and leaves the messages empty.
+			cleanOutdir: false,
 		}),
 		// Entries are found by name in src/: server.ts (Paraglide-wrapped handler) and start.ts (global middleware).
 		tanstackStart(),

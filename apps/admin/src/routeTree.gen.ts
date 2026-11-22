@@ -17,6 +17,7 @@ import { Route as AuthenticatedEventFacultiesRouteImport } from './routes/_authe
 import { Route as AuthenticatedEventLocationsRouteImport } from './routes/_authenticated/event-locations'
 import { Route as AuthenticatedEventTypesRouteImport } from './routes/_authenticated/event-types'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiMetricsRouteImport } from './routes/api/metrics'
 import { Route as AuthenticatedEventsIndexRouteImport } from './routes/_authenticated/events.index'
 import { Route as AuthenticatedEventsEventIdRouteImport } from './routes/_authenticated/events.$eventId'
@@ -66,6 +67,11 @@ const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiMetricsRoute = ApiMetricsRouteImport.update({
   id: '/api/metrics',
   path: '/api/metrics',
@@ -114,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/event-locations': typeof AuthenticatedEventLocationsRoute
   '/event-types': typeof AuthenticatedEventTypesRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/metrics': typeof ApiMetricsRoute
   '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -129,6 +136,7 @@ export interface FileRoutesByTo {
   '/event-locations': typeof AuthenticatedEventLocationsRoute
   '/event-types': typeof AuthenticatedEventTypesRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/metrics': typeof ApiMetricsRoute
   '/': typeof AuthenticatedIndexRoute
   '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
@@ -147,6 +155,7 @@ export interface FileRoutesById {
   '/_authenticated/event-locations': typeof AuthenticatedEventLocationsRoute
   '/_authenticated/event-types': typeof AuthenticatedEventTypesRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/metrics': typeof ApiMetricsRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/events/$eventId': typeof AuthenticatedEventsEventIdRoute
@@ -166,6 +175,7 @@ export interface FileRouteTypes {
     | '/event-locations'
     | '/event-types'
     | '/users'
+    | '/api/health'
     | '/api/metrics'
     | '/events/$eventId'
     | '/api/auth/$'
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/event-locations'
     | '/event-types'
     | '/users'
+    | '/api/health'
     | '/api/metrics'
     | '/'
     | '/events/$eventId'
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
     | '/_authenticated/event-locations'
     | '/_authenticated/event-types'
     | '/_authenticated/users'
+    | '/api/health'
     | '/api/metrics'
     | '/_authenticated/'
     | '/_authenticated/events/$eventId'
@@ -212,6 +224,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
   LogoutRoute: typeof LogoutRoute
+  ApiHealthRoute: typeof ApiHealthRoute
   ApiMetricsRoute: typeof ApiMetricsRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiFilesFileIdRoute: typeof ApiFilesFileIdRoute
@@ -275,6 +288,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/users'
       preLoaderRoute: typeof AuthenticatedUsersRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/metrics': {
       id: '/api/metrics'
@@ -358,6 +378,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
   LogoutRoute: LogoutRoute,
+  ApiHealthRoute: ApiHealthRoute,
   ApiMetricsRoute: ApiMetricsRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiFilesFileIdRoute: ApiFilesFileIdRoute,

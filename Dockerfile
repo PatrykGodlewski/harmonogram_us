@@ -11,7 +11,11 @@ RUN apk add --no-cache libc6-compat \
 
 FROM base AS pruner
 
-ARG APP=web
+# Which app to build: web, admin or worker. Docker Compose passes it as a build arg; on
+# Railway it is a service variable (Railway hands service variables to ARGs).
+ARG APP
+
+RUN case "${APP}" in web|admin|worker) ;; *) echo "Set APP to web, admin or worker (got '${APP}')" >&2; exit 1 ;; esac
 
 WORKDIR /app
 
@@ -21,7 +25,7 @@ RUN pnpm dlx turbo@2.9.6 prune "${APP}" --docker
 
 FROM base AS builder
 
-ARG APP=web
+ARG APP
 ARG VITE_TURNSTILE_SITE_KEY=""
 ARG VITE_APP_TIME_ZONE="Europe/Warsaw"
 
@@ -47,8 +51,6 @@ RUN mkdir -p /app/out \
 	&& if [ -d "apps/${APP}/dist" ]; then cp -r "apps/${APP}/dist" /app/out/dist; fi
 
 FROM base AS runner
-
-ARG APP=web
 
 WORKDIR /app
 
