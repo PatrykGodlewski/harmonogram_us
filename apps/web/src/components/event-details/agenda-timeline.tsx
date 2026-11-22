@@ -3,7 +3,11 @@ import {
 	event_details_no_agenda,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
-import { findOverlaps, markParallel, nowListIndex } from "@repo/ui/agenda";
+import {
+	findOverlaps,
+	programmeEntries,
+	programmeNowIndex,
+} from "@repo/ui/agenda";
 import { AgendaNowDivider, useNow } from "@repo/ui/composed/agenda-now";
 import {
 	type AgendaViewMode,
@@ -63,21 +67,9 @@ export function AgendaTimeline({
 					locationLabel: sessionById.get(item.sessionId)?.locationLabel ?? null,
 				},
 	);
-	const items = markParallel(agenda.filter((item) => !item.sessionId));
-	const entries = [
-		...event.sessions.map((session) => ({
-			kind: "session" as const,
-			session,
-			startsAt: new Date(session.startsAt).getTime(),
-		})),
-		...items.map((item) => ({
-			kind: "item" as const,
-			item,
-			startsAt: new Date(item.startsAt).getTime(),
-		})),
-	].sort((a, b) => a.startsAt - b.startsAt);
+	const entries = programmeEntries(agenda, event.sessions);
 	const now = useNow();
-	const nowIndex = now ? nowListIndex(items, now) : null;
+	const nowIndex = now ? programmeNowIndex(entries, now) : null;
 	const overlaps = findOverlaps(event.agenda, registrations.registeredItemIds);
 	const seatCountOf = (item: AgendaItemData) => ({
 		seatsRemaining: item.seatsRemaining,
@@ -124,59 +116,57 @@ export function AgendaTimeline({
 				/>
 			) : (
 				<ol className="divide-y">
-					{entries.map((entry) =>
-						entry.kind === "session" ? (
-							<li key={entry.session.id} className="py-3">
-								<section
-									aria-labelledby={`session-${entry.session.id}`}
-									className="flex gap-3"
-								>
-									<span
-										aria-hidden
-										className={cn(
-											"w-1.5 shrink-0 rounded-full",
-											sessionColorClasses[entry.session.color].bar,
-										)}
-									/>
-									<div className="flex min-w-0 flex-1 flex-col gap-1">
-										<p className="text-sm text-muted-foreground tabular-nums">
-											{formatEventTime(entry.session.startsAt, locale)}–
-											{formatEventTime(entry.session.endsAt, locale)}
-											{entry.session.locationLabel
-												? ` · ${entry.session.locationLabel}`
-												: ""}
-										</p>
-										<h3
-											id={`session-${entry.session.id}`}
-											className="font-semibold break-words"
-										>
-											{entry.session.title}
-										</h3>
-										{entry.session.description ? (
-											<p className="text-sm text-muted-foreground break-words">
-												{entry.session.description}
+					{entries.map((entry, index) => (
+						<React.Fragment
+							key={entry.kind === "session" ? entry.session.id : entry.item.id}
+						>
+							{index === nowIndex && now ? (
+								<AgendaNowDivider now={now} />
+							) : null}
+							{entry.kind === "session" ? (
+								<li className="py-3">
+									<section
+										aria-labelledby={`session-${entry.session.id}`}
+										className="flex gap-3"
+									>
+										<span
+											aria-hidden
+											className={cn(
+												"w-1.5 shrink-0 rounded-full",
+												sessionColorClasses[entry.session.color].bar,
+											)}
+										/>
+										<div className="flex min-w-0 flex-1 flex-col gap-1">
+											<p className="text-sm text-muted-foreground tabular-nums">
+												{formatEventTime(entry.session.startsAt, locale)}–
+												{formatEventTime(entry.session.endsAt, locale)}
+												{entry.session.locationLabel
+													? ` · ${entry.session.locationLabel}`
+													: ""}
 											</p>
-										) : null}
-										<ol className="divide-y">
-											{markParallel(
-												agenda.filter(
-													(item) => item.sessionId === entry.session.id,
-												),
-											).map((item) => renderRow(item, "li"))}
-										</ol>
-									</div>
-								</section>
-							</li>
-						) : (
-							<React.Fragment key={entry.item.id}>
-								{items.indexOf(entry.item) === nowIndex && now ? (
-									<AgendaNowDivider now={now} />
-								) : null}
-								{renderRow(entry.item, "li")}
-							</React.Fragment>
-						),
-					)}
-					{nowIndex === items.length && now ? (
+											<h3
+												id={`session-${entry.session.id}`}
+												className="font-semibold break-words"
+											>
+												{entry.session.title}
+											</h3>
+											{entry.session.description ? (
+												<p className="text-sm text-muted-foreground break-words">
+													{entry.session.description}
+												</p>
+											) : null}
+											<ol className="divide-y">
+												{entry.items.map((item) => renderRow(item, "li"))}
+											</ol>
+										</div>
+									</section>
+								</li>
+							) : (
+								renderRow(entry.item, "li")
+							)}
+						</React.Fragment>
+					))}
+					{nowIndex === entries.length && now ? (
 						<AgendaNowDivider now={now} />
 					) : null}
 				</ol>

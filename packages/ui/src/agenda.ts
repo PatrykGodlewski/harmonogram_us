@@ -186,6 +186,45 @@ export function nowListIndex<T extends AgendaTimed>(
 	return sorted.filter((item) => ms(item.startsAt) <= time).length;
 }
 
+/** One line of a programme with sessions (F33): a session with its items, or an item outside any session. */
+export type ProgrammeEntry<I, S> =
+	| { kind: "session"; session: S; items: Array<I & { parallel: boolean }> }
+	| { kind: "item"; item: I & { parallel: boolean } };
+
+/** Sessions and the items outside them, in order of start; each session carries its items. */
+export function programmeEntries<
+	I extends AgendaTimed & { sessionId: string | null },
+	S extends AgendaTimed,
+>(items: I[], sessions: S[]): ProgrammeEntry<I, S>[] {
+	const timed = [
+		...sessions.map((session) => ({
+			...session,
+			entry: {
+				kind: "session" as const,
+				session,
+				items: markParallel(items.filter((item) => item.sessionId === session.id)),
+			},
+		})),
+		...markParallel(items.filter((item) => item.sessionId === null)).map(
+			(item) => ({ ...item, entry: { kind: "item" as const, item } }),
+		),
+	];
+	return sortByStart(timed).map(({ entry }) => entry);
+}
+
+/** Where "now" goes among programme entries (a session counts by its own times), as `nowListIndex`. */
+export function programmeNowIndex<I extends AgendaTimed, S extends AgendaTimed>(
+	entries: ProgrammeEntry<I, S>[],
+	now: Date,
+): number | null {
+	return nowListIndex(
+		entries.map((entry) =>
+			entry.kind === "session" ? entry.session : entry.item,
+		),
+		now,
+	);
+}
+
 /** Milliseconds until the next full minute (when a clock showing HH:MM must change). */
 export function msUntilNextMinute(now: Date): number {
 	return 60_000 - (now.getTime() % 60_000);

@@ -121,6 +121,27 @@ describe("agenda sessions", () => {
 		expect(longer).toMatchObject({ title: "Ćwiczenia A" });
 	});
 
+	it("moving a session moves its programme with it; shrinking it past an item is refused", async () => {
+		const { eventId, session } = await exercises();
+		// 10:00–12:00 becomes 14:00–16:00 the next day
+		const moved = await updateAgendaSession(session.id, {
+			startsAt: at("2027-10-31T13:00:00Z"),
+			endsAt: at("2027-10-31T15:00:00Z"),
+		});
+		expect(moved).toMatchObject({ startsAt: at("2027-10-31T13:00:00Z") });
+		const items = await listAgendaItems(eventId);
+		expect(items.map((item) => [item.title, item.startsAt, item.endsAt])).toEqual([
+			["Mikroskopy", at("2027-10-31T13:00:00Z"), at("2027-10-31T13:50:00Z")],
+			["Pomiary", at("2027-10-31T14:00:00Z"), at("2027-10-31T14:50:00Z")],
+		]);
+		// A later start with the same end would squeeze the last item out
+		expect(
+			await rejectionCode(
+				updateAgendaSession(session.id, { startsAt: at("2027-10-31T13:30:00Z") }),
+			),
+		).toBe("SESSION_ITEMS_OUTSIDE");
+	});
+
 	it("refuses a session of another event", async () => {
 		const { session } = await exercises();
 		const otherEvent = await createEvent();

@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, lt, or, sql } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { type DbExecutor, db, type TransactionClient } from "../client";
 import {
 	type AgendaSessionColor,
@@ -109,7 +109,10 @@ async function lockSession(tx: TransactionClient, id: string) {
 		: null;
 }
 
-/** SESSION_ITEMS_OUTSIDE when new times would leave one of its items outside. */
+/**
+ * Moving the start moves the programme with it (items keep their offset from the
+ * start). SESSION_ITEMS_OUTSIDE when the new times would still leave an item outside.
+ */
 export async function updateAgendaSession(
 	id: string,
 	input: Partial<Omit<AgendaSessionInput, "eventId">>,
@@ -122,21 +125,30 @@ export async function updateAgendaSession(
 		const startsAt = input.startsAt ?? current.startsAt;
 		const endsAt = input.endsAt ?? current.endsAt;
 		assertOrdered(startsAt, endsAt);
+		const shift = sql`make_interval(secs => ${(startsAt.getTime() - current.startsAt.getTime()) / 1000})`;
 		const [outside] = await tx
 			.select({ id: agendaItems.id })
 			.from(agendaItems)
 			.where(
 				and(
 					eq(agendaItems.sessionId, id),
-					or(
-						lt(agendaItems.startsAt, startsAt),
-						gt(agendaItems.endsAt, endsAt),
-					),
+					sql`(${agendaItems.startsAt} + ${shift} < ${startsAt.toISOString()}::timestamptz
+						OR ${agendaItems.endsAt} + ${shift} > ${endsAt.toISOString()}::timestamptz)`,
 				),
 			)
 			.limit(1);
 		if (outside) {
 			throw new DomainError("SESSION_ITEMS_OUTSIDE");
+		}
+		if (startsAt.getTime() !== current.startsAt.getTime()) {
+			await tx
+				.update(agendaItems)
+				.set({
+					startsAt: sql`${agendaItems.startsAt} + ${shift}`,
+					endsAt: sql`${agendaItems.endsAt} + ${shift}`,
+					updatedAt: new Date(),
+				})
+				.where(eq(agendaItems.sessionId, id));
 		}
 		await tx
 			.update(agendaSessions)

@@ -4,6 +4,8 @@ import {
 	layoutAgenda,
 	markParallel,
 	nowListIndex,
+	programmeEntries,
+	programmeNowIndex,
 	msUntilNextMinute,
 	nowMinuteOnDay,
 } from "../src/agenda";
@@ -207,3 +209,44 @@ describe("msUntilNextMinute", () => {
 		expect(msUntilNextMinute(new Date("2026-11-19T09:31:00.000Z"))).toBe(60_000);
 	});
 });
+
+describe("programme with sessions (F33)", () => {
+	const loose = (id: string, start: string, end: string) => ({
+		...item(id, start, end),
+		sessionId: null,
+	});
+	const inSession = (id: string, session: string, start: string, end: string) => ({
+		...item(id, start, end),
+		sessionId: session,
+	});
+	const lectures = item("Wykłady", "13:00", "15:00");
+	const programme = [
+		loose("Otwarcie", "09:00", "10:00"),
+		inSession("Grafen", "Wykłady", "13:00", "14:00"),
+		loose("Panel", "15:00", "16:00"),
+	];
+
+	it("orders sessions and items outside them by start; a session carries its items", () => {
+		const entries = programmeEntries(programme, [lectures]);
+		expect(
+			entries.map((entry) =>
+				entry.kind === "session"
+					? `${entry.session.id}: ${entry.items.map((row) => row.id).join(",")}`
+					: entry.item.id,
+			),
+		).toEqual(["Otwarcie", "Wykłady: Grafen", "Panel"]);
+	});
+
+	it("places 'now' among sessions and items, also when every item is in a session", () => {
+		const entries = programmeEntries(programme, [lectures]);
+		expect(programmeNowIndex(entries, new Date(at("12:00")))).toBe(1);
+		expect(programmeNowIndex(entries, new Date(at("14:00")))).toBe(2);
+		const onlySession = programmeEntries(
+			[inSession("Grafen", "Wykłady", "13:00", "14:00")],
+			[lectures],
+		);
+		expect(programmeNowIndex(onlySession, new Date(at("13:30")))).toBe(1);
+		expect(programmeNowIndex(onlySession, new Date(at("16:00")))).toBeNull();
+	});
+});
+

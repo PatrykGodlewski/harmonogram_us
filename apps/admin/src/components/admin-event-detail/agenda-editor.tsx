@@ -22,7 +22,12 @@ import {
 	event_details_no_registration,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
-import { markParallel, nowListIndex } from "@repo/ui/agenda";
+import {
+	markParallel,
+	type ProgrammeEntry,
+	programmeEntries,
+	programmeNowIndex,
+} from "@repo/ui/agenda";
 import { Button } from "@repo/ui/components/button";
 import { AgendaCalendarGrid } from "@repo/ui/composed/agenda-calendar-grid";
 import { AgendaNowDivider, useNow } from "@repo/ui/composed/agenda-now";
@@ -68,10 +73,6 @@ function placesLabel(item: AgendaItem): string {
 				max: item.maxSeats,
 			});
 }
-
-type ListEntry =
-	| { kind: "session"; session: AgendaSession; startsAt: Date }
-	| { kind: "item"; item: AgendaItem & { parallel: boolean }; startsAt: Date };
 
 export function AgendaEditor({
 	eventId,
@@ -127,24 +128,12 @@ export function AgendaEditor({
 		setSessionDialogOpen(true);
 	};
 
-	// At event level the list shows sessions and the items outside them, in time order.
-	const itemsInList = sessions
-		? agenda.filter((item) => item.sessionId === null)
-		: agenda;
-	const listedItems = markParallel(itemsInList);
-	const entries: ListEntry[] = [
-		...(sessions ?? []).map((row) => ({
-			kind: "session" as const,
-			session: row,
-			startsAt: new Date(row.startsAt),
-		})),
-		...listedItems.map((item) => ({
-			kind: "item" as const,
-			item,
-			startsAt: new Date(item.startsAt),
-		})),
-	].sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
-	const nowIndex = now ? nowListIndex(itemsInList, now) : null;
+	// At event level the list shows sessions and the items outside them, in time order;
+	// inside a session, its items.
+	const entries: ProgrammeEntry<AgendaItem, AgendaSession>[] = sessions
+		? programmeEntries(agenda, sessions)
+		: markParallel(agenda).map((item) => ({ kind: "item", item }));
+	const nowIndex = now ? programmeNowIndex(entries, now) : null;
 	const itemCountOf = (sessionId: string) =>
 		agenda.filter((item) => item.sessionId === sessionId).length;
 	const locationOf = (item: AgendaItem) =>
@@ -210,20 +199,26 @@ export function AgendaEditor({
 				/>
 			) : (
 				<ol className="divide-y rounded-lg border">
-					{entries.map((entry) =>
+					{entries.map((entry, index) =>
 						entry.kind === "session" ? (
-							<SessionCard
-								key={entry.session.id}
-								session={entry.session}
-								itemCount={itemCountOf(entry.session.id)}
-								deleting={deleteSessionMutation.isPending}
-								onCopy={() => setCopying(entry.session)}
-								onEdit={() => handleEditSession(entry.session)}
-								onDelete={() => deleteSessionMutation.mutate(entry.session.id)}
-							/>
+							<Fragment key={entry.session.id}>
+								{index === nowIndex && now ? (
+									<AgendaNowDivider now={now} />
+								) : null}
+								<SessionCard
+									session={entry.session}
+									itemCount={itemCountOf(entry.session.id)}
+									deleting={deleteSessionMutation.isPending}
+									onCopy={() => setCopying(entry.session)}
+									onEdit={() => handleEditSession(entry.session)}
+									onDelete={() =>
+										deleteSessionMutation.mutate(entry.session.id)
+									}
+								/>
+							</Fragment>
 						) : (
 							<Fragment key={entry.item.id}>
-								{listedItems.indexOf(entry.item) === nowIndex && now ? (
+								{index === nowIndex && now ? (
 									<AgendaNowDivider now={now} />
 								) : null}
 								<li
@@ -273,7 +268,7 @@ export function AgendaEditor({
 							</Fragment>
 						),
 					)}
-					{nowIndex === itemsInList.length && now ? (
+					{nowIndex === entries.length && now ? (
 						<AgendaNowDivider now={now} />
 					) : null}
 				</ol>
