@@ -24,6 +24,8 @@ const STATUS: Partial<Record<AppErrorCode, number>> = {
 	ITEM_LIMIT_ABOVE_EVENT: 400,
 	MAX_SEATS_BELOW_REGISTERED: 400,
 	EVENT_INCOMPLETE: 400,
+	FILE_TYPE: 400,
+	FILE_TOO_LARGE: 413,
 };
 
 /** A client-facing error: the code travels as the message, `status` becomes the HTTP status. */

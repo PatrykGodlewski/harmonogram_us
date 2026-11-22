@@ -36,3 +36,22 @@ export async function canOpenEvent(
 	const role = (await getUserRole(userId)) ?? "user";
 	return canManageEvent({ id: userId, role }, eventId);
 }
+
+/**
+ * Whether the viewer may open the event page (and so its files): not a draft,
+ * signed in for a signed-in-only event, and allowed by `canOpenEvent`.
+ */
+export async function canViewEvent(
+	eventId: string,
+	userId: string | null,
+	invite: string | undefined,
+): Promise<boolean> {
+	const access = await getEventAccess(eventId, userId ?? undefined);
+	if (!access || access.status === "draft") {
+		return false;
+	}
+	if (access.visibility === "authenticated" && !userId) {
+		return false;
+	}
+	return canOpenEvent(eventId, userId, invite);
+}

@@ -31,6 +31,7 @@ import { Route as ApiCertificatesRegistrationIdRouteImport } from './routes/api/
 import { Route as ApiElectricAgendaItemSeatCountsRouteImport } from './routes/api/electric/agenda-item-seat-counts'
 import { Route as ApiElectricCancelledEventsRouteImport } from './routes/api/electric/cancelled-events'
 import { Route as ApiElectricEventSeatCountsRouteImport } from './routes/api/electric/event-seat-counts'
+import { Route as ApiFilesFileIdRouteImport } from './routes/api/files/$fileId'
 import { Route as ApiV1EventsRouteImport } from './routes/api/v1/events'
 import { Route as RegistrationsRegistrationIdWithdrawRouteImport } from './routes/registrations.$registrationId.withdraw'
 import { Route as ApiCalendarEventEventIdRouteImport } from './routes/api/calendar/event/$eventId'
@@ -152,6 +153,11 @@ const ApiElectricEventSeatCountsRoute =
     path: '/api/electric/event-seat-counts',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiFilesFileIdRoute = ApiFilesFileIdRouteImport.update({
+  id: '/api/files/$fileId',
+  path: '/api/files/$fileId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiV1EventsRoute = ApiV1EventsRouteImport.update({
   id: '/api/v1/events',
   path: '/api/v1/events',
@@ -208,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/api/electric/agenda-item-seat-counts': typeof ApiElectricAgendaItemSeatCountsRoute
   '/api/electric/cancelled-events': typeof ApiElectricCancelledEventsRoute
   '/api/electric/event-seat-counts': typeof ApiElectricEventSeatCountsRoute
+  '/api/files/$fileId': typeof ApiFilesFileIdRoute
   '/api/v1/events': typeof ApiV1EventsRoute
   '/registrations/$registrationId/withdraw': typeof RegistrationsRegistrationIdWithdrawRoute
   '/api/calendar/event/$eventId': typeof ApiCalendarEventEventIdRoute
@@ -238,6 +245,7 @@ export interface FileRoutesByTo {
   '/api/electric/agenda-item-seat-counts': typeof ApiElectricAgendaItemSeatCountsRoute
   '/api/electric/cancelled-events': typeof ApiElectricCancelledEventsRoute
   '/api/electric/event-seat-counts': typeof ApiElectricEventSeatCountsRoute
+  '/api/files/$fileId': typeof ApiFilesFileIdRoute
   '/api/v1/events': typeof ApiV1EventsRoute
   '/registrations/$registrationId/withdraw': typeof RegistrationsRegistrationIdWithdrawRoute
   '/api/calendar/event/$eventId': typeof ApiCalendarEventEventIdRoute
@@ -269,6 +277,7 @@ export interface FileRoutesById {
   '/api/electric/agenda-item-seat-counts': typeof ApiElectricAgendaItemSeatCountsRoute
   '/api/electric/cancelled-events': typeof ApiElectricCancelledEventsRoute
   '/api/electric/event-seat-counts': typeof ApiElectricEventSeatCountsRoute
+  '/api/files/$fileId': typeof ApiFilesFileIdRoute
   '/api/v1/events': typeof ApiV1EventsRoute
   '/registrations/$registrationId/withdraw': typeof RegistrationsRegistrationIdWithdrawRoute
   '/api/calendar/event/$eventId': typeof ApiCalendarEventEventIdRoute
@@ -301,6 +310,7 @@ export interface FileRouteTypes {
     | '/api/electric/agenda-item-seat-counts'
     | '/api/electric/cancelled-events'
     | '/api/electric/event-seat-counts'
+    | '/api/files/$fileId'
     | '/api/v1/events'
     | '/registrations/$registrationId/withdraw'
     | '/api/calendar/event/$eventId'
@@ -331,6 +341,7 @@ export interface FileRouteTypes {
     | '/api/electric/agenda-item-seat-counts'
     | '/api/electric/cancelled-events'
     | '/api/electric/event-seat-counts'
+    | '/api/files/$fileId'
     | '/api/v1/events'
     | '/registrations/$registrationId/withdraw'
     | '/api/calendar/event/$eventId'
@@ -361,6 +372,7 @@ export interface FileRouteTypes {
     | '/api/electric/agenda-item-seat-counts'
     | '/api/electric/cancelled-events'
     | '/api/electric/event-seat-counts'
+    | '/api/files/$fileId'
     | '/api/v1/events'
     | '/registrations/$registrationId/withdraw'
     | '/api/calendar/event/$eventId'
@@ -392,6 +404,7 @@ export interface RootRouteChildren {
   ApiElectricAgendaItemSeatCountsRoute: typeof ApiElectricAgendaItemSeatCountsRoute
   ApiElectricCancelledEventsRoute: typeof ApiElectricCancelledEventsRoute
   ApiElectricEventSeatCountsRoute: typeof ApiElectricEventSeatCountsRoute
+  ApiFilesFileIdRoute: typeof ApiFilesFileIdRoute
   ApiV1EventsRoute: typeof ApiV1EventsRoute
   RegistrationsRegistrationIdWithdrawRoute: typeof RegistrationsRegistrationIdWithdrawRoute
   ApiCalendarEventEventIdRoute: typeof ApiCalendarEventEventIdRoute
@@ -556,6 +569,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiElectricEventSeatCountsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/files/$fileId': {
+      id: '/api/files/$fileId'
+      path: '/api/files/$fileId'
+      fullPath: '/api/files/$fileId'
+      preLoaderRoute: typeof ApiFilesFileIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/v1/events': {
       id: '/api/v1/events'
       path: '/api/v1/events'
@@ -624,6 +644,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiElectricAgendaItemSeatCountsRoute: ApiElectricAgendaItemSeatCountsRoute,
   ApiElectricCancelledEventsRoute: ApiElectricCancelledEventsRoute,
   ApiElectricEventSeatCountsRoute: ApiElectricEventSeatCountsRoute,
+  ApiFilesFileIdRoute: ApiFilesFileIdRoute,
   ApiV1EventsRoute: ApiV1EventsRoute,
   RegistrationsRegistrationIdWithdrawRoute:
     RegistrationsRegistrationIdWithdrawRoute,

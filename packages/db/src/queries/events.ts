@@ -403,6 +403,7 @@ export async function getInvitationEvent(
 }
 
 export type EventAccess = {
+	status: EventStatus;
 	visibility: EventVisibility;
 	inviteToken: string | null;
 	/** The user holds a registration that was not declined (always false without a user). */
@@ -416,6 +417,7 @@ export async function getEventAccess(
 ): Promise<EventAccess | null> {
 	const [row] = await db
 		.select({
+			status: events.status,
 			visibility: events.visibility,
 			inviteToken: events.inviteToken,
 			hasRegistration: userId
