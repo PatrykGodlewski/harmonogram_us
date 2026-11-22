@@ -111,6 +111,7 @@ async function copyEvent(
 			certificateIssuer: source.certificateIssuer,
 			certificateSigner: source.certificateSigner,
 			certificateNote: source.certificateNote,
+			materials: source.materials,
 			status: "draft",
 		})
 		.returning({ id: events.id });

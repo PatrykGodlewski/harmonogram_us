@@ -227,4 +227,14 @@ describe("speakers and materials", () => {
 			.offset(1);
 		expect(copied).toEqual({ speakers, materials });
 	});
+
+	it("copies the event's own links but not its files (F14)", async () => {
+		const actor = await createUser();
+		const sourceId = await sourceEvent(actor);
+		const links = [{ label: "Nagranie", url: "https://example.test/rec" }];
+		await db.update(events).set({ materials: links }).where(eq(events.id, sourceId));
+		const { id } = await duplicateEvent({ eventId: sourceId, date: TARGET, actorId: actor });
+		const [copied] = await db.select({ materials: events.materials }).from(events).where(eq(events.id, id));
+		expect(copied?.materials).toEqual(links);
+	});
 });

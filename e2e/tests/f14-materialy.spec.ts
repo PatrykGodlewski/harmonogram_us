@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { readFile } from "node:fs/promises";
+import { request as httpRequest } from "node:http";
 import { expect, type Page, test } from "@playwright/test";
 import { expectAccessible } from "../fixtures/a11y";
 import { adminUrl, signInAsAdmin } from "../fixtures/auth";
@@ -181,4 +182,28 @@ test("[F19] wystąpienie z prelegentem i plikiem jest na stronie wydarzenia @org
 			.getByRole("region", { name: "Materiały" })
 			.getByRole("link", { name: /grafen-slajdy/ }),
 	).toHaveCount(0);
+});
+
+test("[F14] panel odrzuca zbyt duże żądanie, zanim je przeczyta", async () => {
+	// Announces 30 MB and sends nothing: the answer must come from the headers alone
+	const status = await new Promise<number>((resolve, reject) => {
+		const request = httpRequest(
+			adminUrl("/_serverFn/upload"),
+			{
+				method: "POST",
+				headers: { "content-length": String(30 * 1024 * 1024) },
+			},
+			(response) => {
+				resolve(response.statusCode ?? 0);
+				response.resume();
+				request.destroy();
+			},
+		);
+		request.on("error", reject);
+		request.setTimeout(5000, () =>
+			reject(new Error("no answer before the body")),
+		);
+		request.flushHeaders();
+	});
+	expect(status).toBe(413);
 });

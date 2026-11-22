@@ -1,6 +1,6 @@
 # File storage, event materials (F14) and speaker files (F19) Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans (inline). Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans (inline). Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Organizers attach files and links to an event, and files to a programme item; people who can open the event page see and download them.
 
@@ -41,7 +41,7 @@
 - Create: `packages/api/src/storage/s3.ts` — `storageConfig(): StorageConfig | null`, `putObject(config, key, body: ArrayBuffer, contentType): Promise<void>`, `deleteObject(config, key): Promise<void>` (404 counts as deleted), `presignDownload(config, key, filename, expiresSeconds = 60): Promise<string>`; `contentDisposition(filename): string` (ASCII fallback + RFC 5987 `filename*`).
 - Modify: `packages/env/src/index.ts`, `.env.example`, `docker-compose.yml` (`storage` service, dev port 8333, volume; e2e alias `storage.localhost`), `e2e/ports.env`, `packages/api/package.json` (aws4fetch, export).
 - Test: `packages/api/test/storage.test.ts` (global fetch stub): PUT to `{endpoint}/{bucket}/{key}` with an AWS4 `authorization` header and the content type; throws on non-2xx with the status only; delete treats 404 as done; presigned URL has `X-Amz-Expires=60`, `X-Amz-Signature`, `response-content-disposition`; `contentDisposition("Prezentacja żółć.pdf")` gives `attachment; filename="Prezentacja zolc.pdf"; filename*=UTF-8''Prezentacja%20%C5%BC%C3%B3%C5%82%C4%87.pdf`; `storageConfig()` null when incomplete.
-- [ ] Red, implement, green. Commit `feat(api): s3 storage client and local seaweedfs`.
+- [x] Red, implement, green. Commit `feat(api): s3 storage client and local seaweedfs`.
 
 ### Task 2: Files and links in the database
 
@@ -50,7 +50,7 @@
 - Modify: `events.ts` schema (`materials` jsonb default `[]`), `getEventById` (adds `materials`, `files: {id, name, size, agendaItemId}[]`), domain errors (`EVENT_FILES_LIMIT`, `FILE_TOO_LARGE`, `FILE_TYPE`, `FILES_NOT_CONFIGURED`) + `app-errors.ts` + messages.
 - Migrations: generated table migration; custom migration with the `AFTER DELETE` trigger on `event_files` inserting `OLD.storage_key` into `stored_file_deletions` (ON CONFLICT DO NOTHING).
 - Test: `packages/db/test/event-files.test.ts`: add/list in order; limit 50; programme item from another event refused; delete through the wrong event returns null and keeps the row; deleting a file, a programme item, or an event leaves its keys in `stored_file_deletions`; take/forget; links round-trip; `getEventById` carries files and links.
-- [ ] Red, implement, green. Commit `feat(db): event files and material links`.
+- [x] Red, implement, green. Commit `feat(db): event files and material links`.
 
 ### Task 3: Upload, delete, links and download endpoints
 
@@ -58,7 +58,7 @@
 - Create: `packages/api/src/files/rules.ts` (`MAX_FILE_BYTES = 25 * 1024 * 1024`, `fileTypeFor(name): string | null`, `cleanFileName(name): string`), `packages/api/src/admin/materials.ts` (`uploadEventFileServer(FormData: eventId, agendaItemId?, file)`, `deleteEventFileServer({eventId, id})`, `eventFilesQueryOptions(eventId)`, `setEventMaterialLinksServer({eventId, links})`, `filesAvailableQueryOptions`), `packages/api/src/files/download.ts` (`fileDownloadResponse(fileId, canSee: (eventId) => Promise<boolean>)` → 302 / 404, `cache-control: private, no-store`), `apps/web/src/routes/api/files/$fileId.ts` (event page rules, reusing the details access check with `?invite=`), `apps/admin/src/routes/api/files/$fileId.ts` (`canManageEvent`).
 - Modify: `packages/api/src/events/queries.ts` (extract `canViewEvent(eventId, session, invite)` used by details and download).
 - Test: `packages/api/test/file-rules.test.ts` (allowed and refused names, `../../x.pdf` → `x.pdf`, control characters, 200-char cut); `packages/api/test/file-download.test.ts` (unknown id 404, `canSee` false 404, otherwise 302 to the presigned URL with no-store).
-- [ ] Red, implement, green. Commit `feat(api): event file upload and download`.
+- [x] Red, implement, green. Commit `feat(api): event file upload and download`.
 
 ### Task 4: Stored-object clean-up job
 
@@ -66,7 +66,7 @@
 - Modify: `packages/jobs/src/queues.ts` (`QUEUE_DELETE_STORED_FILES = "delete-stored-files"`, cron `*/15 * * * *`), worker registration.
 - Create: `apps/worker/src/jobs/delete-stored-files.ts` (`deleteStoredFiles(deps)`: takes up to 500 keys, deletes each object, forgets those deleted; skipped when storage is not configured).
 - Test: `apps/worker/test/delete-stored-files.test.ts` (deleted keys forgotten, a failing delete keeps its key for the next run).
-- [ ] Red, implement, green. Commit `feat(worker): delete objects of removed files`.
+- [x] Red, implement, green. Commit `feat(worker): delete objects of removed files`.
 
 ### Task 5: Panel and event page, e2e
 
@@ -77,9 +77,21 @@
   - `[F14] organizator dodaje plik i link, uczestnik pobiera ten sam plik @organizator` (phone): upload a small PDF and add a link in the panel; on the public page both are listed; the download's bytes equal the uploaded ones; delete in the panel → gone from the page and its download link answers 404; a 26 MB-named `.html` upload is refused with a message; `expectAccessible` of the panel page.
   - `[F14] plik szkicu nie jest dostępny publicznie`: a file of a draft event → its public link 404, the panel link downloads.
   - `[F19] wystąpienie z prelegentem i plikiem jest na stronie wydarzenia`: programme item with a speaker, file uploaded for that item → shown under the item with the speaker, downloads.
-- [ ] Red, implement, green. Commit `feat: event materials and speaker files (F14, F19)`.
+- [x] Red, implement, green. Commit `feat: event materials and speaker files (F14, F19)`.
 
 ### Task 6: Docs, review, verification
 
-- [ ] `docs/development.md` (storage container, R2 setup), `docs/architecture.md` (storage, download flow), `docs/data-flows.md` (deletion trigger), `docs/security.md` if it lists data stores, privacy page sentence if files hold personal data (they do not by design), spec F14 status, F19 status, changelog, `README.md`, `docs/README.md` plan 14.
-- [ ] Full suite; fresh-context review; fix Critical/Important test-first; verification summary here.
+- [x] `docs/development.md` (storage container, R2 setup), `docs/architecture.md` (storage, download flow), `docs/data-flows.md` (deletion trigger), `docs/security.md` if it lists data stores, privacy page sentence if files hold personal data (they do not by design), spec F14 status, F19 status, changelog, `README.md`, `docs/README.md` plan 14.
+- [x] Full suite; fresh-context review; fix Critical/Important test-first; verification summary here.
+
+## Verification summary (2026-11-22)
+
+- Commits: d9bc285 (plan) → dffc572 storage client and SeaweedFS → 2873b94 files and links in the database → 8e3d08a upload and download → 7ba905e clean-up job → 1ab3ece panel and event page → 6a049ba docs → 5b998b3 e2e scoping → review fixes.
+- After the fixes: `pnpm lint`, `pnpm typecheck`, `pnpm test` (db 262, api 159, worker 24, ui 33, collections 8, rpc 3), `pnpm build` exit 0; `pnpm e2e:up && pnpm e2e` → 196 passed, 1 skipped (the existing intentional skip). Before the fixes: 195 passed, 1 skipped.
+- `[F14]`/`[F19]` tests: upload a PDF and add a link in the panel, the visitor downloads the same bytes under the Polish name; deletion removes it from the page and its link answers 404; an `.html` upload is refused with a message; a draft's file is 404 publicly and downloads in the panel; a programme item's file is shown under the item with its speaker; the panel answers 413 to a request announcing 30 MB before reading it; WCAG audit of the panel page.
+- Fresh-context review (opus): no Critical. Important, fixed test-first:
+  - duplicating an event dropped its own links (`copies the event's own links but not its files (F14)`, RED→GREEN);
+  - Start reads a server function's whole body into memory before any check, so any client could send gigabytes → global request middleware `requestSizeMiddleware` on web and admin: 413 above 26 MB, 411 without a length (`request-size.test.ts` RED→GREEN; e2e `panel odrzuca zbyt duże żądanie` failed with 500 on the old build). Start answers server-function requests with its own response status, so the middleware sets it explicitly.
+- Rulings: dev/e2e endpoint `storage.localhost:{STORAGE_PORT}` serves server and browser; `storeEventFile` and `canViewEvent` with own tests; panel downloads for managers only; clean-up job in `handlers/`, 20 deletes at a time; no separate files query (event details carry files); e2e refuses by type, size is unit-tested; native select for "Dotyczy"; panel programme section is a labelled region.
+- Deferred minors: an object stays orphaned if the process dies between upload and row insert; a programme item of another event is refused only after the upload; `canViewEvent` loads event access twice; `getEventById` makes a separate query for links; concurrent link edits overwrite each other; deleting another event's file id reports success; a worker without S3 settings does not warn; a signed-out visitor following a copied file link of a signed-in-only event gets 404, not a sign-in prompt; a proxy body limit (Railway/Cloudflare) is still advisable as a second layer.
+- To switch on in production: Cloudflare R2 bucket with EU jurisdiction, an R2 API token with Object Read & Write on it; `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` on web, admin and worker.
