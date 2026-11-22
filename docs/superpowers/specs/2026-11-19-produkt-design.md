@@ -16,6 +16,7 @@ Data: 2026-11-19 · Status: **do akceptacji** · Jedyne źródło prawdy o tym, 
 | 2026-11-20 | Plan 3 wykonany: F4, F9, F13, F28, F29 gotowe. | Plan `docs/superpowers/plans/2026-11-20-rodo-przypomnienia-kalendarz-zapisani.md` |
 | 2026-11-22 | F16 odrzucone: aplikacja nie łączy się z Indico. Import z planu 11 usunięty, tabela `indico_events` usunięta migracją 0033. | Decyzja użytkownika 22.11: „I dont want any integrations with indico” |
 | 2026-11-22 | Plan 11 (F20 ankiety; decyzje oddane Claude): ankieta po wydarzeniu z podsumowaniem. Decyzje: ankietę dostają osoby z miejscem (bez wymogu obecności), otwarta 30 dni po wydarzeniu, odpowiedzi anonimowe. | Plan `docs/superpowers/plans/2026-11-22-ankiety.md` |
+| 2026-11-22 | Plan 12 (F24; decyzje oddane Claude): publiczne API do odczytu i widżet. Decyzje: bez kluczy (dane i tak są publiczne), widżet jako iframe (strona zewnętrzna nie uruchamia naszego kodu), tylko wydarzenia otwarte dla wszystkich. | Plan `docs/superpowers/plans/2026-11-22-api-widzet.md` |
 
 ## Kierunek produktu
 
@@ -81,7 +82,7 @@ Kryterium „gotowe” to zawsze przechodzący test e2e `[Fn] …` z widocznym s
 | F21 | Opłaty za udział | Płatność ręczna (przelew) i jedna bramka online. Pieniądze trafiają do organizatora. | zapis na płatne wydarzenie czeka na płatność; organizator oznacza wpłatę; płatność przez atrapę bramki w testach kończy zapis | brak |
 | F22 | Strona wydarzenia | Logo, obraz nagłówka, własne podstrony. | obraz i podstrona są widoczne na stronie wydarzenia | brak |
 | F23 | Wideokonferencje | Automatyczne spotkanie u dostawcy uczelni (Microsoft Teams). | dla wydarzenia online powstaje spotkanie (atrapa Graph w testach), a link jest widoczny dla zapisanych | brak |
-| F24 | API i widżet | Publiczne API do odczytu wydarzeń i widżet „najbliższe wydarzenia”. | API zwraca nadchodzące wydarzenia; widżet na testowej stronie pokazuje trzy najbliższe | brak |
+| F24 | API i widżet | Publiczne API do odczytu wydarzeń i widżet „najbliższe wydarzenia”. | API zwraca nadchodzące wydarzenia; widżet na testowej stronie pokazuje trzy najbliższe | gotowe (22.11): `GET /api/v1/events` (JSON, filtry: wydział, typ, limit; CORS) i widżet w iframe `/{język}/widget` z najbliższymi wydarzeniami; tylko opublikowane wydarzenia otwarte dla wszystkich (`e2e/tests/f24-api-widzet.spec.ts`, `docs/embedding.md`, Plan 12) |
 | F25 | Integracja z USOS | Zapisy ograniczone do wydziału lub kierunku, ostrzeżenie o kolizji z planem zajęć. | zapis spoza wydziału jest zablokowany; kolizja z planem pokazuje ostrzeżenie (atrapa USOS w testach) | brak |
 
 ### Funkcje, które już działają (spoza listy ze zlecenia)

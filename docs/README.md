@@ -12,6 +12,7 @@ Shared agent rules live in [AGENTS.md](../AGENTS.md). Claude imports that file t
 | Test selection, test-writing standards and when to run checks              | [Testing](testing.md)                                                                           |
 | Evidence, review findings, blockers and completion reports                 | [Reporting](reporting.md)                                                                       |
 | Setup, commands, UI components and code simplification                     | [Development](development.md)                                                                   |
+| Public API and embeddable widget (F24)                                     | [Embedding](embedding.md)                                                                       |
 | Load-test details                                                          | [Load-test guide](../e2e/load/README.md)                                                        |
 | Where we stand against Indico (snapshot with sources)                     | [Indico comparison](indico-comparison.md)                                                       |
 
@@ -34,7 +35,8 @@ Planning references (not a live completion tracker):
 9. [Statistics (F15)](superpowers/plans/2026-11-21-statystyki.md) (plan 9; see its verification summary).
 10. [Guests without an account (F17)](superpowers/plans/2026-11-21-goscie.md) (plan 10; see its verification summary).
 11. [Post-event surveys (F20)](superpowers/plans/2026-11-22-ankiety.md) (plan 11; see its verification summary).
-12. Later priority-one work: profile language, campus calendar/ICS/Open Graph, accessibility and GDPR; consult the spec before planning.
+12. [Public API and widget (F24)](superpowers/plans/2026-11-22-api-widzet.md) (plan 12; see its verification summary).
+13. Later priority-one work: profile language, campus calendar/ICS/Open Graph, accessibility and GDPR; consult the spec before planning.
 
 Historical implementation context moved out of `CLAUDE.md`: F5 capacity/waitlist/promotion and account registrations; F6 registration email with ticket links; F11 ticket QR (`ticket_code`, scanning handled by organiser plan); F18 list/calendar agenda with parallel sessions (`layoutAgenda` in `@repo/ui/agenda`); F26 teacher-led group registration; F27 agenda-item registration. Related account/ticket/agenda work: [plan](superpowers/plans/2026-11-19-moje-zapisy-bilety-agenda.md). These are inherited implementation notes, **not a claim that tests were rerun during the documentation refactor**. Verify current code and tests before deciding what remains.
 

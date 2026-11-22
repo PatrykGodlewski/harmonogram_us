@@ -163,13 +163,13 @@ These are facts about the implementation, not claims that it is better in genera
 | Event change log | ❌ | ✅ |
 | Surveys | ✅ after the event: rating 1–5, choice, yes/no and text questions; personal e-mail link (works for guests), one anonymous response per person, summary with averages, shares and text answers | ✅ |
 | Video calls | ❌ (planned: Microsoft Teams) | ✅ Zoom plugin |
-| HTTP API and embeddable widget | ❌ | ✅ HTTP API |
+| HTTP API and embeddable widget | ✅ public JSON API of upcoming events (filters by faculty and type, CORS) and an iframe "upcoming events" widget; see [docs/embedding.md](docs/embedding.md) | ✅ HTTP API |
 | USOS integration (faculty limits, timetable clashes) | ❌ | ❌ |
 | Plugin system | ❌ | ✅ |
 
 ### Not built yet
 
-From the product spec, in no particular order: materials and file storage (F14), speaker files and directory (F19), payments (F21), event web page (F22), video calls (F23), API and widget (F24), USOS integration (F25). Also missing compared with Indico: LDAP/SAML, user groups, category tree, form builder extras (file fields, several forms), CSV import, tags, e-mail placeholders, badges, wallet passes, timetable PDF, event lock, plugins.
+From the product spec, in no particular order: materials and file storage (F14), speaker files and directory (F19), payments (F21), event web page (F22), video calls (F23), USOS integration (F25). Also missing compared with Indico: LDAP/SAML, user groups, category tree, form builder extras (file fields, several forms), CSV import, tags, e-mail placeholders, badges, wallet passes, timetable PDF, event lock, plugins.
 
 ### Known limitations
 
