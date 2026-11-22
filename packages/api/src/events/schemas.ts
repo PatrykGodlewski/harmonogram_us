@@ -162,6 +162,8 @@ export const eventPageSchema = eventIdSchema.extend({ invite: inviteSchema });
 export const agendaItemIdSchema = z.object({ agendaItemId: z.string().min(1) });
 
 const agendaItemFields = {
+	/** The session the item belongs to (F33); null takes it out of its session. */
+	sessionId: z.string().min(1).nullable().optional(),
 	title: z.string().min(1).max(500),
 	description: descriptionSchema,
 	startsAt: z.coerce.date(),

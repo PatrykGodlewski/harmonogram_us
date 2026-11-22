@@ -1,4 +1,5 @@
 import { getAgendaItemEventId } from "@repo/db/queries/agenda-items";
+import { getAgendaSessionEventId } from "@repo/db/queries/agenda-sessions";
 import {
 	canCheckIn,
 	canCreateEvents,
@@ -35,6 +36,18 @@ export async function assertCanManageAgendaItem(
 	itemId: string,
 ): Promise<void> {
 	const eventId = await getAgendaItemEventId(itemId);
+	if (!eventId) {
+		throw appError("NOT_FOUND");
+	}
+	await assertCanManageEvent(user, eventId);
+}
+
+/** Like `assertCanManageEvent`, for the event a session belongs to (NOT_FOUND if none). */
+export async function assertCanManageAgendaSession(
+	user: AuthenticatedUser,
+	sessionId: string,
+): Promise<void> {
+	const eventId = await getAgendaSessionEventId(sessionId);
 	if (!eventId) {
 		throw appError("NOT_FOUND");
 	}

@@ -20,6 +20,7 @@ import {
 } from "../schema/events";
 import { registrationGroups } from "../schema/groups";
 import { type AgendaItem, listAgendaItems } from "./agenda-items";
+import { type AgendaSession, listAgendaSessions } from "./agenda-sessions";
 import {
 	CAPACITY_EDIT_ERRORS,
 	DomainError,
@@ -558,6 +559,8 @@ export async function deleteEvent(id: string) {
 
 export type EventDetails = EventWithRelations & {
 	agenda: AgendaItem[];
+	/** Parts of the programme (F33); items point at them through `sessionId`. */
+	sessions: AgendaSession[];
 	questions: EventQuestion[];
 	/** Links for the whole event (F14); programme items carry their own. */
 	materials: AgendaMaterial[];
@@ -568,20 +571,23 @@ export async function getEventById(
 	id: string,
 	audience: EventAudience,
 ): Promise<EventDetails | null> {
-	const [[event], agenda, questions, [extras], files] = await Promise.all([
-		queryEvents({ audience }, id),
-		listAgendaItems(id),
-		listEventQuestions(id, "registration"),
-		db
-			.select({ materials: events.materials })
-			.from(events)
-			.where(eq(events.id, id)),
-		listEventFiles(id),
-	]);
+	const [[event], agenda, sessions, questions, [extras], files] =
+		await Promise.all([
+			queryEvents({ audience }, id),
+			listAgendaItems(id),
+			listAgendaSessions(id),
+			listEventQuestions(id, "registration"),
+			db
+				.select({ materials: events.materials })
+				.from(events)
+				.where(eq(events.id, id)),
+			listEventFiles(id),
+		]);
 	return event
 		? {
 				...event,
 				agenda,
+				sessions,
 				questions,
 				materials: extras?.materials ?? [],
 				files: files.map(({ id, name, size, agendaItemId }) => ({

@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@repo/db/client";
 import { createAgendaItem } from "@repo/db/queries/agenda-items";
+import { createAgendaSession } from "@repo/db/queries/agenda-sessions";
 import { eventOrganizers } from "@repo/db/schema/event-organizers";
 import { authUsers } from "@repo/db/schema/better-auth";
 import { events } from "@repo/db/schema/events";
@@ -12,6 +13,7 @@ import {
 	assertCanCreateEvents,
 	assertCanDeleteEvent,
 	assertCanManageAgendaItem,
+	assertCanManageAgendaSession,
 	assertCanManageEvent,
 } from "../src/auth/event-access";
 import type { AuthenticatedUser } from "../src/auth/user";
@@ -69,6 +71,33 @@ describe("event access", () => {
 		);
 	});
 
+	it("session access follows its event; a missing session is not found (F33)", async () => {
+		const owner = await user("organizer");
+		const admin = await user("admin");
+		const stranger = await user("organizer");
+		const eventId = await createEvent();
+		await db.insert(eventOrganizers).values({ eventId, userId: owner.id });
+		const session = await createAgendaSession({
+			eventId,
+			title: "Ćwiczenia",
+			startsAt: new Date(Date.now() + 86_400_000),
+			endsAt: new Date(Date.now() + 90_000_000),
+		});
+
+		await expect(
+			assertCanManageAgendaSession(owner, session.id),
+		).resolves.toBeUndefined();
+		await expect(
+			assertCanManageAgendaSession(admin, session.id),
+		).resolves.toBeUndefined();
+		await expect(
+			assertCanManageAgendaSession(stranger, session.id),
+		).rejects.toThrow("FORBIDDEN");
+		await expect(
+			assertCanManageAgendaSession(owner, "missing"),
+		).rejects.toThrow("NOT_FOUND");
+	});
+
 	it("organizers delete only drafts; published events go through cancellation", async () => {
 		const owner = await user("organizer");
 		const admin = await user("admin");
@@ -120,11 +149,12 @@ describe("panel server functions check event access", () => {
 		"../src/admin/check-in.ts",
 		"../src/admin/invitations.ts",
 		"../src/admin/questions.ts",
+		"../src/admin/sessions.ts",
 	];
 	/** Panel-wide reads that are not about one event. */
 	const panelWide = ["fetchAdminEventFilterOptionsServer"];
 	const checks =
-		/assertCanManageEvent|assertCanCheckIn|assertCanManageAgendaItem|assertCanManageQuestion|assertCanCreateEvents|assertCanDeleteEvent|listManagedEventIds/;
+		/assertCanManageEvent|assertCanCheckIn|assertCanManageAgendaItem|assertCanManageAgendaSession|assertCanManageQuestion|assertCanCreateEvents|assertCanDeleteEvent|listManagedEventIds/;
 
 	for (const file of files) {
 		const source = readFileSync(new URL(file, import.meta.url), "utf8");

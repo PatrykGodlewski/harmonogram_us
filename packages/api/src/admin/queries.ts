@@ -29,6 +29,7 @@ import {
 } from "./schemas";
 
 export type { AgendaItem } from "@repo/db/queries/agenda-items";
+export type { AgendaSession } from "@repo/db/queries/agenda-sessions";
 export type { EventRegistrant } from "@repo/db/queries/event-registrations";
 export type { EventWithRelations, FilterOption } from "@repo/db/queries/events";
 
