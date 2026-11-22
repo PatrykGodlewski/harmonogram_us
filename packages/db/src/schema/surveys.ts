@@ -20,9 +20,10 @@ export const surveyResponses = pgTable(
 		eventId: text("event_id")
 			.notNull()
 			.references(() => events.id, { onDelete: "cascade" }),
+		/** The day only: a precise time could be matched to the person who answered. */
 		createdAt: timestamp("created_at", { withTimezone: true })
 			.notNull()
-			.defaultNow(),
+			.default(sql`date_trunc('day', now())`),
 	},
 	(table) => [index("survey_responses_event_id_idx").on(table.eventId)],
 );

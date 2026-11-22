@@ -9,6 +9,7 @@ import {
 	survey_results_no_answers,
 	survey_results_option,
 	survey_results_responses,
+	survey_results_responses_only,
 	survey_results_text_shown,
 	survey_results_title,
 } from "@repo/i18n/paraglide/messages";
@@ -30,10 +31,12 @@ export function SurveySummaryCard({ eventId }: { eventId: string }) {
 				{survey_results_title()}
 			</h2>
 			<p className="text-sm text-muted-foreground">
-				{survey_results_responses({
-					responses: summary.responses,
-					invited: summary.invited,
-				})}
+				{summary.invited === null
+					? survey_results_responses_only({ responses: summary.responses })
+					: survey_results_responses({
+							responses: summary.responses,
+							invited: summary.invited,
+						})}
 			</p>
 			<ul className="flex flex-col gap-3">
 				{summary.questions.map((question) => (

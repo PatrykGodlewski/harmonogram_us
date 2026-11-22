@@ -1,0 +1,2 @@
+ALTER TABLE "survey_responses" ALTER COLUMN "created_at" SET DEFAULT date_trunc('day', now());--> statement-breakpoint
+ALTER TABLE "event_registrations" ADD COLUMN "survey_answered" boolean DEFAULT false NOT NULL;

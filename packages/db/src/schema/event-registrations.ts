@@ -1,5 +1,6 @@
 import { relations, sql } from "drizzle-orm";
 import {
+	boolean,
 	check,
 	index,
 	integer,
@@ -57,8 +58,11 @@ export const eventRegistrations = pgTable(
 		}),
 		/** When the survey link was e-mailed (once per registration, F20). */
 		surveyEmailedAt: timestamp("survey_emailed_at", { withTimezone: true }),
-		/** When the person answered the survey; the answers themselves are stored without this link. */
-		surveyAnsweredAt: timestamp("survey_answered_at", { withTimezone: true }),
+		/**
+		 * Whether the person answered the survey. Deliberately no time: a time could
+		 * be matched to a response and undo its anonymity.
+		 */
+		surveyAnswered: boolean("survey_answered").notNull().default(false),
 		/** Insert time (not transaction start), so the waitlist follows the real order of inserts. */
 		createdAt: timestamp("created_at", { withTimezone: true })
 			.notNull()

@@ -195,3 +195,29 @@ describe("survey invitations", () => {
 		expect(second.registrations).toBe(0);
 	});
 });
+
+describe("survey anonymity and retention", () => {
+	it("stores nothing that matches a response to a registration by time", async () => {
+		const { registrationIds, rating } = await endedEventWithSurvey();
+		await submitSurvey(registrationIds[0] ?? "", { [rating.id]: "5" });
+		const [response] = await db.execute<{ day_only: boolean }>(
+			sql`SELECT created_at = date_trunc('day', created_at) AS day_only FROM survey_responses`,
+		);
+		expect(response?.day_only).toBe(true);
+		const columns = await db.execute<{ column_name: string }>(
+			sql`SELECT column_name FROM information_schema.columns
+				WHERE table_name = 'event_registrations' AND column_name LIKE 'survey_answered%'`,
+		);
+		expect(columns.map((c) => c.column_name)).toEqual(["survey_answered"]);
+	});
+
+	it("does not give a smaller invited count than responses after retention", async () => {
+		const { eventId, registrationIds, rating } = await endedEventWithSurvey({ people: 2 });
+		await submitSurvey(registrationIds[0] ?? "", { [rating.id]: "5" });
+		await submitSurvey(registrationIds[1] ?? "", { [rating.id]: "4" });
+		await db.delete(eventRegistrations).where(eq(eventRegistrations.eventId, eventId));
+		const summary = await getSurveySummary(eventId);
+		expect(summary.responses).toBe(2);
+		expect(summary.invited).toBeNull();
+	});
+});

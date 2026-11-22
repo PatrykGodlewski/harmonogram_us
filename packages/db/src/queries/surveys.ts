@@ -51,7 +51,7 @@ export async function getSurveyForRegistration(
 		open: boolean;
 	}>(sql`
 		SELECT e.id AS event_id, e.title, r.locale,
-			r.survey_answered_at IS NOT NULL AS answered,
+			r.survey_answered AS answered,
 			${surveyOpenSql(sql`r`, sql`e`, sql`now()`)} AS open
 		FROM event_registrations r
 		JOIN events e ON e.id = r.event_id
@@ -73,7 +73,7 @@ export async function getSurveyForRegistration(
 
 /**
  * Stores a registration's survey answers, once. The claim on
- * `survey_answered_at` and the answers share one transaction, so two
+ * `survey_answered` and the answers share one transaction, so two
  * submissions from the same link store one response; the stored answers carry
  * no link back to the registration.
  */
@@ -83,15 +83,15 @@ export async function submitSurvey(
 ): Promise<void> {
 	await db.transaction(async (tx) => {
 		const [claimed] = await tx.execute<{ event_id: string }>(sql`
-			UPDATE event_registrations r SET survey_answered_at = now()
+			UPDATE event_registrations r SET survey_answered = true
 			FROM events e
 			WHERE r.id = ${registrationId} AND e.id = r.event_id
-				AND r.survey_answered_at IS NULL
+				AND NOT r.survey_answered
 				AND ${surveyOpenSql(sql`r`, sql`e`, sql`now()`)}
 			RETURNING r.event_id`);
 		if (!claimed) {
 			const [current] = await tx.execute<{ answered: boolean }>(sql`
-				SELECT survey_answered_at IS NOT NULL AS answered
+				SELECT survey_answered AS answered
 				FROM event_registrations WHERE id = ${registrationId}`);
 			throw new DomainError(
 				current?.answered ? "SURVEY_ANSWERED" : "SURVEY_CLOSED",
@@ -130,7 +130,7 @@ export async function queueSurveyInvitations(
 			WHERE id IN (
 				SELECT r.id FROM event_registrations r
 				JOIN events e ON e.id = r.event_id
-				WHERE r.survey_emailed_at IS NULL AND r.survey_answered_at IS NULL
+				WHERE r.survey_emailed_at IS NULL AND NOT r.survey_answered
 					AND ${surveyOpenSql(sql`r`, sql`e`, at)}
 				ORDER BY r.created_at
 				LIMIT ${CLAIM_BATCH}
@@ -161,8 +161,11 @@ export type SurveyQuestionSummary = SummaryBase &
 
 export type SurveySummary = {
 	responses: number;
-	/** People who held a place (everyone the survey is meant for). */
-	invited: number;
+	/**
+	 * People who held a place (everyone the survey is meant for); null once
+	 * retention has deleted registrations and the count is no longer known.
+	 */
+	invited: number | null;
 	questions: SurveyQuestionSummary[];
 };
 
@@ -187,7 +190,7 @@ export async function getSurveySummary(
 			SELECT question_id, value, total FROM (
 				SELECT a.question_id, a.value,
 					count(*) OVER (PARTITION BY a.question_id)::int AS total,
-					row_number() OVER (PARTITION BY a.question_id ORDER BY r.created_at DESC) AS n
+					row_number() OVER (PARTITION BY a.question_id ORDER BY r.created_at DESC, r.id) AS n
 				FROM survey_answers a
 				JOIN survey_responses r ON r.id = a.response_id
 				JOIN event_questions q ON q.id = a.question_id
@@ -201,9 +204,11 @@ export async function getSurveySummary(
 		counts.find((row) => row.question_id === questionId && row.value === value)
 			?.count ?? 0;
 
+	const responses = totals[0]?.responses ?? 0;
+	const invited = totals[0]?.invited ?? 0;
 	return {
-		responses: totals[0]?.responses ?? 0,
-		invited: totals[0]?.invited ?? 0,
+		responses,
+		invited: invited < responses ? null : invited,
 		questions: questions.map((question): SurveyQuestionSummary => {
 			const base = { id: question.id, label: question.label };
 			const kind: QuestionKind = question.kind;
