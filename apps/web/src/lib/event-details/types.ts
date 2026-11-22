@@ -11,10 +11,6 @@ export type ItemSeatCount = {
 	registeredCount: number;
 };
 
-export type ItemSeatCountSource = {
-	getItemCount: (itemId: string, fallback: ItemSeatCount) => ItemSeatCount;
-};
-
 export type EventDetailsRegistrations = {
 	isEventRegistered: boolean;
 	registeredItemIds: ReadonlySet<string>;

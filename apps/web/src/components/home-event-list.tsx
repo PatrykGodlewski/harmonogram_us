@@ -2,7 +2,6 @@ import type { EventFiltersParams } from "@repo/api/events/schemas";
 import { HomeEventCards } from "~/components/home-event-card";
 import { HomeEventListShell } from "~/components/home-event-list-shell";
 import { createQueryRegistrationActions } from "~/lib/events/query-registration-actions";
-import { querySeatCountSource } from "~/lib/events/query-seat-counts";
 import { useEventListData } from "~/lib/events/use-event-list-data";
 
 export type HomeEventListProps = {
@@ -10,7 +9,7 @@ export type HomeEventListProps = {
 	user: { id: string; email: string } | null;
 };
 
-/** SSR-safe list: loader data + query cache only (no Electric / mutations). */
+/** Server-rendered list: loader data and the query cache, no registration actions. */
 export function HomeEventList({ filters, user }: HomeEventListProps) {
 	const {
 		events,
@@ -35,7 +34,6 @@ export function HomeEventList({ filters, user }: HomeEventListProps) {
 				user={user}
 				refetching={refetching}
 				interactive={false}
-				seatCounts={querySeatCountSource}
 				registrations={createQueryRegistrationActions(registrationStates)}
 			/>
 		</HomeEventListShell>

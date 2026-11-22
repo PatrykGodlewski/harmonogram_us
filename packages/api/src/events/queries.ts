@@ -11,6 +11,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getCurrentSession } from "../auth/user";
 import { appError } from "../errors";
 import { canOpenEvent } from "./access";
+import { LIVE_REFRESH_MS } from "./live-refresh";
 import type { EventFiltersParams } from "./schemas";
 import { eventFiltersSchema, eventPageSchema } from "./schemas";
 
@@ -45,6 +46,7 @@ export const eventsQueryOptions = (filters: EventFiltersParams) =>
 		queryKey: [...eventsQueryKeyPrefix, filters] as const,
 		queryFn: () => fetchEventsServer({ data: filters }),
 		staleTime: 30_000,
+		refetchInterval: LIVE_REFRESH_MS,
 		placeholderData: (previousData) => previousData,
 	});
 
@@ -103,4 +105,5 @@ export const eventDetailsQueryOptions = (eventId: string, invite?: string) =>
 			: (["event-details", eventId] as const),
 		queryFn: () => fetchEventDetailsServer({ data: { eventId, invite } }),
 		staleTime: 30_000,
+		refetchInterval: LIVE_REFRESH_MS,
 	});

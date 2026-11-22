@@ -1,9 +1,7 @@
 import type {
 	EventDetailsData,
 	EventDetailsRegistrations,
-	ItemSeatCountSource,
 } from "~/lib/event-details/types";
-import type { EventSeatCount } from "~/lib/events/types";
 import { AgendaTimeline } from "./agenda-timeline";
 import { EventMaterials } from "./event-materials";
 import { EventSummary } from "./event-summary";
@@ -12,22 +10,17 @@ export type EventDetailsViewProps = {
 	event: EventDetailsData;
 	user: { id: string; email: string } | null;
 	interactive: boolean;
-	eventSeatCount: EventSeatCount;
-	itemCounts: ItemSeatCountSource;
 	registrations: EventDetailsRegistrations;
-	/** Cancelled events close registration and say so at the top. */
-	isCancelled: boolean;
 };
 
 export function EventDetailsView({
 	event,
 	user,
 	interactive,
-	eventSeatCount,
-	itemCounts,
 	registrations,
-	isCancelled,
 }: EventDetailsViewProps) {
+	// Cancelled events close registration and say so at the top.
+	const isCancelled = event.status === "cancelled";
 	const isClosed =
 		isCancelled || new Date(event.effectiveEndsAt).getTime() <= Date.now();
 
@@ -39,7 +32,10 @@ export function EventDetailsView({
 				interactive={interactive}
 				isClosed={isClosed}
 				isCancelled={isCancelled}
-				seatCount={eventSeatCount}
+				seatCount={{
+					seatsRemaining: event.seatsRemaining,
+					maxSeats: event.maxSeats,
+				}}
 				registrations={registrations}
 			/>
 			<EventMaterials event={event} />
@@ -48,7 +44,6 @@ export function EventDetailsView({
 				user={user}
 				interactive={interactive}
 				eventClosed={isClosed}
-				itemCounts={itemCounts}
 				registrations={registrations}
 			/>
 		</div>

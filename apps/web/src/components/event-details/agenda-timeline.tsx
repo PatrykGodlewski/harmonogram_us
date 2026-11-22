@@ -14,7 +14,6 @@ import type {
 	AgendaItemData,
 	EventDetailsData,
 	EventDetailsRegistrations,
-	ItemSeatCountSource,
 } from "~/lib/event-details/types";
 import { AgendaCalendar } from "./agenda-calendar";
 import { AgendaItemRow } from "./agenda-item-row";
@@ -26,7 +25,6 @@ type AgendaTimelineProps = {
 	user: { id: string; email: string } | null;
 	interactive: boolean;
 	eventClosed: boolean;
-	itemCounts: ItemSeatCountSource;
 	registrations: EventDetailsRegistrations;
 };
 
@@ -36,7 +34,6 @@ export function AgendaTimeline({
 	user,
 	interactive,
 	eventClosed,
-	itemCounts,
 	registrations,
 }: AgendaTimelineProps) {
 	const view: AgendaViewMode = eventRoute.useSearch().agenda ?? "list";
@@ -55,12 +52,11 @@ export function AgendaTimeline({
 	const now = useNow();
 	const nowIndex = now ? nowListIndex(items, now) : null;
 	const overlaps = findOverlaps(event.agenda, registrations.registeredItemIds);
-	const seatCountOf = (item: AgendaItemData) =>
-		itemCounts.getItemCount(item.id, {
-			seatsRemaining: item.seatsRemaining,
-			maxSeats: item.maxSeats,
-			registeredCount: item.registeredCount,
-		});
+	const seatCountOf = (item: AgendaItemData) => ({
+		seatsRemaining: item.seatsRemaining,
+		maxSeats: item.maxSeats,
+		registeredCount: item.registeredCount,
+	});
 	const renderRow = (
 		item: AgendaItemData & { parallel: boolean },
 		as: "li" | "div",
