@@ -139,6 +139,8 @@ These are facts about the implementation, not claims that it is better in genera
 | Programme as list and calendar, parallel sessions, rooms, several days | ✅ with a live "now" line | ✅ timetable |
 | Speakers with affiliation | ✅ | ✅ |
 | Links to materials per programme item | ✅ | ✅ |
+| Files and links for the whole event | ✅ PDF, office documents, images, ZIP up to 25 MB; downloads follow the event page's visibility | ✅ materials |
+| Speakers' files per programme item | ✅ | ✅ |
 | Uploaded files and folders | ❌ | ✅ |
 | Speaker directory | ❌ | not verified |
 | Timetable PDF | ❌ | ✅ |
@@ -169,7 +171,7 @@ These are facts about the implementation, not claims that it is better in genera
 
 ### Not built yet
 
-From the product spec, in no particular order: materials and file storage (F14), speaker files and directory (F19), payments (F21), event web page (F22), USOS integration (F25). Also missing compared with Indico: LDAP/SAML, user groups, category tree, form builder extras (file fields, several forms), CSV import, tags, e-mail placeholders, badges, wallet passes, timetable PDF, event lock, plugins.
+From the product spec, in no particular order: speaker directory (F19), payments (F21), event web page (F22), USOS integration (F25). Also missing compared with Indico: LDAP/SAML, user groups, category tree, form builder extras (file fields, several forms), CSV import, tags, e-mail placeholders, badges, wallet passes, timetable PDF, event lock, plugins.
 
 ### Known limitations
 
