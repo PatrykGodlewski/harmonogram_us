@@ -50,6 +50,18 @@ type RegistrationAnswersDialogProps = {
 	onSubmit: (answers: Answers) => void;
 };
 
+/** Ids of required questions without an answer (the server checks again). */
+export function unansweredRequired(
+	questions: AnswerQuestion[],
+	answers: Answers,
+): ReadonlySet<string> {
+	return new Set(
+		questions
+			.filter((question) => question.required && !answers[question.id]?.trim())
+			.map((question) => question.id),
+	);
+}
+
 /** The event's questions; required ones are checked here and again on the server. */
 export function RegistrationAnswersDialog({
 	questions,
@@ -75,13 +87,7 @@ export function RegistrationAnswersDialog({
 
 	const handleSubmit = (event: FormEvent) => {
 		event.preventDefault();
-		const unanswered = new Set(
-			questions
-				.filter(
-					(question) => question.required && !answers[question.id]?.trim(),
-				)
-				.map((question) => question.id),
-		);
+		const unanswered = unansweredRequired(questions, answers);
 		setMissing(unanswered);
 		if (unanswered.size === 0) {
 			onSubmit(answers);

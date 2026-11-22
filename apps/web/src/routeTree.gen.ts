@@ -22,6 +22,7 @@ import { Route as GroupsGroupIdRouteImport } from './routes/groups/$groupId'
 import { Route as GuestConfirmRouteImport } from './routes/guest.confirm'
 import { Route as InviteTokenRouteImport } from './routes/invite/$token'
 import { Route as JoinCodeRouteImport } from './routes/join/$code'
+import { Route as SurveysRegistrationIdRouteImport } from './routes/surveys.$registrationId'
 import { Route as TicketsRegistrationIdRouteImport } from './routes/tickets/$registrationId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiCalendarEventsRouteImport } from './routes/api/calendar/events'
@@ -98,6 +99,11 @@ const InviteTokenRoute = InviteTokenRouteImport.update({
 const JoinCodeRoute = JoinCodeRouteImport.update({
   id: '/join/$code',
   path: '/join/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SurveysRegistrationIdRoute = SurveysRegistrationIdRouteImport.update({
+  id: '/surveys/$registrationId',
+  path: '/surveys/$registrationId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TicketsRegistrationIdRoute = TicketsRegistrationIdRouteImport.update({
@@ -181,6 +187,7 @@ export interface FileRoutesByFullPath {
   '/guest/confirm': typeof GuestConfirmRoute
   '/invite/$token': typeof InviteTokenRoute
   '/join/$code': typeof JoinCodeRoute
+  '/surveys/$registrationId': typeof SurveysRegistrationIdRoute
   '/tickets/$registrationId': typeof TicketsRegistrationIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/calendar/events': typeof ApiCalendarEventsRoute
@@ -208,6 +215,7 @@ export interface FileRoutesByTo {
   '/guest/confirm': typeof GuestConfirmRoute
   '/invite/$token': typeof InviteTokenRoute
   '/join/$code': typeof JoinCodeRoute
+  '/surveys/$registrationId': typeof SurveysRegistrationIdRoute
   '/tickets/$registrationId': typeof TicketsRegistrationIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/calendar/events': typeof ApiCalendarEventsRoute
@@ -236,6 +244,7 @@ export interface FileRoutesById {
   '/guest/confirm': typeof GuestConfirmRoute
   '/invite/$token': typeof InviteTokenRoute
   '/join/$code': typeof JoinCodeRoute
+  '/surveys/$registrationId': typeof SurveysRegistrationIdRoute
   '/tickets/$registrationId': typeof TicketsRegistrationIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/calendar/events': typeof ApiCalendarEventsRoute
@@ -265,6 +274,7 @@ export interface FileRouteTypes {
     | '/guest/confirm'
     | '/invite/$token'
     | '/join/$code'
+    | '/surveys/$registrationId'
     | '/tickets/$registrationId'
     | '/api/auth/$'
     | '/api/calendar/events'
@@ -292,6 +302,7 @@ export interface FileRouteTypes {
     | '/guest/confirm'
     | '/invite/$token'
     | '/join/$code'
+    | '/surveys/$registrationId'
     | '/tickets/$registrationId'
     | '/api/auth/$'
     | '/api/calendar/events'
@@ -319,6 +330,7 @@ export interface FileRouteTypes {
     | '/guest/confirm'
     | '/invite/$token'
     | '/join/$code'
+    | '/surveys/$registrationId'
     | '/tickets/$registrationId'
     | '/api/auth/$'
     | '/api/calendar/events'
@@ -347,6 +359,7 @@ export interface RootRouteChildren {
   GuestConfirmRoute: typeof GuestConfirmRoute
   InviteTokenRoute: typeof InviteTokenRoute
   JoinCodeRoute: typeof JoinCodeRoute
+  SurveysRegistrationIdRoute: typeof SurveysRegistrationIdRoute
   TicketsRegistrationIdRoute: typeof TicketsRegistrationIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiCalendarEventsRoute: typeof ApiCalendarEventsRoute
@@ -454,6 +467,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JoinCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/surveys/$registrationId': {
+      id: '/surveys/$registrationId'
+      path: '/surveys/$registrationId'
+      fullPath: '/surveys/$registrationId'
+      preLoaderRoute: typeof SurveysRegistrationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tickets/$registrationId': {
       id: '/tickets/$registrationId'
       path: '/tickets/$registrationId'
@@ -555,6 +575,7 @@ const rootRouteChildren: RootRouteChildren = {
   GuestConfirmRoute: GuestConfirmRoute,
   InviteTokenRoute: InviteTokenRoute,
   JoinCodeRoute: JoinCodeRoute,
+  SurveysRegistrationIdRoute: SurveysRegistrationIdRoute,
   TicketsRegistrationIdRoute: TicketsRegistrationIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiCalendarEventsRoute: ApiCalendarEventsRoute,

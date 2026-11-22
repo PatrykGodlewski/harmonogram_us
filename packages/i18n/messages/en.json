@@ -741,5 +741,11 @@
 	"error_survey_link_invalid": "This survey link is not valid.",
 	"reg_email_survey_subject": "Survey: {event}",
 	"reg_email_survey_intro": "Thank you for attending “{event}” ({date}). Tell us how it went — the survey takes a minute and your answers are anonymous.",
-	"reg_email_survey_button": "Fill in the survey"
+	"reg_email_survey_button": "Fill in the survey",
+	"title_survey": "Survey",
+	"survey_title": "Survey: {event}",
+	"survey_intro": "Your answers are anonymous: the organiser only sees a summary, without your name.",
+	"survey_submit": "Send answers",
+	"survey_thanks": "Thank you for your answers!",
+	"survey_error_generic": "Your answers could not be sent. Please try again."
 }

@@ -741,5 +741,11 @@
 	"error_survey_link_invalid": "Ten link do ankiety jest nieprawidłowy.",
 	"reg_email_survey_subject": "Ankieta: {event}",
 	"reg_email_survey_intro": "Dziękujemy za udział w wydarzeniu „{event}” ({date}). Powiedz nam, jak było — ankieta zajmie minutę, a odpowiedzi są anonimowe.",
-	"reg_email_survey_button": "Wypełnij ankietę"
+	"reg_email_survey_button": "Wypełnij ankietę",
+	"title_survey": "Ankieta",
+	"survey_title": "Ankieta: {event}",
+	"survey_intro": "Odpowiedzi są anonimowe: organizator widzi tylko podsumowanie, bez Twojego imienia.",
+	"survey_submit": "Wyślij odpowiedzi",
+	"survey_thanks": "Dziękujemy za odpowiedzi!",
+	"survey_error_generic": "Nie udało się wysłać odpowiedzi. Spróbuj ponownie."
 }
