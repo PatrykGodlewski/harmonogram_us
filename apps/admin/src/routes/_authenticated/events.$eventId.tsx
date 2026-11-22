@@ -24,6 +24,7 @@ import { GroupsList } from "~/components/admin-event-detail/groups-list";
 import { OrganizersCard } from "~/components/admin-event-detail/organizers-card";
 import { QuestionsCard } from "~/components/admin-event-detail/questions-card";
 import { RegistrantsList } from "~/components/admin-event-detail/registrants-list";
+import { SurveySummaryCard } from "~/components/admin-event-detail/survey-summary-card";
 import { formatMutationError } from "~/lib/format-mutation-error";
 
 export const Route = createFileRoute("/_authenticated/events/$eventId")({
@@ -126,7 +127,11 @@ function AdminEventDetailPage() {
 			</div>
 			<div className="flex flex-col gap-8">
 				{canManage ? <OrganizersCard eventId={event.id} /> : null}
-				{canManage ? <QuestionsCard eventId={event.id} /> : null}
+				{canManage ? (
+					<QuestionsCard eventId={event.id} form="registration" />
+				) : null}
+				{canManage ? <QuestionsCard eventId={event.id} form="survey" /> : null}
+				{canManage ? <SurveySummaryCard eventId={event.id} /> : null}
 				{canManage ? <GroupsList groups={groups} /> : null}
 				<RegistrantsList
 					mode={canManage ? "manage" : "checkin"}

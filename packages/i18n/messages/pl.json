@@ -747,5 +747,14 @@
 	"survey_intro": "Odpowiedzi są anonimowe: organizator widzi tylko podsumowanie, bez Twojego imienia.",
 	"survey_submit": "Wyślij odpowiedzi",
 	"survey_thanks": "Dziękujemy za odpowiedzi!",
-	"survey_error_generic": "Nie udało się wysłać odpowiedzi. Spróbuj ponownie."
+	"survey_error_generic": "Nie udało się wysłać odpowiedzi. Spróbuj ponownie.",
+	"survey_questions_title": "Ankieta po wydarzeniu",
+	"survey_questions_add": "Dodaj pytanie do ankiety",
+	"survey_questions_empty": "Dodaj pytania, a po zakończeniu wydarzenia zapisani dostaną e-mail z linkiem do ankiety. Odpowiedzi są anonimowe.",
+	"survey_results_title": "Wyniki ankiety",
+	"survey_results_responses": "Odpowiedziało {responses} z {invited} osób.",
+	"survey_results_average": "Średnia {average}",
+	"survey_results_option": "{option}: {count} ({share})",
+	"survey_results_no_answers": "Brak odpowiedzi.",
+	"survey_results_text_shown": "Pokazano {shown} najnowszych z {total} odpowiedzi."
 }

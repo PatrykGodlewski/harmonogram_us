@@ -1,9 +1,10 @@
-import type { EventQuestion } from "@repo/api/admin/questions";
+import type { EventQuestion, QuestionForm } from "@repo/api/admin/questions";
 import {
 	deleteEventQuestionServer,
 	eventQuestionsQueryOptions,
 	moveEventQuestionServer,
 } from "@repo/api/admin/questions";
+import { surveySummaryQueryOptions } from "@repo/api/admin/survey-summary";
 import {
 	admin_action_cancel,
 	admin_error_generic,
@@ -17,6 +18,9 @@ import {
 	questions_required,
 	questions_title,
 	questions_up,
+	survey_questions_add,
+	survey_questions_empty,
+	survey_questions_title,
 } from "@repo/i18n/paraglide/messages";
 import {
 	AlertDialog,
@@ -38,18 +42,45 @@ import { formatMutationError } from "~/lib/format-mutation-error";
 import { QuestionDialog } from "./question-dialog";
 import { QUESTION_KIND_LABELS } from "./question-kinds";
 
-/** What people answer when they register; none keeps registering to one tap. */
-export function QuestionsCard({ eventId }: { eventId: string }) {
+const TEXTS = {
+	registration: {
+		title: questions_title,
+		empty: questions_empty,
+		add: questions_add,
+	},
+	survey: {
+		title: survey_questions_title,
+		empty: survey_questions_empty,
+		add: survey_questions_add,
+	},
+} as const;
+
+/**
+ * What people answer when they register (none keeps registering to one tap),
+ * or in the survey after the event.
+ */
+export function QuestionsCard({
+	eventId,
+	form,
+}: {
+	eventId: string;
+	form: QuestionForm;
+}) {
 	const headingId = useId();
 	const queryClient = useQueryClient();
+	const texts = TEXTS[form];
 	const { data: questions = [] } = useQuery(
-		eventQuestionsQueryOptions(eventId, "registration"),
+		eventQuestionsQueryOptions(eventId, form),
 	);
 	const [editing, setEditing] = useState<EventQuestion | "new" | null>(null);
 	const refresh = () =>
-		queryClient.invalidateQueries(
-			eventQuestionsQueryOptions(eventId, "registration"),
-		);
+		Promise.all([
+			queryClient.invalidateQueries(eventQuestionsQueryOptions(eventId, form)),
+			// The survey summary lists the questions too.
+			form === "survey"
+				? queryClient.invalidateQueries(surveySummaryQueryOptions(eventId))
+				: null,
+		]);
 	const handleError = (error: unknown) =>
 		toast.error(formatMutationError(error, admin_error_generic));
 
@@ -70,14 +101,14 @@ export function QuestionsCard({ eventId }: { eventId: string }) {
 		<section aria-labelledby={headingId} className="flex flex-col gap-3">
 			<div className="flex flex-wrap items-center justify-between gap-2">
 				<h2 id={headingId} className="text-lg font-semibold">
-					{questions_title()}
+					{texts.title()}
 				</h2>
 				<Button variant="outline" onClick={() => setEditing("new")}>
-					{questions_add()}
+					{texts.add()}
 				</Button>
 			</div>
 			{questions.length === 0 ? (
-				<p className="text-sm text-muted-foreground">{questions_empty()}</p>
+				<p className="text-sm text-muted-foreground">{texts.empty()}</p>
 			) : (
 				<ol className="divide-y rounded-lg border">
 					{questions.map((question, index) => (
@@ -159,6 +190,7 @@ export function QuestionsCard({ eventId }: { eventId: string }) {
 			)}
 			<QuestionDialog
 				eventId={eventId}
+				form={form}
 				question={editing === "new" ? null : editing}
 				open={editing !== null}
 				onOpenChange={(open) => {

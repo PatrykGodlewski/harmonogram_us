@@ -1,11 +1,18 @@
-import { expect, test } from "@playwright/test";
+import { randomBytes } from "node:crypto";
+import { expect, type Page, test } from "@playwright/test";
 import { db } from "@repo/db/client";
-import { createEventQuestion } from "@repo/db/queries/event-questions";
+import {
+	createEventQuestion,
+	listEventQuestions,
+} from "@repo/db/queries/event-questions";
 import { registerForEvent } from "@repo/db/queries/event-registrations";
+import { submitSurvey } from "@repo/db/queries/surveys";
+import { eventRegistrations } from "@repo/db/schema/event-registrations";
 import { events } from "@repo/db/schema/events";
 import { surveyAnswers } from "@repo/db/schema/surveys";
 import { eq, inArray } from "drizzle-orm";
 import { expectAccessible } from "../fixtures/a11y";
+import { adminUrl, signInAsAdmin } from "../fixtures/auth";
 import { createTestEvent, createTestUser, uniqueEmail } from "../fixtures/data";
 import { latestMessageTo, messageCountTo } from "../fixtures/mailpit";
 import { open } from "../fixtures/navigation";
@@ -128,4 +135,97 @@ test("[F20] zmieniony link do ankiety nie działa @uczestnik", async ({
 	await expect(
 		page.getByRole("button", { name: "Wyślij odpowiedzi" }),
 	).toHaveCount(0);
+});
+
+async function addSurveyQuestion(
+	page: Page,
+	question: { label: string; kind: string; required?: boolean },
+) {
+	await page.getByRole("button", { name: "Dodaj pytanie do ankiety" }).click();
+	const dialog = page.getByRole("dialog");
+	await dialog.getByLabel("Treść pytania").fill(question.label);
+	await dialog.getByRole("combobox", { name: "Rodzaj odpowiedzi" }).click();
+	await page.getByRole("option", { name: question.kind }).click();
+	if (question.required) {
+		await dialog.getByLabel("Odpowiedź wymagana").check();
+	}
+	await dialog.getByRole("button", { name: "Zapisz" }).click();
+	await expect(dialog).toBeHidden();
+}
+
+test("[F20] organizator układa ankietę i widzi podsumowanie @organizator", async ({
+	page,
+}, testInfo) => {
+	const email = uniqueEmail(testInfo);
+	const password = randomBytes(18).toString("base64url");
+	const organizer = await createTestUser(email, {
+		role: "organizer",
+		password,
+	});
+	const event = await createTestEvent({ organizerId: organizer.id });
+	await signInAsAdmin(page, email, password);
+	await open(page, adminUrl(`/pl/events/${event.id}`));
+
+	const survey = page.getByRole("region", { name: "Ankieta po wydarzeniu" });
+	await addSurveyQuestion(page, {
+		label: "Jak oceniasz wydarzenie?",
+		kind: "Ocena 1–5",
+		required: true,
+	});
+	await addSurveyQuestion(page, {
+		label: "Polecisz innym?",
+		kind: "Tak / nie",
+	});
+	await addSurveyQuestion(page, { label: "Uwagi", kind: "Tekst" });
+	await expect(survey.getByRole("listitem")).toHaveCount(3);
+	// Registration stays one tap: the survey questions are not asked there
+	await expect(
+		page
+			.getByRole("region", { name: "Pytania przy zapisie" })
+			.getByRole("listitem"),
+	).toHaveCount(0);
+	// A rating is not offered for registration questions
+	await page
+		.getByRole("button", { name: "Dodaj pytanie", exact: true })
+		.click();
+	await page.getByRole("combobox", { name: "Rodzaj odpowiedzi" }).click();
+	await expect(page.getByRole("option", { name: "Ocena 1–5" })).toHaveCount(0);
+	await page.keyboard.press("Escape");
+	await page.getByRole("button", { name: "Anuluj" }).click();
+
+	// Three people held a place; two answered after the event
+	const people = [];
+	for (const n of [1, 2, 3]) {
+		const user = await createTestUser(`${n}-${email}`);
+		await registerForEvent(event.id, user.id, "pl");
+		people.push(user.id);
+	}
+	await endEvent(event.id);
+	const [rating, recommend, notes] = await listEventQuestions(
+		event.id,
+		"survey",
+	);
+	const registrations = await db
+		.select({ id: eventRegistrations.id, userId: eventRegistrations.userId })
+		.from(eventRegistrations)
+		.where(eq(eventRegistrations.eventId, event.id));
+	const idOf = (userId: string | undefined) =>
+		registrations.find((row) => row.userId === userId)?.id ?? "";
+	await submitSurvey(idOf(people[0]), {
+		[rating?.id ?? ""]: "4",
+		[recommend?.id ?? ""]: "yes",
+		[notes?.id ?? ""]: "Za krótkie przerwy",
+	});
+	await submitSurvey(idOf(people[1]), {
+		[rating?.id ?? ""]: "5",
+		[recommend?.id ?? ""]: "no",
+	});
+
+	await open(page, adminUrl(`/pl/events/${event.id}`));
+	const results = page.getByRole("region", { name: "Wyniki ankiety" });
+	await expect(results).toContainText("2 z 3 osób");
+	await expect(results).toContainText("Średnia 4,5");
+	await expect(results).toContainText("Tak: 1 (50%)");
+	await expect(results).toContainText("Za krótkie przerwy");
+	await expectAccessible(page, "wydarzenie z ankietą", event.title);
 });

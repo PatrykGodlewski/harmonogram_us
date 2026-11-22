@@ -267,7 +267,7 @@ test("[F8] panel organizatora obsługiwany klawiaturą @organizator", async ({
 	await page.keyboard.press("Escape");
 	await expect(dialog).toBeHidden();
 	await expect(
-		page.getByRole("button", { name: "Dodaj pytanie" }),
+		page.getByRole("button", { name: "Dodaj pytanie", exact: true }),
 	).toBeFocused();
 });
 

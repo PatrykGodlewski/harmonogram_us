@@ -747,5 +747,14 @@
 	"survey_intro": "Your answers are anonymous: the organiser only sees a summary, without your name.",
 	"survey_submit": "Send answers",
 	"survey_thanks": "Thank you for your answers!",
-	"survey_error_generic": "Your answers could not be sent. Please try again."
+	"survey_error_generic": "Your answers could not be sent. Please try again.",
+	"survey_questions_title": "Post-event survey",
+	"survey_questions_add": "Add survey question",
+	"survey_questions_empty": "Add questions and, once the event ends, registrants get an e-mail with a link to the survey. Answers are anonymous.",
+	"survey_results_title": "Survey results",
+	"survey_results_responses": "{responses} of {invited} people answered.",
+	"survey_results_average": "Average {average}",
+	"survey_results_option": "{option}: {count} ({share})",
+	"survey_results_no_answers": "No answers.",
+	"survey_results_text_shown": "Showing the latest {shown} of {total} answers."
 }

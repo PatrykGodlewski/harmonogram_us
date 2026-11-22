@@ -1,4 +1,4 @@
-import type { EventQuestion } from "@repo/api/admin/questions";
+import type { EventQuestion, QuestionForm } from "@repo/api/admin/questions";
 import {
 	createEventQuestionServer,
 	updateEventQuestionServer,
@@ -43,8 +43,15 @@ import { QUESTION_KIND_LABELS } from "./question-kinds";
 
 type Kind = EventQuestion["kind"];
 
+/** A 1–5 rating only fits a survey. */
+function questionKinds(form: QuestionForm): Kind[] {
+	const kinds = Object.keys(QUESTION_KIND_LABELS) as Kind[];
+	return form === "survey" ? kinds : kinds.filter((kind) => kind !== "rating");
+}
+
 type QuestionDialogProps = {
 	eventId: string;
+	form: QuestionForm;
 	/** null: a new question. */
 	question: EventQuestion | null;
 	open: boolean;
@@ -54,6 +61,7 @@ type QuestionDialogProps = {
 
 export function QuestionDialog({
 	eventId,
+	form,
 	question,
 	open,
 	onOpenChange,
@@ -89,7 +97,7 @@ export function QuestionDialog({
 			};
 			return question
 				? updateEventQuestionServer({ data: { id: question.id, ...fields } })
-				: createEventQuestionServer({ data: { eventId, ...fields } });
+				: createEventQuestionServer({ data: { eventId, form, ...fields } });
 		},
 		onSuccess: async () => {
 			toast.success(questions_saved());
@@ -136,7 +144,7 @@ export function QuestionDialog({
 								<SelectValue />
 							</SelectTrigger>
 							<SelectContent>
-								{(Object.keys(QUESTION_KIND_LABELS) as Kind[]).map((key) => (
+								{questionKinds(form).map((key) => (
 									<SelectItem key={key} value={key}>
 										{QUESTION_KIND_LABELS[key]()}
 									</SelectItem>

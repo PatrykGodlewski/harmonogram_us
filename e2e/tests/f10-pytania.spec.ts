@@ -13,7 +13,9 @@ async function addQuestion(
 		required?: boolean;
 	},
 ) {
-	await page.getByRole("button", { name: "Dodaj pytanie" }).click();
+	await page
+		.getByRole("button", { name: "Dodaj pytanie", exact: true })
+		.click();
 	const dialog = page.getByRole("dialog");
 	await dialog.getByLabel("Treść pytania").fill(question.label);
 	await dialog.getByRole("combobox", { name: "Rodzaj odpowiedzi" }).click();
