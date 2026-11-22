@@ -62,6 +62,8 @@ test("[F5] osoba z listy rezerwowej nie zapisze się na punkt programu", async (
 test("[F27] licznik punktu odświeża się na otwartej stronie, gdy zapisze się ktoś inny @uczestnik", async ({
 	page,
 }, testInfo) => {
+	// Waits for a page refresh (up to 20 s) on top of the usual steps.
+	test.slow();
 	// Given a visitor with the page of an event with a 3-place agenda item open
 	const other = await createTestUser(uniqueEmail(testInfo));
 	const event = await createTestEvent({

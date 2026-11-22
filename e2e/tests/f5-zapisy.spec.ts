@@ -106,6 +106,8 @@ test("[F5] po rezygnacji pierwsza osoba z listy awansuje @uczestnik", async ({
 test("[F5] awans z listy widać na otwartej stronie bez odświeżania @uczestnik", async ({
 	page,
 }, testInfo) => {
+	// Waits for a page refresh (up to 20 s) on top of the usual steps.
+	test.slow();
 	// Given B on the waitlist of a full 1-place event, with the event page open
 	const base = uniqueEmail(testInfo);
 	const event = await createTestEvent({ maxSeats: 1 });
@@ -131,6 +133,8 @@ test("[F5] awans z listy widać na otwartej stronie bez odświeżania @uczestnik
 test("[F5] liczba wolnych miejsc odświeża się na otwartej stronie, gdy zapisze się ktoś inny @uczestnik", async ({
 	page,
 }, testInfo) => {
+	// Waits for a page refresh (up to 20 s) on top of the usual steps.
+	test.slow();
 	// Given a visitor with the event page and the list open
 	const tag = crypto.randomUUID().slice(0, 6);
 	const event = await createTestEvent({ title: `Odczyt ${tag}`, maxSeats: 5 });

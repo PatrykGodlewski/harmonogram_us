@@ -11,6 +11,8 @@ test("[F3] [F6] odwołanie zamyka zapisy, wysyła e-maile i zmienia stronę na �
 	browser,
 	page,
 }, testInfo) => {
+	// Waits for a page refresh (up to 20 s) on top of the usual steps.
+	test.slow();
 	const base = uniqueEmail(testInfo);
 	const password = randomBytes(18).toString("base64url");
 	const organizer = await createTestUser(`org-${base}`, {
