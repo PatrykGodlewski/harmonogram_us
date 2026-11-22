@@ -25,6 +25,12 @@ x-app-env: &app-env
   TEAMS_ORGANIZER_ID: ${TEAMS_ORGANIZER_ID:-}
   TEAMS_LOGIN_URL: ${TEAMS_LOGIN_URL:-https://login.microsoftonline.com}
   TEAMS_GRAPH_URL: ${TEAMS_GRAPH_URL:-https://graph.microsoft.com}
+  # Files (F14): the storage container below, reached by the browser and the containers alike
+  # as storage.localhost (Chrome maps *.localhost to this machine). Production: Cloudflare R2.
+  S3_ENDPOINT: ${S3_APP_ENDPOINT:-http://storage.localhost:${STORAGE_PORT:-8333}}
+  S3_BUCKET: ${S3_BUCKET:-harmonogram}
+  S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-harmonogram-dev}
+  S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-harmonogram-dev-secret}
 
 x-app-build: &app-build
   context: .
@@ -68,6 +74,28 @@ services:
       db:
         condition: service_healthy
 
+  # S3-compatible file storage for development and e2e (SeaweedFS `weed mini`: creates the
+  # bucket and the key pair on start). Same port inside and outside, see S3_ENDPOINT above.
+  storage:
+    image: chrislusf/seaweedfs@sha256:4b42c212543a0acd4c0e675215ecdcaf62a186ef98def76c7e12701871222d15
+    command: ["mini", "-dir=/data", "-s3.port=${STORAGE_PORT:-8333}"]
+    environment:
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-harmonogram-dev}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-harmonogram-dev-secret}
+      S3_BUCKET: ${S3_BUCKET:-harmonogram}
+    ports:
+      - "${STORAGE_PORT:-8333}:${STORAGE_PORT:-8333}"
+    volumes:
+      - storage_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "-o", "/dev/null", "http://localhost:${STORAGE_PORT:-8333}/status"]
+      interval: 2s
+      retries: 30
+    networks:
+      default:
+        aliases: [storage.localhost]
+    restart: unless-stopped
+
   # Renders PDFs over gRPC (services/documents); needs DOCUMENTS_TOKEN from .env.
   documents:
     build:
@@ -102,6 +130,7 @@ services:
       electric: { condition: service_started }
       mailpit: { condition: service_started }
       documents: { condition: service_healthy }
+      storage: { condition: service_healthy }
 
   admin:
     profiles: [app]
@@ -121,6 +150,7 @@ services:
       db: { condition: service_healthy }
       mailpit: { condition: service_started }
       documents: { condition: service_healthy }
+      storage: { condition: service_healthy }
 
   worker:
     profiles: [app]
@@ -135,6 +165,7 @@ services:
     depends_on:
       db: { condition: service_healthy }
       mailpit: { condition: service_started }
+      storage: { condition: service_healthy }
 
   # e2e only: a stand-in Microsoft Graph (e2e/teams-mock), reached as teams.localhost.
   teams-mock:
@@ -216,4 +247,5 @@ configs:
 
 volumes:
   postgres_data:
+  storage_data:
   prometheus_data:

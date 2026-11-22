@@ -60,6 +60,13 @@ export const env = createEnv({
 		TEAMS_LOGIN_URL: z.url().default("https://login.microsoftonline.com"),
 		TEAMS_GRAPH_URL: z.url().default("https://graph.microsoft.com"),
 
+		/** Files in an S3-compatible bucket (F14): Cloudflare R2 in production, SeaweedFS locally; on when all four are set. */
+		S3_ENDPOINT: z.url().optional(),
+		S3_BUCKET: z.string().min(1).optional(),
+		S3_ACCESS_KEY_ID: z.string().min(1).optional(),
+		S3_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+		S3_REGION: z.string().min(1).default("auto"),
+
 		SMTP_HOST: z.string().optional(),
 		SMTP_PORT: z.coerce.number().int().positive().optional(),
 		SMTP_USER: z.string().optional(),
