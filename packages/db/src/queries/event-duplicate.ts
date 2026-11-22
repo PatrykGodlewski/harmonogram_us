@@ -2,7 +2,7 @@ import { env } from "@repo/env/client";
 import { eq, type SQL, sql } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { db, type TransactionClient } from "../client";
-import { agendaItems } from "../schema/agenda";
+import { agendaItems, agendaSessions } from "../schema/agenda";
 import { eventOrganizers } from "../schema/event-organizers";
 import { events } from "../schema/events";
 import { DomainError } from "./domain-errors";
@@ -120,11 +120,47 @@ async function copyEvent(
 	}
 
 	if (options.agenda) {
+		// New session ids up front, so copied items can point at their copied session.
+		const sessionIds = new Map(
+			(
+				await tx
+					.select({ id: agendaSessions.id })
+					.from(agendaSessions)
+					.where(eq(agendaSessions.eventId, source.id))
+			).map((row) => [row.id, crypto.randomUUID()]),
+		);
+		const copiedSession = (column: AnyPgColumn) =>
+			sessionIds.size === 0
+				? sql<string | null>`NULL::text`
+				: sql<string | null>`CASE ${column} ${sql.join(
+						[...sessionIds].map(([from, to]) => sql`WHEN ${from} THEN ${to}`),
+						sql` `,
+					)} END`;
+		if (sessionIds.size > 0) {
+			await tx.insert(agendaSessions).select(
+				tx
+					.select({
+						id: copiedSession(agendaSessions.id).as("id"),
+						eventId: sql<string>`${copy.id}`.as("event_id"),
+						title: agendaSessions.title,
+						description: agendaSessions.description,
+						color: agendaSessions.color,
+						locationId: agendaSessions.locationId,
+						startsAt: moved(agendaSessions.startsAt).as("starts_at"),
+						endsAt: moved(agendaSessions.endsAt).as("ends_at"),
+						createdAt: sql<Date>`now()`.as("created_at"),
+						updatedAt: sql<Date>`now()`.as("updated_at"),
+					})
+					.from(agendaSessions)
+					.where(eq(agendaSessions.eventId, source.id)),
+			);
+		}
 		await tx.insert(agendaItems).select(
 			tx
 				.select({
 					id: sql<string>`gen_random_uuid()::text`.as("id"),
 					eventId: sql<string>`${copy.id}`.as("event_id"),
+					sessionId: copiedSession(agendaItems.sessionId).as("session_id"),
 					title: agendaItems.title,
 					description: agendaItems.description,
 					startsAt: moved(agendaItems.startsAt).as("starts_at"),
