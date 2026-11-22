@@ -1,14 +1,27 @@
 /** @jsxRuntime automatic */
 /** @jsxImportSource react */
 // Explicit so the templates compile the same under every runner (tsx in the worker applies its tsconfig only to its own files).
+
 import { render } from "@react-email/render";
 import { env } from "@repo/env";
 import { baseLocale, type Locale } from "@repo/i18n/paraglide/runtime";
 import nodemailer from "nodemailer";
 import {
+	EventChangeEmail,
+	type EventChangeEmailProps,
+} from "./event-change-email";
+import {
+	EventMessageEmail,
+	type EventMessageEmailProps,
+} from "./event-message-email";
+import {
 	GroupInvitationEmail,
 	type GroupInvitationEmailProps,
 } from "./group-invitation-email";
+import {
+	GuestConfirmationEmail,
+	type GuestConfirmationEmailProps,
+} from "./guest-confirmation-email";
 import { MagicLinkEmail } from "./magic-link-email";
 import {
 	RegistrationEmail,
@@ -32,10 +45,13 @@ export async function sendTransactionalEmail(params: {
 	subject: string;
 	text: string;
 	html?: string;
+	/** Where replies go (an organizer's address); the sender stays SMTP_FROM. */
+	replyTo?: string;
 }) {
 	const from = env.SMTP_FROM;
 	await transport.sendMail({
 		from,
+		replyTo: params.replyTo,
 		to: params.to,
 		subject: params.subject,
 		text: params.text,
@@ -57,6 +73,20 @@ export async function renderGroupInvitationEmail(
 	return render(<GroupInvitationEmail {...props} />);
 }
 
+export async function renderGuestConfirmationEmail(
+	props: GuestConfirmationEmailProps,
+) {
+	return render(<GuestConfirmationEmail {...props} />);
+}
+
 export async function renderRegistrationEmail(props: RegistrationEmailProps) {
 	return render(<RegistrationEmail {...props} />);
+}
+
+export async function renderEventMessageEmail(props: EventMessageEmailProps) {
+	return render(<EventMessageEmail {...props} />);
+}
+
+export async function renderEventChangeEmail(props: EventChangeEmailProps) {
+	return render(<EventChangeEmail {...props} />);
 }

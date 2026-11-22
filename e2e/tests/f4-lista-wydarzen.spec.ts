@@ -52,3 +52,54 @@ test("[F4] lista pokazuje 20 wydarzeń, a „Pokaż więcej” dociąga kolejne 
 	await expect(cards).toHaveCount(25);
 	await expect(page.getByRole("link", { name: "Pokaż więcej" })).toHaveCount(0);
 });
+
+test("[F4] HTML strony wydarzenia ma og:title i og:description", async ({
+	request,
+}) => {
+	const event = await createTestEvent({});
+	const html = await (await request.get(`/pl/events/${event.id}`)).text();
+	expect(html).toContain(`property="og:title" content="${event.title}"`);
+	expect(html).toMatch(/property="og:description" content="[^"]+"/);
+	expect(html).toMatch(/property="og:url" content="[^"]*\/pl\/events\//);
+});
+
+test("[F4] filtry kiedy i forma zawężają listę @uczestnik", async ({
+	page,
+}) => {
+	// All digits on purpose: the router reads `?search=123456` as a number.
+	const tag = String(100_000 + Math.floor(Math.random() * 900_000));
+	const soon = await createTestEvent({
+		title: `Wkrótce ${tag}`,
+		startsInDays: 3,
+	});
+	const later = await createTestEvent({
+		title: `Później ${tag}`,
+		startsInDays: 20,
+	});
+	const online = await createTestEvent({
+		title: `Zdalnie ${tag}`,
+		startsInDays: 4,
+		attendanceMode: "online",
+		onlineUrl: "https://meet.example.test/zdalnie",
+	});
+
+	await open(page, `/pl?search=${tag}`);
+	await expect(page.getByText(later.title)).toBeVisible();
+
+	// Each filter announces its name and its current value to screen readers
+	await expect(
+		page.getByRole("combobox", { name: /Każdy termin/ }),
+	).toBeVisible();
+
+	// When: the next 7 days
+	await page.getByRole("combobox").filter({ hasText: "Każdy termin" }).click();
+	await page.getByRole("option", { name: "Najbliższe 7 dni" }).click();
+	await expect(page.getByText(later.title)).toHaveCount(0);
+	await expect(page.getByText(soon.title)).toBeVisible();
+
+	// Format: online only
+	await page.getByRole("combobox").filter({ hasText: "Każda forma" }).click();
+	await page.getByRole("option", { name: "Online" }).click();
+	await expect(page.getByText(soon.title)).toHaveCount(0);
+	await expect(page.getByText(online.title)).toBeVisible();
+});

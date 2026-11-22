@@ -2,6 +2,8 @@ import { asc, eq, sql } from "drizzle-orm";
 import { db } from "../client";
 import { agendaItemRegistrations, agendaItems } from "../schema/agenda";
 import type { RegistrationState } from "../schema/event-registrations";
+import type { EventStatus } from "../schema/events";
+import { certificateAvailableSql } from "./certificates";
 import { effectiveEventEndSql } from "./event-registrations";
 
 export type MyRegistrationListItem = {
@@ -15,6 +17,9 @@ export type MyRegistrationListItem = {
 	state: RegistrationState;
 	/** 1-based place on the waitlist; null when registered. */
 	waitlistPosition: number | null;
+	eventStatus: EventStatus;
+	/** A certificate of attendance can be downloaded. */
+	certificateAvailable: boolean;
 	items: { id: string; title: string; startsAt: Date; endsAt: Date }[];
 };
 
@@ -32,11 +37,15 @@ export async function listMyRegistrations(
 			location_label: string | null;
 			state: RegistrationState;
 			position: number | null;
+			event_status: EventStatus;
+			certificate_available: boolean;
 		}>(sql`
 			SELECT mine.id AS registration_id, e.id AS event_id, e.title, e.date,
 				${effectiveEventEndSql(sql`e`)} AS effective_ends_at,
 				l.label AS location_label,
 				mine.state,
+				e.status AS event_status,
+				${certificateAvailableSql(sql`mine`, sql`e`)} AS certificate_available,
 				CASE WHEN mine.state = 'waitlisted' THEN (
 					SELECT count(*)::int FROM event_registrations w
 					WHERE w.event_id = mine.event_id AND w.state = 'waitlisted'
@@ -74,6 +83,8 @@ export async function listMyRegistrations(
 		locationLabel: row.location_label,
 		state: row.state,
 		waitlistPosition: row.position,
+		eventStatus: row.event_status,
+		certificateAvailable: row.certificate_available,
 		items: itemRows
 			.filter((item) => item.eventId === row.event_id)
 			.map(({ eventId: _eventId, ...item }) => item),

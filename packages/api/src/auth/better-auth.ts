@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { db } from "@repo/db/client";
 import {
 	findMagicLinkEmail,
+	hasProviderAccount,
 	resetUnverifiedAccount,
 } from "@repo/db/queries/account-safety";
 import {
@@ -27,7 +28,7 @@ import { enqueueEmails } from "@repo/jobs/client";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
-import { captcha, magicLink } from "better-auth/plugins";
+import { captcha, genericOAuth, magicLink } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { z } from "zod";
 import {
@@ -38,6 +39,9 @@ import { getClientIp } from "../security/client-ip";
 import { checkEmails } from "../security/email-policy";
 import { consumeRateLimit, type RateLimit } from "../security/rate-limit";
 import {
+	GUEST_CONFIRM_LIMIT,
+	GUEST_REQUEST_IP_LIMIT,
+	GUEST_REQUEST_LIMIT,
 	INVITATION_ACCEPT_LIMIT,
 	invitationAcceptRateKey,
 	MAGIC_LINK_LIMIT,
@@ -45,40 +49,16 @@ import {
 	SIGN_UP_LIMIT,
 } from "../security/rate-limits";
 import { groupInvitation } from "./group-invitation-plugin";
-import { enabledSocialProviders } from "./social-providers";
+import { guestRegistration } from "./guest-registration-plugin";
+import { universityProviderConfig } from "./university";
+import { UNIVERSITY_PROVIDER_ID } from "./university-provider";
 
 const MAGIC_LINK_EXPIRATION_SECONDS = 15 * 60;
 const magicLinkMetadataSchema = z.object({
 	locale: z.string().optional(),
 });
 
-const socialProviderConfigs = {
-	google:
-		env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
-			? {
-					clientId: env.GOOGLE_CLIENT_ID,
-					clientSecret: env.GOOGLE_CLIENT_SECRET,
-				}
-			: undefined,
-} as const;
-
-const socialProviders = Object.fromEntries(
-	enabledSocialProviders
-		.map((provider) => {
-			const config = socialProviderConfigs[provider];
-			return config ? [provider, config] : undefined;
-		})
-		.filter(
-			(
-				entry,
-			): entry is [
-				keyof typeof socialProviderConfigs,
-				NonNullable<
-					(typeof socialProviderConfigs)[keyof typeof socialProviderConfigs]
-				>,
-			] => Boolean(entry),
-		),
-);
+const universityProvider = universityProviderConfig();
 
 const PASSWORD_MIN_LENGTH = 8;
 
@@ -266,6 +246,18 @@ export const auth = betterAuth({
 	baseURL: env.BETTER_AUTH_URL,
 	secret: env.BETTER_AUTH_SECRET,
 	trustedOrigins: [env.ADMIN_URL],
+	// Our limiter (limitAuth in hooks.before) is shared across instances (Postgres) and keyed
+	// by IP and e-mail. Better Auth's own is per process and per IP only: a campus network
+	// sends many students through one address, and they would lock each other out.
+	rateLimit: { enabled: false },
+	account: {
+		accountLinking: {
+			// A university sign-in with a verified address may join an account nobody verified:
+			// the account.create.before hook first removes the stranger's password and sessions
+			// (pre-hijacking protection). The university must still mark the address verified.
+			requireLocalEmailVerified: false,
+		},
+	},
 	database: drizzleAdapter(db, {
 		provider: "pg",
 		schema: {
@@ -277,6 +269,35 @@ export const auth = betterAuth({
 	}),
 	emailAndPassword: {
 		enabled: true,
+	},
+	databaseHooks: {
+		account: {
+			create: {
+				before: async (account, ctx) => {
+					if (account.providerId !== UNIVERSITY_PROVIDER_ID) return;
+					// One university identity per account: an address the university gave
+					// to someone else must not open the previous owner's account.
+					if (
+						await hasProviderAccount(account.userId, UNIVERSITY_PROVIDER_ID)
+					) {
+						// From the sign-in callback: back to the login page, which explains
+						// (Better Auth would answer the browser with a bare 403).
+						if (ctx?.path.startsWith("/callback/")) {
+							const locale = resolveAuthLocaleFromHeaders(ctx.headers);
+							throw ctx.redirect(
+								`${env.BETTER_AUTH_URL}/${locale}/login?error=account_conflict`,
+							);
+						}
+						throw new APIError("FORBIDDEN", {
+							message: "Account is linked to another university identity.",
+						});
+					}
+					// Joining an unverified account: a password someone set without proving
+					// the address must not outlive the university's proof (as with magic links).
+					await resetUnverifiedAccount(account.userId);
+				},
+			},
+		},
 	},
 	emailVerification: {
 		sendOnSignUp: true,
@@ -298,6 +319,18 @@ export const auth = betterAuth({
 			const email = getBodyValueAsString(ctx.body, "email");
 			const password = getBodyValueAsString(ctx.body, "password");
 			const locale = resolveAuthLocaleFromHeaders(ctx.headers);
+
+			if (
+				ctx.path.startsWith("/callback/") &&
+				typeof ctx.query?.error === "string"
+			) {
+				// The university refused or the person cancelled there: Better Auth would
+				// show its bare error page, so return to the login page, which explains.
+				const error = encodeURIComponent(ctx.query.error);
+				throw ctx.redirect(
+					`${env.BETTER_AUTH_URL}/${locale}/login?error=${error}`,
+				);
+			}
 
 			if (ctx.path === "/sign-up/email") {
 				await limitAuth(
@@ -333,6 +366,37 @@ export const auth = betterAuth({
 				if (email) {
 					await assertEmailIsAllowed(email);
 				}
+				return;
+			}
+
+			if (ctx.path === "/guest-registration/request") {
+				await limitAuth(
+					"auth:guest-request-ip",
+					GUEST_REQUEST_IP_LIMIT,
+					ip,
+					"Too many registration requests. Please try again later.",
+				);
+				await limitAuth(
+					"auth:guest-request",
+					GUEST_REQUEST_LIMIT,
+					`${ip}:${email ?? "unknown-email"}`,
+					"Too many registration requests. Please try again later.",
+				);
+				if (email) {
+					await assertEmailIsAllowed(email);
+				}
+				return;
+			}
+
+			if (ctx.path === "/guest-registration/confirm") {
+				const token: unknown = (ctx.body as { token?: unknown } | undefined)
+					?.token;
+				await limitAuth(
+					"auth:guest-confirm",
+					GUEST_CONFIRM_LIMIT,
+					typeof token === "string" ? invitationAcceptRateKey(token) : ip,
+					"Too many attempts. Please try again later.",
+				);
 				return;
 			}
 
@@ -377,8 +441,10 @@ export const auth = betterAuth({
 			}
 		}),
 	},
-	socialProviders,
 	plugins: [
+		...(universityProvider
+			? [genericOAuth({ config: [universityProvider] })]
+			: []),
 		...(env.TURNSTILE_SECRET_KEY
 			? [
 					captcha({
@@ -388,6 +454,7 @@ export const auth = betterAuth({
 							"/sign-up/email",
 							"/sign-in/email",
 							"/sign-in/magic-link",
+							"/guest-registration/request",
 						],
 					}),
 				]
@@ -411,6 +478,7 @@ export const auth = betterAuth({
 			},
 		}),
 		groupInvitation(),
+		guestRegistration(),
 		tanstackStartCookies(),
 	],
 });

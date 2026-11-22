@@ -51,36 +51,51 @@ export function EventFilters({ search, onSearchChange }: EventFiltersProps) {
 				<EventErrorAlert error={optionsQuery.error} />
 			) : null}
 			<Input
+				type="search"
+				aria-label={filter_search_placeholder()}
 				placeholder={filter_search_placeholder()}
 				value={searchInput}
 				onChange={(e) => setSearchInput(e.target.value)}
 				disabled={loading || optionsQuery.isError}
 			/>
-			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 				{loading || optionsQuery.isError
 					? FILTER_SELECTS.map(({ id }) => (
 							<Skeleton key={id} className="h-9 w-full" />
 						))
-					: FILTER_SELECTS.map(({ id, placeholder, getOptions }) => (
-							<Select
-								key={id}
-								value={filterValue(search, id)}
-								onValueChange={(value) =>
-									onSearchChange((prev) => ({ ...prev, [id]: value }))
-								}
-							>
-								<SelectTrigger className="w-full bg-background">
-									<SelectValue placeholder={placeholder()} />
-								</SelectTrigger>
-								<SelectContent>
-									{getOptions(optionsQuery.data).map((option) => (
-										<SelectItem key={option.value} value={option.value}>
-											{option.label}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-						))}
+					: FILTER_SELECTS.map(({ id, placeholder, getOptions }) => {
+							const value = filterValue(search, id);
+							const options = getOptions(optionsQuery.data);
+							const selected = options.find((option) => option.value === value);
+							return (
+								<Select
+									key={id}
+									value={value}
+									onValueChange={(value) =>
+										onSearchChange((prev) => ({ ...prev, [id]: value }))
+									}
+								>
+									<SelectTrigger
+										className="w-full bg-background"
+										// The name keeps the chosen value, which a plain label would hide.
+										aria-label={
+											selected
+												? `${placeholder()}: ${selected.label}`
+												: placeholder()
+										}
+									>
+										<SelectValue placeholder={placeholder()} />
+									</SelectTrigger>
+									<SelectContent>
+										{options.map((option) => (
+											<SelectItem key={option.value} value={option.value}>
+												{option.label}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							);
+						})}
 			</div>
 		</div>
 	);

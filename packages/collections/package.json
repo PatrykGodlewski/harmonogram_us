@@ -8,6 +8,7 @@
     "./local-notes": "./src/local-notes.ts",
     "./event-seat-counts": "./src/event-seat-counts.ts",
     "./agenda-item-seat-counts": "./src/agenda-item-seat-counts.ts",
+    "./cancelled-events": "./src/cancelled-events.ts",
     "./shapes": "./src/shapes.ts",
     "./electric-proxy": "./src/electric-proxy.ts"
   },
@@ -19,15 +20,15 @@
   },
   "dependencies": {
     "@electric-sql/client": "1.5.20",
-    "@tanstack/db": "^0.6.8",
-    "@tanstack/electric-db-collection": "^0.3.6",
-    "@tanstack/react-db": "^0.1.83",
-    "zod": "^4.3.6"
+    "@tanstack/db": "0.6.8",
+    "@tanstack/electric-db-collection": "0.3.6",
+    "@tanstack/react-db": "0.1.83",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@repo/config": "workspace:*",
-    "@types/react": "^19.2.14",
-    "react": "^19.2.5",
+    "@types/react": "^19.3.0",
+    "react": "^19.3.1",
     "typescript": "^6.0.3",
     "vitest": "^5.1.1"
   },

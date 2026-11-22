@@ -111,11 +111,11 @@ describe("events", () => {
 			endsAt: hoursFromNow(26),
 		});
 
-		const event = await getEventById(eventId);
+		const event = await getEventById(eventId, { kind: "manage" });
 		expect(event).toMatchObject({ id: eventId, description: "Open day" });
 		expect(event?.agenda.map((item) => item.title)).toEqual(["Lasers"]);
 		expect(event?.effectiveEndsAt).toBeInstanceOf(Date);
-		expect(await getEventById("missing")).toBeNull();
+		expect(await getEventById("missing", { kind: "manage" })).toBeNull();
 	});
 
 	it("getEventRegistrants lists users with their item ids", async () => {

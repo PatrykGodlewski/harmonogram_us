@@ -7,24 +7,48 @@ import {
 	Container,
 	Head,
 	Html,
+	Link,
 	Preview,
 	Section,
 	Text,
 } from "@react-email/components";
 import {
 	reg_email_button,
+	reg_email_cancelled_intro,
+	reg_email_cancelled_subject,
+	reg_email_certificate_intro,
+	reg_email_certificate_subject,
 	reg_email_confirmed_intro,
 	reg_email_confirmed_subject,
+	reg_email_pending_intro,
+	reg_email_pending_subject,
 	reg_email_promoted_intro,
 	reg_email_promoted_subject,
+	reg_email_rejected_intro,
+	reg_email_rejected_subject,
+	reg_email_reminder_intro,
+	reg_email_reminder_subject,
+	reg_email_survey_button,
+	reg_email_survey_intro,
+	reg_email_survey_subject,
 	reg_email_ticket,
 	reg_email_ticket_button,
 	reg_email_waitlisted_intro,
 	reg_email_waitlisted_subject,
 	reg_email_withdraw_hint,
+	reg_email_withdraw_link,
 } from "@repo/i18n/paraglide/messages";
 
-export type RegistrationEmailChange = "confirmed" | "waitlisted" | "promoted";
+export type RegistrationEmailChange =
+	| "confirmed"
+	| "waitlisted"
+	| "promoted"
+	| "cancelled"
+	| "reminder"
+	| "pending"
+	| "rejected"
+	| "certificate"
+	| "survey";
 
 export type RegistrationEmailProps = {
 	change: RegistrationEmailChange;
@@ -35,19 +59,50 @@ export type RegistrationEmailProps = {
 	url: string;
 	/** The registrant's ticket; only for a registration that holds a place. */
 	ticketUrl?: string;
+	/** Signed link to withdraw without signing in (shown with the withdraw hint). */
+	withdrawUrl?: string;
 };
 
 const SUBJECTS = {
 	confirmed: reg_email_confirmed_subject,
 	waitlisted: reg_email_waitlisted_subject,
 	promoted: reg_email_promoted_subject,
+	cancelled: reg_email_cancelled_subject,
+	reminder: reg_email_reminder_subject,
+	pending: reg_email_pending_subject,
+	rejected: reg_email_rejected_subject,
+	certificate: reg_email_certificate_subject,
+	survey: reg_email_survey_subject,
 } as const;
 
 const INTROS = {
 	confirmed: reg_email_confirmed_intro,
 	waitlisted: reg_email_waitlisted_intro,
 	promoted: reg_email_promoted_intro,
+	cancelled: reg_email_cancelled_intro,
+	reminder: reg_email_reminder_intro,
+	pending: reg_email_pending_intro,
+	rejected: reg_email_rejected_intro,
+	certificate: reg_email_certificate_intro,
+	survey: reg_email_survey_intro,
 } as const;
+
+/** The main button names what the link does; most e-mails open the event. */
+function buttonLabel(change: RegistrationEmailChange, locale: "pl" | "en") {
+	return change === "survey"
+		? reg_email_survey_button({}, { locale })
+		: reg_email_button({}, { locale });
+}
+
+/** Nothing to withdraw from once the event is cancelled, the request declined, or the event over. */
+function hasWithdrawHint(change: RegistrationEmailChange): boolean {
+	return (
+		change !== "cancelled" &&
+		change !== "rejected" &&
+		change !== "certificate" &&
+		change !== "survey"
+	);
+}
 
 /** Subject and plain-text body; the HTML version is RegistrationEmail. */
 export function registrationEmailText(props: RegistrationEmailProps): {
@@ -67,7 +122,12 @@ export function registrationEmailText(props: RegistrationEmailProps): {
 			props.ticketUrl
 				? `${reg_email_ticket({}, { locale })}\n${props.ticketUrl}`
 				: null,
-			reg_email_withdraw_hint({}, { locale }),
+			hasWithdrawHint(props.change)
+				? reg_email_withdraw_hint({}, { locale })
+				: null,
+			hasWithdrawHint(props.change) && props.withdrawUrl
+				? `${reg_email_withdraw_link({}, { locale })}: ${props.withdrawUrl}`
+				: null,
 		]
 			.filter(Boolean)
 			.join("\n\n"),
@@ -117,7 +177,7 @@ export function RegistrationEmail(props: RegistrationEmailProps) {
 								fontWeight: "700",
 							}}
 						>
-							{reg_email_button({}, { locale })}
+							{buttonLabel(props.change, locale)}
 						</Button>
 						{props.ticketUrl ? (
 							<Button
@@ -134,16 +194,26 @@ export function RegistrationEmail(props: RegistrationEmailProps) {
 								{reg_email_ticket_button({}, { locale })}
 							</Button>
 						) : null}
-						<Text
-							style={{
-								...text,
-								marginTop: "16px",
-								fontSize: "13px",
-								color: "#4b5563",
-							}}
-						>
-							{reg_email_withdraw_hint({}, { locale })}
-						</Text>
+						{!hasWithdrawHint(props.change) ? null : (
+							<Text
+								style={{
+									...text,
+									marginTop: "16px",
+									fontSize: "13px",
+									color: "#4b5563",
+								}}
+							>
+								{reg_email_withdraw_hint({}, { locale })}
+								{props.withdrawUrl ? (
+									<>
+										{" "}
+										<Link href={props.withdrawUrl} style={{ color: "#0f2a56" }}>
+											{reg_email_withdraw_link({}, { locale })}
+										</Link>
+									</>
+								) : null}
+							</Text>
+						)}
 					</Section>
 				</Container>
 			</Body>

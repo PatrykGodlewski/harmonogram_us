@@ -18,9 +18,24 @@ import {
 	admin_field_seat_limit,
 	admin_field_seat_limit_hint,
 	admin_field_start_time,
+	admin_field_time_required,
 	admin_field_title,
+	admin_material_add,
+	admin_material_label,
+	admin_material_remove,
+	admin_material_url,
+	admin_material_url_invalid,
+	admin_material_url_required,
+	admin_materials,
 	admin_save_success,
+	admin_speaker_add,
+	admin_speaker_affiliation,
+	admin_speaker_name,
+	admin_speaker_name_required,
+	admin_speaker_remove,
+	admin_speakers,
 } from "@repo/i18n/paraglide/messages";
+import { Button } from "@repo/ui/components/button";
 import { FormMessage } from "@repo/ui/components/form-message";
 import { Input } from "@repo/ui/components/input";
 import { Label } from "@repo/ui/components/label";
@@ -40,29 +55,67 @@ import {
 } from "@repo/ui/time";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { formatFieldError } from "../../lib/format-field-error";
 import { formatMutationError } from "../../lib/format-mutation-error";
 
 const NONE_VALUE = "__none__";
+/** Speakers and materials per programme item (the server allows the same). */
+const MAX_ROWS = 20;
 
 const agendaItemFormSchema = z
 	.object({
 		title: z.string().min(1).max(500),
 		description: z.string().max(5000),
 		date: z.string().min(1),
-		startTime: z.string().min(1),
-		endTime: z.string().min(1),
+		startTime: z.string().min(1, { error: () => admin_field_time_required() }),
+		endTime: z.string().min(1, { error: () => admin_field_time_required() }),
 		locationId: z.string(),
 		maxSeats: z.string().regex(/^\d*$/),
 		requiresRegistration: z.boolean(),
+		speakers: z.array(
+			z
+				.object({ name: z.string().max(200), affiliation: z.string().max(200) })
+				// A filled row needs a name; it is never dropped silently.
+				.refine(
+					(speaker) => speaker.name.trim() || !speaker.affiliation.trim(),
+					{
+						path: ["name"],
+						message: admin_speaker_name_required(),
+					},
+				),
+		),
+		materials: z.array(
+			z
+				.object({
+					label: z.string().max(200),
+					url: z.union([
+						z.literal(""),
+						z
+							.url({
+								protocol: /^https?$/,
+								error: () => admin_material_url_invalid(),
+							})
+							.max(2000),
+					]),
+				})
+				.refine((material) => material.url || !material.label.trim(), {
+					path: ["url"],
+					message: admin_material_url_required(),
+				}),
+		),
 	})
 	.refine(
+		// Zod runs this even when a field above failed: compare only complete times
+		// (an empty time is not a date, and the "required" message covers it).
 		(value) =>
+			!value.date ||
+			!value.startTime ||
+			!value.endTime ||
 			fromEventWallTime(value.date, value.endTime) >
-			fromEventWallTime(value.date, value.startTime),
+				fromEventWallTime(value.date, value.startTime),
 		{ path: ["endTime"], message: admin_error_end_before_start() },
 	);
 
@@ -82,6 +135,8 @@ function toFormValues(
 			locationId: NONE_VALUE,
 			maxSeats: "",
 			requiresRegistration: true,
+			speakers: [],
+			materials: [],
 		};
 	}
 	const startsAt = new Date(item.startsAt);
@@ -94,6 +149,11 @@ function toFormValues(
 		locationId: item.locationId ?? NONE_VALUE,
 		maxSeats: item.maxSeats === null ? "" : String(item.maxSeats),
 		requiresRegistration: item.requiresRegistration,
+		speakers: item.speakers.map((speaker) => ({
+			name: speaker.name,
+			affiliation: speaker.affiliation ?? "",
+		})),
+		materials: item.materials,
 	};
 }
 
@@ -126,6 +186,21 @@ export function AgendaItemDialog({
 				locationId: values.locationId === NONE_VALUE ? null : values.locationId,
 				maxSeats: values.maxSeats === "" ? null : Number(values.maxSeats),
 				requiresRegistration: values.requiresRegistration,
+				// Empty rows are dropped; a link without a name shows its address.
+				speakers: values.speakers
+					.filter((speaker) => speaker.name.trim())
+					.map((speaker) => ({
+						name: speaker.name.trim(),
+						...(speaker.affiliation.trim()
+							? { affiliation: speaker.affiliation.trim() }
+							: {}),
+					})),
+				materials: values.materials
+					.filter((material) => material.url)
+					.map((material) => ({
+						label: material.label.trim() || material.url,
+						url: material.url,
+					})),
 			};
 			return item
 				? updateAdminAgendaItemServer({ data: { id: item.id, ...payload } })
@@ -149,10 +224,14 @@ export function AgendaItemDialog({
 		},
 	});
 
+	// Start from the item only when the dialog opens: a background refetch
+	// re-renders the page (and passes a new eventDate) while someone is typing.
+	const wasOpen = useRef(false);
 	useEffect(() => {
-		if (open) {
+		if (open && !wasOpen.current) {
 			form.reset(toFormValues(item, eventDate));
 		}
+		wasOpen.current = open;
 	}, [open, item, eventDate, form]);
 
 	const disabled = saveMutation.isPending;
@@ -305,6 +384,147 @@ export function AgendaItemDialog({
 						/>
 						{admin_field_requires_registration()}
 					</label>
+				)}
+			</form.Field>
+
+			<form.Field name="speakers" mode="array">
+				{(speakersField) => (
+					<fieldset className="flex flex-col gap-2">
+						<legend className="text-sm font-medium">{admin_speakers()}</legend>
+						{speakersField.state.value.map((_, index) => {
+							const n = index + 1;
+							return (
+								<div
+									// biome-ignore lint/suspicious/noArrayIndexKey: rows have no id; the index is their identity in the form
+									key={index}
+									className="flex flex-col gap-2 rounded-md border p-2"
+								>
+									<form.Field name={`speakers[${index}].name`}>
+										{(field) => (
+											<Input
+												aria-label={admin_speaker_name({ n })}
+												placeholder={admin_speaker_name({ n })}
+												disabled={disabled}
+												value={field.state.value}
+												onChange={(event) =>
+													field.handleChange(event.target.value)
+												}
+											/>
+										)}
+									</form.Field>
+									<form.Field name={`speakers[${index}].affiliation`}>
+										{(field) => (
+											<Input
+												aria-label={admin_speaker_affiliation({ n })}
+												placeholder={admin_speaker_affiliation({ n })}
+												disabled={disabled}
+												value={field.state.value}
+												onChange={(event) =>
+													field.handleChange(event.target.value)
+												}
+											/>
+										)}
+									</form.Field>
+									<Button
+										type="button"
+										size="sm"
+										variant="ghost"
+										className="self-end"
+										disabled={disabled}
+										onClick={() => speakersField.removeValue(index)}
+									>
+										{admin_speaker_remove({ n })}
+									</Button>
+								</div>
+							);
+						})}
+						<Button
+							type="button"
+							size="sm"
+							variant="outline"
+							className="self-start"
+							disabled={
+								disabled || speakersField.state.value.length >= MAX_ROWS
+							}
+							onClick={() =>
+								speakersField.pushValue({ name: "", affiliation: "" })
+							}
+						>
+							{admin_speaker_add()}
+						</Button>
+					</fieldset>
+				)}
+			</form.Field>
+
+			<form.Field name="materials" mode="array">
+				{(materialsField) => (
+					<fieldset className="flex flex-col gap-2">
+						<legend className="text-sm font-medium">{admin_materials()}</legend>
+						{materialsField.state.value.map((_, index) => {
+							const n = index + 1;
+							return (
+								<div
+									// biome-ignore lint/suspicious/noArrayIndexKey: rows have no id; the index is their identity in the form
+									key={index}
+									className="flex flex-col gap-2 rounded-md border p-2"
+								>
+									<form.Field name={`materials[${index}].label`}>
+										{(field) => (
+											<Input
+												aria-label={admin_material_label({ n })}
+												placeholder={admin_material_label({ n })}
+												disabled={disabled}
+												value={field.state.value}
+												onChange={(event) =>
+													field.handleChange(event.target.value)
+												}
+											/>
+										)}
+									</form.Field>
+									<form.Field name={`materials[${index}].url`}>
+										{(field) => (
+											<div>
+												<Input
+													type="url"
+													inputMode="url"
+													aria-label={admin_material_url({ n })}
+													placeholder="https://"
+													disabled={disabled}
+													value={field.state.value}
+													onChange={(event) =>
+														field.handleChange(event.target.value)
+													}
+												/>
+												{fieldError(field.state.meta.errors)}
+											</div>
+										)}
+									</form.Field>
+									<Button
+										type="button"
+										size="sm"
+										variant="ghost"
+										className="self-end"
+										disabled={disabled}
+										onClick={() => materialsField.removeValue(index)}
+									>
+										{admin_material_remove({ n })}
+									</Button>
+								</div>
+							);
+						})}
+						<Button
+							type="button"
+							size="sm"
+							variant="outline"
+							className="self-start"
+							disabled={
+								disabled || materialsField.state.value.length >= MAX_ROWS
+							}
+							onClick={() => materialsField.pushValue({ label: "", url: "" })}
+						>
+							{admin_material_add()}
+						</Button>
+					</fieldset>
 				)}
 			</form.Field>
 

@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "../client";
 import { DomainError } from "../queries/domain-errors";
 import {
@@ -11,13 +11,20 @@ import {
 	reissueInvitationToken,
 } from "../queries/group-members";
 import { closeGroup, createGroup, listGroupsForEvent } from "../queries/groups";
+import { rejectRegistrations } from "../queries/registration-approval";
+import { eventOrganizers } from "../schema/event-organizers";
+import { eventRegistrations } from "../schema/event-registrations";
 import { events } from "../schema/events";
 import { ensureAccount } from "./accounts";
-import type {
-	AccountSeed,
-	AgendaRegistrationSeed,
-	GroupSeed,
-	RegistrationSeed,
+import {
+	type AccountSeed,
+	type AgendaRegistrationSeed,
+	APPROVAL_EVENT_ID,
+	CERTIFICATE_EVENT_ID,
+	type EventSeed,
+	type GroupSeed,
+	INVITE_EVENT_ID,
+	type RegistrationSeed,
 } from "./data";
 
 /** Creates the test accounts; returns their ids by e-mail. */
@@ -180,4 +187,93 @@ export async function seedGroups(
 			await closeGroup(groupId, ownerUserId);
 		}
 	}
+}
+
+/** Seeded registration ids of `eventId`, by account e-mail. */
+async function registrationIdOf(
+	eventId: string,
+	userId: string,
+): Promise<string | null> {
+	const [row] = await db
+		.select({ id: eventRegistrations.id })
+		.from(eventRegistrations)
+		.where(
+			and(
+				eq(eventRegistrations.eventId, eventId),
+				eq(eventRegistrations.userId, userId),
+			),
+		);
+	return row?.id ?? null;
+}
+
+async function registerOnce(eventId: string, userId: string): Promise<void> {
+	try {
+		await registerForEvent(eventId, userId, "pl");
+	} catch (error) {
+		if (
+			!(error instanceof DomainError && error.code === "ALREADY_REGISTERED")
+		) {
+			throw error;
+		}
+	}
+}
+
+/**
+ * Data that shows plan 4: the organiser account manages the showcase events; the
+ * ended workshop has an attendee (certificate) and an absentee; the approval
+ * seminar has two waiting requests and a declined one; student1 is on the
+ * invite-only event.
+ */
+export async function seedShowcase(
+	seeds: EventSeed[],
+	accounts: ReadonlyMap<string, string>,
+): Promise<void> {
+	const organizerId = accountId(accounts, "organizator@harmonogram.local");
+	const showcase = seeds.filter((event) => event.organizer);
+	if (showcase.length > 0) {
+		await db
+			.insert(eventOrganizers)
+			.values(
+				showcase.map((event) => ({ eventId: event.id, userId: organizerId })),
+			)
+			.onConflictDoNothing();
+	}
+
+	// The workshop has ended, so registering is closed: insert the attendance record directly.
+	const present = accountId(accounts, "student1@harmonogram.local");
+	const absent = accountId(accounts, "student2@harmonogram.local");
+	await db
+		.insert(eventRegistrations)
+		.values([
+			{
+				id: crypto.randomUUID(),
+				eventId: CERTIFICATE_EVENT_ID,
+				userId: present,
+				checkedInAt: new Date(),
+			},
+			{
+				id: crypto.randomUUID(),
+				eventId: CERTIFICATE_EVENT_ID,
+				userId: absent,
+			},
+		])
+		.onConflictDoNothing();
+
+	for (const email of [
+		"student3@harmonogram.local",
+		"student4@harmonogram.local",
+		"student5@harmonogram.local",
+	]) {
+		await registerOnce(APPROVAL_EVENT_ID, accountId(accounts, email));
+	}
+	const declined = await registrationIdOf(
+		APPROVAL_EVENT_ID,
+		accountId(accounts, "student5@harmonogram.local"),
+	);
+	if (declined) {
+		// Only a pending request changes, so a second seed run does nothing.
+		await rejectRegistrations(APPROVAL_EVENT_ID, [declined]);
+	}
+
+	await registerOnce(INVITE_EVENT_ID, present);
 }

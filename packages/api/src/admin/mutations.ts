@@ -3,7 +3,15 @@ import {
 	deleteAgendaItem,
 	updateAgendaItem,
 } from "@repo/db/queries/agenda-items";
-import { createEvent, deleteEvent, updateEvent } from "@repo/db/queries/events";
+import { duplicateEvent } from "@repo/db/queries/event-duplicate";
+import {
+	cancelEvent,
+	createEvent,
+	deleteEvent,
+	publishEvent,
+	regenerateInviteToken,
+	updateEvent,
+} from "@repo/db/queries/events";
 import {
 	createEventFaculty,
 	createEventLocation,
@@ -16,7 +24,15 @@ import {
 	updateEventType,
 } from "@repo/db/queries/lookups";
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { adminMiddleware } from "../auth/admin-middleware";
+import {
+	assertCanCreateEvents,
+	assertCanDeleteEvent,
+	assertCanManageAgendaItem,
+	assertCanManageEvent,
+} from "../auth/event-access";
+import { panelActionFn } from "../auth/panel-middleware";
 import { appError, withDomainErrors } from "../errors";
 import { registrationEmailHooks } from "../notifications/registration-hooks";
 import {
@@ -24,6 +40,7 @@ import {
 	createEventSchema,
 	createLookupSchema,
 	deleteByIdSchema,
+	eventIdActionSchema,
 	updateAgendaItemSchema,
 	updateEventSchema,
 	updateLookupSchema,
@@ -33,13 +50,17 @@ const adminActionFn = createServerFn({ method: "POST" }).middleware([
 	adminMiddleware,
 ]);
 
-export const createAdminEventServer = adminActionFn
-	.inputValidator((input: unknown) => createEventSchema.parse(input))
-	.handler(async ({ data }) => createEvent(data));
+export const createAdminEventServer = panelActionFn
+	.validator((input: unknown) => createEventSchema.parse(input))
+	.handler(async ({ data, context }) => {
+		await assertCanCreateEvents(context.user);
+		return createEvent({ ...data, organizerId: context.user.id });
+	});
 
-export const updateAdminEventServer = adminActionFn
-	.inputValidator((input: unknown) => updateEventSchema.parse(input))
-	.handler(async ({ data }) => {
+export const updateAdminEventServer = panelActionFn
+	.validator((input: unknown) => updateEventSchema.parse(input))
+	.handler(async ({ data, context }) => {
+		await assertCanManageEvent(context.user, data.id);
 		const event = await withDomainErrors(() =>
 			updateEvent(data, registrationEmailHooks),
 		);
@@ -49,9 +70,10 @@ export const updateAdminEventServer = adminActionFn
 		return event;
 	});
 
-export const deleteAdminEventServer = adminActionFn
-	.inputValidator((input: unknown) => deleteByIdSchema.parse(input))
-	.handler(async ({ data }) => {
+export const deleteAdminEventServer = panelActionFn
+	.validator((input: unknown) => eventIdActionSchema.parse(input))
+	.handler(async ({ data, context }) => {
+		await assertCanDeleteEvent(context.user, data.id);
 		const event = await deleteEvent(data.id);
 		if (!event) {
 			throw appError("NOT_FOUND");
@@ -59,12 +81,51 @@ export const deleteAdminEventServer = adminActionFn
 		return event;
 	});
 
+export const publishAdminEventServer = panelActionFn
+	.validator((input: unknown) => eventIdActionSchema.parse(input))
+	.handler(async ({ data, context }) => {
+		await assertCanManageEvent(context.user, data.id);
+		return withDomainErrors(() => publishEvent(data.id));
+	});
+
+export const cancelAdminEventServer = panelActionFn
+	.validator((input: unknown) => eventIdActionSchema.parse(input))
+	.handler(async ({ data, context }) => {
+		await assertCanManageEvent(context.user, data.id);
+		return withDomainErrors(() => cancelEvent(data.id, registrationEmailHooks));
+	});
+
+const duplicateEventSchema = z.object({
+	id: z.string().min(1),
+	date: z.coerce.date(),
+	repeat: z.enum(["once", "weekly", "monthly"]).optional(),
+	count: z.number().int().min(1).max(12).optional(),
+	copy: z.object({ agenda: z.boolean(), organizers: z.boolean() }).optional(),
+});
+
+export const duplicateAdminEventServer = panelActionFn
+	.validator((input: unknown) => duplicateEventSchema.parse(input))
+	.handler(async ({ data, context }) => {
+		await assertCanManageEvent(context.user, data.id);
+		await assertCanCreateEvents(context.user);
+		return withDomainErrors(() =>
+			duplicateEvent({
+				eventId: data.id,
+				date: data.date,
+				repeat: data.repeat,
+				count: data.count,
+				copy: data.copy,
+				actorId: context.user.id,
+			}),
+		);
+	});
+
 export const createAdminEventTypeServer = adminActionFn
-	.inputValidator((input: unknown) => createLookupSchema.parse(input))
+	.validator((input: unknown) => createLookupSchema.parse(input))
 	.handler(async ({ data }) => createEventType(data));
 
 export const updateAdminEventTypeServer = adminActionFn
-	.inputValidator((input: unknown) => updateLookupSchema.parse(input))
+	.validator((input: unknown) => updateLookupSchema.parse(input))
 	.handler(async ({ data }) => {
 		const row = await updateEventType(data);
 		if (!row) {
@@ -74,7 +135,7 @@ export const updateAdminEventTypeServer = adminActionFn
 	});
 
 export const deleteAdminEventTypeServer = adminActionFn
-	.inputValidator((input: unknown) => deleteByIdSchema.parse(input))
+	.validator((input: unknown) => deleteByIdSchema.parse(input))
 	.handler(async ({ data }) => {
 		const row = await deleteEventType(data.id);
 		if (!row) {
@@ -84,11 +145,11 @@ export const deleteAdminEventTypeServer = adminActionFn
 	});
 
 export const createAdminEventLocationServer = adminActionFn
-	.inputValidator((input: unknown) => createLookupSchema.parse(input))
+	.validator((input: unknown) => createLookupSchema.parse(input))
 	.handler(async ({ data }) => createEventLocation(data));
 
 export const updateAdminEventLocationServer = adminActionFn
-	.inputValidator((input: unknown) => updateLookupSchema.parse(input))
+	.validator((input: unknown) => updateLookupSchema.parse(input))
 	.handler(async ({ data }) => {
 		const row = await updateEventLocation(data);
 		if (!row) {
@@ -98,7 +159,7 @@ export const updateAdminEventLocationServer = adminActionFn
 	});
 
 export const deleteAdminEventLocationServer = adminActionFn
-	.inputValidator((input: unknown) => deleteByIdSchema.parse(input))
+	.validator((input: unknown) => deleteByIdSchema.parse(input))
 	.handler(async ({ data }) => {
 		const row = await deleteEventLocation(data.id);
 		if (!row) {
@@ -108,11 +169,11 @@ export const deleteAdminEventLocationServer = adminActionFn
 	});
 
 export const createAdminEventFacultyServer = adminActionFn
-	.inputValidator((input: unknown) => createLookupSchema.parse(input))
+	.validator((input: unknown) => createLookupSchema.parse(input))
 	.handler(async ({ data }) => createEventFaculty(data));
 
 export const updateAdminEventFacultyServer = adminActionFn
-	.inputValidator((input: unknown) => updateLookupSchema.parse(input))
+	.validator((input: unknown) => updateLookupSchema.parse(input))
 	.handler(async ({ data }) => {
 		const row = await updateEventFaculty(data);
 		if (!row) {
@@ -122,7 +183,7 @@ export const updateAdminEventFacultyServer = adminActionFn
 	});
 
 export const deleteAdminEventFacultyServer = adminActionFn
-	.inputValidator((input: unknown) => deleteByIdSchema.parse(input))
+	.validator((input: unknown) => deleteByIdSchema.parse(input))
 	.handler(async ({ data }) => {
 		const row = await deleteEventFaculty(data.id);
 		if (!row) {
@@ -131,13 +192,17 @@ export const deleteAdminEventFacultyServer = adminActionFn
 		return row;
 	});
 
-export const createAdminAgendaItemServer = adminActionFn
-	.inputValidator((input: unknown) => createAgendaItemSchema.parse(input))
-	.handler(async ({ data }) => withDomainErrors(() => createAgendaItem(data)));
+export const createAdminAgendaItemServer = panelActionFn
+	.validator((input: unknown) => createAgendaItemSchema.parse(input))
+	.handler(async ({ data, context }) => {
+		await assertCanManageEvent(context.user, data.eventId);
+		return withDomainErrors(() => createAgendaItem(data));
+	});
 
-export const updateAdminAgendaItemServer = adminActionFn
-	.inputValidator((input: unknown) => updateAgendaItemSchema.parse(input))
-	.handler(async ({ data }) => {
+export const updateAdminAgendaItemServer = panelActionFn
+	.validator((input: unknown) => updateAgendaItemSchema.parse(input))
+	.handler(async ({ data, context }) => {
+		await assertCanManageAgendaItem(context.user, data.id);
 		const { id, ...values } = data;
 		const item = await withDomainErrors(() => updateAgendaItem(id, values));
 		if (!item) {
@@ -146,12 +211,21 @@ export const updateAdminAgendaItemServer = adminActionFn
 		return item;
 	});
 
-export const deleteAdminAgendaItemServer = adminActionFn
-	.inputValidator((input: unknown) => deleteByIdSchema.parse(input))
-	.handler(async ({ data }) => {
+export const deleteAdminAgendaItemServer = panelActionFn
+	.validator((input: unknown) => deleteByIdSchema.parse(input))
+	.handler(async ({ data, context }) => {
+		await assertCanManageAgendaItem(context.user, data.id);
 		const item = await deleteAgendaItem(data.id);
 		if (!item) {
 			throw appError("NOT_FOUND");
 		}
 		return item;
+	});
+
+/** A new invite link for an invite-only event; the old one stops working. */
+export const regenerateInviteServer = panelActionFn
+	.validator((input: unknown) => eventIdActionSchema.parse(input))
+	.handler(async ({ data, context }) => {
+		await assertCanManageEvent(context.user, data.id);
+		return withDomainErrors(() => regenerateInviteToken(data.id));
 	});

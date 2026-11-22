@@ -1,5 +1,6 @@
 import { relations, sql } from "drizzle-orm";
 import {
+	boolean,
 	check,
 	index,
 	integer,
@@ -12,8 +13,16 @@ import { authUsers } from "./better-auth";
 import { events } from "./events";
 import { registrationGroups } from "./groups";
 
-/** `registered` holds a place; `waitlisted` waits in `created_at` order for one. */
-export type RegistrationState = "registered" | "waitlisted";
+/**
+ * `registered` holds a place; `waitlisted` waits in `created_at` order for one;
+ * `pending` waits for the organiser's approval and `rejected` was turned down
+ * (neither takes a place).
+ */
+export type RegistrationState =
+	| "registered"
+	| "waitlisted"
+	| "pending"
+	| "rejected";
 
 export const eventRegistrations = pgTable(
 	"event_registrations",
@@ -41,6 +50,19 @@ export const eventRegistrations = pgTable(
 			.default(
 				sql`replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '')`,
 			),
+		/** When the person was checked in at the event (null: not present). */
+		checkedInAt: timestamp("checked_in_at", { withTimezone: true }),
+		/** When the "your certificate is ready" e-mail was queued (once per registration). */
+		certificateEmailedAt: timestamp("certificate_emailed_at", {
+			withTimezone: true,
+		}),
+		/** When the survey link was e-mailed (once per registration, F20). */
+		surveyEmailedAt: timestamp("survey_emailed_at", { withTimezone: true }),
+		/**
+		 * Whether the person answered the survey. Deliberately no time: a time could
+		 * be matched to a response and undo its anonymity.
+		 */
+		surveyAnswered: boolean("survey_answered").notNull().default(false),
 		/** Insert time (not transaction start), so the waitlist follows the real order of inserts. */
 		createdAt: timestamp("created_at", { withTimezone: true })
 			.notNull()
@@ -49,7 +71,7 @@ export const eventRegistrations = pgTable(
 	(table) => [
 		check(
 			"event_registrations_state_check",
-			sql`${table.state} IN ('registered', 'waitlisted')`,
+			sql`${table.state} IN ('registered', 'waitlisted', 'pending', 'rejected')`,
 		),
 		check(
 			"event_registrations_locale_check",

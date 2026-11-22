@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { inviteSchema } from "../events/schemas";
 
 const idSchema = z.string().min(1);
 
@@ -9,6 +10,8 @@ export const createGroupSchema = z.object({
 	name: z.string().trim().max(120).nullable().optional(),
 	emails: z.array(z.email()).max(500),
 	joinLinkEnabled: z.boolean(),
+	/** The invite-link secret of an invite-only event. */
+	invite: inviteSchema,
 });
 
 export const groupIdSchema = z.object({ groupId: idSchema });

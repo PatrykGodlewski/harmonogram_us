@@ -1,14 +1,18 @@
+import { isRegisteredForEvent } from "@repo/db/queries/event-registrations";
 import {
 	getEventById,
 	getEventFilterOptions,
+	getEventOnlineUrl,
 	getEventPage,
 } from "@repo/db/queries/events";
 import type { QueryClient } from "@tanstack/react-query";
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
+import { getCurrentSession } from "../auth/user";
 import { appError } from "../errors";
+import { canOpenEvent } from "./access";
 import type { EventFiltersParams } from "./schemas";
-import { eventFiltersSchema, eventIdSchema } from "./schemas";
+import { eventFiltersSchema, eventPageSchema } from "./schemas";
 
 export const fetchFilterOptionsServer = createServerFn({
 	method: "GET",
@@ -21,10 +25,17 @@ export const eventFilterOptionsQueryOptions = queryOptions({
 });
 
 export const fetchEventsServer = createServerFn({ method: "GET" })
-	.inputValidator((input: unknown) => eventFiltersSchema.parse(input))
-	.handler(async ({ data: { limit, ...filters } }) =>
-		getEventPage(filters, limit),
-	);
+	.validator((input: unknown) => eventFiltersSchema.parse(input))
+	.handler(async ({ data: { limit, ...filters } }) => {
+		const session = await getCurrentSession();
+		return getEventPage(
+			{
+				...filters,
+				audience: { kind: "public", signedIn: Boolean(session?.user) },
+			},
+			limit,
+		);
+	});
 
 /** Prefix of every event-list query, whatever the filters (for invalidation). */
 export const eventsQueryKeyPrefix = ["events"] as const;
@@ -50,18 +61,46 @@ export async function prefetchEventData(
 export type { EventDetails } from "@repo/db/queries/events";
 
 export const fetchEventDetailsServer = createServerFn({ method: "GET" })
-	.inputValidator((input: unknown) => eventIdSchema.parse(input))
+	.validator((input: unknown) => eventPageSchema.parse(input))
 	.handler(async ({ data }) => {
-		const event = await getEventById(data.eventId);
+		const session = await getCurrentSession();
+		const signedIn = Boolean(session?.user);
+		// An invite-only event without access looks like an unknown one.
+		if (
+			!(await canOpenEvent(data.eventId, session?.user.id ?? null, data.invite))
+		) {
+			throw appError("EVENT_NOT_FOUND");
+		}
+		// Load as if signed in, then decide: a signed-in-only event asks an anonymous visitor to sign in.
+		const event = await getEventById(data.eventId, {
+			kind: "public",
+			signedIn: true,
+			includePrivate: true,
+		});
 		if (!event) {
 			throw appError("EVENT_NOT_FOUND");
+		}
+		if (!signedIn && event.visibility === "authenticated") {
+			throw appError("UNAUTHORIZED");
+		}
+		// The public read never carries the meeting link; registered people get it here.
+		if (
+			event.attendanceMode !== "onsite" &&
+			session?.user &&
+			(await isRegisteredForEvent(event.id, session.user.id))
+		) {
+			return { ...event, onlineUrl: await getEventOnlineUrl(event.id) };
 		}
 		return event;
 	});
 
-export const eventDetailsQueryOptions = (eventId: string) =>
+/** `invite`: the secret of an invite link, for an invite-only event. */
+export const eventDetailsQueryOptions = (eventId: string, invite?: string) =>
 	queryOptions({
-		queryKey: ["event-details", eventId] as const,
-		queryFn: () => fetchEventDetailsServer({ data: { eventId } }),
+		// ["event-details", eventId] stays a prefix, so invalidating it covers both.
+		queryKey: invite
+			? (["event-details", eventId, { invite }] as const)
+			: (["event-details", eventId] as const),
+		queryFn: () => fetchEventDetailsServer({ data: { eventId, invite } }),
 		staleTime: 30_000,
 	});

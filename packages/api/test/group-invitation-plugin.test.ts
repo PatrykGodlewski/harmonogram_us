@@ -102,10 +102,13 @@ describe("magic-link verify", () => {
 		await db.insert(authAccounts).values({ id: crypto.randomUUID(), accountId: squatter, providerId: "credential", userId: squatter, password: "hash" });
 		await db.insert(authVerifications).values({
 			id: crypto.randomUUID(),
-			identifier: createHash("sha256").update("magic-token").digest("base64url"),
-			value: JSON.stringify({ email: "owner@x.test", attempt: 0 }),
+			// Better Auth 1.7 magic-link record (storeToken: "hashed").
+			identifier: `magic-link:${createHash("sha256").update("magic-token").digest("base64url")}`,
+			value: JSON.stringify({ type: "magic-link", email: "owner@x.test" }),
 			expiresAt: hoursFromNow(1),
 		});
+
+		const [before] = await db.select({ calendarToken: authUsers.calendarToken }).from(authUsers).where(eq(authUsers.id, squatter));
 
 		const response = await auth.handler(
 			new Request(`${env.BETTER_AUTH_URL}/api/auth/magic-link/verify?token=magic-token&callbackURL=/`),
@@ -114,6 +117,8 @@ describe("magic-link verify", () => {
 		expect(await db.select().from(authAccounts).where(eq(authAccounts.userId, squatter))).toHaveLength(0);
 		const [user] = await db.select().from(authUsers).where(eq(authUsers.id, squatter));
 		expect(user?.emailVerified).toBe(true);
+		// Our reset (not only Better Auth's) ran: the stranger's calendar feed link is dead.
+		expect(user?.calendarToken).not.toBe(before?.calendarToken);
 	});
 });
 

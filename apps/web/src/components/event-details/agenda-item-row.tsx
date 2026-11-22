@@ -1,4 +1,6 @@
 import {
+	agenda_materials,
+	agenda_speakers,
 	event_details_closed,
 	event_details_full,
 	event_details_no_registration,
@@ -15,13 +17,17 @@ import { formatEventTime } from "@repo/ui/time";
 import { cn } from "@repo/ui/utils";
 import type {
 	AgendaItemData,
+	EventDetailsData,
 	EventDetailsRegistrations,
 	ItemSeatCount,
 } from "~/lib/event-details/types";
+import { FileLink } from "./file-link";
 import { LoginToRegisterButton } from "./login-to-register-button";
 
 type AgendaItemRowProps = {
 	item: AgendaItemData & { parallel: boolean };
+	/** The speakers' files for this item (F19). */
+	files: EventDetailsData["files"];
 	/** "li" in the agenda list, "div" in the calendar's dialog. */
 	as?: "li" | "div";
 	eventId: string;
@@ -35,6 +41,7 @@ type AgendaItemRowProps = {
 
 export function AgendaItemRow({
 	item,
+	files,
 	as: Tag = "li",
 	eventId,
 	user,
@@ -62,8 +69,49 @@ export function AgendaItemRow({
 					{item.locationLabel ? ` · ${item.locationLabel}` : ""}
 				</p>
 				<p className="font-medium">{item.title}</p>
+				{item.speakers.length > 0 ? (
+					<ul aria-label={agenda_speakers()} className="text-sm">
+						{item.speakers.map((speaker, index) => (
+							// biome-ignore lint/suspicious/noArrayIndexKey: a static list that may repeat a name
+							<li key={index}>
+								<span className="font-medium">{speaker.name}</span>
+								{speaker.affiliation ? (
+									<span className="text-muted-foreground">
+										{" · "}
+										{speaker.affiliation}
+									</span>
+								) : null}
+							</li>
+						))}
+					</ul>
+				) : null}
 				{item.description ? (
 					<p className="text-sm text-muted-foreground">{item.description}</p>
+				) : null}
+				{item.materials.length > 0 || files.length > 0 ? (
+					<ul
+						aria-label={agenda_materials()}
+						className="flex flex-wrap gap-x-3 gap-y-1 text-sm"
+					>
+						{item.materials.map((material, index) => (
+							// biome-ignore lint/suspicious/noArrayIndexKey: a static list that may repeat a link
+							<li key={index}>
+								<a
+									href={material.url}
+									target="_blank"
+									rel="noopener noreferrer"
+									className="underline underline-offset-2"
+								>
+									{material.label}
+								</a>
+							</li>
+						))}
+						{files.map((file) => (
+							<li key={file.id}>
+								<FileLink file={file} />
+							</li>
+						))}
+					</ul>
 				) : null}
 				{item.requiresRegistration && seatCount.maxSeats !== null ? (
 					<p

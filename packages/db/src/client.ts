@@ -20,6 +20,10 @@ import {
 	eventTypes,
 } from "./schema/event-lookups";
 import {
+	eventOrganizers,
+	eventOrganizersRelations,
+} from "./schema/event-organizers";
+import {
 	eventRegistrations,
 	eventRegistrationsRelations,
 	eventSeatCounts,
@@ -46,6 +50,8 @@ export const db = drizzle(env.DATABASE_URL, {
 		eventFaculties,
 		events,
 		eventsRelations,
+		eventOrganizers,
+		eventOrganizersRelations,
 		eventRegistrations,
 		eventRegistrationsRelations,
 		eventSeatCounts,

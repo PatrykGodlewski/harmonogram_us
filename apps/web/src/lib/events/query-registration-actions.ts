@@ -1,3 +1,4 @@
+import { approvalOf } from "~/lib/registration/approval";
 import type { EventRegistrationActions } from "~/lib/registration/use-event-list-registrations";
 import type { MyRegistrationsView } from "~/lib/registration/use-my-registrations";
 
@@ -9,6 +10,7 @@ export function createQueryRegistrationActions(
 		isRegistered: (eventId) => states.get(eventId)?.state === "registered",
 		waitlistPosition: (eventId) =>
 			states.get(eventId)?.waitlistPosition ?? null,
+		approval: (eventId) => approvalOf(states.get(eventId)?.state),
 		isRegisterPending: () => false,
 		isUnregisterPending: () => false,
 		register: () => {},

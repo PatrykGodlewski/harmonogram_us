@@ -18,6 +18,7 @@ import {
 	promoteAndNotify,
 	promoteFromWaitlist,
 	type RegistrationHooks,
+	requiresApproval,
 } from "./event-registrations";
 import {
 	type ActorOptions,
@@ -130,6 +131,15 @@ export async function acceptInvitation(
 						eq(eventRegistrations.userId, userId),
 					),
 				);
+			// A group never skips approval: no upgrade of a request, no new place on an approval event
+			// (a group made before approval was switched on).
+			if (
+				existing?.state === "pending" ||
+				existing?.state === "rejected" ||
+				(!existing && (await requiresApproval(tx, group.eventId)))
+			) {
+				throw new DomainError("APPROVAL_REQUIRED");
+			}
 			let eventRegistrationId = existing?.id;
 			if (existing) {
 				// A waitlisted student takes the group's place instead.

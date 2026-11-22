@@ -9,22 +9,25 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as LogoutRouteImport } from './routes/logout'
-import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
-import { Route as ApiMetricsRouteImport } from './routes/api/metrics'
-import { Route as ApiHealthRouteImport } from './routes/api/health'
-import { Route as AuthenticatedEventTypesRouteImport } from './routes/_authenticated/event-types'
-import { Route as AuthenticatedEventLocationsRouteImport } from './routes/_authenticated/event-locations'
 import { Route as AuthenticatedEventFacultiesRouteImport } from './routes/_authenticated/event-faculties'
+import { Route as AuthenticatedEventLocationsRouteImport } from './routes/_authenticated/event-locations'
+import { Route as AuthenticatedEventTypesRouteImport } from './routes/_authenticated/event-types'
+import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
+import { Route as ApiMetricsRouteImport } from './routes/api/metrics'
 import { Route as AuthenticatedEventsIndexRouteImport } from './routes/_authenticated/events.index'
-import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AuthenticatedEventsEventIdRouteImport } from './routes/_authenticated/events.$eventId'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiFilesFileIdRouteImport } from './routes/api/files/$fileId'
+import { Route as AuthenticatedEventsEventIdScanRouteImport } from './routes/_authenticated/events.$eventId_.scan'
+import { Route as ApiEventsEventIdAttendanceRouteImport } from './routes/api/events/$eventId/attendance'
 
-const LogoutRoute = LogoutRouteImport.update({
-  id: '/logout',
-  path: '/logout',
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -32,8 +35,9 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRoute = AuthenticatedRouteImport.update({
-  id: '/_authenticated',
+const LogoutRoute = LogoutRouteImport.update({
+  id: '/logout',
+  path: '/logout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
@@ -41,37 +45,48 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const ApiMetricsRoute = ApiMetricsRouteImport.update({
-  id: '/api/metrics',
-  path: '/api/metrics',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiHealthRoute = ApiHealthRouteImport.update({
-  id: '/api/health',
-  path: '/api/health',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedEventTypesRoute = AuthenticatedEventTypesRouteImport.update({
-  id: '/event-types',
-  path: '/event-types',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedEventLocationsRoute =
-  AuthenticatedEventLocationsRouteImport.update({
-    id: '/event-locations',
-    path: '/event-locations',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
 const AuthenticatedEventFacultiesRoute =
   AuthenticatedEventFacultiesRouteImport.update({
     id: '/event-faculties',
     path: '/event-faculties',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedEventLocationsRoute =
+  AuthenticatedEventLocationsRouteImport.update({
+    id: '/event-locations',
+    path: '/event-locations',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedEventTypesRoute = AuthenticatedEventTypesRouteImport.update({
+  id: '/event-types',
+  path: '/event-types',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMetricsRoute = ApiMetricsRouteImport.update({
+  id: '/api/metrics',
+  path: '/api/metrics',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedEventsIndexRoute =
   AuthenticatedEventsIndexRouteImport.update({
     id: '/events/',
     path: '/events/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedEventsEventIdRoute =
+  AuthenticatedEventsEventIdRouteImport.update({
+    id: '/events/$eventId',
+    path: '/events/$eventId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
@@ -79,11 +94,22 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedEventsEventIdRoute =
-  AuthenticatedEventsEventIdRouteImport.update({
-    id: '/events/$eventId',
-    path: '/events/$eventId',
+const ApiFilesFileIdRoute = ApiFilesFileIdRouteImport.update({
+  id: '/api/files/$fileId',
+  path: '/api/files/$fileId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedEventsEventIdScanRoute =
+  AuthenticatedEventsEventIdScanRouteImport.update({
+    id: '/events/$eventId_/scan',
+    path: '/events/$eventId/scan',
     getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const ApiEventsEventIdAttendanceRoute =
+  ApiEventsEventIdAttendanceRouteImport.update({
+    id: '/api/events/$eventId/attendance',
+    path: '/api/events/$eventId/attendance',
+    getParentRoute: () => rootRouteImport,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -93,11 +119,15 @@ export interface FileRoutesByFullPath {
   '/event-faculties': typeof AuthenticatedEventFacultiesRoute
   '/event-locations': typeof AuthenticatedEventLocationsRoute
   '/event-types': typeof AuthenticatedEventTypesRoute
+  '/users': typeof AuthenticatedUsersRoute
   '/api/health': typeof ApiHealthRoute
   '/api/metrics': typeof ApiMetricsRoute
   '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/files/$fileId': typeof ApiFilesFileIdRoute
   '/events/': typeof AuthenticatedEventsIndexRoute
+  '/events/$eventId/scan': typeof AuthenticatedEventsEventIdScanRoute
+  '/api/events/$eventId/attendance': typeof ApiEventsEventIdAttendanceRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -105,12 +135,16 @@ export interface FileRoutesByTo {
   '/event-faculties': typeof AuthenticatedEventFacultiesRoute
   '/event-locations': typeof AuthenticatedEventLocationsRoute
   '/event-types': typeof AuthenticatedEventTypesRoute
+  '/users': typeof AuthenticatedUsersRoute
   '/api/health': typeof ApiHealthRoute
   '/api/metrics': typeof ApiMetricsRoute
   '/': typeof AuthenticatedIndexRoute
   '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/files/$fileId': typeof ApiFilesFileIdRoute
   '/events': typeof AuthenticatedEventsIndexRoute
+  '/events/$eventId/scan': typeof AuthenticatedEventsEventIdScanRoute
+  '/api/events/$eventId/attendance': typeof ApiEventsEventIdAttendanceRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -120,12 +154,16 @@ export interface FileRoutesById {
   '/_authenticated/event-faculties': typeof AuthenticatedEventFacultiesRoute
   '/_authenticated/event-locations': typeof AuthenticatedEventLocationsRoute
   '/_authenticated/event-types': typeof AuthenticatedEventTypesRoute
+  '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/api/health': typeof ApiHealthRoute
   '/api/metrics': typeof ApiMetricsRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/files/$fileId': typeof ApiFilesFileIdRoute
   '/_authenticated/events/': typeof AuthenticatedEventsIndexRoute
+  '/_authenticated/events/$eventId_/scan': typeof AuthenticatedEventsEventIdScanRoute
+  '/api/events/$eventId/attendance': typeof ApiEventsEventIdAttendanceRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -136,11 +174,15 @@ export interface FileRouteTypes {
     | '/event-faculties'
     | '/event-locations'
     | '/event-types'
+    | '/users'
     | '/api/health'
     | '/api/metrics'
     | '/events/$eventId'
     | '/api/auth/$'
+    | '/api/files/$fileId'
     | '/events/'
+    | '/events/$eventId/scan'
+    | '/api/events/$eventId/attendance'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -148,12 +190,16 @@ export interface FileRouteTypes {
     | '/event-faculties'
     | '/event-locations'
     | '/event-types'
+    | '/users'
     | '/api/health'
     | '/api/metrics'
     | '/'
     | '/events/$eventId'
     | '/api/auth/$'
+    | '/api/files/$fileId'
     | '/events'
+    | '/events/$eventId/scan'
+    | '/api/events/$eventId/attendance'
   id:
     | '__root__'
     | '/_authenticated'
@@ -162,12 +208,16 @@ export interface FileRouteTypes {
     | '/_authenticated/event-faculties'
     | '/_authenticated/event-locations'
     | '/_authenticated/event-types'
+    | '/_authenticated/users'
     | '/api/health'
     | '/api/metrics'
     | '/_authenticated/'
     | '/_authenticated/events/$eventId'
     | '/api/auth/$'
+    | '/api/files/$fileId'
     | '/_authenticated/events/'
+    | '/_authenticated/events/$eventId_/scan'
+    | '/api/events/$eventId/attendance'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -177,15 +227,17 @@ export interface RootRouteChildren {
   ApiHealthRoute: typeof ApiHealthRoute
   ApiMetricsRoute: typeof ApiMetricsRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiFilesFileIdRoute: typeof ApiFilesFileIdRoute
+  ApiEventsEventIdAttendanceRoute: typeof ApiEventsEventIdAttendanceRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/logout': {
-      id: '/logout'
-      path: '/logout'
-      fullPath: '/logout'
-      preLoaderRoute: typeof LogoutRouteImport
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -195,11 +247,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteImport
+    '/logout': {
+      id: '/logout'
+      path: '/logout'
+      fullPath: '/logout'
+      preLoaderRoute: typeof LogoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/': {
@@ -209,25 +261,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/api/metrics': {
-      id: '/api/metrics'
-      path: '/api/metrics'
-      fullPath: '/api/metrics'
-      preLoaderRoute: typeof ApiMetricsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/health': {
-      id: '/api/health'
-      path: '/api/health'
-      fullPath: '/api/health'
-      preLoaderRoute: typeof ApiHealthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/event-types': {
-      id: '/_authenticated/event-types'
-      path: '/event-types'
-      fullPath: '/event-types'
-      preLoaderRoute: typeof AuthenticatedEventTypesRouteImport
+    '/_authenticated/event-faculties': {
+      id: '/_authenticated/event-faculties'
+      path: '/event-faculties'
+      fullPath: '/event-faculties'
+      preLoaderRoute: typeof AuthenticatedEventFacultiesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/event-locations': {
@@ -237,18 +275,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEventLocationsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/event-faculties': {
-      id: '/_authenticated/event-faculties'
-      path: '/event-faculties'
-      fullPath: '/event-faculties'
-      preLoaderRoute: typeof AuthenticatedEventFacultiesRouteImport
+    '/_authenticated/event-types': {
+      id: '/_authenticated/event-types'
+      path: '/event-types'
+      fullPath: '/event-types'
+      preLoaderRoute: typeof AuthenticatedEventTypesRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/users': {
+      id: '/_authenticated/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof AuthenticatedUsersRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/metrics': {
+      id: '/api/metrics'
+      path: '/api/metrics'
+      fullPath: '/api/metrics'
+      preLoaderRoute: typeof ApiMetricsRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/events/': {
       id: '/_authenticated/events/'
       path: '/events'
       fullPath: '/events/'
       preLoaderRoute: typeof AuthenticatedEventsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/events/$eventId': {
+      id: '/_authenticated/events/$eventId'
+      path: '/events/$eventId'
+      fullPath: '/events/$eventId'
+      preLoaderRoute: typeof AuthenticatedEventsEventIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/api/auth/$': {
@@ -258,12 +324,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/events/$eventId': {
-      id: '/_authenticated/events/$eventId'
-      path: '/events/$eventId'
-      fullPath: '/events/$eventId'
-      preLoaderRoute: typeof AuthenticatedEventsEventIdRouteImport
+    '/api/files/$fileId': {
+      id: '/api/files/$fileId'
+      path: '/api/files/$fileId'
+      fullPath: '/api/files/$fileId'
+      preLoaderRoute: typeof ApiFilesFileIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/events/$eventId_/scan': {
+      id: '/_authenticated/events/$eventId_/scan'
+      path: '/events/$eventId/scan'
+      fullPath: '/events/$eventId/scan'
+      preLoaderRoute: typeof AuthenticatedEventsEventIdScanRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/api/events/$eventId/attendance': {
+      id: '/api/events/$eventId/attendance'
+      path: '/api/events/$eventId/attendance'
+      fullPath: '/api/events/$eventId/attendance'
+      preLoaderRoute: typeof ApiEventsEventIdAttendanceRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -272,18 +352,22 @@ interface AuthenticatedRouteChildren {
   AuthenticatedEventFacultiesRoute: typeof AuthenticatedEventFacultiesRoute
   AuthenticatedEventLocationsRoute: typeof AuthenticatedEventLocationsRoute
   AuthenticatedEventTypesRoute: typeof AuthenticatedEventTypesRoute
+  AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedEventsEventIdRoute: typeof AuthenticatedEventsEventIdRoute
   AuthenticatedEventsIndexRoute: typeof AuthenticatedEventsIndexRoute
+  AuthenticatedEventsEventIdScanRoute: typeof AuthenticatedEventsEventIdScanRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedEventFacultiesRoute: AuthenticatedEventFacultiesRoute,
   AuthenticatedEventLocationsRoute: AuthenticatedEventLocationsRoute,
   AuthenticatedEventTypesRoute: AuthenticatedEventTypesRoute,
+  AuthenticatedUsersRoute: AuthenticatedUsersRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedEventsEventIdRoute: AuthenticatedEventsEventIdRoute,
   AuthenticatedEventsIndexRoute: AuthenticatedEventsIndexRoute,
+  AuthenticatedEventsEventIdScanRoute: AuthenticatedEventsEventIdScanRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -297,6 +381,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiHealthRoute: ApiHealthRoute,
   ApiMetricsRoute: ApiMetricsRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiFilesFileIdRoute: ApiFilesFileIdRoute,
+  ApiEventsEventIdAttendanceRoute: ApiEventsEventIdAttendanceRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

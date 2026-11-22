@@ -1,4 +1,5 @@
-import { and, asc, eq, inArray, max, type SQL, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, max, ne, type SQL, sql } from "drizzle-orm";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { type DbExecutor, db, type TransactionClient } from "../client";
 import { agendaItemRegistrations, agendaItems } from "../schema/agenda";
 import { authUsers } from "../schema/better-auth";
@@ -7,7 +8,7 @@ import {
 	eventSeatCounts,
 	type RegistrationState,
 } from "../schema/event-registrations";
-import { events } from "../schema/events";
+import { type EventStatus, events } from "../schema/events";
 import { registrationGroups } from "../schema/groups";
 import {
 	DomainError,
@@ -15,7 +16,13 @@ import {
 	REGISTRATION_ERRORS,
 } from "./domain-errors";
 import { lockEvent } from "./locks";
+import {
+	type Answers,
+	hasRequiredQuestions,
+	saveAnswers,
+} from "./registration-answers";
 import { getCurrentTxId } from "./txid";
+import { findAccountByEmail } from "./users";
 
 /**
  * SQL for an event's effective end (same rule as getEffectiveEventEnd), for queries that
@@ -64,7 +71,18 @@ export async function hasEventEnded(
 	return end !== null && end.getTime() <= Date.now();
 }
 
+/** Registration actions need a published event that hasn't ended (a draft is "not found"). */
 export async function assertEventOpen(tx: TransactionClient, eventId: string) {
+	const [event] = await tx
+		.select({ status: events.status })
+		.from(events)
+		.where(eq(events.id, eventId));
+	if (!event || event.status === "draft") {
+		throw new DomainError("EVENT_NOT_FOUND");
+	}
+	if (event.status === "cancelled") {
+		throw new DomainError("EVENT_CANCELLED");
+	}
 	if (await hasEventEnded(tx, eventId)) {
 		throw new DomainError("EVENT_ENDED");
 	}
@@ -72,7 +90,24 @@ export async function assertEventOpen(tx: TransactionClient, eventId: string) {
 
 export type RegistrationChange = {
 	registrationId: string;
-	change: "confirmed" | "waitlisted" | "promoted";
+	change:
+		| "confirmed"
+		| "waitlisted"
+		| "promoted"
+		| "cancelled"
+		| "pending"
+		| "rejected";
+};
+
+/** Where and when an event takes place, as people read it ("Aula · B105"). */
+export type EventWhenWhere = { date: Date; place: string | null };
+
+/** A published event's date or place changed: who to tell, and what it was and is. */
+export type EventChangeNotice = {
+	eventId: string;
+	registrationIds: string[];
+	before: EventWhenWhere;
+	after: EventWhenWhere;
 };
 
 /** Called inside the transaction with every registration whose state was set or changed. */
@@ -80,6 +115,11 @@ export type RegistrationHooks = {
 	onChanged(
 		tx: TransactionClient,
 		changes: RegistrationChange[],
+	): Promise<void>;
+	/** A published event moved in time or place (registered and waitlisted people). */
+	onEventChanged?(
+		tx: TransactionClient,
+		notice: EventChangeNotice,
 	): Promise<void>;
 };
 
@@ -116,6 +156,14 @@ export async function promoteFromWaitlist(
 ): Promise<RegistrationChange[]> {
 	const free = await seatsRemaining(tx, eventId);
 	if (free <= 0 || (await hasEventEnded(tx, eventId))) {
+		return [];
+	}
+	const [event] = await tx
+		.select({ status: events.status })
+		.from(events)
+		.where(eq(events.id, eventId));
+	// Only a published event moves people up (never a cancelled one).
+	if (event?.status !== "published") {
 		return [];
 	}
 	const next = await tx
@@ -202,12 +250,57 @@ async function insertEventRegistration(
 	return id;
 }
 
-/** Registers for the event, or joins its waitlist when it is full. */
+const CHANGE_FOR_NEW_STATE = {
+	registered: "confirmed",
+	waitlisted: "waitlisted",
+	pending: "pending",
+} as const satisfies Record<string, RegistrationChange["change"]>;
+
+/** A self-registration waits for approval, takes a free place, or joins the waitlist. */
+async function stateForNewRegistration(
+	tx: TransactionClient,
+	eventId: string,
+	byOrganizer: boolean,
+): Promise<keyof typeof CHANGE_FOR_NEW_STATE> {
+	if (!byOrganizer && (await requiresApproval(tx, eventId))) {
+		return "pending";
+	}
+	return (await seatsRemaining(tx, eventId)) > 0 ? "registered" : "waitlisted";
+}
+
+export async function requiresApproval(
+	tx: TransactionClient,
+	eventId: string,
+): Promise<boolean> {
+	const [row] = await tx
+		.select({ requiresApproval: events.requiresApproval })
+		.from(events)
+		.where(eq(events.id, eventId));
+	return row?.requiresApproval ?? false;
+}
+
+/** A registration's answers as `{ questionId: value }` (for selects over registrations). */
+function answersOf(registrationId: AnyPgColumn): SQL<Answers> {
+	return sql<Answers>`coalesce(
+		(SELECT jsonb_object_agg(a.question_id, a.value) FROM registration_answers a
+			WHERE a.registration_id = ${registrationId}),
+		'{}'::jsonb
+	)`;
+}
+
+/**
+ * Registers for the event, joins its waitlist when it is full, or asks for
+ * approval when the event requires it (not when an organiser adds the person).
+ */
 export async function registerForEvent(
 	eventId: string,
 	userId: string,
 	locale: "pl" | "en",
 	hooks?: RegistrationHooks,
+	{
+		byOrganizer = false,
+		answers = {},
+	}: { byOrganizer?: boolean; answers?: Answers } = {},
 ): Promise<{ state: RegistrationState; txid: number }> {
 	try {
 		return await db.transaction(async (tx) => {
@@ -220,8 +313,7 @@ export async function registerForEvent(
 				throw new DomainError("ALREADY_REGISTERED");
 			}
 
-			const state: RegistrationState =
-				(await seatsRemaining(tx, eventId)) > 0 ? "registered" : "waitlisted";
+			const state = await stateForNewRegistration(tx, eventId, byOrganizer);
 			const registrationId = await insertEventRegistration(
 				tx,
 				eventId,
@@ -229,11 +321,12 @@ export async function registerForEvent(
 				state,
 				locale,
 			);
+			// An organiser may add someone before they answered; the person can fill in later.
+			await saveAnswers(tx, registrationId, eventId, answers, {
+				requireAll: !byOrganizer,
+			});
 			await notify(tx, hooks, [
-				{
-					registrationId,
-					change: state === "registered" ? "confirmed" : "waitlisted",
-				},
+				{ registrationId, change: CHANGE_FOR_NEW_STATE[state] },
 			]);
 			return { state, txid: await getCurrentTxId(tx) };
 		});
@@ -305,6 +398,18 @@ export async function registerForAgendaItem(
 			if (registration?.state === "waitlisted") {
 				throw new DomainError("EVENT_WAITLISTED");
 			}
+			// Items come after approval: no item registration on a pending or missing one.
+			if (
+				registration?.state === "pending" ||
+				registration?.state === "rejected" ||
+				(!registration && (await requiresApproval(tx, item.eventId)))
+			) {
+				throw new DomainError("APPROVAL_REQUIRED");
+			}
+			// Registering for the event through an item would skip its required questions.
+			if (!registration && (await hasRequiredQuestions(tx, item.eventId))) {
+				throw new DomainError("REGISTER_EVENT_FIRST");
+			}
 			let eventRegistrationId = registration?.id ?? null;
 			const eventRegistered = eventRegistrationId === null;
 			if (eventRegistrationId === null) {
@@ -374,20 +479,125 @@ export async function unregisterFromEvent(
 ): Promise<{ txid: number }> {
 	return db.transaction(async (tx) => {
 		await lockEvent(tx, eventId);
-		const existingId = await findEventRegistrationId(tx, eventId, userId);
-		if (!existingId) {
+		const existing = await findEventRegistration(tx, eventId, userId);
+		// A rejected request stays, so withdrawing cannot be used to ask again.
+		const id = existing?.state === "rejected" ? null : (existing?.id ?? null);
+		return withdraw(tx, eventId, id, hooks);
+	});
+}
+
+/**
+ * Removes a registration (its item registrations cascade) and promotes the
+ * waitlist. Call with the event row locked. After the event, registrations are
+ * its attendance record: no withdrawing.
+ */
+async function withdraw(
+	tx: TransactionClient,
+	eventId: string,
+	registrationId: string | null,
+	hooks?: RegistrationHooks,
+): Promise<{ txid: number }> {
+	if (!registrationId) {
+		throw new DomainError("NOT_REGISTERED");
+	}
+	await assertEventOpen(tx, eventId);
+	await tx
+		.delete(eventRegistrations)
+		.where(eq(eventRegistrations.id, registrationId));
+	await promoteAndNotify(tx, eventId, hooks);
+	return { txid: await getCurrentTxId(tx) };
+}
+
+/**
+ * The person withdraws through the signed link in their e-mail (F17): the same rules as
+ * withdrawing on the site, so a rejected request stays (it cannot be asked again).
+ */
+export async function withdrawRegistrationByLink(
+	registrationId: string,
+	hooks?: RegistrationHooks,
+): Promise<{ txid: number }> {
+	return db.transaction(async (tx) => {
+		const [found] = await tx
+			.select({ eventId: eventRegistrations.eventId })
+			.from(eventRegistrations)
+			.where(eq(eventRegistrations.id, registrationId));
+		if (!found) {
 			throw new DomainError("NOT_REGISTERED");
 		}
-		// After the event, registrations are its attendance record: no withdrawing.
+		await lockEvent(tx, found.eventId);
+		// Re-read under the event lock: it may have changed or gone meanwhile.
+		const [row] = await tx
+			.select({ id: eventRegistrations.id, state: eventRegistrations.state })
+			.from(eventRegistrations)
+			.where(eq(eventRegistrations.id, registrationId));
+		const id = !row || row.state === "rejected" ? null : row.id;
+		return withdraw(tx, found.eventId, id, hooks);
+	});
+}
+
+/** An organizer removes someone from the event (same rules as withdrawing). */
+export async function removeRegistrant(
+	eventId: string,
+	registrationId: string,
+	hooks?: RegistrationHooks,
+): Promise<{ txid: number }> {
+	return db.transaction(async (tx) => {
+		await lockEvent(tx, eventId);
+		const [row] = await tx
+			.select({ id: eventRegistrations.id })
+			.from(eventRegistrations)
+			.where(
+				and(
+					eq(eventRegistrations.id, registrationId),
+					eq(eventRegistrations.eventId, eventId),
+				),
+			);
+		return withdraw(tx, eventId, row?.id ?? null, hooks);
+	});
+}
+
+/**
+ * An organizer removes several people at once: one lock, one waitlist
+ * promotion. Ids that are no longer there (removed in another tab) are skipped.
+ */
+export async function removeRegistrants(
+	eventId: string,
+	registrationIds: string[],
+	hooks?: RegistrationHooks,
+): Promise<{ removed: number; txid: number }> {
+	return db.transaction(async (tx) => {
+		await lockEvent(tx, eventId);
 		await assertEventOpen(tx, eventId);
-
-		// Item registrations cascade via event_registration_id.
-		await tx
-			.delete(eventRegistrations)
-			.where(eq(eventRegistrations.id, existingId));
+		const removed =
+			registrationIds.length === 0
+				? []
+				: await tx
+						.delete(eventRegistrations)
+						.where(
+							and(
+								eq(eventRegistrations.eventId, eventId),
+								inArray(eventRegistrations.id, registrationIds),
+							),
+						)
+						.returning({ id: eventRegistrations.id });
 		await promoteAndNotify(tx, eventId, hooks);
+		return { removed: removed.length, txid: await getCurrentTxId(tx) };
+	});
+}
 
-		return { txid: await getCurrentTxId(tx) };
+/** An organizer adds an existing account by e-mail; the same rules as registering (waitlist when full). */
+export async function addRegistrantByEmail(
+	eventId: string,
+	email: string,
+	locale: "pl" | "en",
+	hooks?: RegistrationHooks,
+): Promise<{ state: RegistrationState; txid: number }> {
+	const user = await findAccountByEmail(email);
+	if (!user) {
+		throw new DomainError("USER_NOT_FOUND");
+	}
+	return registerForEvent(eventId, user.id, locale, hooks, {
+		byOrganizer: true,
 	});
 }
 
@@ -449,6 +659,7 @@ export type RegistrationForEmail = {
 	eventId: string;
 	eventTitle: string;
 	eventDate: Date;
+	eventStatus: EventStatus;
 };
 
 /** What a registration e-mail needs; null when the registration no longer exists. */
@@ -458,11 +669,15 @@ export async function getRegistrationForEmail(
 	const [row] = await db
 		.select({
 			state: eventRegistrations.state,
-			locale: eventRegistrations.locale,
+			// The profile language wins once the person has chosen one.
+			locale: sql<
+				"pl" | "en"
+			>`coalesce(${authUsers.locale}, ${eventRegistrations.locale})`,
 			email: authUsers.email,
 			eventId: events.id,
 			eventTitle: events.title,
 			eventDate: events.date,
+			eventStatus: events.status,
 		})
 		.from(eventRegistrations)
 		.innerJoin(authUsers, eq(authUsers.id, eventRegistrations.userId))
@@ -481,10 +696,15 @@ export type EventRegistrant = {
 	agendaItemIds: string[];
 	groupId: string | null;
 	groupName: string | null;
+	checkedInAt: Date | null;
+	/** Answers to the event's questions, by question id. */
+	answers: Answers;
 };
 
+/** `withAnswers: false` for people who only check in at the door (answers may be sensitive). */
 export async function getEventRegistrants(
 	eventId: string,
+	{ withAnswers = true }: { withAnswers?: boolean } = {},
 ): Promise<EventRegistrant[]> {
 	const rows = await db
 		.select({
@@ -496,6 +716,10 @@ export async function getEventRegistrants(
 			state: eventRegistrations.state,
 			groupId: eventRegistrations.groupId,
 			groupName: registrationGroups.name,
+			checkedInAt: eventRegistrations.checkedInAt,
+			answers: withAnswers
+				? answersOf(eventRegistrations.id)
+				: sql<Answers>`'{}'::jsonb`,
 			agendaItemIds: sql<string[]>`coalesce(
 				array_agg(${agendaItemRegistrations.agendaItemId})
 					filter (where ${agendaItemRegistrations.agendaItemId} is not null),
@@ -517,4 +741,79 @@ export async function getEventRegistrants(
 		.orderBy(asc(eventRegistrations.createdAt));
 
 	return rows;
+}
+
+/** Whether the user holds a place (registered, not waitlisted) at the event. */
+export async function isRegisteredForEvent(
+	eventId: string,
+	userId: string,
+): Promise<boolean> {
+	const [row] = await db
+		.select({ id: eventRegistrations.id })
+		.from(eventRegistrations)
+		.where(
+			and(
+				eq(eventRegistrations.eventId, eventId),
+				eq(eventRegistrations.userId, userId),
+				eq(eventRegistrations.state, "registered"),
+			),
+		)
+		.limit(1);
+	return Boolean(row);
+}
+
+/**
+ * Changes the answers of a registration of `eventId`. The person may do it
+ * while the event is open and must keep required answers; an organiser may fix
+ * them any time (and leave required ones empty, as when adding someone).
+ */
+export async function updateRegistrationAnswers(
+	eventId: string,
+	registrationId: string,
+	answers: Answers,
+	{ byOrganizer }: { byOrganizer: boolean },
+): Promise<void> {
+	await db.transaction(async (tx) => {
+		const [row] = await tx
+			.select({ id: eventRegistrations.id })
+			.from(eventRegistrations)
+			.where(
+				and(
+					eq(eventRegistrations.id, registrationId),
+					eq(eventRegistrations.eventId, eventId),
+				),
+			)
+			.for("update");
+		if (!row) {
+			throw new DomainError("NOT_REGISTERED");
+		}
+		if (!byOrganizer) {
+			await assertEventOpen(tx, eventId);
+		}
+		await saveAnswers(tx, registrationId, eventId, answers, {
+			requireAll: !byOrganizer,
+		});
+	});
+}
+
+/** The user's registration id and answers for the event; null when not registered. */
+export async function getMyAnswers(
+	eventId: string,
+	userId: string,
+): Promise<{ registrationId: string; answers: Answers } | null> {
+	const [row] = await db
+		.select({
+			registrationId: eventRegistrations.id,
+			answers: answersOf(eventRegistrations.id),
+		})
+		.from(eventRegistrations)
+		.where(
+			and(
+				eq(eventRegistrations.eventId, eventId),
+				eq(eventRegistrations.userId, userId),
+				// A declined request has nothing left to edit.
+				ne(eventRegistrations.state, "rejected"),
+			),
+		);
+	return row ?? null;
 }

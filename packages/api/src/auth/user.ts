@@ -1,5 +1,6 @@
 import { db } from "@repo/db/client";
-import { isAdmin } from "@repo/db/queries/roles";
+import { hasPanelAccess } from "@repo/db/queries/event-organizers";
+import { getUserRole, type UserRole } from "@repo/db/queries/roles";
 import { authAccounts } from "@repo/db/schema/better-auth";
 import { error_title } from "@repo/i18n/paraglide/messages";
 import { getRequestHeaders } from "@tanstack/react-start/server";
@@ -16,6 +17,9 @@ export type AuthenticatedUser = {
 	email: string;
 	hasPassword: boolean;
 	isAdmin: boolean;
+	role: UserRole;
+	/** Can open the admin panel: organizer, admin, or co-organizer of an event. */
+	hasPanelAccess: boolean;
 };
 
 export async function getCurrentSession() {
@@ -26,7 +30,7 @@ export async function getCurrentSession() {
 export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
 	const session = await getCurrentSession();
 	if (!session?.user) return null;
-	const [credentialAccount, admin] = await Promise.all([
+	const [credentialAccount, storedRole] = await Promise.all([
 		db.query.authAccounts.findFirst({
 			where: and(
 				eq(authAccounts.userId, session.user.id),
@@ -37,14 +41,18 @@ export async function getCurrentUser(): Promise<AuthenticatedUser | null> {
 				id: true,
 			},
 		}),
-		isAdmin(session.user.id),
+		getUserRole(session.user.id),
 	]);
+	const role = storedRole ?? "user";
+	const panelAccess = await hasPanelAccess({ id: session.user.id, role });
 
 	return {
 		id: session.user.id,
 		email: session.user.email,
 		hasPassword: Boolean(credentialAccount),
-		isAdmin: admin,
+		isAdmin: role === "admin",
+		role,
+		hasPanelAccess: panelAccess,
 	};
 }
 

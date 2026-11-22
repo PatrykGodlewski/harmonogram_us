@@ -4,7 +4,14 @@ import { createAgendaItem } from "@repo/db/queries/agenda-items";
 import { createEvent } from "@repo/db/queries/events";
 import { authUsers } from "@repo/db/schema/better-auth";
 import { eventFaculties, eventTypes } from "@repo/db/schema/event-lookups";
-import { ensureAccount } from "@repo/db/seed/accounts";
+import {
+	type AttendanceMode,
+	type EventStatus,
+	type EventVisibility,
+	events,
+} from "@repo/db/schema/events";
+import { type AccountRole, ensureAccount } from "@repo/db/seed/accounts";
+import { eq } from "drizzle-orm";
 
 /** A unique address per test, so tests never share mailboxes or accounts. */
 export function uniqueEmail(testInfo: TestInfo): string {
@@ -18,12 +25,12 @@ export function uniqueEmail(testInfo: TestInfo): string {
 
 export async function createTestUser(
 	email: string,
-	opts?: { admin?: boolean; password?: string },
+	opts?: { role?: AccountRole; password?: string },
 ): Promise<{ id: string }> {
 	const { id } = await ensureAccount({
 		email,
 		name: "Test User",
-		role: opts?.admin ? "admin" : "user",
+		role: opts?.role ?? "user",
 		password: opts?.password,
 	});
 	return { id };
@@ -47,6 +54,14 @@ export async function createTestEvent(input: {
 	maxSeats?: number;
 	startsInDays?: number;
 	faculty?: string;
+	/** Default "published": tests about the public site need a public event. */
+	status?: EventStatus;
+	attendanceMode?: AttendanceMode;
+	onlineUrl?: string;
+	visibility?: EventVisibility;
+	requiresApproval?: boolean;
+	/** Makes this user the event's organizer (default: none, only admins manage it). */
+	organizerId?: string;
 	/** startHour: hours after the event starts (default: the item's index); durationMinutes default 50. */
 	agenda?: {
 		title: string;
@@ -65,9 +80,21 @@ export async function createTestEvent(input: {
 		facultyId: input.faculty
 			? await lookup(eventFaculties, input.faculty)
 			: null,
+		organizerId: input.organizerId ?? null,
+		attendanceMode: input.attendanceMode,
+		onlineUrl: input.onlineUrl ?? null,
+		visibility: input.visibility,
+		requiresApproval: input.requiresApproval,
 	});
 	if (!event) {
 		throw new Error("createEvent returned nothing");
+	}
+	const status = input.status ?? "published";
+	if (status !== "draft") {
+		await db
+			.update(events)
+			.set({ status, publishedAt: new Date() })
+			.where(eq(events.id, event.id));
 	}
 	const itemIds: string[] = [];
 	for (const [index, item] of (input.agenda ?? []).entries()) {

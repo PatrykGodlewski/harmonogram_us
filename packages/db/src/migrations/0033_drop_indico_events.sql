@@ -1,0 +1,1 @@
+DROP TABLE "indico_events" CASCADE;

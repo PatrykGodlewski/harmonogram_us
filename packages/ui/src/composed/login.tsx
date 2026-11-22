@@ -1,5 +1,4 @@
-import { Turnstile } from "@marsidev/react-turnstile";
-import { enabledSocialProviders } from "@repo/api/auth/social-providers";
+import type { UniversitySignIn } from "@repo/api/auth/university";
 import { env } from "@repo/env/client";
 import {
 	auth_button_password_login,
@@ -7,6 +6,7 @@ import {
 	auth_field_email,
 	auth_field_password,
 	auth_login_link_failed,
+	auth_magic_link_sent,
 	auth_status_success_title,
 	auth_submit_magic_link,
 	auth_submit_sending_magic_link,
@@ -17,7 +17,7 @@ import {
 	auth_validator_email_password_required,
 	error_title,
 } from "@repo/i18n/paraglide/messages";
-import { getLocale } from "@repo/i18n/paraglide/runtime";
+import { getLocale, localizeHref } from "@repo/i18n/paraglide/runtime";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { createAuthClient } from "better-auth/client";
@@ -30,8 +30,12 @@ import { Button } from "../components/button";
 import { FormMessage } from "../components/form-message";
 import { Input } from "../components/input";
 import { Label } from "../components/label";
+import { Captcha } from "./auth/captcha";
 import { formatFieldError, usePasswordLogin } from "./auth/password-login";
-import { type AuthSocialProvider, authSocialButtonLabel } from "./auth-social";
+import {
+	SignInFailed,
+	UniversitySignInButton,
+} from "./auth/university-sign-in";
 
 const authClient = createAuthClient({
 	plugins: [magicLinkClient()],
@@ -52,6 +56,9 @@ function resolveLoginErrorMessage(status: LoginStatus): string | null {
 
 export interface LoginProps {
 	redirectTo: string;
+	university: UniversitySignIn;
+	/** A sign-in came back with an error (university refusal, expired link). */
+	failed?: boolean;
 }
 
 const loginFormSchema = z.object({
@@ -59,7 +66,7 @@ const loginFormSchema = z.object({
 	password: z.string(),
 });
 
-export function Login({ redirectTo }: LoginProps) {
+export function Login({ redirectTo, university, failed }: LoginProps) {
 	const [passwordPanelOpen, setPasswordPanelOpen] = React.useState(false);
 	const [captchaToken, setCaptchaToken] = React.useState<string | null>(null);
 	const captchaSiteKey = env.VITE_TURNSTILE_SITE_KEY;
@@ -107,7 +114,20 @@ export function Login({ redirectTo }: LoginProps) {
 
 	return (
 		<div className="mx-auto max-w-sm rounded-lg border p-6">
-			<h2 className="mb-4 text-xl font-semibold">{auth_title_login()}</h2>
+			<h1 className="mb-4 text-xl font-semibold">{auth_title_login()}</h1>
+			{failed ? (
+				<div className="mb-4">
+					<SignInFailed />
+				</div>
+			) : null}
+			{university ? (
+				<div className="mb-4">
+					<UniversitySignInButton
+						university={university}
+						redirectTo={redirectTo}
+					/>
+				</div>
+			) : null}
 			<form
 				className="space-y-4"
 				onSubmit={(e) => {
@@ -188,16 +208,8 @@ export function Login({ redirectTo }: LoginProps) {
 					}
 				</form.Subscribe>
 
-				{captchaEnabled ? (
-					<div className="flex justify-center">
-						<Turnstile
-							siteKey={captchaSiteKey ?? ""}
-							options={{ appearance: "always", size: "normal" }}
-							onSuccess={(token) => setCaptchaToken(token)}
-							onExpire={() => setCaptchaToken(null)}
-							onError={() => setCaptchaToken(null)}
-						/>
-					</div>
+				{captchaSiteKey ? (
+					<Captcha siteKey={captchaSiteKey} onToken={setCaptchaToken} />
 				) : null}
 
 				<Button
@@ -210,19 +222,6 @@ export function Login({ redirectTo }: LoginProps) {
 						? auth_toggle_hide_password_login()
 						: auth_toggle_show_password_login()}
 				</Button>
-
-				{login.socialProviders.map((provider) => (
-					<Button
-						key={provider}
-						type="button"
-						variant="secondary"
-						className="w-full"
-						disabled={isBusy}
-						onClick={() => login.onSocialLogin(provider)}
-					>
-						{authSocialButtonLabel[provider]()}
-					</Button>
-				))}
 
 				{errorAlert ? (
 					<Alert variant={errorAlert.variant}>
@@ -244,7 +243,7 @@ function useLogin(redirectTo: string, captchaToken: string | null) {
 				email,
 				callbackURL: redirectTo,
 				newUserCallbackURL: redirectTo,
-				errorCallbackURL: "/login",
+				errorCallbackURL: localizeHref("/login"),
 				metadata: {
 					locale: getLocale(),
 				},
@@ -260,58 +259,28 @@ function useLogin(redirectTo: string, captchaToken: string | null) {
 		},
 		onSuccess: () => {
 			toast.success(auth_status_success_title(), {
-				description:
-					"Email sent successfully. Check your inbox for the login link.",
+				description: auth_magic_link_sent(),
 			});
-		},
-	});
-
-	const socialMutation = useMutation({
-		mutationFn: async (provider: AuthSocialProvider) => {
-			const { error } = await authClient.signIn.social({
-				provider,
-				callbackURL: redirectTo,
-				errorCallbackURL: "/login",
-				newUserCallbackURL: redirectTo,
-			});
-			if (error) throw new Error(error.message ?? "Social sign-in failed");
 		},
 	});
 
 	return {
-		socialProviders: enabledSocialProviders,
 		onMagicLogin: (data: { email: string }) => {
 			passwordMutation.reset();
-			socialMutation.reset();
 			magicLinkMutation.reset();
 			magicLinkMutation.mutate(data.email);
 		},
 		onPasswordLogin: (data: { email: string; password: string }) => {
 			magicLinkMutation.reset();
-			socialMutation.reset();
 			passwordMutation.reset();
 			passwordMutation.mutate(data);
 		},
-		onSocialLogin: (provider: AuthSocialProvider) => {
-			magicLinkMutation.reset();
-			passwordMutation.reset();
-			socialMutation.reset();
-			socialMutation.mutate(provider);
-		},
 		status: {
-			isRequestError:
-				magicLinkMutation.isError ||
-				passwordMutation.isError ||
-				socialMutation.isError,
+			isRequestError: magicLinkMutation.isError || passwordMutation.isError,
 			requestErrorMessage:
-				magicLinkMutation.error?.message ??
-				passwordMutation.error?.message ??
-				socialMutation.error?.message,
+				magicLinkMutation.error?.message ?? passwordMutation.error?.message,
 			serverError: null,
-			isLoading:
-				magicLinkMutation.isPending ||
-				passwordMutation.isPending ||
-				socialMutation.isPending,
+			isLoading: magicLinkMutation.isPending || passwordMutation.isPending,
 		},
 	};
 }

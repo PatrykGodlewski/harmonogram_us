@@ -2,14 +2,18 @@ import { execFileSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { db } from "@repo/db/client";
+import { registerForEvent } from "@repo/db/queries/event-registrations";
 import { authSessions, authUsers } from "@repo/db/schema/better-auth";
+import { eventRegistrations } from "@repo/db/schema/event-registrations";
 import { env } from "@repo/env";
 import { serializeSignedCookie } from "better-call";
+import { eq } from "drizzle-orm";
 import { toJSONAsync } from "seroval";
 import { createTestEvent } from "../fixtures/data";
 import {
 	LOAD,
 	LOAD_FUNCTIONS,
+	type LoadDocuments,
 	type LoadFunction,
 	type LoadRun,
 	type LoadUsers,
@@ -131,9 +135,49 @@ async function createEvents(count: number, label: string, maxSeats: number) {
 	return created.map((event) => event.id);
 }
 
+/** One event everyone holds a ticket for, plus people who only browse. */
+async function documentsRun(): Promise<LoadDocuments> {
+	const event = await createTestEvent({
+		title: `Load documents ${randomBytes(3).toString("hex")}`,
+		maxSeats: LOAD.documentsUsers,
+		startsInDays: 22,
+	});
+	const holders = await createUsers(LOAD.documentsUsers, "documents");
+	for (const holder of holders) {
+		await registerForEvent(event.id, holder.id, "pl");
+	}
+	const registrations = await db
+		.select({ id: eventRegistrations.id, userId: eventRegistrations.userId })
+		.from(eventRegistrations)
+		.where(eq(eventRegistrations.eventId, event.id));
+	const byUser = new Map(registrations.map((row) => [row.userId, row.id]));
+	const browsers = await createUsers(LOAD.documentsBrowseUsers, "browse");
+	return {
+		eventId: event.id,
+		downloads: holders.map((holder) => ({
+			cookie: holder.cookie,
+			path: `/api/tickets/${byUser.get(holder.id)}/pdf?lang=pl`,
+		})),
+		browsers: browsers.map((user) => ({ cookie: user.cookie })),
+	};
+}
+
 export async function setupLoadRun(options: {
 	stress: boolean;
+	documents?: boolean;
 }): Promise<LoadRun> {
+	if (options.documents) {
+		const run: LoadRun = {
+			webUrl: LOAD.webUrl,
+			functionIds: readFunctionIds(),
+			spike: { eventId: "", users: [] },
+			steady: { eventIds: [], users: [] },
+			documents: await documentsRun(),
+		};
+		mkdirSync(LOAD.runDir, { recursive: true });
+		writeFileSync(new URL("run.json", LOAD.runDir), JSON.stringify(run));
+		return run;
+	}
 	const functionIds = readFunctionIds();
 	const spikeEvent = await createTestEvent({
 		title: `Load spike ${randomBytes(3).toString("hex")}`,

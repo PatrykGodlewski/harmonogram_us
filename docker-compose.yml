@@ -1,4 +1,5 @@
-# Development: `docker compose up -d` starts the services the apps need (db, mailpit, electric).
+# Development: `docker compose up -d` starts the services the apps need (db, mailpit, electric,
+# documents: the Rust PDF service, rebuilt with `docker compose up -d --build documents`).
 # Full stack (production images of web, admin and worker): `docker compose --profile app up -d --build`.
 # The e2e suite runs the full stack as a separate project on other ports: see e2e/README.md.
 # Metrics: add `--profile observability` for Prometheus (scrapes /api/metrics, receives k6) and Grafana.
@@ -9,8 +10,27 @@ x-app-env: &app-env
   ELECTRIC_URL: http://electric:3000
   SMTP_HOST: mailpit
   SMTP_PORT: "1025"
+  DOCUMENTS_URL: http://documents:50051
   BETTER_AUTH_URL: http://localhost:${WEB_PORT:-3000}
   ADMIN_URL: http://localhost:${ADMIN_PORT:-3001}
+  # University sign-in (OpenID Connect); set in .env, or by e2e/ports.env for the mock.
+  UNIVERSITY_SSO_DISCOVERY_URL: ${UNIVERSITY_SSO_DISCOVERY_URL:-}
+  UNIVERSITY_SSO_CLIENT_ID: ${UNIVERSITY_SSO_CLIENT_ID:-}
+  UNIVERSITY_SSO_CLIENT_SECRET: ${UNIVERSITY_SSO_CLIENT_SECRET:-}
+  UNIVERSITY_SSO_NAME: ${UNIVERSITY_SSO_NAME:-}
+  # Teams meetings through Microsoft Graph (F23); set in .env, or by e2e/ports.env for the stand-in.
+  TEAMS_TENANT_ID: ${TEAMS_TENANT_ID:-}
+  TEAMS_CLIENT_ID: ${TEAMS_CLIENT_ID:-}
+  TEAMS_CLIENT_SECRET: ${TEAMS_CLIENT_SECRET:-}
+  TEAMS_ORGANIZER_ID: ${TEAMS_ORGANIZER_ID:-}
+  TEAMS_LOGIN_URL: ${TEAMS_LOGIN_URL:-https://login.microsoftonline.com}
+  TEAMS_GRAPH_URL: ${TEAMS_GRAPH_URL:-https://graph.microsoft.com}
+  # Files (F14): the storage container below, reached by the browser and the containers alike
+  # as storage.localhost (Chrome maps *.localhost to this machine). Production: Cloudflare R2.
+  S3_ENDPOINT: ${S3_APP_ENDPOINT:-http://storage.localhost:${STORAGE_PORT:-8333}}
+  S3_BUCKET: ${S3_BUCKET:-harmonogram}
+  S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-harmonogram-dev}
+  S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-harmonogram-dev-secret}
 
 x-app-build: &app-build
   context: .
@@ -54,6 +74,43 @@ services:
       db:
         condition: service_healthy
 
+  # S3-compatible file storage for development and e2e (SeaweedFS `weed mini`: creates the
+  # bucket and the key pair on start). Same port inside and outside, see S3_ENDPOINT above.
+  storage:
+    image: chrislusf/seaweedfs@sha256:4b42c212543a0acd4c0e675215ecdcaf62a186ef98def76c7e12701871222d15
+    command: ["mini", "-dir=/data", "-s3.port=${STORAGE_PORT:-8333}"]
+    environment:
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-harmonogram-dev}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-harmonogram-dev-secret}
+      S3_BUCKET: ${S3_BUCKET:-harmonogram}
+    ports:
+      - "${STORAGE_PORT:-8333}:${STORAGE_PORT:-8333}"
+    volumes:
+      - storage_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "-o", "/dev/null", "http://localhost:${STORAGE_PORT:-8333}/status"]
+      interval: 2s
+      retries: 30
+    networks:
+      default:
+        aliases: [storage.localhost]
+    restart: unless-stopped
+
+  # Renders PDFs over gRPC (services/documents); needs DOCUMENTS_TOKEN from .env.
+  documents:
+    build:
+      context: .
+      dockerfile: services/documents/Dockerfile
+    env_file: .env
+    ports:
+      - "${DOCUMENTS_PORT:-50051}:50051"
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/documents", "healthcheck"]
+      interval: 2s
+      retries: 30
+    stop_grace_period: 10s
+    restart: unless-stopped
+
   web:
     profiles: [app]
     build:
@@ -72,6 +129,8 @@ services:
       db: { condition: service_healthy }
       electric: { condition: service_started }
       mailpit: { condition: service_started }
+      documents: { condition: service_healthy }
+      storage: { condition: service_healthy }
 
   admin:
     profiles: [app]
@@ -90,6 +149,8 @@ services:
     depends_on:
       db: { condition: service_healthy }
       mailpit: { condition: service_started }
+      documents: { condition: service_healthy }
+      storage: { condition: service_healthy }
 
   worker:
     profiles: [app]
@@ -104,6 +165,44 @@ services:
     depends_on:
       db: { condition: service_healthy }
       mailpit: { condition: service_started }
+      storage: { condition: service_healthy }
+
+  # e2e only: a stand-in Microsoft Graph (e2e/teams-mock), reached as teams.localhost.
+  teams-mock:
+    profiles: [e2e]
+    image: node:22-alpine
+    command: ["node", "/srv/server.mjs"]
+    volumes:
+      - ./e2e/teams-mock/server.mjs:/srv/server.mjs:ro
+    environment:
+      PORT: ${TEAMS_PORT:-18082}
+      TENANT: ${TEAMS_TENANT_ID:-}
+      CLIENT_ID: ${TEAMS_CLIENT_ID:-}
+      CLIENT_SECRET: ${TEAMS_CLIENT_SECRET:-}
+    ports:
+      - "${TEAMS_PORT:-18082}:${TEAMS_PORT:-18082}"
+    networks:
+      default:
+        aliases: [teams.localhost]
+
+  # e2e only: a stand-in university sign-in server (e2e/oidc-mock). The browser and the
+  # app containers both reach it as oidc.localhost (Chrome maps *.localhost to this machine).
+  oidc-mock:
+    profiles: [e2e]
+    image: node:22-alpine
+    command: ["node", "/srv/server.mjs"]
+    volumes:
+      - ./e2e/oidc-mock/server.mjs:/srv/server.mjs:ro
+    environment:
+      PORT: ${OIDC_PORT:-18080}
+      CLIENT_ID: ${UNIVERSITY_SSO_CLIENT_ID:-}
+      CLIENT_SECRET: ${UNIVERSITY_SSO_CLIENT_SECRET:-}
+    ports:
+      - "${OIDC_PORT:-18080}:${OIDC_PORT:-18080}"
+    networks:
+      default:
+        aliases: [oidc.localhost]
+    restart: unless-stopped
 
   prometheus:
     profiles: [observability]
@@ -121,6 +220,8 @@ services:
       - "${PROMETHEUS_PORT:-9090}:9090"
     volumes:
       - prometheus_data:/prometheus
+    depends_on:
+      documents: { condition: service_started }
     restart: unless-stopped
 
   grafana:
@@ -146,4 +247,5 @@ configs:
 
 volumes:
   postgres_data:
+  storage_data:
   prometheus_data:

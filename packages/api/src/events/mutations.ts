@@ -1,3 +1,4 @@
+import { getAgendaItemEventId } from "@repo/db/queries/agenda-items";
 import { DomainError } from "@repo/db/queries/domain-errors";
 import {
 	registerForAgendaItem,
@@ -11,15 +12,20 @@ import { authMiddleware } from "../auth/middleware";
 import { getCurrentSession } from "../auth/user";
 import { appError, withDomainErrors } from "../errors";
 import { registrationEmailHooks } from "../notifications/registration-hooks";
-import { agendaItemIdSchema } from "./schemas";
+import { canOpenEvent } from "./access";
+import { agendaItemIdSchema, answersSchema, inviteSchema } from "./schemas";
 
 /** `locale` is the UI language for the confirmation e-mail (server functions have no locale prefix). */
 const registerForAgendaItemSchema = agendaItemIdSchema.extend({
 	locale: z.enum(["pl", "en"]),
+	invite: inviteSchema,
 });
 
 export const registerForEventInputSchema = z.object({
 	eventId: z.string().min(1),
+	invite: inviteSchema,
+	/** Answers to the event's questions, by question id (checked against them on the server). */
+	answers: answersSchema.optional(),
 	/** UI language, for the registrant's e-mails (server functions have no locale prefix). */
 	locale: z.enum(["pl", "en"]),
 });
@@ -35,11 +41,14 @@ export type UnregisterFromEventInput = z.infer<
 >;
 
 export const registerForEventServer = createServerFn({ method: "POST" })
-	.inputValidator(registerForEventInputSchema)
+	.validator(registerForEventInputSchema)
 	.handler(async ({ data }) => {
 		const session = await getCurrentSession();
 		if (!session?.user) {
 			throw appError("UNAUTHORIZED");
+		}
+		if (!(await canOpenEvent(data.eventId, session.user.id, data.invite))) {
+			throw appError("EVENT_NOT_FOUND");
 		}
 
 		try {
@@ -48,6 +57,7 @@ export const registerForEventServer = createServerFn({ method: "POST" })
 				session.user.id,
 				data.locale,
 				registrationEmailHooks,
+				{ answers: data.answers },
 			);
 		} catch (error) {
 			if (error instanceof DomainError) {
@@ -58,7 +68,7 @@ export const registerForEventServer = createServerFn({ method: "POST" })
 	});
 
 export const unregisterFromEventServer = createServerFn({ method: "POST" })
-	.inputValidator(unregisterFromEventInputSchema)
+	.validator(unregisterFromEventInputSchema)
 	.handler(async ({ data }) => {
 		const session = await getCurrentSession();
 		if (!session?.user) {
@@ -84,20 +94,27 @@ const protectedActionFn = createServerFn({ method: "POST" }).middleware([
 ]);
 
 export const registerForAgendaItemServer = protectedActionFn
-	.inputValidator(registerForAgendaItemSchema)
-	.handler(async ({ data, context }) =>
-		withDomainErrors(() =>
+	.validator(registerForAgendaItemSchema)
+	.handler(async ({ data, context }) => {
+		const eventId = await getAgendaItemEventId(data.agendaItemId);
+		if (
+			!eventId ||
+			!(await canOpenEvent(eventId, context.user.id, data.invite))
+		) {
+			throw appError("ITEM_NOT_FOUND");
+		}
+		return withDomainErrors(() =>
 			registerForAgendaItem(
 				data.agendaItemId,
 				context.user.id,
 				data.locale,
 				registrationEmailHooks,
 			),
-		),
-	);
+		);
+	});
 
 export const unregisterFromAgendaItemServer = protectedActionFn
-	.inputValidator(agendaItemIdSchema)
+	.validator(agendaItemIdSchema)
 	.handler(async ({ data, context }) =>
 		withDomainErrors(() =>
 			unregisterFromAgendaItem(data.agendaItemId, context.user.id),

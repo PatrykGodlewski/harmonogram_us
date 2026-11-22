@@ -99,6 +99,181 @@
       "when": 1795062797825,
       "tag": "0013_ticket_code",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1795156917918,
+      "tag": "0014_event_organizers",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1795157492291,
+      "tag": "0015_event_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1795161887196,
+      "tag": "0016_event_visibility",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1795165334147,
+      "tag": "0017_checked_in_at",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1795171448623,
+      "tag": "0018_event_room",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1795176484555,
+      "tag": "0019_event_reminders",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1795177307864,
+      "tag": "0020_calendar_token",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1795179410732,
+      "tag": "0021_organizer_roles",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1795211689011,
+      "tag": "0022_registration_approval",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1795213247540,
+      "tag": "0023_invite_only",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1795215345549,
+      "tag": "0024_certificates",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1795215428639,
+      "tag": "0025_private_has_invite",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1795216889304,
+      "tag": "0026_certificate_per_registration",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1795217261318,
+      "tag": "0027_agenda_speakers",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1795224797249,
+      "tag": "0028_user_locale",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1795225029149,
+      "tag": "0029_event_questions",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1795227130111,
+      "tag": "0030_certificate_text",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1795285292650,
+      "tag": "0031_guest_requests",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1795295950921,
+      "tag": "0032_indico_events",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1795331602882,
+      "tag": "0033_drop_indico_events",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1795333384295,
+      "tag": "0034_surveys",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1795334845767,
+      "tag": "0035_drop_survey_answered_at",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1795334846271,
+      "tag": "0036_survey_answered_flag",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1795346289815,
+      "tag": "0037_event_files",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1795346290254,
+      "tag": "0038_stored_file_deletions_trigger",
+      "breakpoints": true
     }
   ]
 }

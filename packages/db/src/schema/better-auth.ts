@@ -1,21 +1,47 @@
-import { relations } from "drizzle-orm";
-import { boolean, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { relations, sql } from "drizzle-orm";
+import {
+	boolean,
+	check,
+	index,
+	pgTable,
+	text,
+	timestamp,
+} from "drizzle-orm/pg-core";
 
-export const authUsers = pgTable("user", {
-	id: text("id").primaryKey(),
-	name: text("name").notNull(),
-	email: text("email").notNull().unique(),
-	emailVerified: boolean("email_verified").notNull().default(false),
-	image: text("image"),
-	/** "user" | "admin". Admins can use the admin panel. */
-	role: text("role").notNull().default("user"),
-	createdAt: timestamp("created_at", { withTimezone: true })
-		.notNull()
-		.defaultNow(),
-	updatedAt: timestamp("updated_at", { withTimezone: true })
-		.notNull()
-		.defaultNow(),
-});
+export const authUsers = pgTable(
+	"user",
+	{
+		id: text("id").primaryKey(),
+		name: text("name").notNull(),
+		email: text("email").notNull().unique(),
+		emailVerified: boolean("email_verified").notNull().default(false),
+		image: text("image"),
+		/** "user" | "organizer" | "admin". Organizers create events; admins manage everything. */
+		role: text("role").notNull().default("user"),
+		/** Language chosen in the profile; null: none chosen (e-mails use the registration's). */
+		locale: text("locale").$type<"pl" | "en">(),
+		/** Secret part of the personal calendar feed URL ("my registrations"). */
+		calendarToken: text("calendar_token")
+			.notNull()
+			.unique()
+			.default(
+				sql`replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '')`,
+			),
+		createdAt: timestamp("created_at", { withTimezone: true })
+			.notNull()
+			.defaultNow(),
+		updatedAt: timestamp("updated_at", { withTimezone: true })
+			.notNull()
+			.defaultNow(),
+	},
+	(table) => [
+		check(
+			"user_role_check",
+			sql`${table.role} IN ('user', 'organizer', 'admin')`,
+		),
+		check("user_locale_check", sql`${table.locale} IN ('pl', 'en')`),
+	],
+);
 
 export const authSessions = pgTable(
 	"session",

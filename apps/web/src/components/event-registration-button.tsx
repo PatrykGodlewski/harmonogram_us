@@ -1,11 +1,15 @@
 import {
 	events_join_waitlist,
 	events_leave_waitlist,
+	events_pending_approval,
 	events_register,
 	events_register_login_required,
 	events_registered,
+	events_rejected,
+	events_request_registration,
 	events_unregister,
 	events_waitlisted,
+	events_withdraw_request,
 } from "@repo/i18n/paraglide/messages";
 import { Button } from "@repo/ui/components/button";
 import { Link } from "@tanstack/react-router";
@@ -16,6 +20,9 @@ type EventRegistrationButtonProps = {
 	user: { id: string; email: string } | null;
 	interactive: boolean;
 	seatsRemaining: number;
+	requiresApproval: boolean;
+	/** Registering asks questions: the button leads to the event page. */
+	hasQuestions: boolean;
 	registrations: EventRegistrationActions;
 };
 
@@ -24,6 +31,8 @@ export function EventRegistrationButton({
 	user,
 	interactive,
 	seatsRemaining,
+	requiresApproval,
+	hasQuestions,
 	registrations,
 }: EventRegistrationButtonProps) {
 	const isRegistered = registrations.isRegistered(eventId);
@@ -55,6 +64,30 @@ export function EventRegistrationButton({
 		);
 	}
 
+	const approval = registrations.approval(eventId);
+	if (approval === "rejected") {
+		return (
+			<span className="text-sm text-muted-foreground">{events_rejected()}</span>
+		);
+	}
+	if (approval === "pending") {
+		return (
+			<div className="flex flex-col items-end gap-1">
+				<span className="text-sm text-muted-foreground">
+					{events_pending_approval()}
+				</span>
+				<Button
+					size="sm"
+					variant="outline"
+					disabled={!interactive || isMutating}
+					onClick={() => registrations.unregister(eventId)}
+				>
+					{events_withdraw_request()}
+				</Button>
+			</div>
+		);
+	}
+
 	const position = registrations.waitlistPosition(eventId);
 	if (position !== null) {
 		return (
@@ -74,6 +107,20 @@ export function EventRegistrationButton({
 		);
 	}
 
+	const label = requiresApproval
+		? events_request_registration()
+		: isFull
+			? events_join_waitlist()
+			: events_register();
+	if (hasQuestions) {
+		return (
+			<Button size="sm" variant={isFull ? "secondary" : "default"} asChild>
+				<Link to="/events/$eventId" params={{ eventId }}>
+					{label}
+				</Link>
+			</Button>
+		);
+	}
 	return (
 		<Button
 			size="sm"
@@ -81,7 +128,7 @@ export function EventRegistrationButton({
 			disabled={!interactive || isRegisterPending}
 			onClick={() => registrations.register(eventId)}
 		>
-			{isFull ? events_join_waitlist() : events_register()}
+			{label}
 		</Button>
 	);
 }

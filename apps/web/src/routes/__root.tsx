@@ -4,6 +4,8 @@ import { ensureCurrentUser } from "@repo/api/auth/current-user-query";
 import { syncDocumentLocale } from "@repo/i18n/localization/sync-document-locale";
 import {
 	error_title,
+	footer_accessibility,
+	footer_privacy,
 	go_home,
 	not_found_title,
 } from "@repo/i18n/paraglide/messages";
@@ -20,6 +22,7 @@ import {
 	Link,
 	Outlet,
 	Scripts,
+	useMatch,
 } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import appCss from "~/app.css?url";
@@ -69,6 +72,16 @@ export const Route = createRootRouteWithContext<{
 
 function RootComponent() {
 	const { user } = Route.useRouteContext();
+	// The embeddable widget (F24) is only its list: no site chrome or live sync.
+	const isWidget = useMatch({ from: "/widget", shouldThrow: false });
+	if (isWidget) {
+		return (
+			<>
+				<Outlet />
+				<HydrationMarker />
+			</>
+		);
+	}
 	return (
 		<>
 			<EventSeatCountsSync />
@@ -80,6 +93,14 @@ function RootComponent() {
 			<ReactQueryDevtools buttonPosition="bottom-right" />
 			<Header user={user} />
 			<Outlet />
+			<footer className="mx-auto flex w-full max-w-4xl flex-wrap gap-x-4 gap-y-1 px-4 py-6 text-sm text-muted-foreground">
+				<Link to="/privacy" className="underline underline-offset-2">
+					{footer_privacy()}
+				</Link>
+				<Link to="/accessibility" className="underline underline-offset-2">
+					{footer_accessibility()}
+				</Link>
+			</footer>
 			<Toaster />
 			<HydrationMarker />
 		</>

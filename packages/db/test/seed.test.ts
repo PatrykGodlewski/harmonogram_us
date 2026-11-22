@@ -6,8 +6,11 @@ import { effectiveEventEndSql } from "../src/queries/event-registrations";
 import { authUsers } from "../src/schema/better-auth";
 import {
 	accountSeeds,
+	APPROVAL_EVENT_ID,
+	CERTIFICATE_EVENT_ID,
 	FULL_EVENT_ID,
 	groupSeeds,
+	INVITE_EVENT_ID,
 	LAST_SEAT_EVENT_ID,
 	LIVE_NOW_EVENT_ID,
 	PAST_ATTENDED_EVENT_ID,
@@ -168,6 +171,35 @@ describe("seedDatabase", () => {
 			closed: groupSeeds.filter((group) => group.close).length,
 			with_items: groupSeeds.filter((group) => group.itemIds.length > 0).length,
 		});
+	});
+
+	it("shows plan 4 features: a certificate, waiting requests, an invite-only event, speakers", async () => {
+		const { getCertificate } = await import("../src/queries/certificates");
+		const [row] = await db.execute<{
+			certificate_id: string;
+			certificate_user: string;
+			pending: number;
+			rejected: number;
+			private_token: string | null;
+			speakers: number;
+			organizer_events: number;
+		}>(sql`
+			SELECT
+				(SELECT r.id FROM event_registrations r JOIN "user" u ON u.id = r.user_id
+					WHERE r.event_id = ${CERTIFICATE_EVENT_ID} AND u.email = 'student1@harmonogram.local') AS certificate_id,
+				(SELECT id FROM "user" WHERE email = 'student1@harmonogram.local') AS certificate_user,
+				(SELECT count(*)::int FROM event_registrations WHERE event_id = ${APPROVAL_EVENT_ID} AND state = 'pending') AS pending,
+				(SELECT count(*)::int FROM event_registrations WHERE event_id = ${APPROVAL_EVENT_ID} AND state = 'rejected') AS rejected,
+				(SELECT invite_token FROM events WHERE id = ${INVITE_EVENT_ID} AND visibility = 'private') AS private_token,
+				(SELECT count(*)::int FROM agenda_items WHERE jsonb_array_length(speakers) > 0) AS speakers,
+				(SELECT count(*)::int FROM event_organizers o JOIN "user" u ON u.id = o.user_id
+					WHERE u.email = 'organizator@harmonogram.local') AS organizer_events
+		`);
+		expect(row).toMatchObject({ pending: 2, rejected: 1 });
+		expect(row?.private_token).toBeTruthy();
+		expect(row?.speakers).toBeGreaterThan(0);
+		expect(row?.organizer_events).toBeGreaterThanOrEqual(3);
+		expect(await getCertificate(row?.certificate_id ?? "", row?.certificate_user ?? "")).not.toBeNull();
 	});
 
 	it("refuses to run in production", async () => {

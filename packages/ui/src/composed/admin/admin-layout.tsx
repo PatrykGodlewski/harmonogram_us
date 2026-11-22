@@ -5,6 +5,7 @@ import {
 	admin_nav_event_types,
 	admin_nav_events,
 	admin_nav_section,
+	admin_nav_users,
 	header_logout,
 } from "@repo/i18n/paraglide/messages";
 import {
@@ -30,6 +31,7 @@ import {
 	LogOutIcon,
 	MapPinIcon,
 	TagIcon,
+	UsersIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { AdminLogo } from "../logo/admin-logo";
@@ -39,34 +41,47 @@ const navItems = [
 		to: "/",
 		label: admin_nav_dashboard,
 		icon: LayoutDashboardIcon,
+		adminOnly: false,
 	},
 	{
 		to: "/events",
 		label: admin_nav_events,
 		icon: CalendarDaysIcon,
+		adminOnly: false,
 	},
 	{
 		to: "/event-types",
 		label: admin_nav_event_types,
+		adminOnly: true,
 		icon: TagIcon,
 	},
 	{
 		to: "/event-locations",
 		label: admin_nav_event_locations,
+		adminOnly: true,
 		icon: MapPinIcon,
 	},
 	{
 		to: "/event-faculties",
 		label: admin_nav_event_faculties,
+		adminOnly: true,
 		icon: GraduationCapIcon,
+	},
+	{
+		to: "/users",
+		label: admin_nav_users,
+		icon: UsersIcon,
+		adminOnly: true,
 	},
 ] as const;
 
 export interface AdminLayoutProps {
 	children: ReactNode;
+	/** Lookups (and other instance settings) are shown to admins only. */
+	isAdmin: boolean;
 }
 
-export function AdminLayout({ children }: AdminLayoutProps) {
+export function AdminLayout({ children, isAdmin }: AdminLayoutProps) {
 	const pathname = useRouterState({
 		select: (state) => state.location.pathname,
 	});
@@ -86,28 +101,30 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 						<SidebarGroupLabel>{admin_nav_section()}</SidebarGroupLabel>
 						<SidebarGroupContent>
 							<SidebarMenu>
-								{navItems.map((item) => {
-									const Icon = item.icon;
-									const isActive =
-										item.to === "/"
-											? pathname === "/"
-											: pathname.startsWith(item.to);
+								{navItems
+									.filter((item) => isAdmin || !item.adminOnly)
+									.map((item) => {
+										const Icon = item.icon;
+										const isActive =
+											item.to === "/"
+												? pathname === "/"
+												: pathname.startsWith(item.to);
 
-									return (
-										<SidebarMenuItem key={item.to}>
-											<SidebarMenuButton
-												asChild
-												isActive={isActive}
-												tooltip={item.label()}
-											>
-												<Link to={item.to}>
-													<Icon />
-													<span>{item.label()}</span>
-												</Link>
-											</SidebarMenuButton>
-										</SidebarMenuItem>
-									);
-								})}
+										return (
+											<SidebarMenuItem key={item.to}>
+												<SidebarMenuButton
+													asChild
+													isActive={isActive}
+													tooltip={item.label()}
+												>
+													<Link to={item.to}>
+														<Icon />
+														<span>{item.label()}</span>
+													</Link>
+												</SidebarMenuButton>
+											</SidebarMenuItem>
+										);
+									})}
 							</SidebarMenu>
 						</SidebarGroupContent>
 					</SidebarGroup>

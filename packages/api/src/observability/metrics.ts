@@ -30,7 +30,16 @@ const LOCALE = /^(pl|en)$/;
 const ID =
 	/^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|evt-[\w-]+|\d+)$/i;
 /** Segments after these are ids, tokens or codes, whatever they look like (never label values). */
-const ID_PARENTS = new Set(["events", "tickets", "groups", "invite", "join"]);
+const ID_PARENTS = new Set([
+	"events",
+	"tickets",
+	"certificates",
+	"groups",
+	"invite",
+	"join",
+	// Personal calendar feeds: the segment after "my" is a secret token.
+	"my",
+]);
 const MAX_SEGMENTS = 4;
 
 /**

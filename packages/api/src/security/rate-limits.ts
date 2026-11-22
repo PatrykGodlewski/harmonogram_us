@@ -43,3 +43,44 @@ export const MAGIC_LINK_LIMIT: RateLimit = {
 	durationSeconds: FIFTEEN_MINUTES,
 	blockDurationSeconds: FIFTEEN_MINUTES,
 };
+
+/** Organizer messages: at most 5 per event per hour (each one e-mails everyone registered). */
+export const EVENT_MESSAGE_LIMIT: RateLimit = {
+	points: 5,
+	durationSeconds: 60 * 60,
+};
+
+/** Invitations by e-mail: 10 sends (of up to 50 addresses each) per event and per sender per hour. */
+export const EVENT_INVITATION_LIMIT: RateLimit = {
+	points: 10,
+	durationSeconds: 60 * 60,
+};
+
+/** One budget per event and one per sender, so neither can be drained through the other. */
+export function eventMessageRateKeys(
+	eventId: string,
+	userId: string,
+): string[] {
+	return [`event:${eventId}`, `user:${userId}`];
+}
+
+/** Guest registration requests (F17): per address from one network, and per network. */
+export const GUEST_REQUEST_LIMIT: RateLimit = {
+	points: 5,
+	durationSeconds: 60 * 60,
+};
+
+/** Generous: a campus network sends many guests through one address. */
+export const GUEST_REQUEST_IP_LIMIT: RateLimit = {
+	points: 200,
+	durationSeconds: 60 * 60,
+};
+
+/**
+ * Confirming a guest registration, per token like invitations: tokens are 256-bit, so a
+ * per-IP limit would only block people sharing a network.
+ */
+export const GUEST_CONFIRM_LIMIT: RateLimit = {
+	points: 10,
+	durationSeconds: FIFTEEN_MINUTES,
+};

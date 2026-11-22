@@ -1,6 +1,10 @@
 import type { Ticket } from "@repo/api/events/ticket";
+import { ticketQrText } from "@repo/api/tickets/qr";
 import {
+	events_pending_approval,
+	events_rejected,
 	tickets_holder,
+	tickets_pdf,
 	tickets_print,
 	tickets_qr_alt,
 	tickets_show_at_entry,
@@ -12,10 +16,12 @@ import { formatEventDateTime } from "@repo/ui/time";
 import QRCode from "qrcode";
 import * as React from "react";
 
-/** What the ticket's QR code encodes; an organiser's scanner reads it back. */
-function ticketQrText(ticketCode: string): string {
-	return `harmonogram-ticket:${ticketCode}`;
-}
+/** Why a ticket without a place shows no QR code. */
+const NO_PLACE_MESSAGE = {
+	waitlisted: tickets_waitlisted,
+	pending: events_pending_approval,
+	rejected: events_rejected,
+} as const;
 
 export function TicketCard({ ticket }: { ticket: Ticket }) {
 	const locale = getLocale();
@@ -41,17 +47,23 @@ export function TicketCard({ ticket }: { ticket: Ticket }) {
 					<p className="text-center text-sm text-muted-foreground">
 						{tickets_show_at_entry()}
 					</p>
-					<Button
-						variant="outline"
-						className="print:hidden"
-						onClick={handlePrint}
-					>
-						{tickets_print()}
-					</Button>
+					<div className="flex flex-wrap justify-center gap-2 print:hidden">
+						<Button variant="outline" asChild>
+							<a
+								href={`/api/tickets/${ticket.registrationId}/pdf?lang=${getLocale()}`}
+								download
+							>
+								{tickets_pdf()}
+							</a>
+						</Button>
+						<Button variant="outline" onClick={handlePrint}>
+							{tickets_print()}
+						</Button>
+					</div>
 				</>
 			) : (
 				<p className="rounded-md bg-muted p-3 text-sm">
-					{tickets_waitlisted()}
+					{NO_PLACE_MESSAGE[ticket.state]()}
 				</p>
 			)}
 		</article>

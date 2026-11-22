@@ -1,14 +1,18 @@
 import { myRegistrationListQueryOptions } from "@repo/api/events/my-registration-list";
 import type { MyRegistrationListItem } from "@repo/db/queries/my-registrations";
 import {
+	account_archive,
 	account_my_registrations,
 	account_open_event,
-	account_past,
+	account_pending,
 	account_registrations_empty,
+	account_rejected,
 	account_section_empty,
 	account_ticket,
 	account_upcoming,
 	account_waitlisted,
+	certificate_download,
+	event_status_cancelled,
 	events_registered,
 	events_unregister,
 } from "@repo/i18n/paraglide/messages";
@@ -57,11 +61,7 @@ export function MyRegistrations({ userId }: { userId: string }) {
 						rows={upcoming}
 						canWithdraw
 					/>
-					<RegistrationGroup
-						title={account_past()}
-						rows={past}
-						canWithdraw={false}
-					/>
+					{past.length > 0 ? <RegistrationArchive rows={past} /> : null}
 				</div>
 			)}
 		</section>
@@ -102,16 +102,53 @@ function RegistrationGroup({
 	);
 }
 
+/** Events that have ended: folded away, with no actions but opening the event (and a certificate). */
+function RegistrationArchive({ rows }: { rows: MyRegistrationListItem[] }) {
+	return (
+		<details className="group flex flex-col gap-2">
+			<summary className="cursor-pointer text-sm font-medium text-muted-foreground">
+				{account_archive({ count: rows.length })}
+			</summary>
+			<ul className="mt-2 divide-y">
+				{rows.map((row) => (
+					<RegistrationRow
+						key={row.registrationId}
+						row={row}
+						canWithdraw={false}
+						archived
+					/>
+				))}
+			</ul>
+		</details>
+	);
+}
+
+function stateLabel(row: MyRegistrationListItem): string {
+	switch (row.state) {
+		case "registered":
+			return events_registered();
+		case "waitlisted":
+			return account_waitlisted({ position: row.waitlistPosition ?? 0 });
+		case "pending":
+			return account_pending();
+		case "rejected":
+			return account_rejected();
+	}
+}
+
 function RegistrationRow({
 	row,
 	canWithdraw,
+	archived = false,
 }: {
+	archived?: boolean;
 	row: MyRegistrationListItem;
 	canWithdraw: boolean;
 }) {
 	const locale = getLocale();
 	const actions = useRegistrationActions();
 	const handleWithdraw = () => actions.unregister(row.eventId);
+	const isCancelled = row.eventStatus === "cancelled";
 
 	return (
 		<li className="flex flex-col gap-3 py-3 sm:flex-row sm:items-start sm:justify-between">
@@ -121,11 +158,12 @@ function RegistrationRow({
 					{formatEventDateTime(row.date, locale)}
 					{row.locationLabel ? ` · ${row.locationLabel}` : ""}
 				</p>
-				<div>
+				<div className="flex flex-wrap gap-2">
+					{isCancelled ? (
+						<Badge variant="destructive">{event_status_cancelled()}</Badge>
+					) : null}
 					<Badge variant={row.state === "registered" ? "default" : "secondary"}>
-						{row.state === "registered"
-							? events_registered()
-							: account_waitlisted({ position: row.waitlistPosition ?? 0 })}
+						{stateLabel(row)}
 					</Badge>
 				</div>
 				{row.items.length > 0 ? (
@@ -144,7 +182,7 @@ function RegistrationRow({
 						{account_open_event()}
 					</Link>
 				</Button>
-				{row.state === "registered" ? (
+				{row.state === "registered" && !isCancelled && !archived ? (
 					<Button size="sm" variant="outline" asChild>
 						<Link
 							to="/tickets/$registrationId"
@@ -154,7 +192,14 @@ function RegistrationRow({
 						</Link>
 					</Button>
 				) : null}
-				{canWithdraw ? (
+				{row.certificateAvailable ? (
+					<Button size="sm" variant="outline" asChild>
+						<a href={`/api/certificates/${row.registrationId}`} download>
+							{certificate_download()}
+						</a>
+					</Button>
+				) : null}
+				{canWithdraw && !isCancelled && row.state !== "rejected" ? (
 					<UnregisterEventDialog onConfirm={handleWithdraw}>
 						<Button
 							size="sm"

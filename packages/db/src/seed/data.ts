@@ -90,7 +90,19 @@ export type EventSeed = {
 	typeId: string;
 	locationId: string;
 	facultyId: string;
+	requiresApproval?: boolean;
+	certificatesEnabled?: boolean;
+	visibility?: "public" | "private";
+	/** Managed by the seeded organiser account (organizator@harmonogram.local). */
+	organizer?: boolean;
 };
+
+/** Ended yesterday's workshop with certificates: student1 was there, student2 was not. */
+export const CERTIFICATE_EVENT_ID = "evt-first-aid-past";
+/** Registrations wait for approval: two pending requests and one declined. */
+export const APPROVAL_EVENT_ID = "evt-phd-seminar";
+/** Invite-only: not on the list; the organiser panel shows its invite link. */
+export const INVITE_EVENT_ID = "evt-project-team";
 
 /** Seeded event that fills up, so the waitlist has people on it. */
 export const FULL_EVENT_ID = "evt-full-seminar";
@@ -108,6 +120,39 @@ export const SESSIONS_EVENT_ID = "evt-language-day";
 export const PAST_ATTENDED_EVENT_ID = "evt-past-biology-night";
 
 export const eventSeeds: EventSeed[] = [
+	{
+		id: CERTIFICATE_EVENT_ID,
+		title: "Warsztaty pierwszej pomocy (zakończone, z zaświadczeniami)",
+		daysFromNow: -1,
+		maxSeats: 20,
+		typeId: "workshop",
+		locationId: "katowice",
+		facultyId: "wnst",
+		certificatesEnabled: true,
+		organizer: true,
+	},
+	{
+		id: APPROVAL_EVENT_ID,
+		title: "Seminarium doktoranckie (zapisy z akceptacją)",
+		daysFromNow: 9,
+		maxSeats: 2,
+		typeId: "lecture",
+		locationId: "katowice",
+		facultyId: "wh",
+		requiresApproval: true,
+		organizer: true,
+	},
+	{
+		id: INVITE_EVENT_ID,
+		title: "Spotkanie zespołu projektowego (na zaproszenie)",
+		daysFromNow: 5,
+		maxSeats: 12,
+		typeId: "workshop",
+		locationId: "katowice",
+		facultyId: "wnst",
+		visibility: "private",
+		organizer: true,
+	},
 	{
 		id: "evt-1",
 		title: "Warsztaty z programowania",
@@ -353,12 +398,19 @@ export type AgendaItemSeed = {
 	locationId: string | null;
 	maxSeats: number | null;
 	requiresRegistration: boolean;
+	speakers?: { name: string; affiliation?: string }[];
+	materials?: { label: string; url: string }[];
 };
 
 type AgendaOptions = Partial<
 	Pick<
 		AgendaItemSeed,
-		"description" | "locationId" | "maxSeats" | "requiresRegistration"
+		| "description"
+		| "locationId"
+		| "maxSeats"
+		| "requiresRegistration"
+		| "speakers"
+		| "materials"
 	>
 >;
 
@@ -386,6 +438,8 @@ function agendaItem(
 			options.locationId === undefined ? event.locationId : options.locationId,
 		maxSeats: options.maxSeats ?? null,
 		requiresRegistration: options.requiresRegistration ?? true,
+		speakers: options.speakers,
+		materials: options.materials,
 	};
 }
 
@@ -423,6 +477,42 @@ function festivalDay(
 
 /** Every event's agenda starts when the event starts (startHour 0). */
 export const agendaItemSeeds: AgendaItemSeed[] = [
+	agendaItem(
+		CERTIFICATE_EVENT_ID,
+		"basics",
+		"Podstawy pierwszej pomocy",
+		0,
+		90,
+		{
+			speakers: [
+				{ name: "ratownik Marek Zieliński", affiliation: "WOPR Katowice" },
+			],
+		},
+	),
+	agendaItem(
+		CERTIFICATE_EVENT_ID,
+		"practice",
+		"Ćwiczenia na fantomach",
+		1.5,
+		90,
+	),
+	agendaItem(
+		APPROVAL_EVENT_ID,
+		"talk",
+		"Referat: metody badań jakościowych",
+		0,
+		60,
+		{
+			speakers: [
+				{ name: "mgr Ola Kwiatkowska", affiliation: "Szkoła Doktorska" },
+			],
+		},
+	),
+	agendaItem(APPROVAL_EVENT_ID, "discussion", "Dyskusja", 1, 45, {
+		requiresRegistration: false,
+	}),
+	agendaItem(INVITE_EVENT_ID, "status", "Przegląd postępów", 0, 60),
+	agendaItem(INVITE_EVENT_ID, "plan", "Plan na kolejny sprint", 1, 60),
 	// Warsztaty z programowania: parallel workshops with their own limits
 	agendaItem("evt-1", "opening", "Otwarcie i wprowadzenie", 0, 60),
 	agendaItem("evt-1", "web", "Warsztat: aplikacje webowe", 1.5, 90, {
@@ -437,7 +527,17 @@ export const agendaItemSeeds: AgendaItemSeed[] = [
 		requiresRegistration: false,
 	}),
 
-	agendaItem("evt-2", "lecture", "Wykład: sztuka renesansu na Śląsku", 0, 90),
+	agendaItem("evt-2", "lecture", "Wykład: sztuka renesansu na Śląsku", 0, 90, {
+		speakers: [
+			{
+				name: "dr hab. Ewa Malinowska",
+				affiliation: "Instytut Historii Sztuki",
+			},
+		],
+		materials: [
+			{ label: "Slajdy (PDF)", url: "https://example.org/renesans-slajdy.pdf" },
+		],
+	}),
 	agendaItem("evt-2", "discussion", "Dyskusja z prelegentką", 1.75, 45, {
 		requiresRegistration: false,
 	}),
@@ -711,7 +811,7 @@ export const agendaItemSeeds: AgendaItemSeed[] = [
 export type AccountSeed = {
 	email: string;
 	name: string;
-	role: "user" | "admin";
+	role: "user" | "organizer" | "admin";
 	/** false: the account signs in only with e-mail links (no password). */
 	withPassword: boolean;
 };
@@ -722,6 +822,12 @@ export const accountSeeds: AccountSeed[] = [
 		email: "admin@harmonogram.local",
 		name: "Administrator",
 		role: "admin",
+		withPassword: true,
+	},
+	{
+		email: "organizator@harmonogram.local",
+		name: "Olga Organizatorka",
+		role: "organizer",
 		withPassword: true,
 	},
 	{

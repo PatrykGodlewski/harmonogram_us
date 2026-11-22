@@ -1,18 +1,34 @@
 import type { EventFilterOptions, EventSearch } from "@repo/api/events/schemas";
 import {
+	attendance_mode_hybrid,
+	attendance_mode_online,
+	attendance_mode_onsite,
 	filter_all_faculties,
 	filter_all_locations,
 	filter_all_types,
 	filter_faculty_placeholder,
 	filter_location_placeholder,
+	filter_mode_all,
+	filter_mode_placeholder,
 	filter_sort_asc,
 	filter_sort_desc,
 	filter_sort_placeholder,
 	filter_type_placeholder,
+	filter_when_7d,
+	filter_when_30d,
+	filter_when_all,
+	filter_when_placeholder,
+	filter_when_today,
 } from "@repo/i18n/paraglide/messages";
 
 export type FilterSelectConfig = {
-	id: "sortOrder" | "locationFilter" | "facultyFilter" | "eventTypeFilter";
+	id:
+		| "sortOrder"
+		| "whenFilter"
+		| "modeFilter"
+		| "locationFilter"
+		| "facultyFilter"
+		| "eventTypeFilter";
 	placeholder: () => string;
 	getOptions: (
 		options: EventFilterOptions,
@@ -26,6 +42,26 @@ export const FILTER_SELECTS: FilterSelectConfig[] = [
 		getOptions: () => [
 			{ value: "asc", label: filter_sort_asc() },
 			{ value: "desc", label: filter_sort_desc() },
+		],
+	},
+	{
+		id: "whenFilter",
+		placeholder: filter_when_placeholder,
+		getOptions: () => [
+			{ value: "all", label: filter_when_all() },
+			{ value: "today", label: filter_when_today() },
+			{ value: "7d", label: filter_when_7d() },
+			{ value: "30d", label: filter_when_30d() },
+		],
+	},
+	{
+		id: "modeFilter",
+		placeholder: filter_mode_placeholder,
+		getOptions: () => [
+			{ value: "all", label: filter_mode_all() },
+			{ value: "onsite", label: attendance_mode_onsite() },
+			{ value: "online", label: attendance_mode_online() },
+			{ value: "hybrid", label: attendance_mode_hybrid() },
 		],
 	},
 	{

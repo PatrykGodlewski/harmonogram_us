@@ -20,6 +20,7 @@ import {
 	seedAgendaRegistrations,
 	seedGroups,
 	seedRegistrations,
+	seedShowcase,
 } from "./people";
 
 /** Seeds sample data and local test accounts. Idempotent; refuses to touch production. */
@@ -52,4 +53,5 @@ export async function seedDatabase(options: {
 		accounts,
 	);
 	await seedGroups(groupSeeds, accounts);
+	await seedShowcase(eventSeeds, accounts);
 }

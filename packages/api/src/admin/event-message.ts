@@ -1,0 +1,44 @@
+import { messageRegistrants } from "@repo/db/queries/event-message";
+import { enqueueEmails } from "@repo/jobs/client";
+import { z } from "zod";
+import { assertCanManageEvent } from "../auth/event-access";
+import { panelActionFn } from "../auth/panel-middleware";
+import { consumeRateLimit } from "../security/rate-limit";
+import {
+	EVENT_MESSAGE_LIMIT,
+	eventMessageRateKeys,
+} from "../security/rate-limits";
+
+const sendEventMessageSchema = z.object({
+	eventId: z.string().min(1),
+	audience: z.enum(["registered", "waitlisted", "all"]),
+	/** When given, exactly these people (selected on the list) instead of the audience. */
+	registrationIds: z.array(z.string().min(1)).min(1).max(1000).optional(),
+	subject: z.string().trim().min(1).max(200),
+	body: z.string().trim().min(1).max(5000),
+});
+
+/** E-mails the event's registrants; replies go to the organizer who sent it. */
+export const sendEventMessageServer = panelActionFn
+	.validator((input: unknown) => sendEventMessageSchema.parse(input))
+	.handler(async ({ data, context }) => {
+		await assertCanManageEvent(context.user, data.eventId);
+		for (const key of eventMessageRateKeys(data.eventId, context.user.id)) {
+			await consumeRateLimit("event-message", EVENT_MESSAGE_LIMIT, key);
+		}
+		const target = data.registrationIds
+			? { registrationIds: data.registrationIds }
+			: data.audience;
+		return messageRegistrants(data.eventId, target, (tx, ids) =>
+			enqueueEmails(
+				ids.map((registrationId) => ({
+					kind: "event-message",
+					registrationId,
+					subject: data.subject,
+					body: data.body,
+					replyTo: context.user.email,
+				})),
+				{ tx },
+			),
+		);
+	});

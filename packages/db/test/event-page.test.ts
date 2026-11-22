@@ -11,8 +11,8 @@ describe("getEventPage", () => {
 		for (let index = 0; index < 5; index++) {
 			ids.push(await createEvent({ date: sameTime }));
 		}
-		const first = await getEventPage({ sortOrder: "asc" }, 3);
-		const all = await getEventPage({ sortOrder: "asc" }, 10);
+		const first = await getEventPage({ audience: { kind: "public", signedIn: false }, sortOrder: "asc" }, 3);
+		const all = await getEventPage({ audience: { kind: "public", signedIn: false }, sortOrder: "asc" }, 10);
 		expect(first.events).toHaveLength(3);
 		expect(first.hasMore).toBe(true);
 		expect(all.hasMore).toBe(false);

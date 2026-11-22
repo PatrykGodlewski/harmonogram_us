@@ -1,4 +1,3 @@
-import { resetUnverifiedAccount } from "@repo/db/queries/account-safety";
 import { DomainError } from "@repo/db/queries/domain-errors";
 import {
 	acceptInvitation,
@@ -9,6 +8,7 @@ import { APIError, createAuthEndpoint } from "better-auth/api";
 import { setSessionCookie } from "better-auth/cookies";
 import { z } from "zod";
 import { registrationEmailHooks } from "../notifications/registration-hooks";
+import { ensureVerifiedUser } from "./verified-user";
 
 function invitationError(code: string): APIError {
 	return new APIError("BAD_REQUEST", { code, message: code });
@@ -38,26 +38,13 @@ export const groupInvitation = () =>
 					}
 
 					const adapter = ctx.context.internalAdapter;
-					let user = (await adapter.findUserByEmail(invitation.email))?.user;
-					if (user && !user.emailVerified) {
-						await resetUnverifiedAccount(user.id);
-						user = await adapter.updateUser(user.id, { emailVerified: true });
-					}
-					if (!user) {
-						try {
-							user = await adapter.createUser({
-								email: invitation.email,
-								name: invitation.email.split("@")[0] ?? invitation.email,
-								emailVerified: true,
-							});
-						} catch (error) {
-							// A concurrent confirm (double tap, two tabs) created the user first.
-							user = (await adapter.findUserByEmail(invitation.email))?.user;
-							if (!user) {
-								throw error;
-							}
-						}
-					}
+					// The invitation e-mail proved the address, like a magic link.
+					const user = await ensureVerifiedUser(
+						adapter,
+						invitation.email,
+						invitation.email.split("@")[0] ?? invitation.email,
+						"group-invitation",
+					);
 
 					let eventId: string;
 					try {

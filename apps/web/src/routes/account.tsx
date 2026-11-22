@@ -1,4 +1,6 @@
+import { profileQueryOptions } from "@repo/api/auth/profile";
 import { setPasswordForCurrentSession } from "@repo/api/auth/user";
+import { myCalendarUrlQueryOptions } from "@repo/api/calendar/my-calendar-url";
 import { myRegistrationListQueryOptions } from "@repo/api/events/my-registration-list";
 import { ensureMyRegistrations } from "@repo/api/events/my-registrations";
 import { myGroupsQueryOptions } from "@repo/api/groups/queries";
@@ -30,6 +32,7 @@ import {
 	groups_open_group,
 	groups_summary,
 } from "@repo/i18n/paraglide/messages";
+import { studentsPageHead } from "@repo/router-utils/metadata/page-head";
 import { requireAuthenticatedUser } from "@repo/router-utils/require-auth";
 import { Alert, AlertDescription, AlertTitle } from "@repo/ui/components/alert";
 import { Button } from "@repo/ui/components/button";
@@ -44,6 +47,9 @@ import { getRequestHeaders } from "@tanstack/react-start/server";
 import * as React from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { MyCalendar } from "~/components/account/my-calendar";
+import { MyData } from "~/components/account/my-data";
+import { MyProfile } from "~/components/account/my-profile";
 import { MyRegistrations } from "~/components/account/my-registrations";
 import { authClient } from "../lib/auth-client";
 
@@ -63,7 +69,7 @@ function formatFieldError(error: unknown): string {
 }
 
 const setPasswordWithSessionFn = createServerFn({ method: "POST" })
-	.inputValidator((input: unknown) => setPasswordInputSchema.parse(input))
+	.validator((input: unknown) => setPasswordInputSchema.parse(input))
 	.handler(async ({ data }) => {
 		const headers = getRequestHeaders();
 		await setPasswordForCurrentSession(headers, data.newPassword);
@@ -77,7 +83,10 @@ export const Route = createFileRoute("/account")({
 		Promise.all([
 			queryClient.ensureQueryData(myRegistrationListQueryOptions),
 			ensureMyRegistrations(queryClient),
+			queryClient.ensureQueryData(myCalendarUrlQueryOptions),
+			queryClient.ensureQueryData(profileQueryOptions),
 		]),
+	head: () => studentsPageHead(account_title()),
 	component: AccountPage,
 });
 
@@ -171,8 +180,11 @@ function AccountPage() {
 						: account_password_status_missing()}
 				</p>
 			</div>
+			{user ? <MyProfile /> : null}
 			{user ? <MyRegistrations userId={user.id} /> : null}
 			<MyGroups />
+			<MyCalendar />
+			{user ? <MyData email={user.email} /> : null}
 			<div className="mt-6 rounded-lg border p-4">
 				<h2 className="mb-4 text-lg font-semibold">
 					{account_password_title()}

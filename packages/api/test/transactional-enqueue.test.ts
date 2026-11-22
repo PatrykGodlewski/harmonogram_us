@@ -1,10 +1,14 @@
 import { sql } from "drizzle-orm";
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@repo/db/client";
 import { createGroup, joinGroup } from "@repo/db/queries/groups";
 import { registrationGroups } from "@repo/db/schema/groups";
-import { enqueueInvitationEmails, getBoss } from "@repo/jobs/client";
-import { QUEUE_GROUP_INVITATION_EMAIL } from "@repo/jobs/queues";
+import {
+	enqueueEmails,
+	enqueueInvitationEmails,
+	getBoss,
+} from "@repo/jobs/client";
+import { QUEUE_EMAILS, QUEUE_GROUP_INVITATION_EMAIL } from "@repo/jobs/queues";
 import { createEvent, createUser, hoursFromNow, resetDb } from "../../db/test/helpers";
 
 beforeEach(async () => {
@@ -92,3 +96,27 @@ describe("invitation jobs commit with the group", () => {
 	});
 });
 
+describe("enqueueEmails", () => {
+	it("queues a large message in batches, all inside the caller's transaction", async () => {
+		await db.execute(sql`DELETE FROM pgboss.job WHERE name = ${QUEUE_EMAILS}`);
+		const boss = await getBoss();
+		const insert = vi.spyOn(boss, "insert");
+		const jobs = Array.from({ length: 1200 }, (_, n) => ({
+			kind: "event-message" as const,
+			registrationId: `r${n}`,
+			subject: "S",
+			body: "B",
+			replyTo: "org@x.test",
+		}));
+		await db.transaction(async (tx) => {
+			await enqueueEmails(jobs, { tx });
+		});
+		expect(insert).toHaveBeenCalledTimes(3);
+		insert.mockRestore();
+		const [row] = await db.execute<{ n: number }>(
+			sql`SELECT count(*)::int AS n FROM pgboss.job WHERE name = ${QUEUE_EMAILS} AND data->>'kind' = 'event-message'`,
+		);
+		expect(row?.n).toBe(1200);
+		await db.execute(sql`DELETE FROM pgboss.job WHERE name = ${QUEUE_EMAILS}`);
+	});
+});

@@ -6,7 +6,7 @@
 import { and, asc, eq, inArray } from "drizzle-orm";
 import type { TransactionClient } from "../client";
 import { agendaItems } from "../schema/agenda";
-import { events } from "../schema/events";
+import { type EventStatus, events } from "../schema/events";
 import { registrationGroupMembers, registrationGroups } from "../schema/groups";
 import { DomainError } from "./domain-errors";
 
@@ -16,9 +16,9 @@ export type LockedMember = typeof registrationGroupMembers.$inferSelect;
 export async function lockEvent(
 	tx: TransactionClient,
 	eventId: string,
-): Promise<{ id: string } | null> {
+): Promise<{ id: string; status: EventStatus } | null> {
 	const [event] = await tx
-		.select({ id: events.id })
+		.select({ id: events.id, status: events.status })
 		.from(events)
 		.where(eq(events.id, eventId))
 		.for("update");

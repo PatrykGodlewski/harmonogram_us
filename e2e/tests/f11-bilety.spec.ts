@@ -83,3 +83,33 @@ test("[F11] cudzy bilet i bilet z listy rezerwowej @uczestnik", async ({
 	).toBeVisible();
 	await expect(page.getByRole("img", { name: "Kod QR biletu" })).toHaveCount(0);
 });
+
+test("[F11] bilet PDF do pobrania @uczestnik", async ({ page }, testInfo) => {
+	const email = uniqueEmail(testInfo);
+	const user = await createTestUser(email);
+	const event = await createTestEvent({
+		title: `Koncert ${email.slice(0, 6)}`,
+	});
+	await registerForEvent(event.id, user.id, "pl");
+	const { id } = await registrationOf(event.id, user.id);
+
+	await signInByEmail(page, email);
+	await open(page, `/pl/tickets/${id}`);
+	const link = page.getByRole("link", { name: "Pobierz PDF" });
+	const response = await page.request.get(
+		(await link.getAttribute("href")) ?? "",
+	);
+	expect(response.headers()["content-type"]).toContain("application/pdf");
+	const { extractText } = await import("unpdf");
+	const { text } = await extractText(new Uint8Array(await response.body()), {
+		mergePages: true,
+	});
+	expect(text).toContain(event.title);
+	expect(text).toContain("Test User");
+
+	// Someone else's ticket is not served
+	const other = await page.request.get(
+		`/api/tickets/${crypto.randomUUID()}/pdf`,
+	);
+	expect(other.status()).toBe(404);
+});

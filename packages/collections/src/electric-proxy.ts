@@ -9,6 +9,16 @@ export type ElectricProxyConfig = {
 	fetchImpl?: typeof fetch;
 };
 
+const HOP_BY_HOP_HEADERS = [
+	"connection",
+	"keep-alive",
+	"proxy-connection",
+	"transfer-encoding",
+	"upgrade",
+	"te",
+	"trailer",
+];
+
 /**
  * Proxies a shape request to Electric (server-only).
  * Forwards only Electric protocol params from the client; the server sets
@@ -30,6 +40,11 @@ export async function proxyShape(
 
 	upstream.searchParams.set("table", shape.table);
 	upstream.searchParams.set("columns", shape.columns.join(","));
+	// Subset filters (subset__where) may only use the shape's own columns.
+	upstream.searchParams.set("queryable_columns", shape.columns.join(","));
+	if ("where" in shape && shape.where) {
+		upstream.searchParams.set("where", shape.where);
+	}
 	if (secret) {
 		upstream.searchParams.set("secret", secret);
 	}
@@ -39,8 +54,16 @@ export async function proxyShape(
 		cache: "no-store",
 	});
 
-	// fetch already decoded the body; forwarding these would corrupt it.
 	const headers = new Headers(response.headers);
+	// Per-connection headers (RFC 9110 §7.6.1) belong to the upstream hop; HTTP/2 refuses them.
+	const perConnection = (headers.get("connection") ?? "")
+		.split(",")
+		.map((name) => name.trim())
+		.filter(Boolean);
+	for (const name of [...HOP_BY_HOP_HEADERS, ...perConnection]) {
+		headers.delete(name);
+	}
+	// fetch already decoded the body; forwarding these would corrupt it.
 	headers.delete("content-encoding");
 	headers.delete("content-length");
 

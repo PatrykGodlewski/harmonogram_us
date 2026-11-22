@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package harmonogram.documents.v1;
+
+// Renders the app's PDFs. Callers send display-ready text (translated and formatted);
+// the service only lays it out.
+service DocumentService {
+  rpc RenderTicket(RenderTicketRequest) returns (RenderTicketResponse);
+  rpc RenderCertificate(RenderCertificateRequest) returns (RenderCertificateResponse);
+  rpc RenderAttendanceSheet(RenderAttendanceSheetRequest) returns (RenderAttendanceSheetResponse);
+}
+
+message RenderTicketRequest {
+  // PDF metadata title, e.g. "Bilet — Koncert jesienny".
+  string document_title = 1;
+  // Small heading above the event title, e.g. "Bilet".
+  string heading = 2;
+  string event_title = 3;
+  // Formatted start, e.g. "1 grudnia 2026, 18:00".
+  string date_text = 4;
+  optional string place = 5;
+  // The full QR payload the door scanner reads.
+  string qr_text = 6;
+  string show_at_entry = 7;
+  string holder_label = 8;
+  string holder_name = 9;
+}
+
+message RenderTicketResponse {
+  bytes pdf = 1;
+}
+
+message RenderCertificateRequest {
+  // PDF metadata title, e.g. "Zaświadczenie o udziale — Warsztaty".
+  string document_title = 1;
+  // Who issues it (set by the organiser), above the title.
+  optional string issuer = 2;
+  string title = 3;
+  // "This is to certify that" line above the name.
+  string person_label = 4;
+  string name = 5;
+  // "attended" line above the event title.
+  string intro = 6;
+  string event_title = 7;
+  // Formatted, e.g. "Data: 1 grudnia 2026".
+  string date_line = 8;
+  optional string note = 9;
+  // Name under a line to sign, bottom right.
+  optional string signer = 10;
+  // Reference line at the bottom.
+  string footer = 11;
+}
+
+message RenderCertificateResponse {
+  bytes pdf = 1;
+}
+
+message RenderAttendanceSheetRequest {
+  // PDF metadata title, e.g. "Lista obecności — Warsztaty".
+  string document_title = 1;
+  // Heading on the first page, e.g. "Lista obecności".
+  string title = 2;
+  string event_title = 3;
+  // Formatted start, e.g. "1 grudnia 2026, 10:00".
+  string date_text = 4;
+  // Column headings.
+  string no_label = 5;
+  string name_label = 6;
+  string email_label = 7;
+  string signature_label = 8;
+  // Page footer with placeholders the service fills in, e.g. "Strona {page} z {pages}".
+  string page_label_template = 9;
+  // In the order to print.
+  repeated Person people = 10;
+}
+
+message Person {
+  string name = 1;
+  string email = 2;
+}
+
+message RenderAttendanceSheetResponse {
+  bytes pdf = 1;
+}

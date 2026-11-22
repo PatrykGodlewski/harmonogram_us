@@ -1,5 +1,10 @@
 import { ticketQueryOptions } from "@repo/api/events/ticket";
-import { tickets_back, tickets_not_found } from "@repo/i18n/paraglide/messages";
+import {
+	tickets_back,
+	tickets_not_found,
+	tickets_title,
+} from "@repo/i18n/paraglide/messages";
+import { studentsPageHead } from "@repo/router-utils/metadata/page-head";
 import { requireAuthenticatedUser } from "@repo/router-utils/require-auth";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -11,6 +16,10 @@ export const Route = createFileRoute("/tickets/$registrationId")({
 	},
 	loader: ({ context: { queryClient }, params }) =>
 		queryClient.ensureQueryData(ticketQueryOptions(params.registrationId)),
+	head: ({ loaderData }) =>
+		studentsPageHead(
+			loaderData ? `${tickets_title()}: ${loaderData.title}` : tickets_title(),
+		),
 	component: TicketPage,
 });
 

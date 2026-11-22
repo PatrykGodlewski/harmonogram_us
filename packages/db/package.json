@@ -20,16 +20,16 @@
   },
   "dependencies": {
     "@repo/env": "workspace:*",
-    "better-auth": "^1.6.9",
-    "drizzle-orm": "^0.45.2",
+    "better-auth": "^1.7.27",
+    "drizzle-orm": "^0.45.4",
     "postgres": "^3.4.9",
-    "zod": "^4.3.6"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@repo/config": "workspace:*",
-    "@types/node": "^25.6.0",
-    "drizzle-kit": "^0.31.10",
-    "tsx": "^4.21.0",
+    "@types/node": "^25.9.9",
+    "drizzle-kit": "^0.31.11",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.3",
     "vitest": "^5.1.1"
   }

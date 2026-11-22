@@ -1,5 +1,4 @@
-import { Turnstile } from "@marsidev/react-turnstile";
-import { enabledSocialProviders } from "@repo/api/auth/social-providers";
+import type { UniversitySignIn } from "@repo/api/auth/university";
 import { env } from "@repo/env/client";
 import {
 	auth_field_confirm_password,
@@ -32,7 +31,8 @@ import { Button } from "../components/button";
 import { FormMessage } from "../components/form-message";
 import { Input } from "../components/input";
 import { Label } from "../components/label";
-import { type AuthSocialProvider, authSocialButtonLabel } from "./auth-social";
+import { Captcha } from "./auth/captcha";
+import { UniversitySignInButton } from "./auth/university-sign-in";
 
 const authClient = createAuthClient();
 const PASSWORD_MIN_LENGTH = 8;
@@ -100,13 +100,14 @@ type SignupData = {
 
 export interface SignupProps {
 	redirectTo?: string;
+	university: UniversitySignIn;
 }
 
 function getRequestErrorMessage(error: unknown, fallback: string): string {
 	return getErrorMessage(error, fallback);
 }
 
-export function Signup({ redirectTo = "/account" }: SignupProps) {
+export function Signup({ redirectTo = "/account", university }: SignupProps) {
 	const [captchaToken, setCaptchaToken] = React.useState<string | null>(null);
 	const captchaSiteKey = env.VITE_TURNSTILE_SITE_KEY;
 	const captchaEnabled = Boolean(captchaSiteKey);
@@ -146,7 +147,15 @@ export function Signup({ redirectTo = "/account" }: SignupProps) {
 
 	return (
 		<div className="mx-auto max-w-sm rounded-lg border p-6">
-			<h2 className="mb-4 text-xl font-semibold">{auth_title_signup()}</h2>
+			<h1 className="mb-4 text-xl font-semibold">{auth_title_signup()}</h1>
+			{university ? (
+				<div className="mb-4">
+					<UniversitySignInButton
+						university={university}
+						redirectTo={localizeHref(redirectTo)}
+					/>
+				</div>
+			) : null}
 			<form
 				className="space-y-4"
 				onSubmit={(event) => {
@@ -216,30 +225,9 @@ export function Signup({ redirectTo = "/account" }: SignupProps) {
 					}}
 				</form.Subscribe>
 
-				{captchaEnabled ? (
-					<div className="flex justify-center">
-						<Turnstile
-							siteKey={captchaSiteKey ?? ""}
-							options={{ appearance: "always", size: "normal" }}
-							onSuccess={(token) => setCaptchaToken(token)}
-							onExpire={() => setCaptchaToken(null)}
-							onError={() => setCaptchaToken(null)}
-						/>
-					</div>
+				{captchaSiteKey ? (
+					<Captcha siteKey={captchaSiteKey} onToken={setCaptchaToken} />
 				) : null}
-
-				{signup.socialProviders.map((provider) => (
-					<Button
-						key={provider}
-						type="button"
-						variant="secondary"
-						className="w-full"
-						disabled={isBusy}
-						onClick={() => signup.onSocialSignup(provider)}
-					>
-						{authSocialButtonLabel[provider]()}
-					</Button>
-				))}
 
 				{errorAlert ? (
 					<Alert variant={errorAlert.variant}>
@@ -287,33 +275,14 @@ function useSignup(redirectTo: string, captchaToken: string | null) {
 		},
 	});
 
-	const socialSignupMutation = useMutation({
-		mutationFn: async (provider: AuthSocialProvider) => {
-			const { error } = await authClient.signIn.social({
-				provider,
-				callbackURL: redirectTo,
-				newUserCallbackURL: redirectTo,
-				errorCallbackURL: "/signup",
-			});
-			if (error) throw new Error(error.message ?? "Social sign-up failed");
-		},
-	});
-
 	return {
-		socialProviders: enabledSocialProviders,
 		onSignup: (data: SignupData) => signupMutation.mutateAsync(data),
-		onSocialSignup: (provider: AuthSocialProvider) =>
-			socialSignupMutation.mutate(provider),
-		clearFeedback: () => {
-			signupMutation.reset();
-			socialSignupMutation.reset();
-		},
+		clearFeedback: () => signupMutation.reset(),
 		status: {
-			isRequestError: signupMutation.isError || socialSignupMutation.isError,
-			requestErrorMessage:
-				signupMutation.error?.message ?? socialSignupMutation.error?.message,
+			isRequestError: signupMutation.isError,
+			requestErrorMessage: signupMutation.error?.message,
 			serverError: null,
-			isLoading: signupMutation.isPending || socialSignupMutation.isPending,
+			isLoading: signupMutation.isPending,
 		},
 	};
 }

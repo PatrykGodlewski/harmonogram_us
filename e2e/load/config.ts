@@ -11,6 +11,12 @@ export const LOAD = {
 	steadySeats: 10,
 	/** Stress: users for the stepped ramp that looks for the breaking point (pnpm load:stress). */
 	stressUsers: 400,
+	/** Documents: this many people download their ticket PDF in a ~10 s burst… */
+	documentsUsers: 200,
+	/** …while this many browse the list and an event page. */
+	documentsBrowseUsers: 50,
+	/** The "after" run may be this much slower for browsing than the baseline (run-to-run noise). */
+	documentsBrowseMargin: 1.1,
 	/** Where the setup writes sessions, payloads and function ids for k6 (gitignored). */
 	runDir: new URL("./.run/", import.meta.url),
 	/** grafana/k6 v2.4.0, pinned like the other images. */
@@ -32,6 +38,14 @@ export type LoadRun = {
 	spike: { eventId: string; users: { cookie: string; register: string }[] };
 	stress?: LoadUsers;
 	steady: LoadUsers;
+	documents?: LoadDocuments;
+};
+
+/** People with a ticket for one event (they download it) and people browsing meanwhile. */
+export type LoadDocuments = {
+	eventId: string;
+	downloads: { cookie: string; path: string }[];
+	browsers: { cookie: string }[];
 };
 
 /** Signed-in users with request bodies per event (same order as eventIds). */

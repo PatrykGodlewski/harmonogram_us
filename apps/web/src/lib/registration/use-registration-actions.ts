@@ -17,6 +17,7 @@ import {
 	events_join_waitlist_success,
 	events_register_full,
 	events_register_success,
+	events_request_success,
 	events_unregister_success,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
@@ -26,19 +27,21 @@ import {
 	useMutationState,
 	useQueryClient,
 } from "@tanstack/react-query";
+import { useSearch } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { showRegistrationErrorToast } from "~/lib/event-registration/errors";
 
 export type AgendaItemTarget = { id: string; title: string };
 
 type RegistrationAction =
-	| { type: "register"; eventId: string }
+	| { type: "register"; eventId: string; answers?: Record<string, string> }
 	| { type: "unregister"; eventId: string }
 	| { type: "registerItem"; eventId: string; item: AgendaItemTarget }
 	| { type: "unregisterItem"; eventId: string; item: AgendaItemTarget };
 
 export type RegistrationActions = {
-	register: (eventId: string) => void;
+	/** `answers`: to the event's questions, by question id (events with questions). */
+	register: (eventId: string, answers?: Record<string, string>) => void;
 	unregister: (eventId: string) => void;
 	registerItem: (eventId: string, item: AgendaItemTarget) => void;
 	unregisterItem: (eventId: string, item: AgendaItemTarget) => void;
@@ -66,17 +69,23 @@ function pendingKeyOf(mutation: Mutation<unknown, Error, unknown>): string {
 	return keyOf(mutation.state.variables as RegistrationAction);
 }
 
-function runAction(action: RegistrationAction) {
+/** `invite`: the invite-link secret of the page the action comes from, if any. */
+function runAction(action: RegistrationAction, invite: string | undefined) {
 	switch (action.type) {
 		case "register":
 			return registerForEventServer({
-				data: { eventId: action.eventId, locale: getLocale() },
+				data: {
+					eventId: action.eventId,
+					locale: getLocale(),
+					invite,
+					answers: action.answers,
+				},
 			});
 		case "unregister":
 			return unregisterFromEventServer({ data: { eventId: action.eventId } });
 		case "registerItem":
 			return registerForAgendaItemServer({
-				data: { agendaItemId: action.item.id, locale: getLocale() },
+				data: { agendaItemId: action.item.id, locale: getLocale(), invite },
 			});
 		case "unregisterItem":
 			return unregisterFromAgendaItemServer({
@@ -91,7 +100,9 @@ function successMessage(
 ): string {
 	switch (action.type) {
 		case "register":
-			return "state" in result && result.state === "waitlisted"
+			if (!("state" in result)) return events_register_success();
+			if (result.state === "pending") return events_request_success();
+			return result.state === "waitlisted"
 				? events_join_waitlist_success()
 				: events_register_success();
 		case "unregister":
@@ -120,6 +131,10 @@ function isSyncUnconfirmed(error: unknown): boolean {
  */
 export function useRegistrationActions(): RegistrationActions {
 	const queryClient = useQueryClient();
+	const invite = useSearch({
+		strict: false,
+		select: (search) => search.invite,
+	});
 
 	const refreshKeys = (eventId: string) => [
 		// A prefix: also the account list and open tickets.
@@ -131,7 +146,7 @@ export function useRegistrationActions(): RegistrationActions {
 	/** Runs one action end to end; errors are shown here, so the mutation itself never fails. */
 	const execute = async (action: RegistrationAction) => {
 		try {
-			const result = await runAction(action);
+			const result = await runAction(action, invite);
 			toast.success(successMessage(action, result));
 			const collection =
 				action.type === "registerItem" || action.type === "unregisterItem"
@@ -170,9 +185,9 @@ export function useRegistrationActions(): RegistrationActions {
 	const run = (action: RegistrationAction) => {
 		// Read the cache, not render state: a second click before the re-render is still ignored.
 		const key = keyOf(action);
+		// isMutating counts only pending mutations.
 		const inFlight = queryClient.isMutating({
 			mutationKey: REGISTRATION_MUTATION_KEY,
-			status: "pending",
 			predicate: (mutation) => pendingKeyOf(mutation) === key,
 		});
 		if (inFlight === 0) {
@@ -181,7 +196,7 @@ export function useRegistrationActions(): RegistrationActions {
 	};
 
 	return {
-		register: (eventId) => run({ type: "register", eventId }),
+		register: (eventId, answers) => run({ type: "register", eventId, answers }),
 		unregister: (eventId) => run({ type: "unregister", eventId }),
 		registerItem: (eventId, item) =>
 			run({ type: "registerItem", eventId, item }),

@@ -1,0 +1,35 @@
+# cargo-deny: known vulnerabilities, licences and sources of the Rust workspace (CI `rust` job).
+
+[advisories]
+version = 2
+yanked = "deny"
+ignore = [
+	# ttf-parser is unmaintained (no known vulnerability). krilla needs it through rustybuzz for
+	# text shaping, so it cannot be dropped; it only ever parses the fonts embedded in the binary,
+	# never request data. Revisit when krilla moves off rustybuzz.
+	{ id = "RUSTSEC-2026-0192", reason = "unmaintained, no vulnerability; parses only our embedded fonts" },
+]
+
+[licenses]
+version = 2
+allow = [
+	"Apache-2.0",
+	"Apache-2.0 WITH LLVM-exception",
+	"BSD-2-Clause",
+	"BSD-3-Clause",
+	"MIT",
+	"Unicode-3.0",
+	"Zlib",
+]
+
+# Our own crates are not published (publish = false); the repository licence covers them.
+[licenses.private]
+ignore = true
+
+[bans]
+multiple-versions = "allow"
+wildcards = "deny"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

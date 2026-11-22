@@ -1,4 +1,8 @@
-import { events_seats_remaining } from "@repo/i18n/paraglide/messages";
+import {
+	event_room,
+	event_status_cancelled,
+	events_seats_remaining,
+} from "@repo/i18n/paraglide/messages";
 import { Badge } from "@repo/ui/components/badge";
 import {
 	Card,
@@ -8,6 +12,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@repo/ui/components/card";
+import { AttendanceModeBadge } from "@repo/ui/composed/events/attendance-mode-badge";
 import { Link } from "@tanstack/react-router";
 import { EventRegistrationButton } from "~/components/event-registration-button";
 import { formatEventDateForLocale } from "~/lib/events/format-event-date";
@@ -40,6 +45,7 @@ export function HomeEventCard({
 		event.id,
 		fallback,
 	);
+	const isCancelled = event.status === "cancelled";
 
 	return (
 		<Card>
@@ -58,21 +64,32 @@ export function HomeEventCard({
 					{" · "}
 					{events_seats_remaining({ remaining: seatsRemaining, max: maxSeats })}
 				</CardDescription>
-				<CardAction>
-					<EventRegistrationButton
-						eventId={event.id}
-						user={user}
-						interactive={interactive}
-						seatsRemaining={seatsRemaining}
-						registrations={registrations}
-					/>
-				</CardAction>
+				{isCancelled ? null : (
+					<CardAction>
+						<EventRegistrationButton
+							eventId={event.id}
+							user={user}
+							interactive={interactive}
+							seatsRemaining={seatsRemaining}
+							requiresApproval={event.requiresApproval}
+							hasQuestions={event.hasQuestions}
+							registrations={registrations}
+						/>
+					</CardAction>
+				)}
 			</CardHeader>
 			<CardContent>
 				<div className="flex flex-wrap gap-2">
+					{isCancelled ? (
+						<Badge variant="destructive">{event_status_cancelled()}</Badge>
+					) : null}
+					<AttendanceModeBadge mode={event.attendanceMode} />
 					<Badge variant="secondary">{event.typeLabel}</Badge>
 					{event.locationLabel ? (
 						<Badge variant="outline">{event.locationLabel}</Badge>
+					) : null}
+					{event.room ? (
+						<Badge variant="outline">{event_room({ room: event.room })}</Badge>
 					) : null}
 					{event.facultyLabel ? (
 						<Badge variant="outline">{event.facultyLabel}</Badge>

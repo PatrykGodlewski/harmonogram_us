@@ -13,7 +13,8 @@ import { enqueueInvitationEmails } from "@repo/jobs/client";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeaders } from "@tanstack/react-start/server";
 import { authMiddleware } from "../auth/middleware";
-import { withDomainErrors } from "../errors";
+import { appError, withDomainErrors } from "../errors";
+import { canOpenEvent } from "../events/access";
 import { registrationEmailHooks } from "../notifications/registration-hooks";
 import { getClientIp } from "../security/client-ip";
 import { assertEmailsAllowed } from "../security/email-policy";
@@ -51,8 +52,11 @@ function invitationHooks(): InvitationHooks {
 }
 
 export const createGroupServer = protectedActionFn
-	.inputValidator(createGroupSchema)
-	.handler(async ({ data, context }) => {
+	.validator(createGroupSchema)
+	.handler(async ({ data: { invite, ...data }, context }) => {
+		if (!(await canOpenEvent(data.eventId, context.user.id, invite))) {
+			throw appError("EVENT_NOT_FOUND");
+		}
 		await assertEmailsAllowed(data.emails);
 		const result = await withDomainErrors(() =>
 			createGroup({ ...data, ownerUserId: context.user.id }, invitationHooks()),
@@ -61,7 +65,7 @@ export const createGroupServer = protectedActionFn
 	});
 
 export const inviteToGroupServer = protectedActionFn
-	.inputValidator(inviteToGroupSchema)
+	.validator(inviteToGroupSchema)
 	.handler(async ({ data, context }) => {
 		await assertEmailsAllowed(data.emails);
 		const refs = await withDomainErrors(() =>
@@ -77,7 +81,7 @@ export const inviteToGroupServer = protectedActionFn
 	});
 
 export const resendInvitationServer = protectedActionFn
-	.inputValidator(memberIdSchema)
+	.validator(memberIdSchema)
 	.handler(async ({ data, context }) => {
 		await withDomainErrors(() =>
 			resendInvitation(
@@ -91,7 +95,7 @@ export const resendInvitationServer = protectedActionFn
 	});
 
 export const removeMemberServer = protectedActionFn
-	.inputValidator(memberIdSchema)
+	.validator(memberIdSchema)
 	.handler(async ({ data, context }) =>
 		withDomainErrors(() =>
 			removeMember(
@@ -104,7 +108,7 @@ export const removeMemberServer = protectedActionFn
 	);
 
 export const setMemberItemsServer = protectedActionFn
-	.inputValidator(setMemberItemsSchema)
+	.validator(setMemberItemsSchema)
 	.handler(async ({ data, context }) =>
 		withDomainErrors(() =>
 			setMemberItems(data.memberId, context.user.id, data.itemIds, {
@@ -114,7 +118,7 @@ export const setMemberItemsServer = protectedActionFn
 	);
 
 export const updateGroupServer = protectedActionFn
-	.inputValidator(updateGroupSchema)
+	.validator(updateGroupSchema)
 	.handler(async ({ data, context }) => {
 		const { groupId, ...patch } = data;
 		return withDomainErrors(() =>
@@ -129,7 +133,7 @@ export const updateGroupServer = protectedActionFn
 	});
 
 export const closeGroupServer = protectedActionFn
-	.inputValidator(groupIdSchema)
+	.validator(groupIdSchema)
 	.handler(async ({ data, context }) => {
 		await withDomainErrors(() =>
 			closeGroup(
@@ -144,7 +148,7 @@ export const closeGroupServer = protectedActionFn
 
 /** Public: a student joins through the teacher's link. Rate limited and captcha-protected. */
 export const joinGroupServer = createServerFn({ method: "POST" })
-	.inputValidator(joinGroupSchema)
+	.validator(joinGroupSchema)
 	.handler(async ({ data }) => {
 		const ip = getClientIp(getRequestHeaders());
 		await consumeRateLimit(

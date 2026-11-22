@@ -1,0 +1,2 @@
+ALTER TABLE "event_organizers" ADD COLUMN "role" text DEFAULT 'manager' NOT NULL;--> statement-breakpoint
+ALTER TABLE "event_organizers" ADD CONSTRAINT "event_organizers_role_check" CHECK ("event_organizers"."role" IN ('manager', 'checkin'));

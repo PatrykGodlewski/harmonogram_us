@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@repo/i18n": "workspace:*",
-    "@tanstack/react-router": "^1.168.23"
+    "@tanstack/react-router": "^1.170.46"
   },
   "devDependencies": {
     "@repo/config": "workspace:*",

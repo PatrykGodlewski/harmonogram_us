@@ -25,10 +25,15 @@ async function createEventInAdmin(page: Page, title: string) {
 	await dialog.getByLabel("Maks. miejsc").fill("2");
 	await dialog.getByRole("combobox", { name: "Typ" }).click();
 	await page.getByRole("option", { name: "Seminarium" }).click();
+	await dialog.getByRole("combobox", { name: "Forma" }).click();
+	await page.getByRole("option", { name: "Online" }).click();
+	await dialog.getByLabel("Link online").fill("https://meet.example.test/cykl");
 	await dialog.getByRole("button", { name: "Zapisz" }).click();
 	await expect(dialog).toBeHidden();
-	await page.getByRole("link", { name: title }).click();
 	await page.waitForURL(/\/events\/[^/]+$/);
+	await page.waitForURL(/\/events\/[^/]+$/);
+	await page.getByRole("button", { name: "Opublikuj" }).click();
+	await expect(page.getByText("Szkic", { exact: true })).toHaveCount(0);
 	return page.url().split("/").at(-1) ?? "";
 }
 
@@ -42,7 +47,9 @@ async function addAgendaItemInAdmin(page: Page, title: string) {
 	await dialog.getByLabel("Limit miejsc").fill("1");
 	await dialog.getByRole("button", { name: "Zapisz" }).click();
 	await expect(dialog).toBeHidden();
-	await expect(page.getByText(title)).toBeVisible();
+	await expect(
+		page.getByRole("region", { name: "Program" }).getByText(title),
+	).toBeVisible();
 }
 
 test("[F3] pełny cykl: admin tworzy, uczestnik się zapisuje, wydarzenie się kończy albo zostaje usunięte", async ({
@@ -52,7 +59,7 @@ test("[F3] pełny cykl: admin tworzy, uczestnik się zapisuje, wydarzenie się k
 	// Given an admin and a participant
 	const adminEmail = uniqueEmail(testInfo);
 	const password = randomBytes(18).toString("base64url");
-	await createTestUser(adminEmail, { admin: true, password });
+	await createTestUser(adminEmail, { role: "admin", password });
 	const participantEmail = `uczestnik-${adminEmail}`;
 	const participant = await createTestUser(participantEmail);
 	// (the fixture also makes sure the "Seminarium" type exists)
@@ -94,14 +101,18 @@ test("[F3] pełny cykl: admin tworzy, uczestnik się zapisuje, wydarzenie się k
 
 	// Then registration is closed and the event is in the participant's past events
 	await open(user, `/pl/events/${eventId}`);
-	await expect(user.getByText("Zapisy zamknięte").first()).toBeVisible();
-	await open(user, "/pl/account");
 	await expect(
-		user.getByRole("region", { name: "Minione" }).getByText(title),
+		user.getByText("To wydarzenie już się odbyło.").first(),
+	).toBeVisible();
+	await open(user, "/pl/account");
+	await user.getByText(/^Archiwum \(\d+\)$/).click();
+	await expect(
+		user.locator("details").filter({ hasText: "Archiwum" }).getByText(title),
 	).toBeVisible();
 
 	// When the admin deletes another event the participant registered for
 	await open(page, adminUrl("/pl/events"));
+	await page.getByLabel("Szukaj wydarzenia").fill(toDelete.title);
 	page.once("dialog", (dialog) => void dialog.accept());
 	await page
 		.getByRole("row")

@@ -189,3 +189,32 @@ describe("member changes", () => {
 	});
 });
 
+
+describe("groups and registration approval", () => {
+	it("a group cannot be created on an event that requires approval", async () => {
+		const eventId = await createEvent({ requiresApproval: true, date: hoursFromNow(24 * 10) });
+		const owner = await createUser();
+		expect(
+			await rejectionCode(
+				createGroup({ eventId, ownerUserId: owner, places: 2, itemIds: [], emails: [], joinLinkEnabled: true }),
+			),
+		).toBe("APPROVAL_REQUIRED");
+	});
+
+	it("a rejected student cannot get in through a group invitation", async () => {
+		const { token, eventId } = await groupWithInvite();
+		const kid = await createUser("kid@x.test");
+		await registerForEvent(eventId, kid, "pl");
+		await db.update(eventRegistrations).set({ state: "rejected" }).where(eq(eventRegistrations.userId, kid));
+		expect(await rejectionCode(acceptInvitation(token, kid))).toBe("APPROVAL_REQUIRED");
+	});
+});
+
+describe("groups made before approval was switched on", () => {
+	it("a new member without a registration waits for approval instead of getting in", async () => {
+		const { token, eventId } = await groupWithInvite();
+		await db.update(events).set({ requiresApproval: true }).where(eq(events.id, eventId));
+		const kid = await createUser("kid@x.test");
+		expect(await rejectionCode(acceptInvitation(token, kid))).toBe("APPROVAL_REQUIRED");
+	});
+});

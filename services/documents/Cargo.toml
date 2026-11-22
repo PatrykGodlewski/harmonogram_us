@@ -1,0 +1,32 @@
+[package]
+name = "documents"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+prost = "0.14"
+tonic = "0.14"
+tonic-prost = "0.14"
+tonic-health = "0.14"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "signal", "sync"] }
+tokio-stream = { version = "0.1", features = ["net"] }
+subtle = "2"
+axum = { version = "0.8", default-features = false, features = ["http1", "tokio"] }
+prometheus-client = "0.24"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
+ttf-parser = "0.25"
+krilla = "0.6"
+qrcode = "0.14"
+image = { version = "0.25", default-features = false, features = ["png"] }
+
+[build-dependencies]
+protox = "0.9"
+tonic-prost-build = "0.14"
+
+[dev-dependencies]
+proptest = "1"
+rqrr = "0.10"
+lopdf = "0.42"
+reqwest = { version = "0.12", default-features = false }

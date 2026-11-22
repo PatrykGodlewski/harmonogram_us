@@ -30,7 +30,7 @@ function migrationsUpTo(lastTag: string): string {
 
 async function recreateScratchDb() {
 	const admin = postgres(adminUrl.toString(), { max: 1, onnotice: () => {} });
-	await admin.unsafe('DROP DATABASE IF EXISTS "harmonogram_us_migration_test"');
+	await admin.unsafe('DROP DATABASE IF EXISTS "harmonogram_us_migration_test" WITH (FORCE)');
 	await admin.unsafe('CREATE DATABASE "harmonogram_us_migration_test"');
 	await admin.end();
 }
@@ -45,9 +45,9 @@ beforeAll(async () => {
 afterAll(async () => {
 	await sql.end();
 	const admin = postgres(adminUrl.toString(), { max: 1, onnotice: () => {} });
-	await admin.unsafe('DROP DATABASE IF EXISTS "harmonogram_us_migration_test"');
+	await admin.unsafe('DROP DATABASE IF EXISTS "harmonogram_us_migration_test" WITH (FORCE)');
 	await admin.end();
-});
+}, 30_000);
 
 describe("migration 0011 on existing data", () => {
 	it("keeps existing registrations registered and seat counts unchanged", async () => {

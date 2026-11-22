@@ -12,10 +12,14 @@ import {
 	admin_event_faculties_title,
 	admin_nav_event_faculties,
 } from "@repo/i18n/paraglide/messages";
+import { adminPageHead } from "@repo/router-utils/metadata/page-head";
 import { createFileRoute } from "@tanstack/react-router";
 import { AdminLookupPage } from "~/components/admin-lookup-page";
 
 export const Route = createFileRoute("/_authenticated/event-faculties")({
+	loader: ({ context: { queryClient } }) =>
+		queryClient.ensureQueryData(adminEventFacultiesQueryOptions),
+	head: () => adminPageHead(admin_event_faculties_title()),
 	component: AdminEventFacultiesPage,
 });
 

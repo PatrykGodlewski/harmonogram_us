@@ -12,6 +12,10 @@ function fakeElectric(body = "[]") {
 				"content-encoding": "gzip",
 				"content-length": "999",
 				"electric-handle": "h-1",
+				connection: "keep-alive, x-trace",
+				"keep-alive": "timeout=5",
+				"transfer-encoding": "chunked",
+				"x-trace": "1",
 			},
 		});
 	};
@@ -43,6 +47,21 @@ describe("proxyShape", () => {
 		expect(upstream?.searchParams.get("secret")).toBe("s3cret");
 	});
 
+	it("sends the shape's own row filter; a client filter is ignored", async () => {
+		const { calls, fetchImpl } = fakeElectric();
+		await proxyShape(
+			new Request("http://app.test/x?offset=-1&where=1%3D1"),
+			shapes.cancelledEvents,
+			{ ...config, fetchImpl },
+		);
+		expect(calls[0]?.searchParams.get("table")).toBe("events");
+		expect(calls[0]?.searchParams.get("where")).toBe("status = 'cancelled'");
+		// Subset filters may only touch the shape's own columns.
+		expect(calls[0]?.searchParams.get("queryable_columns")).toBe(
+			shapes.cancelledEvents.columns.join(","),
+		);
+	});
+
 	it("omits the secret when none is configured", async () => {
 		const { calls, fetchImpl } = fakeElectric();
 		await proxyShape(
@@ -64,5 +83,18 @@ describe("proxyShape", () => {
 		expect(response.headers.get("content-length")).toBeNull();
 		expect(response.headers.get("electric-handle")).toBe("h-1");
 		expect(await response.text()).toBe("[1]");
+	});
+
+	it("drops per-connection headers, which HTTP/2 refuses and proxies must not forward", async () => {
+		const { fetchImpl } = fakeElectric();
+		const response = await proxyShape(
+			new Request("http://app.test/x?offset=-1"),
+			shapes.eventSeatCounts,
+			{ ...config, fetchImpl },
+		);
+		for (const name of ["connection", "keep-alive", "transfer-encoding", "x-trace"]) {
+			expect(response.headers.get(name), name).toBeNull();
+		}
+		expect(response.headers.get("electric-handle")).toBe("h-1");
 	});
 });
