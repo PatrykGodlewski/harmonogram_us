@@ -25,7 +25,7 @@ import {
 import { formatEventTime } from "@repo/ui/time";
 import { cn } from "@repo/ui/utils";
 import { useMutation } from "@tanstack/react-query";
-import { Fragment, useState } from "react";
+import { Fragment, useId, useState } from "react";
 import { toast } from "sonner";
 import { formatMutationError } from "../../lib/format-mutation-error";
 import { AgendaItemDialog } from "./agenda-item-dialog";
@@ -61,6 +61,7 @@ export function AgendaEditor({
 	view,
 	onViewChange,
 }: AgendaEditorProps) {
+	const headingId = useId();
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [editingItem, setEditingItem] = useState<AgendaItem | null>(null);
 	const locale = getLocale();
@@ -95,9 +96,11 @@ export function AgendaEditor({
 	};
 
 	return (
-		<section className="flex flex-col gap-3">
+		<section aria-labelledby={headingId} className="flex flex-col gap-3">
 			<div className="flex items-center justify-between gap-2">
-				<h2 className="text-lg font-semibold">{admin_event_agenda()}</h2>
+				<h2 id={headingId} className="text-lg font-semibold">
+					{admin_event_agenda()}
+				</h2>
 				<div className="flex flex-wrap items-center justify-end gap-2">
 					{agenda.length > 0 ? (
 						<AgendaViewToggle value={view} onChange={onViewChange} />

@@ -47,7 +47,9 @@ async function addAgendaItemInAdmin(page: Page, title: string) {
 	await dialog.getByLabel("Limit miejsc").fill("1");
 	await dialog.getByRole("button", { name: "Zapisz" }).click();
 	await expect(dialog).toBeHidden();
-	await expect(page.getByText(title)).toBeVisible();
+	await expect(
+		page.getByRole("region", { name: "Program" }).getByText(title),
+	).toBeVisible();
 }
 
 test("[F3] pełny cykl: admin tworzy, uczestnik się zapisuje, wydarzenie się kończy albo zostaje usunięte", async ({

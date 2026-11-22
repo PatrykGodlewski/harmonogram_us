@@ -24,7 +24,11 @@ test("[F18] organizator dodaje punkt programu do swojego wydarzenia @organizator
 	await dialog.getByLabel("Godzina zakończenia").fill("11:00");
 	await dialog.getByRole("button", { name: "Zapisz" }).click();
 	await expect(dialog).toBeHidden();
-	await expect(page.getByText("Wykład otwierający")).toBeVisible();
+	await expect(
+		page
+			.getByRole("region", { name: "Program" })
+			.getByText("Wykład otwierający"),
+	).toBeVisible();
 });
 
 test("[F18] brak godziny zakończenia pokazuje błąd zamiast nic nie robić @organizator", async ({

@@ -47,7 +47,11 @@ test("[F3] duplikat ma te same dane i nowy termin @organizator", async ({
 	}).format(new Date(Date.UTC(year ?? 0, (month ?? 1) - 1, day ?? 1, 12)));
 	await expect(page.getByText(expected).first()).toBeVisible();
 	await expect(page.getByText("12:00").first()).toBeVisible();
-	await expect(page.getByText("Otwarcie")).toBeVisible();
-	await expect(page.getByText("Dyskusja")).toBeVisible();
+	await expect(
+		page.getByRole("region", { name: "Program" }).getByText("Otwarcie"),
+	).toBeVisible();
+	await expect(
+		page.getByRole("region", { name: "Program" }).getByText("Dyskusja"),
+	).toBeVisible();
 	await expect(page.getByText("Zapisani (0)")).toBeVisible();
 });
