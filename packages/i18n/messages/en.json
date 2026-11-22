@@ -817,5 +817,6 @@
 	"admin_session_programme": "Session programme",
 	"admin_session_back": "Back to the event",
 	"admin_session_empty": "This session has no programme items yet.",
-	"admin_session_hint": "A session groups programme items with one theme, place and time, e.g. lectures or workshops in one room."
+	"admin_session_hint": "A session groups programme items with one theme, place and time, e.g. lectures or workshops in one room.",
+	"event_details_sessions": "Sessions"
 }
