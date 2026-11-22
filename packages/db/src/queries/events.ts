@@ -674,6 +674,47 @@ export async function cancelEvent(
 	});
 }
 
+/** What a Teams meeting needs about an event (F23); null for an unknown event. */
+export async function getEventForMeeting(eventId: string): Promise<{
+	title: string;
+	start: Date;
+	end: Date;
+	attendanceMode: AttendanceMode;
+} | null> {
+	const [row] = await db
+		.select({
+			title: events.title,
+			start: events.date,
+			end: sql<string>`${effectiveEventEndSql(sql`${events}`)}`,
+			attendanceMode: events.attendanceMode,
+		})
+		.from(events)
+		.where(eq(events.id, eventId));
+	return row ? { ...row, end: new Date(row.end) } : null;
+}
+
+/**
+ * Sets the meeting link only while the event has none (blank counts as none),
+ * so a second click or another organizer never replaces a link. Returns the
+ * link the event has afterwards; null for an unknown event.
+ */
+export async function setOnlineUrlIfEmpty(
+	eventId: string,
+	url: string,
+): Promise<string | null> {
+	const [updated] = await db
+		.update(events)
+		.set({ onlineUrl: url })
+		.where(
+			and(
+				eq(events.id, eventId),
+				sql`coalesce(trim(${events.onlineUrl}), '') = ''`,
+			),
+		)
+		.returning({ onlineUrl: events.onlineUrl });
+	return updated ? updated.onlineUrl : getEventOnlineUrl(eventId);
+}
+
 /** The meeting link of an event (show it only to registered people). */
 export async function getEventOnlineUrl(
 	eventId: string,

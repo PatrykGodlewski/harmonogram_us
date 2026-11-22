@@ -46,6 +46,9 @@ export const DOMAIN_ERROR_CODES = [
 	"SURVEY_CLOSED",
 	"SURVEY_ANSWERED",
 	"SURVEY_LINK_INVALID",
+	"TEAMS_NOT_CONFIGURED",
+	"TEAMS_NOT_ONLINE",
+	"TEAMS_FAILED",
 ] as const;
 
 export type DomainErrorCode = (typeof DOMAIN_ERROR_CODES)[number];

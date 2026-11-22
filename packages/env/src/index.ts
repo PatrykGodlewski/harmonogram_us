@@ -51,6 +51,15 @@ export const env = createEnv({
 		/** Shown on the sign-in button, e.g. "Uniwersytet Śląski". */
 		UNIVERSITY_SSO_NAME: z.string().min(1).optional(),
 
+		/** Teams meetings through Microsoft Graph (F23); on when tenant, client, secret and organizer are set. */
+		TEAMS_TENANT_ID: z.string().min(1).optional(),
+		TEAMS_CLIENT_ID: z.string().min(1).optional(),
+		TEAMS_CLIENT_SECRET: z.string().min(1).optional(),
+		/** Entra object id or UPN of the account the meetings belong to (needs an application access policy). */
+		TEAMS_ORGANIZER_ID: z.string().min(1).optional(),
+		TEAMS_LOGIN_URL: z.url().default("https://login.microsoftonline.com"),
+		TEAMS_GRAPH_URL: z.url().default("https://graph.microsoft.com"),
+
 		SMTP_HOST: z.string().optional(),
 		SMTP_PORT: z.coerce.number().int().positive().optional(),
 		SMTP_USER: z.string().optional(),
