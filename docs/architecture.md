@@ -34,7 +34,6 @@ Both apps have near-identical `vite.config.ts`, `router.tsx` and `server.ts` set
 - `packages/api/src/procedures.ts` provides `publicQueryFn` (GET) and `protectedActionFn` (POST + `authMiddleware`); some mutations check `getCurrentSession()` inline.
 - Server functions validate input with `.validator()` (TanStack Start v1). `errorStatusMiddleware` sets an app error's 4xx status only for browser calls (`/_serverFn/…`); during server rendering it would override the loader's redirect.
 - Guests (F17) register through Better Auth plugin endpoints (`guest-registration-plugin.ts`: `/guest-registration/request` under CAPTCHA and `limitAuth`, `/guest-registration/confirm` signs the guest in), like group invitations. Pages that act on e-mail links (`/guest/confirm`, `/registrations/:id/withdraw`) need a button press: mail scanners fetch links.
-- Events from the university's Indico (F16) live in their own table, `indico_events`, so no registration path can reach them. The worker (`packages/api/src/indico`) fetches Indico's export API every 30 minutes and once at start-up, and replaces that copy; a failed read keeps the old copy. `fetchEventsServer` merges them into the public list by date (`mergeByDate`; picking a type, place, unit or format leaves them out), and the campus ICS feed carries them. Links are built from `INDICO_URL` and the event id, never taken from the feed.
 - Rethrow domain errors as `appError(CODE)`. Add each code to `@repo/db/queries/domain-errors` and map it to Polish/English messages in `@repo/ui/app-errors`.
 
 ## Auth and localisation

@@ -232,6 +232,13 @@
       "when": 1795295950921,
       "tag": "0032_indico_events",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1795331602882,
+      "tag": "0033_drop_indico_events",
+      "breakpoints": true
     }
   ]
 }

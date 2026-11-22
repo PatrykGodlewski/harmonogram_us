@@ -75,7 +75,7 @@ These are facts about the implementation, not claims that it is better in genera
 | "Add to calendar" for one event | ✅ | ✅ |
 | Link previews when shared (Open Graph) | ✅ | not verified |
 | Month view | ❌ | ✅ category calendar |
-| Import of events from Indico | ✅ read-only, in the list and the calendar feed, linking to Indico | — |
+| Import of events from Indico | ❌ | — |
 
 #### Registration
 

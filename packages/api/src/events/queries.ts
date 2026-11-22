@@ -5,14 +5,12 @@ import {
 	getEventOnlineUrl,
 	getEventPage,
 } from "@repo/db/queries/events";
-import { listIndicoEvents } from "@repo/db/queries/indico-events";
 import type { QueryClient } from "@tanstack/react-query";
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { getCurrentSession } from "../auth/user";
 import { appError } from "../errors";
 import { canOpenEvent } from "./access";
-import { includeIndico, mergeByDate } from "./merge-listing";
 import type { EventFiltersParams } from "./schemas";
 import { eventFiltersSchema, eventPageSchema } from "./schemas";
 
@@ -30,20 +28,13 @@ export const fetchEventsServer = createServerFn({ method: "GET" })
 	.validator((input: unknown) => eventFiltersSchema.parse(input))
 	.handler(async ({ data: { limit, ...filters } }) => {
 		const session = await getCurrentSession();
-		const [page, indico] = await Promise.all([
-			getEventPage(
-				{
-					...filters,
-					audience: { kind: "public", signedIn: Boolean(session?.user) },
-				},
-				limit,
-			),
-			// Read-only events from the university's Indico (F16), in the same list.
-			includeIndico(filters) ? listIndicoEvents(filters, limit + 1) : [],
-		]);
-		const merged = mergeByDate(page.events, indico, filters.sortOrder, limit);
-		// The first `limit` local rows are enough to merge; the page says if there are more.
-		return { events: merged.events, hasMore: merged.hasMore || page.hasMore };
+		return getEventPage(
+			{
+				...filters,
+				audience: { kind: "public", signedIn: Boolean(session?.user) },
+			},
+			limit,
+		);
 	});
 
 /** Prefix of every event-list query, whatever the filters (for invalidation). */

@@ -369,7 +369,6 @@
 	"admin_field_status": "Stan",
 	"admin_event_status_published": "Opublikowane",
 	"event_join_online": "Dołącz online",
-	"indico_badge": "Z Indico",
 	"event_status_cancelled": "Odwołane",
 	"reg_email_cancelled_subject": "Odwołano: {event}",
 	"reg_email_cancelled_intro": "Wydarzenie {event} ({date}) zostało odwołane. Przepraszamy za kłopot.",

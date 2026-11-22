@@ -25,8 +25,6 @@ Creates/updates an account and prints a generated password unless `--password` o
 
 University sign-in is OpenID Connect, configured only through `UNIVERSITY_SSO_*` in `.env` (see `.env.example`; redirect URI `<BETTER_AUTH_URL>/api/auth/callback/university`). The public site's login and signup show the button only when it is configured; the admin panel keeps e-mail and password (the callback lands on the public site's origin). A university sign-in joins the account with the same e-mail and counts the address as verified. The e2e stack runs a stand-in server (`e2e/oidc-mock`, compose profile `e2e`) reachable as `oidc.localhost:18080` from both the browser and the containers.
 
-Events from the university's Indico (F16) are configured through `INDICO_URL`, `INDICO_CATEGORY_IDS` and optionally `INDICO_API_TOKEN` (see `.env.example`). Indico exports whatever the token's user may see, so leave the token empty for public categories, or use an account that sees only public events. The worker copies the events; the e2e stack runs a stand-in export API (`e2e/indico-mock`, compose profile `e2e`, `indico.localhost:18081`), and `[F16]` asks the worker for a sync through pg-boss.
-
 ### Rust documents service
 
 PDFs (tickets, certificates, attendance sheets) are rendered by `services/documents`, a Rust gRPC service; the contract is `proto/` and the generated TypeScript client is `@repo/rpc`. You need only Docker: `docker compose up -d` builds and starts it, and the apps and `@repo/api`/`@repo/rpc` tests reach it at `DOCUMENTS_URL` with `DOCUMENTS_TOKEN` (both in `.env.example`). After changing the renderer or `proto/`, run `docker compose up -d --build documents`.

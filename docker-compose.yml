@@ -18,10 +18,6 @@ x-app-env: &app-env
   UNIVERSITY_SSO_CLIENT_ID: ${UNIVERSITY_SSO_CLIENT_ID:-}
   UNIVERSITY_SSO_CLIENT_SECRET: ${UNIVERSITY_SSO_CLIENT_SECRET:-}
   UNIVERSITY_SSO_NAME: ${UNIVERSITY_SSO_NAME:-}
-  # Events from the university's Indico (F16); set in .env, or by e2e/ports.env for the mock.
-  INDICO_URL: ${INDICO_URL:-}
-  INDICO_CATEGORY_IDS: ${INDICO_CATEGORY_IDS:-}
-  INDICO_API_TOKEN: ${INDICO_API_TOKEN:-}
 
 x-app-build: &app-build
   context: .
@@ -132,22 +128,6 @@ services:
     depends_on:
       db: { condition: service_healthy }
       mailpit: { condition: service_started }
-
-  # e2e only: a stand-in Indico export API (e2e/indico-mock), reached as indico.localhost.
-  indico-mock:
-    profiles: [e2e]
-    image: node:22-alpine
-    command: ["node", "/srv/server.mjs"]
-    volumes:
-      - ./e2e/indico-mock/server.mjs:/srv/server.mjs:ro
-    environment:
-      PORT: ${INDICO_PORT:-18081}
-      TOKEN: ${INDICO_API_TOKEN:-}
-    ports:
-      - "${INDICO_PORT:-18081}:${INDICO_PORT:-18081}"
-    networks:
-      default:
-        aliases: [indico.localhost]
 
   # e2e only: a stand-in university sign-in server (e2e/oidc-mock). The browser and the
   # app containers both reach it as oidc.localhost (Chrome maps *.localhost to this machine).

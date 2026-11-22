@@ -14,7 +14,6 @@
   "dependencies": {
     "@repo/api": "workspace:*",
     "@repo/db": "workspace:*",
-    "@repo/jobs": "workspace:*",
     "drizzle-orm": "^0.45.4"
   },
   "devDependencies": {

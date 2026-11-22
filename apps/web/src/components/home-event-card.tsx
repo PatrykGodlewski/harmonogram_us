@@ -15,17 +15,15 @@ import {
 import { AttendanceModeBadge } from "@repo/ui/composed/events/attendance-mode-badge";
 import { Link } from "@tanstack/react-router";
 import { EventRegistrationButton } from "~/components/event-registration-button";
-import { IndicoEventCard } from "~/components/indico-event-card";
 import { formatEventDateForLocale } from "~/lib/events/format-event-date";
 import type {
 	EventSeatCountSource,
 	HomeEventListEvent,
-	LocalListEvent,
 } from "~/lib/events/types";
 import type { EventRegistrationActions } from "~/lib/registration/use-event-list-registrations";
 
 type HomeEventCardProps = {
-	event: LocalListEvent;
+	event: HomeEventListEvent;
 	user: { id: string; email: string } | null;
 	interactive: boolean;
 	seatCounts: EventSeatCountSource;
@@ -125,20 +123,16 @@ export function HomeEventCards({
 			data-busy={refetching || undefined}
 			aria-busy={refetching}
 		>
-			{events.map((event) =>
-				event.source === "indico" ? (
-					<IndicoEventCard key={`indico-${event.id}`} event={event} />
-				) : (
-					<HomeEventCard
-						key={event.id}
-						event={event}
-						user={user}
-						interactive={interactive}
-						seatCounts={seatCounts}
-						registrations={registrations}
-					/>
-				),
-			)}
+			{events.map((event) => (
+				<HomeEventCard
+					key={event.id}
+					event={event}
+					user={user}
+					interactive={interactive}
+					seatCounts={seatCounts}
+					registrations={registrations}
+				/>
+			))}
 		</div>
 	);
 }

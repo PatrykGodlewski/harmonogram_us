@@ -317,9 +317,6 @@ importers:
       '@repo/db':
         specifier: workspace:*
         version: link:../packages/db
-      '@repo/jobs':
-        specifier: workspace:*
-        version: link:../packages/jobs
       drizzle-orm:
         specifier: ^0.45.4
         version: 0.45.4(@opentelemetry/api@1.10.0)(gel@2.2.0)(kysely@0.29.9)(pg@8.23.1)(postgres@3.4.9)

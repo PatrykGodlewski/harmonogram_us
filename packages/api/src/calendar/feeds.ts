@@ -5,10 +5,6 @@ import {
 	listMyCalendarEntries,
 	listPublicCalendarEntries,
 } from "@repo/db/queries/calendar";
-import {
-	type ImportedEvent,
-	listIndicoCalendarEntries,
-} from "@repo/db/queries/indico-events";
 import { env } from "@repo/env";
 import {
 	calendar_my_name,
@@ -42,24 +38,6 @@ function toIcsEvent(entry: CalendarEntry, locale: Locale): IcsEvent {
 	};
 }
 
-const DAY_MS = 86_400_000;
-
-/** An event from the university's Indico (F16): its own uid, linking to Indico. */
-export function indicoIcsEvent(event: ImportedEvent): IcsEvent {
-	const place = [event.location, event.room].filter(Boolean).join(" · ");
-	return {
-		uid: `indico-${event.id}`,
-		title: event.title,
-		description: null,
-		start: event.startsAt,
-		// As for local events: no end means a day after the start.
-		end: event.endsAt ?? new Date(event.startsAt.getTime() + DAY_MS),
-		location: place || null,
-		url: event.url,
-		cancelled: false,
-	};
-}
-
 function calendarResponse(
 	body: string,
 	options: { filename?: string; personal?: boolean } = {},
@@ -84,16 +62,13 @@ function calendarResponse(
 export async function publicCalendarResponse(
 	locale: Locale,
 ): Promise<Response> {
-	const now = new Date();
-	const [entries, indico] = await Promise.all([
-		listPublicCalendarEntries(now),
-		listIndicoCalendarEntries(now),
-	]);
-	const events = [
-		...entries.map((entry) => toIcsEvent(entry, locale)),
-		...indico.map(indicoIcsEvent),
-	].sort((a, b) => a.start.getTime() - b.start.getTime());
-	return calendarResponse(toIcs(events, calendar_public_name({}, { locale })));
+	const entries = await listPublicCalendarEntries(new Date());
+	return calendarResponse(
+		toIcs(
+			entries.map((entry) => toIcsEvent(entry, locale)),
+			calendar_public_name({}, { locale }),
+		),
+	);
 }
 
 /** One event as a file, for "add to calendar". */
