@@ -16,6 +16,9 @@ export const PRUNE_OLD_REGISTRATIONS_CRON = "30 3 * * *";
 export const QUEUE_CERTIFICATE_EMAILS = "certificate-emails";
 export const CERTIFICATE_EMAILS_CRON = "*/15 * * * *";
 export const QUEUE_SURVEY_EMAILS = "survey-emails";
+/** Deletes bucket objects of removed event files (F14), every 15 minutes. */
+export const QUEUE_DELETE_STORED_FILES = "delete-stored-files";
+export const DELETE_STORED_FILES_CRON = "*/15 * * * *";
 export const SURVEY_EMAILS_CRON = "*/15 * * * *";
 /** Reminders before events, checked every 5 minutes. */
 export const QUEUE_EVENT_REMINDERS = "event-reminders";
@@ -99,4 +102,5 @@ export const QUEUES = [
 	{ name: QUEUE_EVENT_REMINDERS, policy: "standard" },
 	{ name: QUEUE_CERTIFICATE_EMAILS, policy: "standard" },
 	{ name: QUEUE_SURVEY_EMAILS, policy: "standard" },
+	{ name: QUEUE_DELETE_STORED_FILES, policy: "standard" },
 ] as const;

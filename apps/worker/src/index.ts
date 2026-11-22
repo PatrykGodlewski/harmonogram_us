@@ -9,6 +9,7 @@ import { getBoss } from "@repo/jobs/client";
 import {
 	CERTIFICATE_EMAILS_CRON,
 	CLOSE_EXPIRED_GROUPS_CRON,
+	DELETE_STORED_FILES_CRON,
 	EVENT_REMINDERS_CRON,
 	emailJob,
 	groupInvitationEmailPayload,
@@ -17,6 +18,7 @@ import {
 	PRUNE_RATE_LIMITS_CRON,
 	QUEUE_CERTIFICATE_EMAILS,
 	QUEUE_CLOSE_EXPIRED_GROUPS,
+	QUEUE_DELETE_STORED_FILES,
 	QUEUE_EMAILS,
 	QUEUE_EVENT_REMINDERS,
 	QUEUE_GROUP_INVITATION_EMAIL,
@@ -26,6 +28,7 @@ import {
 	SURVEY_EMAILS_CRON,
 } from "@repo/jobs/queues";
 import { closeExpired } from "./handlers/close-expired";
+import { deleteStoredFiles } from "./handlers/delete-stored-files";
 import { handleEmailJob } from "./handlers/send-email";
 import { sendInvitationEmail } from "./handlers/send-invitation";
 import { EMAIL_WORK } from "./work-options";
@@ -120,6 +123,19 @@ await boss.work(QUEUE_SURVEY_EMAILS, async () => {
 });
 
 await boss.schedule(QUEUE_SURVEY_EMAILS, SURVEY_EMAILS_CRON, null, {
+	tz: JOBS_TIME_ZONE,
+});
+
+await boss.work(QUEUE_DELETE_STORED_FILES, async () => {
+	const { deleted, failed } = await deleteStoredFiles();
+	if (deleted > 0 || failed > 0) {
+		console.log(
+			`[worker] deleted ${deleted} stored file(s), ${failed} left for the next run`,
+		);
+	}
+});
+
+await boss.schedule(QUEUE_DELETE_STORED_FILES, DELETE_STORED_FILES_CRON, null, {
 	tz: JOBS_TIME_ZONE,
 });
 
