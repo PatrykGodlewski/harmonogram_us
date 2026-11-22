@@ -32,7 +32,7 @@ describe("event end", () => {
 			endsAt: hoursFromNow(1),
 		});
 		await expect(registerForEvent(extended, user, "pl")).resolves.toHaveProperty(
-			"txid",
+			"state",
 		);
 	});
 
@@ -58,7 +58,7 @@ describe("event end", () => {
 		});
 		await expect(
 			registerForEvent(eventId, await createUser(), "pl"),
-		).resolves.toHaveProperty("txid");
+		).resolves.toHaveProperty("state");
 	});
 });
 
@@ -70,7 +70,6 @@ describe("agenda item registration", () => {
 
 		const result = await registerForAgendaItem(itemId, user);
 		expect(result.eventRegistered).toBe(true);
-		expect(typeof result.txid).toBe("number");
 		expect(await getMyRegistrations(user)).toEqual({
 			events: [{ eventId: eventId, state: "registered", waitlistPosition: null }],
 			agendaItemIds: [itemId],
@@ -157,9 +156,7 @@ describe("agenda item registration", () => {
 		const user = await createUser();
 		await registerForAgendaItem(itemId, user);
 
-		await expect(unregisterFromAgendaItem(itemId, user)).resolves.toHaveProperty(
-			"txid",
-		);
+		await expect(unregisterFromAgendaItem(itemId, user)).resolves.toBeUndefined();
 		expect(await getMyRegistrations(user)).toEqual({
 			events: [{ eventId: eventId, state: "registered", waitlistPosition: null }],
 			agendaItemIds: [],

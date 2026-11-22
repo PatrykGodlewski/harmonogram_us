@@ -37,7 +37,6 @@ import {
 	type RegistrationHooks,
 } from "./event-registrations";
 import { lockEvent } from "./locks";
-import { getCurrentTxId } from "./txid";
 
 /**
  * Who is looking: the public site never sees drafts (nor signed-in-only events
@@ -646,7 +645,7 @@ export async function publishEvent(
 export async function cancelEvent(
 	eventId: string,
 	hooks?: RegistrationHooks,
-): Promise<{ txid: number }> {
+): Promise<void> {
 	return db.transaction(async (tx) => {
 		if (!(await lockEvent(tx, eventId))) {
 			throw new DomainError("EVENT_NOT_FOUND");
@@ -694,7 +693,6 @@ export async function cancelEvent(
 			hooks,
 			people.map((row) => ({ registrationId: row.id, change: "cancelled" })),
 		);
-		return { txid: await getCurrentTxId(tx) };
 	});
 }
 

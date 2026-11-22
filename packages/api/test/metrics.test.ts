@@ -12,7 +12,7 @@ describe("routeLabel", () => {
 		["/pl/tickets/0f8b7e6d-5c4b-4a39-8281-7f6e5d4c3b2a", "/:locale/tickets/:id"],
 		["/pl/events/evt-1", "/:locale/events/:id"],
 		[`/_serverFn/${"a".repeat(64)}`, `/_serverFn/${"a".repeat(64)}`],
-		["/api/electric/event-seat-counts", "/api/electric/event-seat-counts"],
+		["/api/v1/events", "/api/v1/events"],
 		["/assets/index-B1x2.js", "/assets/*"],
 		["/a/b/c/d/e/f", "/a/b/c/d/*"],
 		// Secrets in paths (invitation tokens, join codes) must never become label values.

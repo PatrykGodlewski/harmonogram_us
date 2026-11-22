@@ -28,7 +28,6 @@ import {
 import { createInvitationToken, hashToken } from "./group-tokens";
 import { findPublicGroupInfo, type PublicGroupInfo } from "./groups";
 import { lockEventMemberAndGroup, lockMemberAndGroup } from "./locks";
-import { getCurrentTxId } from "./txid";
 
 async function memberItemIds(
 	tx: DbExecutor,
@@ -91,7 +90,7 @@ export async function acceptInvitation(
 	token: string,
 	userId: string,
 	hooks?: RegistrationHooks,
-): Promise<{ eventId: string; txid: number }> {
+): Promise<{ eventId: string }> {
 	try {
 		return await db.transaction(async (tx) => {
 			const tokenHash = hashToken(token);
@@ -178,7 +177,7 @@ export async function acceptInvitation(
 					: [{ registrationId: eventRegistrationId, change: "confirmed" }],
 			);
 
-			return { eventId: group.eventId, txid: await getCurrentTxId(tx) };
+			return { eventId: group.eventId };
 		});
 	} catch (error) {
 		mapConstraintError(error, REGISTRATION_ERRORS);
@@ -231,7 +230,7 @@ export async function removeMember(
 	actorUserId: string,
 	opts?: ActorOptions,
 	hooks?: RegistrationHooks,
-): Promise<{ txid: number }> {
+): Promise<void> {
 	return db.transaction(async (tx) => {
 		const locked = await lockEventMemberAndGroup(tx, { id: memberId });
 		if (!locked) {
@@ -252,7 +251,6 @@ export async function removeMember(
 		if (locked.group.status !== "open") {
 			await promoteAndNotify(tx, locked.group.eventId, hooks);
 		}
-		return { txid: await getCurrentTxId(tx) };
 	});
 }
 
@@ -261,7 +259,7 @@ export async function setMemberItems(
 	actorUserId: string,
 	itemIds: string[],
 	opts?: ActorOptions,
-): Promise<{ txid: number }> {
+): Promise<void> {
 	const next = [...new Set(itemIds)];
 	try {
 		return await db.transaction(async (tx) => {
@@ -329,7 +327,6 @@ export async function setMemberItems(
 					added,
 				);
 			}
-			return { txid: await getCurrentTxId(tx) };
 		});
 	} catch (error) {
 		mapConstraintError(error, REGISTRATION_ERRORS);

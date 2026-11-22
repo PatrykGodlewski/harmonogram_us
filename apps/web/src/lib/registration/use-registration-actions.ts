@@ -98,7 +98,7 @@ function successMessage(
 ): string {
 	switch (action.type) {
 		case "register":
-			if (!("state" in result)) return events_register_success();
+			if (!result || !("state" in result)) return events_register_success();
 			if (result.state === "pending") return events_request_success();
 			return result.state === "waitlisted"
 				? events_join_waitlist_success()
