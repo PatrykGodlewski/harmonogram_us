@@ -22,6 +22,7 @@ import {
 	Link,
 	Outlet,
 	Scripts,
+	useMatch,
 } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import appCss from "~/app.css?url";
@@ -71,6 +72,16 @@ export const Route = createRootRouteWithContext<{
 
 function RootComponent() {
 	const { user } = Route.useRouteContext();
+	// The embeddable widget (F24) is only its list: no site chrome or live sync.
+	const isWidget = useMatch({ from: "/widget", shouldThrow: false });
+	if (isWidget) {
+		return (
+			<>
+				<Outlet />
+				<HydrationMarker />
+			</>
+		);
+	}
 	return (
 		<>
 			<EventSeatCountsSync />

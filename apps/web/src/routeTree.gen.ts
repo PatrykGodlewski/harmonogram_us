@@ -16,6 +16,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as WidgetRouteImport } from './routes/widget'
 import { Route as ApiMetricsRouteImport } from './routes/api/metrics'
 import { Route as EventsEventIdRouteImport } from './routes/events/$eventId'
 import { Route as GroupsGroupIdRouteImport } from './routes/groups/$groupId'
@@ -70,6 +71,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WidgetRoute = WidgetRouteImport.update({
+  id: '/widget',
+  path: '/widget',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiMetricsRoute = ApiMetricsRouteImport.update({
@@ -187,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/logout': typeof LogoutRoute
   '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
+  '/widget': typeof WidgetRoute
   '/api/metrics': typeof ApiMetricsRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/groups/$groupId': typeof GroupsGroupIdRoute
@@ -216,6 +223,7 @@ export interface FileRoutesByTo {
   '/logout': typeof LogoutRoute
   '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
+  '/widget': typeof WidgetRoute
   '/api/metrics': typeof ApiMetricsRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/groups/$groupId': typeof GroupsGroupIdRoute
@@ -246,6 +254,7 @@ export interface FileRoutesById {
   '/logout': typeof LogoutRoute
   '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
+  '/widget': typeof WidgetRoute
   '/api/metrics': typeof ApiMetricsRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/groups/$groupId': typeof GroupsGroupIdRoute
@@ -277,6 +286,7 @@ export interface FileRouteTypes {
     | '/logout'
     | '/privacy'
     | '/signup'
+    | '/widget'
     | '/api/metrics'
     | '/events/$eventId'
     | '/groups/$groupId'
@@ -306,6 +316,7 @@ export interface FileRouteTypes {
     | '/logout'
     | '/privacy'
     | '/signup'
+    | '/widget'
     | '/api/metrics'
     | '/events/$eventId'
     | '/groups/$groupId'
@@ -335,6 +346,7 @@ export interface FileRouteTypes {
     | '/logout'
     | '/privacy'
     | '/signup'
+    | '/widget'
     | '/api/metrics'
     | '/events/$eventId'
     | '/groups/$groupId'
@@ -365,6 +377,7 @@ export interface RootRouteChildren {
   LogoutRoute: typeof LogoutRoute
   PrivacyRoute: typeof PrivacyRoute
   SignupRoute: typeof SignupRoute
+  WidgetRoute: typeof WidgetRoute
   ApiMetricsRoute: typeof ApiMetricsRoute
   EventsEventIdRoute: typeof EventsEventIdRoute
   GroupsGroupIdRoute: typeof GroupsGroupIdRoute
@@ -436,6 +449,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/widget': {
+      id: '/widget'
+      path: '/widget'
+      fullPath: '/widget'
+      preLoaderRoute: typeof WidgetRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/metrics': {
@@ -589,6 +609,7 @@ const rootRouteChildren: RootRouteChildren = {
   LogoutRoute: LogoutRoute,
   PrivacyRoute: PrivacyRoute,
   SignupRoute: SignupRoute,
+  WidgetRoute: WidgetRoute,
   ApiMetricsRoute: ApiMetricsRoute,
   EventsEventIdRoute: EventsEventIdRoute,
   GroupsGroupIdRoute: GroupsGroupIdRoute,

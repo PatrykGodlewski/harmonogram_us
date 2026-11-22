@@ -758,5 +758,8 @@
 	"survey_results_no_answers": "Brak odpowiedzi.",
 	"survey_results_text_shown": "Pokazano {shown} najnowszych z {total} odpowiedzi.",
 	"privacy_survey": "Ankietę po wydarzeniu zapisujemy bez imienia i adresu: organizator widzi tylko zbiorcze wyniki, a odpowiedzi zostają po usunięciu konta i danych zapisu.",
-	"survey_results_responses_only": "Odpowiedzi: {responses}."
+	"survey_results_responses_only": "Odpowiedzi: {responses}.",
+	"widget_title": "Najbliższe wydarzenia",
+	"widget_empty": "Brak nadchodzących wydarzeń.",
+	"widget_all_events": "Wszystkie wydarzenia"
 }
