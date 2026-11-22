@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { signInByEmail } from "../fixtures/auth";
 import { createTestEvent, createTestUser, uniqueEmail } from "../fixtures/data";
+import { LIVE_WAIT } from "../fixtures/live";
 import { open } from "../fixtures/navigation";
 
 test("[F27] zapis na punkt programu zapisuje też na wydarzenie @uczestnik", async ({
@@ -56,4 +57,25 @@ test("[F5] osoba z listy rezerwowej nie zapisze się na punkt programu", async (
 		page.getByText("Jesteś na liście rezerwowej tego wydarzenia"),
 	).toBeVisible();
 	await expect(item.getByText("Wolne miejsca: 1 / 1")).toBeVisible();
+});
+
+test("[F27] licznik punktu odświeża się na otwartej stronie, gdy zapisze się ktoś inny @uczestnik", async ({
+	page,
+}, testInfo) => {
+	// Given a visitor with the page of an event with a 3-place agenda item open
+	const other = await createTestUser(uniqueEmail(testInfo));
+	const event = await createTestEvent({
+		maxSeats: 5,
+		agenda: [{ title: "Warsztaty", maxSeats: 3 }],
+	});
+	await open(page, `/pl/events/${event.id}`);
+	const item = page.getByRole("listitem").filter({ hasText: "Warsztaty" });
+	await expect(item.getByText("Wolne miejsca: 3 / 3")).toBeVisible();
+	// When someone else registers for the item
+	const { registerForAgendaItem } = await import(
+		"@repo/db/queries/event-registrations"
+	);
+	await registerForAgendaItem(event.itemIds[0] ?? "", other.id, "pl");
+	// Then the open page shows it, without a reload
+	await expect(item.getByText("Wolne miejsca: 2 / 3")).toBeVisible(LIVE_WAIT);
 });
