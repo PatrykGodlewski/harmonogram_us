@@ -2,27 +2,43 @@ import { sql } from "drizzle-orm";
 import { db } from "../client";
 import { agendaItems } from "../schema/agenda";
 import { events } from "../schema/events";
-import { agendaItemSeeds, eventSeeds } from "./data";
+import type { AgendaItemSeed, EventSeed } from "./data";
 
-/** Seeded events start at 09:00 UTC, `daysFromNow` days from today; their agenda starts with them. */
-function eventStart(now: Date, daysFromNow: number): Date {
+const HOUR = 3_600_000;
+
+/**
+ * When a seeded event starts: `hoursFromNow` hours from now (rounded down to the hour),
+ * or `daysFromNow` days from today at `startHourUtc` (default 09:00 UTC).
+ */
+export function eventStart(now: Date, event: EventSeed): Date {
 	const start = new Date(now);
-	start.setUTCDate(start.getUTCDate() + daysFromNow);
-	start.setUTCHours(9, 0, 0, 0);
+	if (event.hoursFromNow !== undefined) {
+		start.setUTCMinutes(0, 0, 0);
+		return new Date(start.getTime() + event.hoursFromNow * HOUR);
+	}
+	start.setUTCDate(start.getUTCDate() + event.daysFromNow);
+	start.setUTCHours(event.startHourUtc ?? 9, 0, 0, 0);
 	return start;
 }
 
-export async function seedEvents() {
-	const now = new Date();
+export function eventEnd(now: Date, event: EventSeed): Date | null {
+	return event.durationHours === undefined
+		? null
+		: new Date(eventStart(now, event).getTime() + event.durationHours * HOUR);
+}
 
-	for (const event of eventSeeds) {
+export async function seedEvents(seeds: EventSeed[], now: Date) {
+	for (const event of seeds) {
 		await db
 			.insert(events)
 			.values({
 				id: event.id,
 				title: event.title,
-				date: eventStart(now, event.daysFromNow),
+				description: event.description ?? null,
+				date: eventStart(now, event),
+				endsAt: eventEnd(now, event),
 				maxSeats: event.maxSeats,
+				groupDeadlineHours: event.groupDeadlineHours ?? 48,
 				typeId: event.typeId,
 				locationId: event.locationId,
 				facultyId: event.facultyId,
@@ -31,8 +47,11 @@ export async function seedEvents() {
 				target: events.id,
 				set: {
 					title: sql`excluded.title`,
+					description: sql`excluded.description`,
 					date: sql`excluded.date`,
+					endsAt: sql`excluded.ends_at`,
 					maxSeats: sql`excluded.max_seats`,
+					groupDeadlineHours: sql`excluded.group_deadline_hours`,
 					typeId: sql`excluded.type_id`,
 					locationId: sql`excluded.location_id`,
 					facultyId: sql`excluded.faculty_id`,
@@ -42,16 +61,18 @@ export async function seedEvents() {
 	}
 }
 
-export async function seedAgenda() {
-	const now = new Date();
-
-	for (const item of agendaItemSeeds) {
+export async function seedAgenda(
+	items: AgendaItemSeed[],
+	eventSeeds: EventSeed[],
+	now: Date,
+) {
+	for (const item of items) {
 		const event = eventSeeds.find((seed) => seed.id === item.eventId);
 		if (!event) {
-			continue;
+			throw new Error(`Agenda seed refers to unknown event ${item.eventId}`);
 		}
 		const startsAt = new Date(
-			eventStart(now, event.daysFromNow).getTime() + item.startHour * 3_600_000,
+			eventStart(now, event).getTime() + item.startHour * HOUR,
 		);
 		const endsAt = new Date(startsAt.getTime() + item.durationMinutes * 60_000);
 
@@ -61,6 +82,7 @@ export async function seedAgenda() {
 				id: item.id,
 				eventId: item.eventId,
 				title: item.title,
+				description: item.description,
 				startsAt,
 				endsAt,
 				locationId: item.locationId,
@@ -71,6 +93,7 @@ export async function seedAgenda() {
 				target: agendaItems.id,
 				set: {
 					title: sql`excluded.title`,
+					description: sql`excluded.description`,
 					startsAt: sql`excluded.starts_at`,
 					endsAt: sql`excluded.ends_at`,
 					locationId: sql`excluded.location_id`,
