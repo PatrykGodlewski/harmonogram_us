@@ -28,6 +28,9 @@ import {
 	reg_email_rejected_subject,
 	reg_email_reminder_intro,
 	reg_email_reminder_subject,
+	reg_email_survey_button,
+	reg_email_survey_intro,
+	reg_email_survey_subject,
 	reg_email_ticket,
 	reg_email_ticket_button,
 	reg_email_waitlisted_intro,
@@ -44,7 +47,8 @@ export type RegistrationEmailChange =
 	| "reminder"
 	| "pending"
 	| "rejected"
-	| "certificate";
+	| "certificate"
+	| "survey";
 
 export type RegistrationEmailProps = {
 	change: RegistrationEmailChange;
@@ -68,6 +72,7 @@ const SUBJECTS = {
 	pending: reg_email_pending_subject,
 	rejected: reg_email_rejected_subject,
 	certificate: reg_email_certificate_subject,
+	survey: reg_email_survey_subject,
 } as const;
 
 const INTROS = {
@@ -79,12 +84,23 @@ const INTROS = {
 	pending: reg_email_pending_intro,
 	rejected: reg_email_rejected_intro,
 	certificate: reg_email_certificate_intro,
+	survey: reg_email_survey_intro,
 } as const;
+
+/** The main button names what the link does; most e-mails open the event. */
+function buttonLabel(change: RegistrationEmailChange, locale: "pl" | "en") {
+	return change === "survey"
+		? reg_email_survey_button({}, { locale })
+		: reg_email_button({}, { locale });
+}
 
 /** Nothing to withdraw from once the event is cancelled, the request declined, or the event over. */
 function hasWithdrawHint(change: RegistrationEmailChange): boolean {
 	return (
-		change !== "cancelled" && change !== "rejected" && change !== "certificate"
+		change !== "cancelled" &&
+		change !== "rejected" &&
+		change !== "certificate" &&
+		change !== "survey"
 	);
 }
 
@@ -161,7 +177,7 @@ export function RegistrationEmail(props: RegistrationEmailProps) {
 								fontWeight: "700",
 							}}
 						>
-							{reg_email_button({}, { locale })}
+							{buttonLabel(props.change, locale)}
 						</Button>
 						{props.ticketUrl ? (
 							<Button

@@ -1,5 +1,6 @@
 import { queueReadyCertificateEmails } from "@repo/api/notifications/certificates";
 import { queueDueReminderEmails } from "@repo/api/notifications/reminders";
+import { queueSurveyEmails } from "@repo/api/notifications/surveys";
 import { pruneExpiredGuestRequests } from "@repo/db/queries/guest-requests";
 import { pruneRateLimits } from "@repo/db/queries/rate-limits";
 import { pruneOldRegistrations } from "@repo/db/queries/retention";
@@ -21,6 +22,8 @@ import {
 	QUEUE_GROUP_INVITATION_EMAIL,
 	QUEUE_PRUNE_OLD_REGISTRATIONS,
 	QUEUE_PRUNE_RATE_LIMITS,
+	QUEUE_SURVEY_EMAILS,
+	SURVEY_EMAILS_CRON,
 } from "@repo/jobs/queues";
 import { closeExpired } from "./handlers/close-expired";
 import { handleEmailJob } from "./handlers/send-email";
@@ -106,6 +109,17 @@ await boss.work(QUEUE_CERTIFICATE_EMAILS, async () => {
 });
 
 await boss.schedule(QUEUE_CERTIFICATE_EMAILS, CERTIFICATE_EMAILS_CRON, null, {
+	tz: JOBS_TIME_ZONE,
+});
+
+await boss.work(QUEUE_SURVEY_EMAILS, async () => {
+	const { registrations } = await queueSurveyEmails(new Date());
+	if (registrations > 0) {
+		console.log(`[worker] queued ${registrations} survey e-mail(s)`);
+	}
+});
+
+await boss.schedule(QUEUE_SURVEY_EMAILS, SURVEY_EMAILS_CRON, null, {
 	tz: JOBS_TIME_ZONE,
 });
 

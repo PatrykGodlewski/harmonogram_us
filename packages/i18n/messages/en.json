@@ -738,5 +738,8 @@
 	"error_question_kind": "A 1–5 rating only fits a survey.",
 	"error_survey_closed": "This survey no longer takes answers.",
 	"error_survey_answered": "This survey has already been filled in.",
-	"error_survey_link_invalid": "This survey link is not valid."
+	"error_survey_link_invalid": "This survey link is not valid.",
+	"reg_email_survey_subject": "Survey: {event}",
+	"reg_email_survey_intro": "Thank you for attending “{event}” ({date}). Tell us how it went — the survey takes a minute and your answers are anonymous.",
+	"reg_email_survey_button": "Fill in the survey"
 }

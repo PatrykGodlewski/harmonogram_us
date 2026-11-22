@@ -15,6 +15,8 @@ export const PRUNE_OLD_REGISTRATIONS_CRON = "30 3 * * *";
 /** "Your certificate is ready" e-mails after events, checked every 15 minutes. */
 export const QUEUE_CERTIFICATE_EMAILS = "certificate-emails";
 export const CERTIFICATE_EMAILS_CRON = "*/15 * * * *";
+export const QUEUE_SURVEY_EMAILS = "survey-emails";
+export const SURVEY_EMAILS_CRON = "*/15 * * * *";
 /** Reminders before events, checked every 5 minutes. */
 export const QUEUE_EVENT_REMINDERS = "event-reminders";
 export const EVENT_REMINDERS_CRON = "*/5 * * * *";
@@ -59,6 +61,7 @@ export const emailJob = z.discriminatedUnion("kind", [
 			"pending",
 			"rejected",
 			"certificate",
+			"survey",
 		]),
 	}),
 	z.object({
@@ -95,4 +98,5 @@ export const QUEUES = [
 	{ name: QUEUE_PRUNE_OLD_REGISTRATIONS, policy: "standard" },
 	{ name: QUEUE_EVENT_REMINDERS, policy: "standard" },
 	{ name: QUEUE_CERTIFICATE_EMAILS, policy: "standard" },
+	{ name: QUEUE_SURVEY_EMAILS, policy: "standard" },
 ] as const;

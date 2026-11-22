@@ -738,5 +738,8 @@
 	"error_question_kind": "Ocena 1–5 pasuje tylko do ankiety.",
 	"error_survey_closed": "Ta ankieta nie przyjmuje już odpowiedzi.",
 	"error_survey_answered": "Ta ankieta jest już wypełniona.",
-	"error_survey_link_invalid": "Ten link do ankiety jest nieprawidłowy."
+	"error_survey_link_invalid": "Ten link do ankiety jest nieprawidłowy.",
+	"reg_email_survey_subject": "Ankieta: {event}",
+	"reg_email_survey_intro": "Dziękujemy za udział w wydarzeniu „{event}” ({date}). Powiedz nam, jak było — ankieta zajmie minutę, a odpowiedzi są anonimowe.",
+	"reg_email_survey_button": "Wypełnij ankietę"
 }

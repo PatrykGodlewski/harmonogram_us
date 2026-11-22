@@ -11,6 +11,7 @@ import { guestConfirmationEmail } from "@repo/api/notifications/guest-confirmati
 import { registrationEmailText } from "@repo/api/notifications/registration-email";
 import { verificationEmail } from "@repo/api/notifications/verification-email";
 import { withdrawUrl } from "@repo/api/registrations/withdraw-link";
+import { surveyUrl } from "@repo/api/surveys/link";
 import { getRegistrationForEmail } from "@repo/db/queries/event-registrations";
 import { getInvitationEvent } from "@repo/db/queries/events";
 import { env } from "@repo/env";
@@ -37,6 +38,7 @@ const EXPECTED_STATE = {
 	pending: "pending",
 	rejected: "rejected",
 	certificate: "registered",
+	survey: "registered",
 } as const;
 
 /** Sends one queued e-mail. Errors propagate so pg-boss retries the job. */
@@ -87,16 +89,18 @@ export async function handleEmailJob(
 					registration.eventDate,
 					registration.locale,
 				),
-				// The certificate is on the account page (sign-in first, then the download).
 				// Certificates are on the account page; a declined person may no longer open an invite-only event.
 				url:
-					job.change === "certificate" || job.change === "rejected"
-						? `${appUrl}/account`
-						: `${appUrl}/events/${registration.eventId}`,
+					job.change === "survey"
+						? surveyUrl(job.registrationId, registration.locale)
+						: job.change === "certificate" || job.change === "rejected"
+							? `${appUrl}/account`
+							: `${appUrl}/events/${registration.eventId}`,
 				ticketUrl:
 					registration.state === "registered" &&
 					job.change !== "cancelled" &&
-					job.change !== "certificate"
+					job.change !== "certificate" &&
+					job.change !== "survey"
 						? `${appUrl}/tickets/${job.registrationId}`
 						: undefined,
 				withdrawUrl: withdrawUrl(job.registrationId, registration.locale),
