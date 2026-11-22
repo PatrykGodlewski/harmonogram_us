@@ -15,6 +15,15 @@ pnpm db:seed                 # idempotent sample events, waitlist, group, accoun
 pnpm dev                     # web :3000, admin :3001, pg-boss worker
 ```
 
+The dev servers use HTTPS: https://localhost:3000 (web) and https://localhost:3001 (admin). Over plain HTTP a browser speaks HTTP/1.1 and opens at most 6 connections per origin; the live updates (Electric long polls, held up to 20 s) of a few open tabs take them all and every other request stalls. HTTPS gives HTTP/2, one connection for everything. Without a certificate the servers make a self-signed one (the browser warns once). For a trusted one, install [mkcert](https://github.com/FiloSottile/mkcert) and run once:
+
+```bash
+mkcert -install
+mkdir -p .certs && mkcert -cert-file .certs/localhost.pem -key-file .certs/localhost-key.pem localhost 127.0.0.1 ::1
+```
+
+`.certs/` is ignored by git. `BETTER_AUTH_URL` and `ADMIN_URL` in `.env` must use `https://`. The e2e stack and production are unaffected (their URLs are set explicitly; production's edge serves HTTP/2).
+
 Seed accounts use `SEED_ACCOUNT_PASSWORD` from `.env`; seeding refuses `NODE_ENV=production`. Local Mailpit inbox (including magic links): http://localhost:8025.
 
 ```bash

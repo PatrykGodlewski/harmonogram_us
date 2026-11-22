@@ -30,8 +30,8 @@ export const env = createEnv({
 		BETTER_AUTH_SECRET: z
 			.string({ message: "BETTER_AUTH_SECRET must be provided" })
 			.min(32, "BETTER_AUTH_SECRET must be at least 32 characters"),
-		BETTER_AUTH_URL: z.url().default("http://localhost:3000"),
-		ADMIN_URL: z.url().default("http://localhost:3001"),
+		BETTER_AUTH_URL: z.url().default("https://localhost:3000"),
+		ADMIN_URL: z.url().default("https://localhost:3001"),
 		TURNSTILE_SECRET_KEY: z.string().optional(),
 		HIBP_MIN_BREACH_COUNT: z.coerce.number().int().positive().default(1),
 		/** Days after an event ends before its registrations are deleted (GDPR). */
