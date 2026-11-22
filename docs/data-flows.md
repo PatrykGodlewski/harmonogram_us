@@ -1,6 +1,6 @@
-# Registration, live sync and jobs
+# Registration, fresh data and jobs
 
-Read before changing capacity, registration, waitlists, groups, Electric shapes or transactional jobs. These invariants span packages and apps.
+Read before changing capacity, registration, waitlists, groups, page refresh or transactional jobs. These invariants span packages and apps.
 
 ## Database capacity and concurrency
 
@@ -18,7 +18,7 @@ Global row-lock order:
 4. `registration_group_members`.
 5. Count rows (locked by triggers).
 
-Foreign-key insertion takes a key-share lock on the parent: lock parents first. Mutations return the Postgres transaction ID via `queries/txid.ts` for live-sync confirmation.
+Foreign-key insertion takes a key-share lock on the parent: lock parents first.
 
 Only `published` events take registrations or promote from the waitlist (`assertEventOpen`: drafts are `EVENT_NOT_FOUND`, cancelled ones `EVENT_CANCELLED`); a cancelled event can't be edited. Organiser add/remove (`addRegistrantByEmail`, `removeRegistrant`) follow the same rules and share `withdraw()` with self-service. Attendance is `event_registrations.checked_in_at`, set by `checkInByTicketCode` (first scan wins; a re-scan reports the original time) or the manual switch.
 
@@ -28,17 +28,14 @@ Guest requests (F17, `guest_registration_requests`: hashed token, 24 h) are **no
 
 Invite-only events (`visibility = 'private'`, CHECK: `invite_token` not null) are never listed or in feeds; `canOpenEvent` (`packages/api/src/events/access.ts`) opens them for the current invite link, a non-declined registration, or organisers, and is checked by the event page, registration, agenda-item registration, group creation and the single-event ICS.
 
-## Electric → TanStack DB → UI
+## Fresh data on open pages
 
-1. Declare shapes once in `@repo/collections/shapes` (proxy path, table, columns).
-2. Each route under `apps/web/src/routes/api/electric/` delegates to `proxyShape()` from `@repo/collections/electric-proxy`. Forward only Electric protocol parameters. The server owns table, columns and filter, and adds `ELECTRIC_SECRET` server-side.
-3. Collections use `shapeUrl(shapes.x.path)`. Electric requires an **absolute URL**; a relative URL silently fails to sync.
-4. To add a live table, add a shape, proxy route and collection. A shape may carry a server-side `where` (e.g. `cancelledEvents`: `status = 'cancelled'`, so event pages flip to "cancelled" live); the proxy also sets `queryable_columns` to the shape's columns so subset filters can't read other columns.
-5. Registration actions go through `useRegistrationActions` in `apps/web/src/lib/registration/`: call server, await its `txid` on the collection changed by that action, refetch if Electric does not confirm in time.
+Open pages refetch the data they already load; there is no separate sync channel.
 
-Keep exactly one `@tanstack/db` version, shared by `@tanstack/react-db` and `@tanstack/electric-db-collection`, or collection types break. Update the root `pnpm.overrides` pin and dependent packages together.
-
-Local plain HTTP has Chrome's six-connections-per-origin limit across tabs. Every open page holds a long-poll per shape; multiple app tabs can stall updates. Use separate browser profiles for multi-viewer manual testing. Production HTTPS/HTTP2 avoids this limitation.
+1. `eventsQueryOptions` (lists) and `eventDetailsQueryOptions` (event page) refetch every `LIVE_REFRESH_MS` (15 s, `packages/api/src/events/live-refresh.ts`): seat counts, programme-item counts and cancellations come with them. `myRegistrationsQueryOptions` refetches at the same pace only while the user is on a waitlist (a promotion happens in someone else's action).
+2. TanStack Query pauses the interval in hidden tabs and refetches when a tab regains focus. A background refetch does not mark the list busy (`refetching` means "previous filter's results shown").
+3. Registration actions go through `useRegistrationActions` in `apps/web/src/lib/registration/`: call the server, then invalidate the user's registrations, the event page and the lists.
+4. A count on screen may be up to one interval old; the server decides capacity under the event lock, so a stale count never overbooks.
 
 ## Worker and transactional email
 

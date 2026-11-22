@@ -9,13 +9,13 @@ Read [workflow](workflow.md) for planning/resuming/completion and Superpowers us
 ```bash
 pnpm install                 # prepare hook compiles Paraglide messages, generates @repo/rpc
 cp .env.example .env         # shared root env; fill required values
-docker compose up -d         # Postgres (wal_level=logical), Mailpit, Electric, documents (Rust PDFs)
+docker compose up -d         # Postgres, Mailpit, storage (SeaweedFS), documents (Rust PDFs)
 pnpm db:migrate
 pnpm db:seed                 # idempotent sample events, waitlist, group, accounts
 pnpm dev                     # web :3000, admin :3001, pg-boss worker
 ```
 
-The dev servers use HTTPS: https://localhost:3000 (web) and https://localhost:3001 (admin). Over plain HTTP a browser speaks HTTP/1.1 and opens at most 6 connections per origin; the live updates (Electric long polls, held up to 20 s) of a few open tabs take them all and every other request stalls. HTTPS gives HTTP/2, one connection for everything. Without a certificate the servers make a self-signed one (the browser warns once). For a trusted one, install [mkcert](https://github.com/FiloSottile/mkcert) and run once:
+The dev servers use HTTPS: https://localhost:3000 (web) and https://localhost:3001 (admin). Over plain HTTP a browser speaks HTTP/1.1 and opens at most 6 connections per origin, shared by all tabs, so a few open tabs make requests queue. HTTPS gives HTTP/2 (as in production), one connection for everything. Without a certificate the servers make a self-signed one (the browser warns once). For a trusted one, install [mkcert](https://github.com/FiloSottile/mkcert) and run once:
 
 ```bash
 mkcert -install
@@ -111,7 +111,7 @@ TanStack Form schema input types must match actual form values. Avoid `z.coerce`
 
 Applies to every agent and subagent: after a major feature or substantial change passes tests, review the changed code and simplify it before moving on. Aim for the smallest complete, readable solution—not the fewest lines. Remove dead or redundant code introduced by the change. Reuse existing patterns; avoid speculative abstractions, pass-through wrappers, unnecessary configuration and premature generalisation. Extract helpers or split files only when doing so improves clarity, reuse or responsibility boundaries; do not trade readability for terse code.
 
-Verify relevant library and framework usage against current Context7 docs (`npx ctx7@latest library …`, then `docs …`), particularly TanStack Start/Router/Query/DB, Electric, Drizzle, Better Auth, pg-boss, Zod and shadcn. Check for focused modules with clear responsibilities, clear names, explicit public API types, duplication, N+1 queries and unbounded reads. Address demonstrated scalability needs without speculative infrastructure.
+Verify relevant library and framework usage against current Context7 docs (`npx ctx7@latest library …`, then `docs …`), particularly TanStack Start/Router/Query, Drizzle, Better Auth, pg-boss, Zod and shadcn. Check for focused modules with clear responsibilities, clear names, explicit public API types, duplication, N+1 queries and unbounded reads. Address demonstrated scalability needs without speculative infrastructure.
 
 Keep refactoring scoped and behavior-preserving. Do not remove validation, authorization, error handling or meaningful test coverage to reduce code size. Rerun relevant tests after refactoring and report the results; if blocked, state what remains unverified.
 

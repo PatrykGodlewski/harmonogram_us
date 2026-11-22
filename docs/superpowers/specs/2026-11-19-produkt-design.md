@@ -18,6 +18,7 @@ Data: 2026-11-19 · Status: **do akceptacji** · Jedyne źródło prawdy o tym, 
 | 2026-11-22 | Plan 11 (F20 ankiety; decyzje oddane Claude): ankieta po wydarzeniu z podsumowaniem. Decyzje: ankietę dostają osoby z miejscem (bez wymogu obecności), otwarta 30 dni po wydarzeniu, odpowiedzi anonimowe. | Plan `docs/superpowers/plans/2026-11-22-ankiety.md` |
 | 2026-11-22 | Plan 12 (F24; decyzje oddane Claude): publiczne API do odczytu i widżet. Decyzje: bez kluczy (dane i tak są publiczne), widżet jako iframe (strona zewnętrzna nie uruchamia naszego kodu), tylko wydarzenia otwarte dla wszystkich. | Plan `docs/superpowers/plans/2026-11-22-api-widzet.md` |
 | 2026-11-22 | Plan 14 (F14, pliki F19): przechowywanie plików. Decyzje: Cloudflare R2 w produkcji (użytkownik: „use best international provider”), SeaweedFS w kontenerze lokalnie i w e2e (użytkownik: „use docker image for bucket storage”), kod mówi czystym S3, więc dostawcę można zmienić; pobieranie przez krótkotrwały podpisany link jako załącznik; F22 w następnym planie. | Plan `docs/superpowers/plans/2026-11-22-materialy.md` |
+| 2026-11-22 | Plan 15: bez ElectricSQL. Otwarte strony odświeżają dane, które już wczytują, co 15 s (lista, strona wydarzenia; zapisy tylko na liście rezerwowej), zamiast osobnej usługi synchronizacji. Mniej elementów w produkcji (bez usługi Electric i replikacji logicznej), licznik może być starszy o jeden interwał; o miejscach i tak decyduje serwer. | Decyzja użytkownika 22.11: „it seems like unecessary feature that adds a lot of complexity” → „do as you recommend”; plan `docs/superpowers/plans/2026-11-22-bez-electric.md` |
 | 2026-11-22 | Plan 13 (F23; decyzje oddane Claude): spotkania Teams. Decyzje: jedno kliknięcie w panelu zamiast zadania w tle (organizator od razu widzi link albo błąd, publikacja nadal wymaga linku), bez aktualizacji ani usuwania spotkania później (link Teams działa niezależnie od godzin). | Plan `docs/superpowers/plans/2026-11-22-teams.md` |
 
 ## Kierunek produktu
@@ -92,7 +93,7 @@ Kryterium „gotowe” to zawsze przechodzący test e2e `[Fn] …` z widocznym s
 | # | Funkcja | Co użytkownik może zrobić | Gotowe, gdy test e2e pokazuje, że… | Stan |
 |---|---|---|---|---|
 | F26 | Rejestracja grupowa | Nauczyciel rezerwuje miejsca dla klasy, zaprasza uczniów e-mailem albo linkiem z kodem QR, a uczeń potwierdza miejsce jednym przyciskiem. Niepotwierdzone miejsca wracają po terminie. | grupa trzyma miejsca w licznikach; uczeń potwierdza z linku w Mailpit; zamknięcie grupy zwalnia miejsca | działa (`packages/db/src/queries/groups.ts`, `group-members.ts`, testy Vitest) |
-| F27 | Zapis na punkty programu | Zapis na wybrane punkty programu z własnym limitem; zapis na punkt zapisuje też na wydarzenie. | zapis na pełny punkt jest odrzucony z komunikatem; licznik punktu zmienia się na żywo | działa (`queries/event-registrations.ts`, `agenda-items.test.ts`) |
+| F27 | Zapis na punkty programu | Zapis na wybrane punkty programu z własnym limitem; zapis na punkt zapisuje też na wydarzenie. | zapis na pełny punkt jest odrzucony z komunikatem; licznik punktu odświeża się na otwartej stronie bez przeładowania | działa (`queries/event-registrations.ts`, `agenda-items.test.ts`, `e2e/tests/f27-punkty-programu.spec.ts`) |
 
 ### Uzupełnienia z porównania z Indico (decyzja użytkownika 20.11)
 

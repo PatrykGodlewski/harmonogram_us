@@ -1,10 +1,10 @@
 # Architecture
 
-Read the sections relevant to the task. Cross-cutting transaction and live-sync rules are in [data-flows.md](data-flows.md); commands are in [development.md](development.md).
+Read the sections relevant to the task. Cross-cutting transaction and page-refresh rules are in [data-flows.md](data-flows.md); commands are in [development.md](development.md).
 
 ## Workspace
 
-Packages are consumed as TypeScript source without a build step, through explicit `package.json#exports` subpaths. Add exports when adding public files, particularly in `collections`, `router-utils`, and `env`. Never add barrel files.
+Packages are consumed as TypeScript source without a build step, through explicit `package.json#exports` subpaths. Add exports when adding public files, particularly in `api`, `router-utils`, and `env`. Never add barrel files.
 
 | Package | Responsibility |
 | --- | --- |
@@ -14,14 +14,13 @@ Packages are consumed as TypeScript source without a build step, through explici
 | `@repo/ui` | shadcn primitives in `components/`, shared app-level UI in `composed/`. |
 | `@repo/i18n` | Paraglide; `src/paraglide/` is generated and gitignored. |
 | `@repo/router-utils` | Paraglide router rewrite, `requireAuthenticatedUser` for `beforeLoad`, root document head builders. |
-| `@repo/collections` | TanStack DB collections and Electric shapes/proxy. |
 | `@repo/jobs` | pg-boss queue names, payload schemas, `enqueue*` helpers (`@repo/jobs/client`) shared by API and worker. |
 
 ## Apps and server functions
 
-`apps/web` (port 3000) is the public event-discovery and registration site; event state and seat counts update live. `apps/admin` (3001) manages events, agenda, registrants and lookup data (faculties, rooms, event types). Use Indico event management as scope inspiration, with a simpler mobile-first UI.
+`apps/web` (port 3000) is the public event-discovery and registration site; open pages refresh event state and seat counts every 15 s. `apps/admin` (3001) manages events, agenda, registrants and lookup data (faculties, rooms, event types). Use Indico event management as scope inspiration, with a simpler mobile-first UI.
 
-Both apps have near-identical `vite.config.ts`, `router.tsx` and `server.ts` setups. Stack: TanStack Start SSR, Vite 8, Nitro, file-based TanStack Router, Query, DB/ElectricSQL, Drizzle/Postgres, Better Auth, Paraglide, Tailwind/shadcn, Biome. React Compiler runs through Babel.
+Both apps have near-identical `vite.config.ts`, `router.tsx` and `server.ts` setups. Stack: TanStack Start SSR, Vite 8, Nitro, file-based TanStack Router, Query, Drizzle/Postgres, Better Auth, Paraglide, Tailwind/shadcn, Biome. React Compiler runs through Babel.
 
 - `src/server.ts` wraps Start with `paraglideMiddleware`; `envDir` points to the workspace root; `~` aliases app `src`.
 - Never edit generated `routeTree.gen.ts`.

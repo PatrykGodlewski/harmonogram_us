@@ -38,28 +38,41 @@
 
 **Files:** `e2e/tests/f5-zapisy.spec.ts`, `e2e/tests/f27-punkty-programu.spec.ts`, `e2e/tests/f3-*.spec.ts` (cancellation).
 
-- [ ] `[F5] liczba wolnych miejsc odświeża się na otwartej stronie, gdy zapisze się ktoś inny @uczestnik` (event page and home list).
-- [ ] `[F27] licznik punktu odświeża się na otwartej stronie, gdy zapisze się ktoś inny @uczestnik`.
-- [ ] `[F3] odwołanie wydarzenia widać na otwartej stronie bez przeładowania @uczestnik` (registration button gone, "odwołane" shown).
-- [ ] Existing `[F5] awans z listy widać na otwartej stronie bez odświeżania` waits up to one interval.
-- [ ] Run on the current (Electric) e2e stack: pass. Commit.
+- [x] `[F5] liczba wolnych miejsc odświeża się na otwartej stronie, gdy zapisze się ktoś inny @uczestnik` (event page and home list).
+- [x] `[F27] licznik punktu odświeża się na otwartej stronie, gdy zapisze się ktoś inny @uczestnik`.
+- [x] `[F3] odwołanie wydarzenia widać na otwartej stronie bez przeładowania @uczestnik` (registration button gone, "odwołane" shown).
+- [x] Existing `[F5] awans z listy widać na otwartej stronie bez odświeżania` waits up to one interval.
+- [x] Run on the current (Electric) e2e stack: pass. Commit.
 
 ### Task 2: Poll instead of Electric (client)
 
 **Files:** `packages/api/src/events/{live-refresh,queries,my-registrations}.ts`, `apps/web/src/lib/events/*`, `apps/web/src/lib/event-details/*`, `apps/web/src/lib/registration/use-registration-actions.ts`, `apps/web/src/components/{home-event-card,home-event-list,home-event-list-live,event-details/*}.tsx`, `apps/web/src/routes/{__root,events/$eventId}.tsx`.
 
-- [ ] Unit test: `myRegistrationsRefetchInterval(data)` → 15 000 with a waitlisted entry, `false` otherwise; query options carry `refetchInterval` 15 000. See it fail, implement, pass.
-- [ ] Remove overlays and count sources; views read `event.seatsRemaining`, `item.seatsRemaining`, `event.status`; delete `WaitlistLiveRefresh`, `EventSeatCountsSync`, `EventDetailsLive`, the `use-*` live hooks, `seat-count.ts`, `query-seat-counts.ts`.
-- [ ] typecheck, lint; commit.
+- [x] Unit test: `myRegistrationsRefetchInterval(data)` → 15 000 with a waitlisted entry, `false` otherwise; query options carry `refetchInterval` 15 000. See it fail, implement, pass.
+- [x] Remove overlays and count sources; views read `event.seatsRemaining`, `item.seatsRemaining`, `event.status`; delete `WaitlistLiveRefresh`, `EventSeatCountsSync`, `EventDetailsLive`, the `use-*` live hooks, `seat-count.ts`, `query-seat-counts.ts`.
+- [x] typecheck, lint; commit.
 
 ### Task 3: Remove the Electric layer (server, packages, infrastructure)
 
-- [ ] Domain queries and server functions stop returning `txid` (`queries/txid.ts` deleted; tests updated).
-- [ ] Delete `packages/collections`, `apps/web/src/routes/api/electric/*` (route tree regenerated), deps `@repo/collections`, `@tanstack/react-db`, the `@tanstack/db` override.
-- [ ] `docker-compose.yml` without `electric` and `wal_level`; `ELECTRIC_*` out of env, `.env.example`, `e2e/ports.env`, CI; metrics test example route.
-- [ ] lint, typecheck, `pnpm test`, build; commit.
+- [x] Domain queries and server functions stop returning `txid` (`queries/txid.ts` deleted; tests updated).
+- [x] Delete `packages/collections`, `apps/web/src/routes/api/electric/*` (route tree regenerated), deps `@repo/collections`, `@tanstack/react-db`, the `@tanstack/db` override.
+- [x] `docker-compose.yml` without `electric` and `wal_level`; `ELECTRIC_*` out of env, `.env.example`, `e2e/ports.env`, CI; metrics test example route.
+- [x] lint, typecheck, `pnpm test`, build; commit.
 
 ### Task 4: Docs, full checks, review
 
-- [ ] AGENTS.md, docs (architecture, data-flows, development, README, docs/README), spec F27 + changelog; plan verification summary.
-- [ ] `pnpm e2e:up` + `pnpm e2e`; fresh review; push `next`.
+- [x] AGENTS.md, docs (architecture, data-flows, development, README, docs/README), spec F27 + changelog; plan verification summary.
+- [x] `pnpm e2e:up` + `pnpm e2e`; fresh review; push `next`.
+
+---
+
+## Verification summary (22.11)
+
+- Task 1 (guard tests, run on the Electric build first): event-page count, programme-item counter, waitlist promotion and cancellation on an open page passed with Electric; the list count with the event page open in another tab did not update within 20 s (likely the HTTP/1.1 connection limit) and passes on the polling build.
+- Task 2: `packages/api/test/live-refresh.test.ts` seen failing (missing module; then a test that called `refetchInterval` with data instead of the query, fixed to read `query.state.data`), now 4/4: list and event page every 15 s; registrations, the account list and an open ticket only while waitlisted.
+- Task 3: `txid` removed from domain queries (tests assert the real results), `packages/collections`, `/api/electric/*`, the `electric` service, `wal_level=logical`, `ELECTRIC_*` removed. Local dev and e2e databases: Electric containers removed and their replication slot and publication dropped before Postgres restarted with the default `wal_level` (a logical slot with `wal_level < logical` stops Postgres from starting).
+- Final review (fresh, opus): no Critical. Important fixed: the account-page promotion test waited 5 s (now `LIVE_WAIT`); an open waitlisted ticket no longer updated on promotion (ticket query now polls while waitlisted, unit test RED→GREEN). Minor fixed: docs still listed `collections`; tests that wait for a refresh marked `test.slow()`.
+- Deferred minors: the event page's seat count and the user's own registration state poll on separate timers (may disagree for up to 15 s after a promotion); the new-group form polls event details it does not need to refresh.
+- Final checks: `pnpm turbo run lint typecheck --force` 27/27; `pnpm test` db 264, api 163, worker 24, ui 33, rpc 3; web and admin build; `pnpm e2e` on a freshly built stack: 200 passed, 1 skipped.
+- Operations: a deployment that ran Electric must delete that service and drop its replication slot (`.env.example`); a local `docker-compose.override.yml` that configures `electric` must be removed.
+
