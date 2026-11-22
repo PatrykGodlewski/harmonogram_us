@@ -15,6 +15,7 @@ Data: 2026-11-19 · Status: **do akceptacji** · Jedyne źródło prawdy o tym, 
 | 2026-11-21 | Plan 5 (prośba użytkownika: „improve existing features marked yellow”, decyzje oddane Claude): F1 profil z językiem, F10 własne pytania i edycja zapisu, lista obecności PDF (F7), bilet PDF (F11), tekst zaświadczenia od organizatora (F12), audyt dostępności i deklaracja (F8). | Prośba użytkownika 21.11 |
 | 2026-11-20 | Plan 3 wykonany: F4, F9, F13, F28, F29 gotowe. | Plan `docs/superpowers/plans/2026-11-20-rodo-przypomnienia-kalendarz-zapisani.md` |
 | 2026-11-22 | F16 odrzucone: aplikacja nie łączy się z Indico. Import z planu 11 usunięty, tabela `indico_events` usunięta migracją 0033. | Decyzja użytkownika 22.11: „I dont want any integrations with indico” |
+| 2026-11-22 | Plan 11 (F20 ankiety; decyzje oddane Claude): ankieta po wydarzeniu z podsumowaniem. Decyzje: ankietę dostają osoby z miejscem (bez wymogu obecności), otwarta 30 dni po wydarzeniu, odpowiedzi anonimowe. | Plan `docs/superpowers/plans/2026-11-22-ankiety.md` |
 
 ## Kierunek produktu
 
@@ -76,7 +77,7 @@ Kryterium „gotowe” to zawsze przechodzący test e2e `[Fn] …` z widocznym s
 |---|---|---|---|---|
 | F18 | Program wydarzenia | Harmonogram z punktami programu, prelegentami i salami, także na kilka dni. | program wielodniowy z salami wyświetla się poprawnie na telefonie i komputerze | gotowe (21.11): program z salami jako lista albo kalendarz, równoległe sesje, podział na dni, prelegenci przy punktach programu (`e2e/tests/f18-program.spec.ts`, `f19-prelegenci.spec.ts`) |
 | F19 | Prelegenci i referaty | Lista wystąpień z opisami i materiałami prelegentów. | wystąpienie z prelegentem i plikiem jest na stronie wydarzenia | częściowo (21.11): prelegenci z afiliacją i linki do materiałów przy punktach programu (`e2e/tests/f19-prelegenci.spec.ts`); brak plików (czeka na przechowywanie plików, F14) |
-| F20 | Ankiety | Ankieta po wydarzeniu z prostym podsumowaniem. | odpowiedzi uczestników dają poprawne podsumowanie | brak |
+| F20 | Ankiety | Ankieta po wydarzeniu z prostym podsumowaniem. | odpowiedzi uczestników dają poprawne podsumowanie | gotowe (22.11): pytania ankiety (ocena 1–5, wybór, tak/nie, tekst) w panelu; po wydarzeniu zapisani dostają e-mail z osobistym linkiem (działa też dla gości), jedna anonimowa odpowiedź na osobę przez 30 dni; podsumowanie: średnia i rozkład ocen, liczby i odsetki, odpowiedzi tekstowe (`e2e/tests/f20-ankiety.spec.ts`, Plan 11) |
 | F21 | Opłaty za udział | Płatność ręczna (przelew) i jedna bramka online. Pieniądze trafiają do organizatora. | zapis na płatne wydarzenie czeka na płatność; organizator oznacza wpłatę; płatność przez atrapę bramki w testach kończy zapis | brak |
 | F22 | Strona wydarzenia | Logo, obraz nagłówka, własne podstrony. | obraz i podstrona są widoczne na stronie wydarzenia | brak |
 | F23 | Wideokonferencje | Automatyczne spotkanie u dostawcy uczelni (Microsoft Teams). | dla wydarzenia online powstaje spotkanie (atrapa Graph w testach), a link jest widoczny dla zapisanych | brak |

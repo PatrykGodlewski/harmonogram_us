@@ -161,7 +161,7 @@ These are facts about the implementation, not claims that it is better in genera
 |---|---|---|
 | Statistics for organisers | ✅ per event: registered, present, no-shows and their share, waitlisted, awaiting approval; administrators see events and registrations per month for 12 months | ✅ Matomo plugin (page views and downloads) |
 | Event change log | ❌ | ✅ |
-| Surveys | ❌ | ✅ |
+| Surveys | ✅ after the event: rating 1–5, choice, yes/no and text questions; personal e-mail link (works for guests), one anonymous response per person, summary with averages, shares and text answers | ✅ |
 | Video calls | ❌ (planned: Microsoft Teams) | ✅ Zoom plugin |
 | HTTP API and embeddable widget | ❌ | ✅ HTTP API |
 | USOS integration (faculty limits, timetable clashes) | ❌ | ❌ |
@@ -169,7 +169,7 @@ These are facts about the implementation, not claims that it is better in genera
 
 ### Not built yet
 
-From the product spec, in no particular order: materials and file storage (F14), speaker files and directory (F19), surveys (F20), payments (F21), event web page (F22), video calls (F23), API and widget (F24), USOS integration (F25). Also missing compared with Indico: LDAP/SAML, user groups, category tree, form builder extras (file fields, several forms), CSV import, tags, e-mail placeholders, badges, wallet passes, timetable PDF, event lock, plugins.
+From the product spec, in no particular order: materials and file storage (F14), speaker files and directory (F19), payments (F21), event web page (F22), video calls (F23), API and widget (F24), USOS integration (F25). Also missing compared with Indico: LDAP/SAML, user groups, category tree, form builder extras (file fields, several forms), CSV import, tags, e-mail placeholders, badges, wallet passes, timetable PDF, event lock, plugins.
 
 ### Known limitations
 

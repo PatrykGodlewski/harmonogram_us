@@ -6,6 +6,7 @@ import {
 	privacy_controller,
 	privacy_retention,
 	privacy_rights,
+	privacy_survey,
 	privacy_title,
 	privacy_what,
 	privacy_who,
@@ -39,6 +40,7 @@ function PrivacyPage() {
 				<p>{privacy_contact({ email: data.contactEmail })}</p>
 			) : null}
 			<p>{privacy_what()}</p>
+			<p>{privacy_survey()}</p>
 			<p>{privacy_basis()}</p>
 			<p>{privacy_retention({ days: data.retentionDays })}</p>
 			<p>{privacy_rights()}</p>

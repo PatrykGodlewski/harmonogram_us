@@ -756,5 +756,6 @@
 	"survey_results_average": "Average {average}",
 	"survey_results_option": "{option}: {count} ({share})",
 	"survey_results_no_answers": "No answers.",
-	"survey_results_text_shown": "Showing the latest {shown} of {total} answers."
+	"survey_results_text_shown": "Showing the latest {shown} of {total} answers.",
+	"privacy_survey": "Post-event survey answers are stored without your name or address: the organiser only sees combined results, and the answers stay after your account and registration data are deleted."
 }

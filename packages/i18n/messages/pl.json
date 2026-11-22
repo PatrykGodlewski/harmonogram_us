@@ -756,5 +756,6 @@
 	"survey_results_average": "Średnia {average}",
 	"survey_results_option": "{option}: {count} ({share})",
 	"survey_results_no_answers": "Brak odpowiedzi.",
-	"survey_results_text_shown": "Pokazano {shown} najnowszych z {total} odpowiedzi."
+	"survey_results_text_shown": "Pokazano {shown} najnowszych z {total} odpowiedzi.",
+	"privacy_survey": "Ankietę po wydarzeniu zapisujemy bez imienia i adresu: organizator widzi tylko zbiorcze wyniki, a odpowiedzi zostają po usunięciu konta i danych zapisu."
 }
