@@ -627,7 +627,12 @@ export function EventFormDialog({
 										<div className="mt-2 flex">
 											<TeamsMeetingButton
 												eventId={event.id}
-												onCreated={async (url) => field.handleChange(url)}
+												onCreated={async (url) => {
+													field.handleChange(url);
+													// The link is stored already: refresh the event so a
+													// cancelled form never brings back the old, empty link.
+													await onSaved();
+												}}
 											/>
 										</div>
 									) : null}

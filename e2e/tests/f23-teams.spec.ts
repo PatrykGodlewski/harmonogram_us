@@ -81,3 +81,39 @@ test("[F23] organizator tworzy spotkanie Teams, a link widzą zapisani @organiza
 		visitor.getByRole("link", { name: "Dołącz online" }),
 	).toHaveCount(0);
 });
+
+test("[F23] spotkanie utworzone w edycji zostaje po anulowaniu formularza @organizator", async ({
+	page,
+}, testInfo) => {
+	const email = uniqueEmail(testInfo);
+	const password = randomBytes(18).toString("base64url");
+	const organizer = await createTestUser(email, {
+		role: "organizer",
+		password,
+	});
+	const event = await createTestEvent({
+		title: `Webinar ${randomBytes(4).toString("hex")}`,
+		organizerId: organizer.id,
+		attendanceMode: "online",
+	});
+
+	await signInAsAdmin(page, email, password);
+	await open(page, adminUrl(`/pl/events/${event.id}`));
+	await page.getByRole("button", { name: "Edytuj wydarzenie" }).click();
+	const dialog = page.getByRole("dialog");
+	await dialog
+		.getByRole("button", { name: "Utwórz spotkanie w Teams" })
+		.click();
+	await expect.poll(() => meetingFor(event.title)).toBeTruthy();
+	const meeting = await meetingFor(event.title);
+	await expect(dialog.getByLabel("Link online")).toHaveValue(
+		meeting?.joinWebUrl ?? "missing",
+	);
+
+	// Closed without saving: the link is stored, and the form shows it next time
+	await dialog.getByRole("button", { name: "Anuluj" }).click();
+	await page.getByRole("button", { name: "Edytuj wydarzenie" }).click();
+	await expect(page.getByRole("dialog").getByLabel("Link online")).toHaveValue(
+		meeting?.joinWebUrl ?? "missing",
+	);
+});
