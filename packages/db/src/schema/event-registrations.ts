@@ -55,6 +55,10 @@ export const eventRegistrations = pgTable(
 		certificateEmailedAt: timestamp("certificate_emailed_at", {
 			withTimezone: true,
 		}),
+		/** When the survey link was e-mailed (once per registration, F20). */
+		surveyEmailedAt: timestamp("survey_emailed_at", { withTimezone: true }),
+		/** When the person answered the survey; the answers themselves are stored without this link. */
+		surveyAnsweredAt: timestamp("survey_answered_at", { withTimezone: true }),
 		/** Insert time (not transaction start), so the waitlist follows the real order of inserts. */
 		createdAt: timestamp("created_at", { withTimezone: true })
 			.notNull()

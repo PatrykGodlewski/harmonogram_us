@@ -1,16 +1,21 @@
 import { and, asc, eq } from "drizzle-orm";
 import type { TransactionClient } from "../client";
-import { eventQuestions, registrationAnswers } from "../schema/event-questions";
+import {
+	eventQuestions,
+	type QuestionKind,
+	registrationAnswers,
+} from "../schema/event-questions";
 import { DomainError } from "./domain-errors";
 
 /** Answers by question id: text, the chosen option, or "yes" / "no". */
 export type Answers = Record<string, string>;
 
 const MAX_TEXT_ANSWER = 2000;
+const RATINGS = ["1", "2", "3", "4", "5"];
 
-type QuestionRule = {
+export type QuestionRule = {
 	id: string;
-	kind: "text" | "choice" | "yesno";
+	kind: QuestionKind;
 	options: string[];
 	required: boolean;
 };
@@ -18,7 +23,8 @@ type QuestionRule = {
 /**
  * The answers worth keeping (trimmed, blanks dropped, unknown questions
  * ignored); ANSWERS_INVALID for a missing required answer (when `requireAll`),
- * a choice outside the options, a yes/no that is neither, or too long a text.
+ * a choice outside the options, a yes/no that is neither, a rating outside
+ * 1–5, or too long a text.
  */
 export function normalizeAnswers(
 	questions: QuestionRule[],
@@ -39,7 +45,9 @@ export function normalizeAnswers(
 				? question.options.includes(value)
 				: question.kind === "yesno"
 					? value === "yes" || value === "no"
-					: value.length <= MAX_TEXT_ANSWER;
+					: question.kind === "rating"
+						? RATINGS.includes(value)
+						: value.length <= MAX_TEXT_ANSWER;
 		if (!valid) {
 			throw new DomainError("ANSWERS_INVALID");
 		}
@@ -60,7 +68,12 @@ async function questionRules(
 			required: eventQuestions.required,
 		})
 		.from(eventQuestions)
-		.where(eq(eventQuestions.eventId, eventId))
+		.where(
+			and(
+				eq(eventQuestions.eventId, eventId),
+				eq(eventQuestions.form, "registration"),
+			),
+		)
 		.orderBy(asc(eventQuestions.position));
 }
 
@@ -75,6 +88,7 @@ export async function hasRequiredQuestions(
 		.where(
 			and(
 				eq(eventQuestions.eventId, eventId),
+				eq(eventQuestions.form, "registration"),
 				eq(eventQuestions.required, true),
 			),
 		)

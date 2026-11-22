@@ -43,11 +43,13 @@ export function QuestionsCard({ eventId }: { eventId: string }) {
 	const headingId = useId();
 	const queryClient = useQueryClient();
 	const { data: questions = [] } = useQuery(
-		eventQuestionsQueryOptions(eventId),
+		eventQuestionsQueryOptions(eventId, "registration"),
 	);
 	const [editing, setEditing] = useState<EventQuestion | "new" | null>(null);
 	const refresh = () =>
-		queryClient.invalidateQueries(eventQuestionsQueryOptions(eventId));
+		queryClient.invalidateQueries(
+			eventQuestionsQueryOptions(eventId, "registration"),
+		);
 	const handleError = (error: unknown) =>
 		toast.error(formatMutationError(error, admin_error_generic));
 

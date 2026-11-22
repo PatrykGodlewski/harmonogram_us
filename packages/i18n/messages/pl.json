@@ -733,5 +733,10 @@
 	"withdraw_done": "Zrezygnowano z zapisu.",
 	"withdraw_error_generic": "Nie udało się zrezygnować. Spróbuj ponownie.",
 	"reg_email_withdraw_link": "Zrezygnuj z zapisu",
-	"title_withdraw": "Rezygnacja z zapisu"
+	"title_withdraw": "Rezygnacja z zapisu",
+	"questions_kind_rating": "Ocena 1–5",
+	"error_question_kind": "Ocena 1–5 pasuje tylko do ankiety.",
+	"error_survey_closed": "Ta ankieta nie przyjmuje już odpowiedzi.",
+	"error_survey_answered": "Ta ankieta jest już wypełniona.",
+	"error_survey_link_invalid": "Ten link do ankiety jest nieprawidłowy."
 }

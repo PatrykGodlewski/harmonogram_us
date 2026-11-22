@@ -28,15 +28,16 @@ import {
 	SelectValue,
 } from "../components/select";
 
-/** A registration question as the form needs it. */
+/** A registration or survey question as the form needs it. */
 export type AnswerQuestion = {
 	id: string;
 	label: string;
-	kind: "text" | "choice" | "yesno";
+	kind: "text" | "choice" | "yesno" | "rating";
 	options: string[];
 	required: boolean;
 };
 type Question = AnswerQuestion;
+const RATINGS = ["1", "2", "3", "4", "5"];
 export type Answers = Record<string, string>;
 
 type RegistrationAnswersDialogProps = {
@@ -158,7 +159,9 @@ export function AnswerField({
 					{ value: "yes", label: answers_yes() },
 					{ value: "no", label: answers_no() },
 				]
-			: question.options.map((option) => ({ value: option, label: option }));
+			: question.kind === "rating"
+				? RATINGS.map((rating) => ({ value: rating, label: rating }))
+				: question.options.map((option) => ({ value: option, label: option }));
 	// Radix Select has no empty value: an optional question gets a "no answer" choice.
 	const NO_ANSWER = "__none__";
 

@@ -2,14 +2,17 @@ import { and, asc, desc, eq, gt, lt, max, notInArray } from "drizzle-orm";
 import { db } from "../client";
 import {
 	eventQuestions,
+	type QuestionForm,
 	type QuestionKind,
 	registrationAnswers,
 } from "../schema/event-questions";
+import { surveyAnswers } from "../schema/surveys";
 import { DomainError } from "./domain-errors";
 
 export type EventQuestion = {
 	id: string;
 	eventId: string;
+	form: QuestionForm;
 	label: string;
 	kind: QuestionKind;
 	options: string[];
@@ -18,6 +21,8 @@ export type EventQuestion = {
 };
 
 export type EventQuestionInput = {
+	/** Registration form (default) or the survey after the event. */
+	form?: QuestionForm;
 	label: string;
 	kind: QuestionKind;
 	options?: string[];
@@ -27,6 +32,7 @@ export type EventQuestionInput = {
 const columns = {
 	id: eventQuestions.id,
 	eventId: eventQuestions.eventId,
+	form: eventQuestions.form,
 	label: eventQuestions.label,
 	kind: eventQuestions.kind,
 	options: eventQuestions.options,
@@ -51,13 +57,23 @@ function normalizeOptions(
 	return distinct;
 }
 
+/** A rating only makes sense in a survey. */
+function assertKindFits(kind: QuestionKind, form: QuestionForm): void {
+	if (kind === "rating" && form !== "survey") {
+		throw new DomainError("QUESTION_KIND");
+	}
+}
+
 export async function listEventQuestions(
 	eventId: string,
+	form: QuestionForm,
 ): Promise<EventQuestion[]> {
 	return db
 		.select(columns)
 		.from(eventQuestions)
-		.where(eq(eventQuestions.eventId, eventId))
+		.where(
+			and(eq(eventQuestions.eventId, eventId), eq(eventQuestions.form, form)),
+		)
 		.orderBy(asc(eventQuestions.position), asc(eventQuestions.createdAt));
 }
 
@@ -71,20 +87,28 @@ export async function getQuestionEventId(
 	return row?.eventId ?? null;
 }
 
-/** Adds a question at the end of the event's list. */
+/** Adds a question at the end of the event's list for its form. */
 export async function createEventQuestion(
 	input: EventQuestionInput & { eventId: string },
 ): Promise<EventQuestion> {
+	const form = input.form ?? "registration";
+	assertKindFits(input.kind, form);
 	const options = normalizeOptions(input.kind, input.options);
 	return db.transaction(async (tx) => {
 		const [last] = await tx
 			.select({ position: max(eventQuestions.position) })
 			.from(eventQuestions)
-			.where(eq(eventQuestions.eventId, input.eventId));
+			.where(
+				and(
+					eq(eventQuestions.eventId, input.eventId),
+					eq(eventQuestions.form, form),
+				),
+			);
 		const [row] = await tx
 			.insert(eventQuestions)
 			.values({
 				eventId: input.eventId,
+				form,
 				label: input.label.trim(),
 				kind: input.kind,
 				options,
@@ -114,6 +138,7 @@ export async function updateEventQuestion(
 			throw new DomainError("QUESTION_NOT_FOUND");
 		}
 		const kind = input.kind ?? current.kind;
+		assertKindFits(kind, current.form);
 		const [row] = await tx
 			.update(eventQuestions)
 			.set({
@@ -128,17 +153,16 @@ export async function updateEventQuestion(
 			throw new DomainError("QUESTION_NOT_FOUND");
 		}
 		// Answers that no longer fit go: all of them on a new kind, others outside the new options.
+		const answers = row.form === "survey" ? surveyAnswers : registrationAnswers;
 		if (row.kind !== current.kind) {
-			await tx
-				.delete(registrationAnswers)
-				.where(eq(registrationAnswers.questionId, id));
+			await tx.delete(answers).where(eq(answers.questionId, id));
 		} else if (row.kind === "choice") {
 			await tx
-				.delete(registrationAnswers)
+				.delete(answers)
 				.where(
 					and(
-						eq(registrationAnswers.questionId, id),
-						notInArray(registrationAnswers.value, row.options),
+						eq(answers.questionId, id),
+						notInArray(answers.value, row.options),
 					),
 				);
 		}
@@ -171,6 +195,7 @@ export async function moveEventQuestion(
 			.where(
 				and(
 					eq(eventQuestions.eventId, current.eventId),
+					eq(eventQuestions.form, current.form),
 					direction === "up"
 						? lt(eventQuestions.position, current.position)
 						: gt(eventQuestions.position, current.position),

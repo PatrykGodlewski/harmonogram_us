@@ -41,7 +41,11 @@ export const Route = createFileRoute("/_authenticated/events/$eventId")({
 			settle(
 				queryClient.ensureQueryData(adminEventRegistrantsQueryOptions(eventId)),
 			),
-			settle(queryClient.ensureQueryData(eventQuestionsQueryOptions(eventId))),
+			settle(
+				queryClient.ensureQueryData(
+					eventQuestionsQueryOptions(eventId, "registration"),
+				),
+			),
 			settle(
 				queryClient.ensureQueryData(adminEventGroupsQueryOptions(eventId)),
 			),

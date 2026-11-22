@@ -733,5 +733,10 @@
 	"withdraw_done": "You have withdrawn.",
 	"withdraw_error_generic": "We couldn't withdraw you. Please try again.",
 	"reg_email_withdraw_link": "Withdraw",
-	"title_withdraw": "Withdraw"
+	"title_withdraw": "Withdraw",
+	"questions_kind_rating": "Rating 1–5",
+	"error_question_kind": "A 1–5 rating only fits a survey.",
+	"error_survey_closed": "This survey no longer takes answers.",
+	"error_survey_answered": "This survey has already been filled in.",
+	"error_survey_link_invalid": "This survey link is not valid."
 }

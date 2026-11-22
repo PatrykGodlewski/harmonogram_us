@@ -252,7 +252,7 @@ async function queryEvents(
 			certificateIssuer: events.certificateIssuer,
 			certificateSigner: events.certificateSigner,
 			certificateNote: events.certificateNote,
-			hasQuestions: sql<boolean>`exists (select 1 from event_questions q where q.event_id = "events"."id")`,
+			hasQuestions: sql<boolean>`exists (select 1 from event_questions q where q.event_id = "events"."id" and q.form = 'registration')`,
 			effectiveEndsAt:
 				sql<Date>`${effectiveEventEndSql(sql`"events"`)}`.mapWith(
 					(value: string | Date) => new Date(value),
@@ -566,7 +566,7 @@ export async function getEventById(
 	const [[event], agenda, questions] = await Promise.all([
 		queryEvents({ audience }, id),
 		listAgendaItems(id),
-		listEventQuestions(id),
+		listEventQuestions(id, "registration"),
 	]);
 	return event ? { ...event, agenda, questions } : null;
 }

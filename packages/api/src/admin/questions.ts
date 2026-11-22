@@ -8,6 +8,9 @@ import {
 import { queryOptions } from "@tanstack/react-query";
 
 export type { EventQuestion } from "@repo/db/queries/event-questions";
+export type { QuestionForm } from "@repo/db/schema/event-questions";
+
+import type { QuestionForm } from "@repo/db/schema/event-questions";
 
 import { z } from "zod";
 import {
@@ -19,30 +22,37 @@ import { withDomainErrors } from "../errors";
 
 const questionFields = {
 	label: z.string().trim().min(1).max(300),
-	kind: z.enum(["text", "choice", "yesno"]),
+	kind: z.enum(["text", "choice", "yesno", "rating"]),
 	options: z.array(z.string().trim().max(200)).max(30).optional(),
 	required: z.boolean().optional(),
 };
 
 const eventIdSchema = z.object({ eventId: z.string().min(1) });
+const formSchema = z.enum(["registration", "survey"]);
+const eventFormSchema = eventIdSchema.extend({ form: formSchema });
 const questionIdSchema = z.object({ id: z.string().min(1) });
 
 export const fetchEventQuestionsServer = panelQueryFn
-	.validator((input: unknown) => eventIdSchema.parse(input))
+	.validator((input: unknown) => eventFormSchema.parse(input))
 	.handler(async ({ data, context }) => {
 		await assertCanManageEvent(context.user, data.eventId);
-		return listEventQuestions(data.eventId);
+		return listEventQuestions(data.eventId, data.form);
 	});
 
-export const eventQuestionsQueryOptions = (eventId: string) =>
+export const eventQuestionsQueryOptions = (
+	eventId: string,
+	form: QuestionForm,
+) =>
 	queryOptions({
-		queryKey: ["admin", "event", eventId, "questions"] as const,
-		queryFn: () => fetchEventQuestionsServer({ data: { eventId } }),
+		queryKey: ["admin", "event", eventId, "questions", form] as const,
+		queryFn: () => fetchEventQuestionsServer({ data: { eventId, form } }),
 	});
 
 export const createEventQuestionServer = panelActionFn
 	.validator((input: unknown) =>
-		eventIdSchema.extend(questionFields).parse(input),
+		eventIdSchema
+			.extend({ ...questionFields, form: formSchema.optional() })
+			.parse(input),
 	)
 	.handler(async ({ data, context }) => {
 		await assertCanManageEvent(context.user, data.eventId);

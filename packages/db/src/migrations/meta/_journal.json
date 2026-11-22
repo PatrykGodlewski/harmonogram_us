@@ -239,6 +239,13 @@
       "when": 1795331602882,
       "tag": "0033_drop_indico_events",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1795333384295,
+      "tag": "0034_surveys",
+      "breakpoints": true
     }
   ]
 }

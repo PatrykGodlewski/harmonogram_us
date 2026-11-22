@@ -115,7 +115,7 @@ export function RegistrantsList({
 	const approval = useApprovalActions(eventId, onChanged);
 	// Answers are for those who manage the event (helpers at the door don't need them).
 	const { data: questions = [] } = useQuery({
-		...eventQuestionsQueryOptions(eventId),
+		...eventQuestionsQueryOptions(eventId, "registration"),
 		enabled: canManage,
 	});
 	const pendingCount = registrants.filter(

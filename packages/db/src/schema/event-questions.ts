@@ -13,10 +13,13 @@ import {
 import { eventRegistrations } from "./event-registrations";
 import { events } from "./events";
 
-/** Free text, one of the listed options, or yes/no. */
-export type QuestionKind = "text" | "choice" | "yesno";
+/** Free text, one of the listed options, yes/no, or a 1–5 rating (surveys only). */
+export type QuestionKind = "text" | "choice" | "yesno" | "rating";
 
-/** A question people answer when they register (F10). */
+/** Asked when registering (F10) or in the survey after the event (F20). */
+export type QuestionForm = "registration" | "survey";
+
+/** A question people answer when they register (F10) or after the event (F20). */
 export const eventQuestions = pgTable(
 	"event_questions",
 	{
@@ -24,6 +27,7 @@ export const eventQuestions = pgTable(
 		eventId: text("event_id")
 			.notNull()
 			.references(() => events.id, { onDelete: "cascade" }),
+		form: text("form").$type<QuestionForm>().notNull().default("registration"),
 		label: text("label").notNull(),
 		kind: text("kind").$type<QuestionKind>().notNull(),
 		/** The choices of a `choice` question; empty for the others. */
@@ -37,10 +41,19 @@ export const eventQuestions = pgTable(
 	(table) => [
 		check(
 			"event_questions_kind_check",
-			sql`${table.kind} IN ('text', 'choice', 'yesno')`,
+			sql`${table.kind} IN ('text', 'choice', 'yesno', 'rating')`,
 		),
-		index("event_questions_event_position_idx").on(
+		check(
+			"event_questions_form_check",
+			sql`${table.form} IN ('registration', 'survey')`,
+		),
+		check(
+			"event_questions_rating_survey_check",
+			sql`${table.kind} <> 'rating' OR ${table.form} = 'survey'`,
+		),
+		index("event_questions_event_form_position_idx").on(
 			table.eventId,
+			table.form,
 			table.position,
 		),
 	],

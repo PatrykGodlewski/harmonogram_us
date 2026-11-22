@@ -37,7 +37,7 @@ function cell(value: string): string {
 export type ExportQuestion = {
 	id: string;
 	label: string;
-	kind: "text" | "choice" | "yesno";
+	kind: "text" | "choice" | "yesno" | "rating";
 };
 
 /**
