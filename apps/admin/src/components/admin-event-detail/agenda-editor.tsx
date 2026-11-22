@@ -1,5 +1,10 @@
 import { deleteAdminAgendaItemServer } from "@repo/api/admin/mutations";
-import type { AgendaItem, FilterOption } from "@repo/api/admin/queries";
+import type {
+	AgendaItem,
+	AgendaSession,
+	FilterOption,
+} from "@repo/api/admin/queries";
+import { deleteAgendaSessionServer } from "@repo/api/admin/sessions";
 import {
 	admin_action_delete,
 	admin_action_edit,
@@ -11,6 +16,9 @@ import {
 	admin_event_agenda_empty,
 	admin_event_places,
 	admin_event_registered_count,
+	admin_session_add,
+	admin_session_empty,
+	admin_session_programme,
 	event_details_no_registration,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
@@ -29,11 +37,20 @@ import { Fragment, useId, useState } from "react";
 import { toast } from "sonner";
 import { formatMutationError } from "../../lib/format-mutation-error";
 import { AgendaItemDialog } from "./agenda-item-dialog";
+import { SessionCard } from "./session-card";
+import { SessionCopyDialog } from "./session-copy-dialog";
+import { SessionDialog } from "./session-dialog";
 
 type AgendaEditorProps = {
 	eventId: string;
 	eventDate: Date;
 	agenda: AgendaItem[];
+	/**
+	 * The event's sessions (F33): the list shows them with the items outside any
+	 * session. Omitted inside a session, where `session` scopes the editor.
+	 */
+	sessions?: AgendaSession[];
+	session?: AgendaSession;
 	locations: FilterOption[];
 	onChanged: () => Promise<unknown>;
 	view: AgendaViewMode;
@@ -52,10 +69,16 @@ function placesLabel(item: AgendaItem): string {
 			});
 }
 
+type ListEntry =
+	| { kind: "session"; session: AgendaSession; startsAt: Date }
+	| { kind: "item"; item: AgendaItem & { parallel: boolean }; startsAt: Date };
+
 export function AgendaEditor({
 	eventId,
 	eventDate,
 	agenda,
+	sessions,
+	session,
 	locations,
 	onChanged,
 	view,
@@ -64,9 +87,13 @@ export function AgendaEditor({
 	const headingId = useId();
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [editingItem, setEditingItem] = useState<AgendaItem | null>(null);
+	const [sessionDialogOpen, setSessionDialogOpen] = useState(false);
+	const [editingSession, setEditingSession] = useState<AgendaSession | null>(
+		null,
+	);
+	const [copying, setCopying] = useState<AgendaSession | null>(null);
 	const locale = getLocale();
 	const now = useNow();
-	const nowIndex = now ? nowListIndex(agenda, now) : null;
 
 	const deleteMutation = useMutation({
 		mutationFn: (id: string) => deleteAdminAgendaItemServer({ data: { id } }),
@@ -78,6 +105,51 @@ export function AgendaEditor({
 			toast.error(formatMutationError(error, admin_error_generic));
 		},
 	});
+
+	const deleteSessionMutation = useMutation({
+		mutationFn: (id: string) => deleteAgendaSessionServer({ data: { id } }),
+		onSuccess: async () => {
+			await onChanged();
+			toast.success(admin_delete_success());
+		},
+		onError: (error) => {
+			toast.error(formatMutationError(error, admin_error_generic));
+		},
+	});
+
+	const handleAddSession = () => {
+		setEditingSession(null);
+		setSessionDialogOpen(true);
+	};
+
+	const handleEditSession = (target: AgendaSession) => {
+		setEditingSession(target);
+		setSessionDialogOpen(true);
+	};
+
+	// At event level the list shows sessions and the items outside them, in time order.
+	const itemsInList = sessions
+		? agenda.filter((item) => item.sessionId === null)
+		: agenda;
+	const listedItems = markParallel(itemsInList);
+	const entries: ListEntry[] = [
+		...(sessions ?? []).map((row) => ({
+			kind: "session" as const,
+			session: row,
+			startsAt: new Date(row.startsAt),
+		})),
+		...listedItems.map((item) => ({
+			kind: "item" as const,
+			item,
+			startsAt: new Date(item.startsAt),
+		})),
+	].sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
+	const nowIndex = now ? nowListIndex(itemsInList, now) : null;
+	const itemCountOf = (sessionId: string) =>
+		agenda.filter((item) => item.sessionId === sessionId).length;
+	const locationOf = (item: AgendaItem) =>
+		item.locationLabel ??
+		(session && item.sessionId === session.id ? session.locationLabel : null);
 
 	const handleAdd = () => {
 		setEditingItem(null);
@@ -99,11 +171,16 @@ export function AgendaEditor({
 		<section aria-labelledby={headingId} className="flex flex-col gap-3">
 			<div className="flex items-center justify-between gap-2">
 				<h2 id={headingId} className="text-lg font-semibold">
-					{admin_event_agenda()}
+					{session ? admin_session_programme() : admin_event_agenda()}
 				</h2>
 				<div className="flex flex-wrap items-center justify-end gap-2">
 					{agenda.length > 0 ? (
 						<AgendaViewToggle value={view} onChange={onViewChange} />
+					) : null}
+					{sessions ? (
+						<Button size="sm" variant="outline" onClick={handleAddSession}>
+							{admin_session_add()}
+						</Button>
 					) : null}
 					<Button size="sm" onClick={handleAdd}>
 						{admin_event_agenda_add()}
@@ -111,9 +188,9 @@ export function AgendaEditor({
 				</div>
 			</div>
 
-			{agenda.length === 0 ? (
+			{entries.length === 0 ? (
 				<p className="text-sm text-muted-foreground">
-					{admin_event_agenda_empty()}
+					{session ? admin_session_empty() : admin_event_agenda_empty()}
 				</p>
 			) : view === "calendar" ? (
 				<AgendaCalendarGrid
@@ -133,52 +210,70 @@ export function AgendaEditor({
 				/>
 			) : (
 				<ol className="divide-y rounded-lg border">
-					{markParallel(agenda).map((item, index) => (
-						<Fragment key={item.id}>
-							{index === nowIndex && now ? (
-								<AgendaNowDivider now={now} />
-							) : null}
-							<li
-								className={cn(
-									"flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between",
-									item.parallel && "pl-6",
-								)}
-							>
-								<div className="flex flex-col gap-0.5">
-									<p className="text-sm text-muted-foreground tabular-nums">
-										{formatEventTime(item.startsAt, locale)}–
-										{formatEventTime(item.endsAt, locale)}
-										{item.locationLabel ? ` · ${item.locationLabel}` : ""}
-									</p>
-									<p className="font-medium">{item.title}</p>
-									{item.speakers.length > 0 ? (
-										<p className="text-sm text-muted-foreground">
-											{item.speakers.map((speaker) => speaker.name).join(", ")}
+					{entries.map((entry) =>
+						entry.kind === "session" ? (
+							<SessionCard
+								key={entry.session.id}
+								session={entry.session}
+								itemCount={itemCountOf(entry.session.id)}
+								deleting={deleteSessionMutation.isPending}
+								onCopy={() => setCopying(entry.session)}
+								onEdit={() => handleEditSession(entry.session)}
+								onDelete={() => deleteSessionMutation.mutate(entry.session.id)}
+							/>
+						) : (
+							<Fragment key={entry.item.id}>
+								{listedItems.indexOf(entry.item) === nowIndex && now ? (
+									<AgendaNowDivider now={now} />
+								) : null}
+								<li
+									className={cn(
+										"flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between",
+										entry.item.parallel && "pl-6",
+									)}
+								>
+									<div className="flex flex-col gap-0.5">
+										<p className="text-sm text-muted-foreground tabular-nums">
+											{formatEventTime(entry.item.startsAt, locale)}–
+											{formatEventTime(entry.item.endsAt, locale)}
+											{locationOf(entry.item)
+												? ` · ${locationOf(entry.item)}`
+												: ""}
 										</p>
-									) : null}
-									<p className="text-sm tabular-nums">{placesLabel(item)}</p>
-								</div>
-								<div className="flex gap-2">
-									<Button
-										size="sm"
-										variant="outline"
-										onClick={() => handleEdit(item)}
-									>
-										{admin_action_edit()}
-									</Button>
-									<Button
-										size="sm"
-										variant="outline"
-										disabled={deleteMutation.isPending}
-										onClick={() => handleDelete(item)}
-									>
-										{admin_action_delete()}
-									</Button>
-								</div>
-							</li>
-						</Fragment>
-					))}
-					{nowIndex === agenda.length && now ? (
+										<p className="font-medium">{entry.item.title}</p>
+										{entry.item.speakers.length > 0 ? (
+											<p className="text-sm text-muted-foreground">
+												{entry.item.speakers
+													.map((speaker) => speaker.name)
+													.join(", ")}
+											</p>
+										) : null}
+										<p className="text-sm tabular-nums">
+											{placesLabel(entry.item)}
+										</p>
+									</div>
+									<div className="flex gap-2">
+										<Button
+											size="sm"
+											variant="outline"
+											onClick={() => handleEdit(entry.item)}
+										>
+											{admin_action_edit()}
+										</Button>
+										<Button
+											size="sm"
+											variant="outline"
+											disabled={deleteMutation.isPending}
+											onClick={() => handleDelete(entry.item)}
+										>
+											{admin_action_delete()}
+										</Button>
+									</div>
+								</li>
+							</Fragment>
+						),
+					)}
+					{nowIndex === itemsInList.length && now ? (
 						<AgendaNowDivider now={now} />
 					) : null}
 				</ol>
@@ -190,9 +285,31 @@ export function AgendaEditor({
 				eventId={eventId}
 				eventDate={eventDate}
 				item={editingItem}
+				session={session ?? null}
 				locations={locations}
 				onSaved={onChanged}
 			/>
+			{sessions ? (
+				<>
+					<SessionDialog
+						open={sessionDialogOpen}
+						onOpenChange={setSessionDialogOpen}
+						eventId={eventId}
+						eventDate={eventDate}
+						session={editingSession}
+						locations={locations}
+						onSaved={onChanged}
+					/>
+					<SessionCopyDialog
+						session={copying}
+						onOpenChange={(open) => {
+							if (!open) setCopying(null);
+						}}
+						locations={locations}
+						onCopied={onChanged}
+					/>
+				</>
+			) : null}
 		</section>
 	);
 }

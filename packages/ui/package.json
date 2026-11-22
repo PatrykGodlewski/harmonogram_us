@@ -23,7 +23,8 @@
     "./app-errors": "./src/app-errors.ts",
     "./registrants-csv": "./src/registrants-csv.ts",
     "./registrant-stats": "./src/registrant-stats.ts",
-    "./file-size": "./src/file-size.ts"
+    "./file-size": "./src/file-size.ts",
+    "./session-colors": "./src/session-colors.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",

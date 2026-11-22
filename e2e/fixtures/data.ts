@@ -3,7 +3,11 @@ import { db } from "@repo/db/client";
 import { createAgendaItem } from "@repo/db/queries/agenda-items";
 import { createEvent } from "@repo/db/queries/events";
 import { authUsers } from "@repo/db/schema/better-auth";
-import { eventFaculties, eventTypes } from "@repo/db/schema/event-lookups";
+import {
+	eventFaculties,
+	eventLocations,
+	eventTypes,
+} from "@repo/db/schema/event-lookups";
 import {
 	type AttendanceMode,
 	type EventStatus,
@@ -37,7 +41,7 @@ export async function createTestUser(
 }
 
 async function lookup(
-	table: typeof eventTypes | typeof eventFaculties,
+	table: typeof eventTypes | typeof eventFaculties | typeof eventLocations,
 	label: string,
 ) {
 	const slug = label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
@@ -47,6 +51,11 @@ async function lookup(
 		.onConflictDoUpdate({ target: table.id, set: { label } })
 		.returning({ id: table.id });
 	return row?.id ?? slug;
+}
+
+/** A place to choose in the panel (rooms list); returns its id. */
+export function createTestLocation(label: string): Promise<string> {
+	return lookup(eventLocations, label);
 }
 
 export async function createTestEvent(input: {

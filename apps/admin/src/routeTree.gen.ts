@@ -25,6 +25,7 @@ import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiFilesFileIdRouteImport } from './routes/api/files/$fileId'
 import { Route as AuthenticatedEventsEventIdScanRouteImport } from './routes/_authenticated/events.$eventId_.scan'
 import { Route as ApiEventsEventIdAttendanceRouteImport } from './routes/api/events/$eventId/attendance'
+import { Route as AuthenticatedEventsEventIdSessionsSessionIdRouteImport } from './routes/_authenticated/events.$eventId_.sessions.$sessionId'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -111,6 +112,12 @@ const ApiEventsEventIdAttendanceRoute =
     path: '/api/events/$eventId/attendance',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AuthenticatedEventsEventIdSessionsSessionIdRoute =
+  AuthenticatedEventsEventIdSessionsSessionIdRouteImport.update({
+    id: '/events/$eventId_/sessions/$sessionId',
+    path: '/events/$eventId/sessions/$sessionId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -128,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/events/': typeof AuthenticatedEventsIndexRoute
   '/events/$eventId/scan': typeof AuthenticatedEventsEventIdScanRoute
   '/api/events/$eventId/attendance': typeof ApiEventsEventIdAttendanceRoute
+  '/events/$eventId/sessions/$sessionId': typeof AuthenticatedEventsEventIdSessionsSessionIdRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -145,6 +153,7 @@ export interface FileRoutesByTo {
   '/events': typeof AuthenticatedEventsIndexRoute
   '/events/$eventId/scan': typeof AuthenticatedEventsEventIdScanRoute
   '/api/events/$eventId/attendance': typeof ApiEventsEventIdAttendanceRoute
+  '/events/$eventId/sessions/$sessionId': typeof AuthenticatedEventsEventIdSessionsSessionIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -164,6 +173,7 @@ export interface FileRoutesById {
   '/_authenticated/events/': typeof AuthenticatedEventsIndexRoute
   '/_authenticated/events/$eventId_/scan': typeof AuthenticatedEventsEventIdScanRoute
   '/api/events/$eventId/attendance': typeof ApiEventsEventIdAttendanceRoute
+  '/_authenticated/events/$eventId_/sessions/$sessionId': typeof AuthenticatedEventsEventIdSessionsSessionIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -183,6 +193,7 @@ export interface FileRouteTypes {
     | '/events/'
     | '/events/$eventId/scan'
     | '/api/events/$eventId/attendance'
+    | '/events/$eventId/sessions/$sessionId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -200,6 +211,7 @@ export interface FileRouteTypes {
     | '/events'
     | '/events/$eventId/scan'
     | '/api/events/$eventId/attendance'
+    | '/events/$eventId/sessions/$sessionId'
   id:
     | '__root__'
     | '/_authenticated'
@@ -218,6 +230,7 @@ export interface FileRouteTypes {
     | '/_authenticated/events/'
     | '/_authenticated/events/$eventId_/scan'
     | '/api/events/$eventId/attendance'
+    | '/_authenticated/events/$eventId_/sessions/$sessionId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -345,6 +358,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiEventsEventIdAttendanceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/events/$eventId_/sessions/$sessionId': {
+      id: '/_authenticated/events/$eventId_/sessions/$sessionId'
+      path: '/events/$eventId/sessions/$sessionId'
+      fullPath: '/events/$eventId/sessions/$sessionId'
+      preLoaderRoute: typeof AuthenticatedEventsEventIdSessionsSessionIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -357,6 +377,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedEventsEventIdRoute: typeof AuthenticatedEventsEventIdRoute
   AuthenticatedEventsIndexRoute: typeof AuthenticatedEventsIndexRoute
   AuthenticatedEventsEventIdScanRoute: typeof AuthenticatedEventsEventIdScanRoute
+  AuthenticatedEventsEventIdSessionsSessionIdRoute: typeof AuthenticatedEventsEventIdSessionsSessionIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -368,6 +389,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedEventsEventIdRoute: AuthenticatedEventsEventIdRoute,
   AuthenticatedEventsIndexRoute: AuthenticatedEventsIndexRoute,
   AuthenticatedEventsEventIdScanRoute: AuthenticatedEventsEventIdScanRoute,
+  AuthenticatedEventsEventIdSessionsSessionIdRoute:
+    AuthenticatedEventsEventIdSessionsSessionIdRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
