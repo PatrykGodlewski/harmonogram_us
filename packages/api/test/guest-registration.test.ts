@@ -1,15 +1,22 @@
 import { db } from "@repo/db/client";
 import { events } from "@repo/db/schema/events";
 import { env } from "@repo/env";
+import { getBoss } from "@repo/jobs/client";
 import { QUEUE_EMAILS } from "@repo/jobs/queues";
 import { eq, sql } from "drizzle-orm";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { createEvent, resetDb } from "../../db/test/helpers";
 import { requestGuestRegistration } from "../src/registrations/guest-registration";
 
 beforeEach(async () => {
 	await resetDb();
+	// Starting pg-boss creates its schema (a fresh database has none).
+	await getBoss();
 	await db.execute(sql`DELETE FROM pgboss.job WHERE name = ${QUEUE_EMAILS}`);
+});
+
+afterAll(async () => {
+	await (await getBoss()).stop();
 });
 
 async function queuedEmails() {
