@@ -12,6 +12,10 @@ function fakeElectric(body = "[]") {
 				"content-encoding": "gzip",
 				"content-length": "999",
 				"electric-handle": "h-1",
+				connection: "keep-alive, x-trace",
+				"keep-alive": "timeout=5",
+				"transfer-encoding": "chunked",
+				"x-trace": "1",
 			},
 		});
 	};
@@ -79,5 +83,18 @@ describe("proxyShape", () => {
 		expect(response.headers.get("content-length")).toBeNull();
 		expect(response.headers.get("electric-handle")).toBe("h-1");
 		expect(await response.text()).toBe("[1]");
+	});
+
+	it("drops per-connection headers, which HTTP/2 refuses and proxies must not forward", async () => {
+		const { fetchImpl } = fakeElectric();
+		const response = await proxyShape(
+			new Request("http://app.test/x?offset=-1"),
+			shapes.eventSeatCounts,
+			{ ...config, fetchImpl },
+		);
+		for (const name of ["connection", "keep-alive", "transfer-encoding", "x-trace"]) {
+			expect(response.headers.get(name), name).toBeNull();
+		}
+		expect(response.headers.get("electric-handle")).toBe("h-1");
 	});
 });
