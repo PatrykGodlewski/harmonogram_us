@@ -69,6 +69,7 @@ export function AgendaTimeline({
 			key={item.id}
 			as={as}
 			item={item}
+			files={event.files.filter((file) => file.agendaItemId === item.id)}
 			eventId={event.id}
 			user={user}
 			interactive={interactive}

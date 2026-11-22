@@ -17,13 +17,17 @@ import { formatEventTime } from "@repo/ui/time";
 import { cn } from "@repo/ui/utils";
 import type {
 	AgendaItemData,
+	EventDetailsData,
 	EventDetailsRegistrations,
 	ItemSeatCount,
 } from "~/lib/event-details/types";
+import { FileLink } from "./file-link";
 import { LoginToRegisterButton } from "./login-to-register-button";
 
 type AgendaItemRowProps = {
 	item: AgendaItemData & { parallel: boolean };
+	/** The speakers' files for this item (F19). */
+	files: EventDetailsData["files"];
 	/** "li" in the agenda list, "div" in the calendar's dialog. */
 	as?: "li" | "div";
 	eventId: string;
@@ -37,6 +41,7 @@ type AgendaItemRowProps = {
 
 export function AgendaItemRow({
 	item,
+	files,
 	as: Tag = "li",
 	eventId,
 	user,
@@ -83,7 +88,7 @@ export function AgendaItemRow({
 				{item.description ? (
 					<p className="text-sm text-muted-foreground">{item.description}</p>
 				) : null}
-				{item.materials.length > 0 ? (
+				{item.materials.length > 0 || files.length > 0 ? (
 					<ul
 						aria-label={agenda_materials()}
 						className="flex flex-wrap gap-x-3 gap-y-1 text-sm"
@@ -99,6 +104,11 @@ export function AgendaItemRow({
 								>
 									{material.label}
 								</a>
+							</li>
+						))}
+						{files.map((file) => (
+							<li key={file.id}>
+								<FileLink file={file} />
 							</li>
 						))}
 					</ul>

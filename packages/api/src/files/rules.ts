@@ -26,6 +26,11 @@ const TYPES: Record<string, string> = {
 	zip: "application/zip",
 };
 
+/** For the file picker (`accept`); the server checks again. */
+export const ACCEPTED_EXTENSIONS = Object.keys(TYPES)
+	.map((extension) => `.${extension}`)
+	.join(",");
+
 /** The content type for an allowed file name, else null. */
 export function fileTypeFor(name: string): string | null {
 	const match = /^.+\.([a-z0-9]+)$/i.exec(name);

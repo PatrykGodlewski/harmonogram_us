@@ -21,6 +21,7 @@ import { AgendaEditor } from "~/components/admin-event-detail/agenda-editor";
 import { EventStatsCard } from "~/components/admin-event-detail/event-stats-card";
 import { EventSummaryCard } from "~/components/admin-event-detail/event-summary-card";
 import { GroupsList } from "~/components/admin-event-detail/groups-list";
+import { MaterialsCard } from "~/components/admin-event-detail/materials-card";
 import { OrganizersCard } from "~/components/admin-event-detail/organizers-card";
 import { QuestionsCard } from "~/components/admin-event-detail/questions-card";
 import { RegistrantsList } from "~/components/admin-event-detail/registrants-list";
@@ -122,6 +123,15 @@ function AdminEventDetailPage() {
 						onChanged={handleChanged}
 						view={view}
 						onViewChange={handleViewChange}
+					/>
+				) : null}
+				{canManage ? (
+					<MaterialsCard
+						eventId={event.id}
+						agenda={event.agenda}
+						materials={event.materials}
+						files={event.files}
+						onChanged={handleChanged}
 					/>
 				) : null}
 			</div>

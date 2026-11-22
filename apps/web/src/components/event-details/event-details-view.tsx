@@ -5,6 +5,7 @@ import type {
 } from "~/lib/event-details/types";
 import type { EventSeatCount } from "~/lib/events/types";
 import { AgendaTimeline } from "./agenda-timeline";
+import { EventMaterials } from "./event-materials";
 import { EventSummary } from "./event-summary";
 
 export type EventDetailsViewProps = {
@@ -41,6 +42,7 @@ export function EventDetailsView({
 				seatCount={eventSeatCount}
 				registrations={registrations}
 			/>
+			<EventMaterials event={event} />
 			<AgendaTimeline
 				event={event}
 				user={user}

@@ -1,6 +1,5 @@
 import {
 	deleteEventFile,
-	listEventFiles,
 	setEventMaterialLinks,
 } from "@repo/db/queries/event-files";
 import { queryOptions } from "@tanstack/react-query";
@@ -10,8 +9,6 @@ import { panelActionFn, panelQueryFn } from "../auth/panel-middleware";
 import { withDomainErrors } from "../errors";
 import { storeEventFile } from "../files/store";
 import { storageConfig } from "../storage/s3";
-
-export type { EventFile } from "@repo/db/queries/event-files";
 
 const eventIdSchema = z.object({ eventId: z.string().min(1) });
 
@@ -25,19 +22,6 @@ export const filesAvailableQueryOptions = queryOptions({
 	queryFn: () => fetchFilesAvailableServer(),
 	staleTime: Number.POSITIVE_INFINITY,
 });
-
-export const fetchEventFilesServer = panelQueryFn
-	.validator((input: unknown) => eventIdSchema.parse(input))
-	.handler(async ({ data, context }) => {
-		await assertCanManageEvent(context.user, data.eventId);
-		return listEventFiles(data.eventId);
-	});
-
-export const eventFilesQueryOptions = (eventId: string) =>
-	queryOptions({
-		queryKey: ["admin", "event", eventId, "files"] as const,
-		queryFn: () => fetchEventFilesServer({ data: { eventId } }),
-	});
 
 const uploadSchema = z.object({
 	eventId: z.string().min(1),

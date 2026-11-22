@@ -22,7 +22,8 @@
     "./tailwind": "./tailwind.css",
     "./app-errors": "./src/app-errors.ts",
     "./registrants-csv": "./src/registrants-csv.ts",
-    "./registrant-stats": "./src/registrant-stats.ts"
+    "./registrant-stats": "./src/registrant-stats.ts",
+    "./file-size": "./src/file-size.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",
