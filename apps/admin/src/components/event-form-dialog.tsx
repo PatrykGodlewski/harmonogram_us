@@ -79,6 +79,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { formatFieldError } from "../lib/format-field-error";
 import { formatMutationError } from "../lib/format-mutation-error";
+import { TeamsMeetingButton } from "./teams-meeting-button";
 
 const NONE_VALUE = "__none__";
 /** Places a new event offers until the organizer changes it. */
@@ -618,6 +619,17 @@ export function EventFormDialog({
 										<FormMessage>
 											{formatFieldError(field.state.meta.errors[0])}
 										</FormMessage>
+									) : null}
+									{/* The saved event must already be online: the server checks the stored mode. */}
+									{event &&
+									event.attendanceMode !== "onsite" &&
+									!field.state.value.trim() ? (
+										<div className="mt-2 flex">
+											<TeamsMeetingButton
+												eventId={event.id}
+												onCreated={async (url) => field.handleChange(url)}
+											/>
+										</div>
 									) : null}
 								</div>
 							)}

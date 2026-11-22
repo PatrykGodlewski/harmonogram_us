@@ -764,5 +764,7 @@
 	"widget_all_events": "All events",
 	"error_teams_not_configured": "Teams meetings are not set up in this installation.",
 	"error_teams_not_online": "A Teams meeting can only be created for an online or hybrid event.",
-	"error_teams_failed": "The Teams meeting could not be created. Try again or paste a link yourself."
+	"error_teams_failed": "The Teams meeting could not be created. Try again or paste a link yourself.",
+	"teams_create_meeting": "Create a Teams meeting",
+	"teams_meeting_created": "Teams meeting created"
 }

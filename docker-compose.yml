@@ -18,6 +18,13 @@ x-app-env: &app-env
   UNIVERSITY_SSO_CLIENT_ID: ${UNIVERSITY_SSO_CLIENT_ID:-}
   UNIVERSITY_SSO_CLIENT_SECRET: ${UNIVERSITY_SSO_CLIENT_SECRET:-}
   UNIVERSITY_SSO_NAME: ${UNIVERSITY_SSO_NAME:-}
+  # Teams meetings through Microsoft Graph (F23); set in .env, or by e2e/ports.env for the stand-in.
+  TEAMS_TENANT_ID: ${TEAMS_TENANT_ID:-}
+  TEAMS_CLIENT_ID: ${TEAMS_CLIENT_ID:-}
+  TEAMS_CLIENT_SECRET: ${TEAMS_CLIENT_SECRET:-}
+  TEAMS_ORGANIZER_ID: ${TEAMS_ORGANIZER_ID:-}
+  TEAMS_LOGIN_URL: ${TEAMS_LOGIN_URL:-https://login.microsoftonline.com}
+  TEAMS_GRAPH_URL: ${TEAMS_GRAPH_URL:-https://graph.microsoft.com}
 
 x-app-build: &app-build
   context: .
@@ -128,6 +135,24 @@ services:
     depends_on:
       db: { condition: service_healthy }
       mailpit: { condition: service_started }
+
+  # e2e only: a stand-in Microsoft Graph (e2e/teams-mock), reached as teams.localhost.
+  teams-mock:
+    profiles: [e2e]
+    image: node:22-alpine
+    command: ["node", "/srv/server.mjs"]
+    volumes:
+      - ./e2e/teams-mock/server.mjs:/srv/server.mjs:ro
+    environment:
+      PORT: ${TEAMS_PORT:-18082}
+      TENANT: ${TEAMS_TENANT_ID:-}
+      CLIENT_ID: ${TEAMS_CLIENT_ID:-}
+      CLIENT_SECRET: ${TEAMS_CLIENT_SECRET:-}
+    ports:
+      - "${TEAMS_PORT:-18082}:${TEAMS_PORT:-18082}"
+    networks:
+      default:
+        aliases: [teams.localhost]
 
   # e2e only: a stand-in university sign-in server (e2e/oidc-mock). The browser and the
   # app containers both reach it as oidc.localhost (Chrome maps *.localhost to this machine).

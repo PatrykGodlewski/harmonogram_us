@@ -50,6 +50,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { type FormEvent, type ReactNode, useId, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { TeamsMeetingButton } from "~/components/teams-meeting-button";
 import { formatMutationError } from "~/lib/format-mutation-error";
 
 type AttendanceMode = AdminEventDetails["attendanceMode"];
@@ -174,6 +175,7 @@ export function PublishChecklist({ event, onChanged }: PublishChecklistProps) {
 						done={!missing.has("link")}
 						saving={saveMutation.isPending}
 						onSave={(changes) => saveMutation.mutateAsync(changes)}
+						onChanged={onChanged}
 					/>
 				) : null}
 			</ul>
@@ -318,7 +320,13 @@ function PlaceRow({ event, done, saving, onSave }: FixRowProps) {
 	);
 }
 
-function LinkRow({ event, done, saving, onSave }: FixRowProps) {
+function LinkRow({
+	event,
+	done,
+	saving,
+	onSave,
+	onChanged,
+}: FixRowProps & { onChanged: () => Promise<unknown> }) {
 	const inputId = useId();
 	const errorId = useId();
 	const [editing, setEditing] = useState(false);
@@ -357,6 +365,7 @@ function LinkRow({ event, done, saving, onSave }: FixRowProps) {
 					<p className="text-sm text-muted-foreground">
 						{publish_checklist_link_hint()}
 					</p>
+					<TeamsMeetingButton eventId={event.id} onCreated={onChanged} />
 					<div className="flex flex-col gap-1">
 						<Label htmlFor={inputId}>{publish_checklist_link()}</Label>
 						<Input
