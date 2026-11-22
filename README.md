@@ -137,6 +137,7 @@ These are facts about the implementation, not claims that it is better in genera
 | Feature | Harmonogram US | Indico |
 |---|---|---|
 | Programme as list and calendar, parallel sessions, rooms, several days | ✅ with a live "now" line | ✅ timetable |
+| Programme sessions (theme, room, time), copied to another room and time | ✅ | ✅ sessions (no copy) |
 | Speakers with affiliation | ✅ | ✅ |
 | Links to materials per programme item | ✅ | ✅ |
 | Files and links for the whole event | ✅ PDF, office documents, images, ZIP up to 25 MB; downloads follow the event page's visibility | ✅ materials |

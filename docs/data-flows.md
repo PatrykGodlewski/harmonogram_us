@@ -4,6 +4,8 @@ Read before changing capacity, registration, waitlists, groups, page refresh or 
 
 ## Database capacity and concurrency
 
+Programme sessions (F33, `agenda_sessions`): an item with `session_id` must lie within its session's times (checked under a lock on the session row, both when an item and when a session changes); deleting a session deletes its items; `copyAgendaSession` makes an independent copy shifted to a new start. Seat counts stay per event and per item.
+
 `event_seat_counts` and `agenda_item_seat_counts` are maintained by Postgres triggers from registration rows and capacity columns (`0003_seat_count_triggers.sql`). **Never write these count tables directly**, including from seeds. `CHECK (seats_remaining >= 0)` enforces capacity.
 
 Refresh functions must first lock the count row, then recount in a separate statement (migration `0006`). Under READ COMMITTED, a single UPDATE that waits for the lock recounts using a stale snapshot. Regression coverage: `packages/db/test/concurrency.test.ts`.
