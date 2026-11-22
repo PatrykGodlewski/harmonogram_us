@@ -1,3 +1,4 @@
+# Railway service "worker". Set the service variable APP=worker: the shared Dockerfile builds the app it names.
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "/Dockerfile"
@@ -9,9 +10,6 @@ watchPatterns = [
   "/package.json",
   "/turbo.json",
 ]
-
-[build.args]
-APP = "worker"
 
 [deploy]
 startCommand = "node dist/index.mjs"

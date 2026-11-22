@@ -83,7 +83,7 @@ Mailpit inbox for local email (magic links): http://localhost:8025.
 
 **Observability:** each app records request count and duration per normalised route (`@repo/api/observability/metrics`, request middleware in `src/start.ts`) plus Node runtime metrics, served at `/api/metrics` to a bearer `METRICS_TOKEN` (unset: 404). Route labels must never contain ids, tokens or codes (`routeLabel`). `docker compose --profile observability` adds Prometheus and Grafana (`observability/`). The Prometheus client (`@prometheus-io/client`) pulls in `@opentelemetry/api`, aliased to its ESM build in both `vite.config.ts` (its CJS build breaks in the SSR bundle, like `tslib`). Server functions answer app errors with 4xx through the global function middleware; `src/start.ts` is found by name (Start resolves entries inside `src/`).
 
-**Deployment:** Railway, with one service per app (`apps/*/railway.toml`). See the bottom of `.env.example` for the variables each service needs.
+**Deployment:** Railway, with one service per app (`apps/*/railway.toml`) plus Postgres (`wal_level=logical`) and Electric. Railway can't pass build args from `railway.toml`, so each service sets the variable `APP` (`web`/`admin`/`worker`) and the shared Dockerfile refuses to build without it. Web runs migrations as its pre-deploy step with `pnpm --filter @repo/db db:migrate` (not `pnpm db:migrate`: Turbo's strict env mode hides the env vars, and the image has no `.env`). Web and admin gate deploys on `/api/health` (200 once Postgres answers). See the bottom of `.env.example` for the variables each service needs.
 
 ## Conventions (from `.cursor/rules`)
 
