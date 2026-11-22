@@ -22,7 +22,7 @@ qrcode = "0.14"
 image = { version = "0.25", default-features = false, features = ["png"] }
 
 [build-dependencies]
-protox = "0.9"
+protox = "0.10"
 tonic-prost-build = "0.14"
 
 [dev-dependencies]
