@@ -765,6 +765,10 @@
 	"error_teams_not_configured": "Spotkania Teams nie są skonfigurowane w tej instalacji.",
 	"error_teams_not_online": "Spotkanie Teams można utworzyć tylko dla wydarzenia online lub hybrydowego.",
 	"error_teams_failed": "Nie udało się utworzyć spotkania w Teams. Spróbuj ponownie albo wklej link ręcznie.",
+	"error_event_files_limit": "To wydarzenie ma już 50 plików. Usuń któryś, aby dodać nowy.",
+	"error_file_too_large": "Plik jest za duży. Największy dozwolony rozmiar to 25 MB.",
+	"error_file_type": "Tego rodzaju pliku nie można dodać. Dozwolone: PDF, dokumenty, prezentacje, arkusze, tekst, CSV, obrazy PNG/JPG/WebP i ZIP.",
+	"error_files_not_configured": "Przechowywanie plików nie jest skonfigurowane w tej instalacji.",
 	"teams_create_meeting": "Utwórz spotkanie w Teams",
 	"teams_meeting_created": "Utworzono spotkanie w Teams"
 }

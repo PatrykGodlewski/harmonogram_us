@@ -260,6 +260,20 @@
       "when": 1795334846271,
       "tag": "0036_survey_answered_flag",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1795346289815,
+      "tag": "0037_event_files",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1795346290254,
+      "tag": "0038_stored_file_deletions_trigger",
+      "breakpoints": true
     }
   ]
 }

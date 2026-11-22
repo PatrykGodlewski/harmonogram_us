@@ -765,6 +765,10 @@
 	"error_teams_not_configured": "Teams meetings are not set up in this installation.",
 	"error_teams_not_online": "A Teams meeting can only be created for an online or hybrid event.",
 	"error_teams_failed": "The Teams meeting could not be created. Try again or paste a link yourself.",
+	"error_event_files_limit": "This event already has 50 files. Remove one to add another.",
+	"error_file_too_large": "The file is too large. The largest allowed size is 25 MB.",
+	"error_file_type": "This kind of file cannot be added. Allowed: PDF, documents, presentations, spreadsheets, text, CSV, PNG/JPG/WebP images and ZIP.",
+	"error_files_not_configured": "File storage is not set up in this installation.",
 	"teams_create_meeting": "Create a Teams meeting",
 	"teams_meeting_created": "Teams meeting created"
 }

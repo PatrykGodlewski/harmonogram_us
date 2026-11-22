@@ -1,7 +1,7 @@
 import { env as clientEnv } from "@repo/env/client";
 import { and, asc, desc, eq, ilike, inArray, max, ne, sql } from "drizzle-orm";
 import { db, type TransactionClient } from "../client";
-import { agendaItems } from "../schema/agenda";
+import { type AgendaMaterial, agendaItems } from "../schema/agenda";
 import {
 	eventFaculties,
 	eventLocations,
@@ -26,6 +26,7 @@ import {
 	mapConstraintError,
 } from "./domain-errors";
 import { missingForPublish } from "./event-completeness";
+import { type EventFileSummary, listEventFiles } from "./event-files";
 import { type EventQuestion, listEventQuestions } from "./event-questions";
 import {
 	type EventWhenWhere,
@@ -557,18 +558,39 @@ export async function deleteEvent(id: string) {
 export type EventDetails = EventWithRelations & {
 	agenda: AgendaItem[];
 	questions: EventQuestion[];
+	/** Links for the whole event (F14); programme items carry their own. */
+	materials: AgendaMaterial[];
+	files: EventFileSummary[];
 };
 
 export async function getEventById(
 	id: string,
 	audience: EventAudience,
 ): Promise<EventDetails | null> {
-	const [[event], agenda, questions] = await Promise.all([
+	const [[event], agenda, questions, [extras], files] = await Promise.all([
 		queryEvents({ audience }, id),
 		listAgendaItems(id),
 		listEventQuestions(id, "registration"),
+		db
+			.select({ materials: events.materials })
+			.from(events)
+			.where(eq(events.id, id)),
+		listEventFiles(id),
 	]);
-	return event ? { ...event, agenda, questions } : null;
+	return event
+		? {
+				...event,
+				agenda,
+				questions,
+				materials: extras?.materials ?? [],
+				files: files.map(({ id, name, size, agendaItemId }) => ({
+					id,
+					name,
+					size,
+					agendaItemId,
+				})),
+			}
+		: null;
 }
 
 /** Makes a draft public. EVENT_INCOMPLETE without a place or link; EVENT_NOT_DRAFT if already public. */

@@ -3,10 +3,12 @@ import {
 	boolean,
 	check,
 	integer,
+	jsonb,
 	pgTable,
 	text,
 	timestamp,
 } from "drizzle-orm/pg-core";
+import type { AgendaMaterial } from "./agenda";
 import { eventFaculties, eventLocations, eventTypes } from "./event-lookups";
 
 /** `draft` is visible only in the panel; `cancelled` keeps its registrations as history. */
@@ -42,6 +44,11 @@ export const events = pgTable(
 		cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
 		/** Meeting link; shown only to registered people. */
 		onlineUrl: text("online_url"),
+		/** Links to slides, recordings or papers for the whole event (F14). */
+		materials: jsonb("materials")
+			.$type<AgendaMaterial[]>()
+			.notNull()
+			.default([]),
 		/** A typed room ("B105"), next to the place picked from the list. */
 		room: text("room"),
 		/** Hours before the start when registrants get a reminder; null switches it off. */

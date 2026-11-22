@@ -49,6 +49,10 @@ export const DOMAIN_ERROR_CODES = [
 	"TEAMS_NOT_CONFIGURED",
 	"TEAMS_NOT_ONLINE",
 	"TEAMS_FAILED",
+	"EVENT_FILES_LIMIT",
+	"FILE_TOO_LARGE",
+	"FILE_TYPE",
+	"FILES_NOT_CONFIGURED",
 ] as const;
 
 export type DomainErrorCode = (typeof DOMAIN_ERROR_CODES)[number];
