@@ -789,5 +789,8 @@
 	"materials_add_link": "Dodaj link",
 	"materials_remove_link": "Usuń link {label}",
 	"materials_link_invalid": "Podaj nazwę i adres zaczynający się od https:// lub http://.",
-	"materials_files_of_item": "Pliki punktu programu"
+	"materials_files_of_item": "Pliki punktu programu",
+	"error_session_not_found": "Nie znaleziono tej sesji.",
+	"error_item_outside_session": "Punkt programu musi mieścić się w godzinach sesji.",
+	"error_session_items_outside": "Nowe godziny sesji nie obejmują wszystkich jej punktów. Najpierw przesuń punkty."
 }

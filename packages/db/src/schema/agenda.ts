@@ -20,6 +20,51 @@ export type AgendaSpeaker = { name: string; affiliation?: string };
 /** A link to slides, a recording or a paper. */
 export type AgendaMaterial = { label: string; url: string };
 
+/** Calendar colours a session may have (classes in the UI keep text contrast). */
+export const AGENDA_SESSION_COLORS = [
+	"slate",
+	"blue",
+	"green",
+	"amber",
+	"rose",
+	"violet",
+] as const;
+export type AgendaSessionColor = (typeof AGENDA_SESSION_COLORS)[number];
+
+/** A part of the programme with its own theme, place and time (F33, like Indico's sessions). */
+export const agendaSessions = pgTable(
+	"agenda_sessions",
+	{
+		id: text("id").primaryKey().default(sql`(gen_random_uuid())::text`),
+		eventId: text("event_id")
+			.notNull()
+			.references(() => events.id, { onDelete: "cascade" }),
+		title: text("title").notNull(),
+		description: text("description"),
+		color: text("color").$type<AgendaSessionColor>().notNull().default("blue"),
+		locationId: text("location_id").references(() => eventLocations.id),
+		startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+		endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
+		createdAt: timestamp("created_at", { withTimezone: true })
+			.notNull()
+			.defaultNow(),
+		updatedAt: timestamp("updated_at", { withTimezone: true })
+			.notNull()
+			.defaultNow(),
+	},
+	(table) => [
+		index("agenda_sessions_event_starts_idx").on(table.eventId, table.startsAt),
+		check(
+			"agenda_sessions_ends_after_starts",
+			sql`${table.endsAt} > ${table.startsAt}`,
+		),
+		check(
+			"agenda_sessions_color",
+			sql`${table.color} IN ('slate', 'blue', 'green', 'amber', 'rose', 'violet')`,
+		),
+	],
+);
+
 export const agendaItems = pgTable(
 	"agenda_items",
 	{
@@ -27,6 +72,10 @@ export const agendaItems = pgTable(
 		eventId: text("event_id")
 			.notNull()
 			.references(() => events.id, { onDelete: "cascade" }),
+		/** NULL = outside any session. Deleting the session deletes its programme. */
+		sessionId: text("session_id").references(() => agendaSessions.id, {
+			onDelete: "cascade",
+		}),
 		title: text("title").notNull(),
 		description: text("description"),
 		startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
@@ -51,6 +100,7 @@ export const agendaItems = pgTable(
 	},
 	(table) => [
 		index("agenda_items_event_starts_idx").on(table.eventId, table.startsAt),
+		index("agenda_items_session_idx").on(table.sessionId),
 		check(
 			"agenda_items_ends_after_starts",
 			sql`${table.endsAt} > ${table.startsAt}`,

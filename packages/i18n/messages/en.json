@@ -789,5 +789,8 @@
 	"materials_add_link": "Add link",
 	"materials_remove_link": "Remove link {label}",
 	"materials_link_invalid": "Give a name and an address starting with https:// or http://.",
-	"materials_files_of_item": "Programme item files"
+	"materials_files_of_item": "Programme item files",
+	"error_session_not_found": "This session was not found.",
+	"error_item_outside_session": "A programme item must fit within the session's times.",
+	"error_session_items_outside": "The new session times do not cover all of its items. Move the items first."
 }
