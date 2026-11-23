@@ -1,6 +1,7 @@
 # Builds the production images and publishes them to GitHub's container registry:
 # ghcr.io/<owner>/harmonogram-{web,admin,worker,documents}:<branch> and :sha-<commit>.
 # The server pulls them (deploy/compose.yml); nothing is built on the server.
+# Built for Arm (linux/arm64), the Oracle Always Free servers, on GitHub's Arm runners.
 name: images
 
 on:
@@ -16,7 +17,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     permissions:
       contents: read
       packages: write
@@ -52,6 +53,7 @@ jobs:
           context: .
           file: ${{ matrix.file }}
           push: true
+          platforms: linux/arm64
           build-args: |
             APP=${{ matrix.name }}
             VITE_TURNSTILE_SITE_KEY=${{ vars.VITE_TURNSTILE_SITE_KEY }}

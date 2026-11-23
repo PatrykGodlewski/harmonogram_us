@@ -12,7 +12,7 @@ Shared agent rules live in [AGENTS.md](../AGENTS.md). Claude imports that file t
 | Test selection, test-writing standards and when to run checks              | [Testing](testing.md)                                                                           |
 | Evidence, review findings, blockers and completion reports                 | [Reporting](reporting.md)                                                                       |
 | Setup, commands, UI components and code simplification                     | [Development](development.md)                                                                   |
-| Production deployment (Azure, Terraform, one server)                       | [Deploying to Azure](deploy-azure.md)                                                           |
+| Production deployment (one server, Terraform): Oracle Always Free or Azure | [Oracle](deploy-oracle.md), [Azure](deploy-azure.md)                                            |
 | Public API and embeddable widget (F24)                                     | [Embedding](embedding.md)                                                                       |
 | Load-test details                                                          | [Load-test guide](../e2e/load/README.md)                                                        |
 | Where we stand against Indico (snapshot with sources)                     | [Indico comparison](indico-comparison.md)                                                       |

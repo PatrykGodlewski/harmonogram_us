@@ -27,14 +27,14 @@ terraform -chdir=infra/azure apply main.tfplan
 # Settings and start
 cp deploy/.env.production.example deploy/.env.production   # fill in; DATABASE_URL from:
 terraform -chdir=infra/azure output -raw database_url
-deploy/deploy.sh
+deploy/deploy.sh deploy@$(terraform -chdir=infra/azure output -raw fqdn)
 ```
 
 `deploy/deploy.sh` copies `compose.yml`, `Caddyfile` and the settings (as `.env`, mode 600) to `/opt/harmonogram`, pulls the images and starts them; `migrate` applies database migrations before the apps start.
 
 ## Updates
 
-Push to the branch in `TAG` (images rebuild), then run `deploy/deploy.sh` again. Logs: `ssh … 'cd /opt/harmonogram && docker compose logs -f web'`.
+Push to the branch in `TAG` (images rebuild), then run `deploy/deploy.sh deploy@<fqdn>` again. The images are built for Arm (`linux/arm64`, see the workflow); for this x86 VM change `platforms` and `runs-on` in `.github/workflows/images.yml` to `linux/amd64` and `ubuntu-latest`. Logs: `ssh … 'cd /opt/harmonogram && docker compose logs -f web'`.
 
 ## Removing everything
 

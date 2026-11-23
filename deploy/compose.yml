@@ -8,8 +8,8 @@ x-app: &app
   environment:
     NODE_ENV: production
     DOCUMENTS_URL: http://documents:50051
-    # The free VM sizes have ~1 GB of memory: keep each Node process small.
-    NODE_OPTIONS: --max-old-space-size=256
+    # Memory per Node process; small servers keep the default, larger ones may raise it.
+    NODE_OPTIONS: ${NODE_OPTIONS:---max-old-space-size=256}
 
 services:
   caddy:
@@ -33,6 +33,46 @@ services:
     env_file: .env
     command: ["pnpm", "--filter", "@repo/db", "db:migrate"]
     restart: "no"
+    depends_on:
+      db: { condition: service_healthy, required: false }
+
+  # Postgres on the server itself (COMPOSE_PROFILES=local-db), for hosts without a
+  # managed database (Oracle Always Free). DATABASE_URL then points at db:5432.
+  db:
+    profiles: [local-db]
+    image: postgres:16-alpine@sha256:f2f98726820d0342055351c6e9d36e705f5bfffb3dd53ff556325114b08afb6d
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: harmonogram
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
+      POSTGRES_DB: harmonogram_us
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "harmonogram", "-d", "harmonogram_us"]
+      interval: 5s
+      retries: 30
+
+  # A compressed dump every day, kept 14 days in ./backups on the server.
+  backup:
+    profiles: [local-db]
+    image: postgres:16-alpine@sha256:f2f98726820d0342055351c6e9d36e705f5bfffb3dd53ff556325114b08afb6d
+    restart: unless-stopped
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:-}
+    volumes:
+      - ./backups:/backups
+    entrypoint:
+      - sh
+      - -c
+      - |
+        while true; do
+          pg_dump -h db -U harmonogram harmonogram_us | gzip > /backups/harmonogram-$$(date +%F).sql.gz
+          find /backups -name '*.sql.gz' -mtime +14 -delete
+          sleep 86400
+        done
+    depends_on:
+      db: { condition: service_healthy }
 
   web:
     <<: *app
@@ -67,3 +107,4 @@ services:
 volumes:
   caddy_data:
   caddy_config:
+  postgres_data:
