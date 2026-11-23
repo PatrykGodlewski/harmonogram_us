@@ -121,15 +121,42 @@
 
 ### Task 7: Final verification and closure
 
-- [ ] CI on the `next` tip: green for all jobs (`checks`, `unit`, `e2e`, `rust` and the three CodeQL analyses).
-- [ ] Open code-scanning alerts: 0 (`gh api …/code-scanning/alerts?state=open` → empty).
-- [ ] Required checks on `main`: seven contexts, `strict: true` (API re-GET).
-- [ ] Final checks per `docs/testing.md`: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, then `pnpm e2e:up` (builds the pinned images, including the e2e mocks) and `pnpm e2e`.
-- [ ] Fresh-context whole-range review (`superpowers:requesting-code-review`) over the baseline `next` revision → final commit; resolve findings per `docs/reporting.md`.
+- [x] CI on the `next` tip: green for all jobs (`checks`, `unit`, `e2e`, `rust` and the three CodeQL analyses). (23.11: remote tip `1c273d2` — run 45128601010: checks/unit/e2e/rust all success; CodeQL run on `1c273d2` success; earlier `58fddc9`/`bbed56d`/`5b00da8` CI runs cancelled as superseded, their CodeQL runs green.)
+- [x] Open code-scanning alerts: 0 (`gh api …/code-scanning/alerts?state=open` → empty). (23.11: 0 open.)
+- [x] Required checks on `main`: seven contexts, `strict: true` (API re-GET). (23.11: 7 contexts incl. the three CodeQL analyses, strict:true.)
+- [x] Final checks per `docs/testing.md`: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, then `pnpm e2e:up` (builds the pinned images, including the e2e mocks) and `pnpm e2e`. (23.11 local, at code tip `1c273d2`: lint 15/15 tasks (2 pre-existing worker warnings), typecheck 15/15, test 5/5 (4m03s incl. DB integration against `harmonogram_us_test`), build 6/6. E2E deviations, local-machine only: (a) an untracked local `docker-compose.override.yml` (stale `electric` service, no image/build) breaks plain `docker compose` — e2e ran with `COMPOSE_FILE=docker-compose.yml` prefix (CI-equivalent; CI's clean checkout has no override); (b) the local compose DB was pre-seeded without drizzle's `__drizzle_migrations` journal, so the `e2e:up` migrate step fails re-applying 0001 — schema verified current anyway (27 tables incl. `agenda_sessions`); (c) full suite: 205 passed, 1 failed (`[F3] … (telefon)` — "Target crashed", browser tab crash right after the docker build; re-run 2/2 passed in 3.7s — flake, not a regression), 1 intentional skip (f15 mobile variant, "data check runs once").)
+- [ ] Fresh-context whole-range review (`superpowers:requesting-code-review`) over the baseline `next` revision → final commit; resolve findings per `docs/reporting.md`. (23.11: dispatched over `0c2c834 → 18ef50d`; findings pending.)
 - [ ] Fill in the Verification summary below and sync the checkboxes.
 
 ---
 
 ## Verification summary
 
-(to be filled in at closure)
+Executed inline on `next`, 23 November 2026. Scope: documentation, tooling and GitHub repository state only — no application code in this plan's commits.
+
+**Commands run and results (local, code tip `1c273d2`):**
+
+- `pnpm lint` → 15/15 tasks pass (2 pre-existing warnings in `@repo/worker` lint, not introduced here).
+- `pnpm typecheck` → 15/15 tasks pass.
+- `pnpm test` → 5/5 tasks pass in 4m03s (includes `@repo/db` integration tests against real Postgres `harmonogram_us_test`; test DB auto-created/migrated per `docs/testing.md`, dev DB untouched).
+- `pnpm build` → 6/6 tasks pass.
+- E2E stack: `COMPOSE_FILE=docker-compose.yml docker compose -p harmonogram-e2e --env-file .env --env-file e2e/ports.env --profile app --profile e2e up -d --build --wait --remove-orphans` (built all images from the digest-pinned `node:22-alpine@sha256:1314fb30ec37592d5845e5a160d522c0e680972aa534549940b8d73bde88481a` base) + `pnpm e2e` → **205 passed, 1 failed, 1 skipped**. The failure was `[F3] organizator edytuje wydarzenie … (telefon)` with "Target crashed" (Chromium tab crash immediately after the docker build); re-run of `tests/f3-edycja.spec.ts` → 2/2 passed in 3.7s (flake, not a regression). The skip is the intentional f15 mobile-variant skip ("data check runs once").
+- CI on remote tip `1c273d2`: run 45128601010 — `checks`, `unit`, `e2e`, `rust` all success; CodeQL run on `1c273d2` success.
+- Direct build from the pinned base: `docker build --target runner --build-arg APP=web -t harmonogram-digest-check .` → success (image `8a73b3af8ec5`); without `--build-arg APP=` the build correctly fails at the Dockerfile guard (expected).
+
+**GitHub state (verified via API, 23 November):**
+
+- `main` required status checks: 7 contexts (`checks`, `unit`, `e2e`, `rust`, `CodeQL / analyze (javascript-typescript)`, `CodeQL / analyze (rust)`, `CodeQL / analyze (actions)`), `strict: true`.
+- Open code-scanning alerts: 0 (10 triaged: 1 false positive, 5 won't fix, 4 mitigated).
+- Repository rulesets: 0 (stale disabled "Main block" ruleset 17333180 deleted).
+- Secret scanning and secret-scanning push protection: both `enabled` (repo object `security_and_analysis`; the dedicated push-protection REST route 404s on personal repos).
+- Dependabot PR #35 (rqrr 0.10.1 → 0.11.0) merged as `bbed56d`; `Cargo.lock` now carries `lru 0.18.5` (fixes RUSTSEC-2026-0253 UAF) and `rqrr 0.11.0`.
+
+**Outstanding / blocked (honest record):**
+
+- Fresh-context whole-range review was dispatched over `0c2c834 → 18ef50d`; findings and their resolution are not yet recorded (this summary is updated when the review lands).
+- The plan-doc state commits (`18ef50d` and the closure commit) were unpushed at the time of writing: the local 1Password agent refused SSH key signing ("agent refused operation") and GPG commit signing ("failed to fill whole buffer") starting ~08:00 on 23.11. A background push-retry was running; re-push once 1Password recovers. No code is affected — only the plan-document commits are behind; remote `next` (`1c273d2`) already contains all code/tooling changes of this plan.
+- Local machine quirks (not repository defects): untracked `docker-compose.override.yml` with a stale `electric` service breaks plain `docker compose` invocations on this machine (bypass with `COMPOSE_FILE=docker-compose.yml`); the local compose e2e DB was pre-seeded without a drizzle `__drizzle_migrations` journal, so the `e2e:up` migrate step fails there (schema itself is current).
+- Pre-existing, out of scope: Docker build warnings `SecretsUsedInArgOrEnv` for `VITE_TURNSTILE_SITE_KEY` (public site key, build-time arg); 2 lint warnings in `@repo/worker`.
+
+Not a "bug-free" claim: the items above state what was actually run and what remains open.
