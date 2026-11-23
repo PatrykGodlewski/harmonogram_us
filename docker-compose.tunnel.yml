@@ -1,0 +1,28 @@
+# Public demo from this computer: the production build of web, admin and worker behind
+# Cloudflare quick tunnels (https://<random>.trycloudflare.com, no account needed).
+# Start and stop with scripts/tunnel.sh; it fills in PUBLIC_WEB_URL / PUBLIC_ADMIN_URL.
+services:
+  web:
+    # Reached through the tunnel only: no ports here, so the dev servers keep 3000/3001.
+    ports: !reset []
+    environment:
+      BETTER_AUTH_URL: ${PUBLIC_WEB_URL:-https://pending.invalid}
+      ADMIN_URL: ${PUBLIC_ADMIN_URL:-https://pending.invalid}
+  admin:
+    ports: !reset []
+    environment:
+      BETTER_AUTH_URL: ${PUBLIC_WEB_URL:-https://pending.invalid}
+      ADMIN_URL: ${PUBLIC_ADMIN_URL:-https://pending.invalid}
+  worker:
+    environment:
+      BETTER_AUTH_URL: ${PUBLIC_WEB_URL:-https://pending.invalid}
+      ADMIN_URL: ${PUBLIC_ADMIN_URL:-https://pending.invalid}
+
+  tunnel-web:
+    image: cloudflare/cloudflared@sha256:55c7e3e8d89d5e8d20b75a82f3602cbf98e06db406e73e282073cfdc5a9a3af6
+    command: ["tunnel", "--no-autoupdate", "--url", "http://web:3000"]
+    restart: unless-stopped
+  tunnel-admin:
+    image: cloudflare/cloudflared@sha256:55c7e3e8d89d5e8d20b75a82f3602cbf98e06db406e73e282073cfdc5a9a3af6
+    command: ["tunnel", "--no-autoupdate", "--url", "http://admin:3000"]
+    restart: unless-stopped

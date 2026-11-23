@@ -24,6 +24,8 @@ mkdir -p .certs && mkcert -cert-file .certs/localhost.pem -key-file .certs/local
 
 `.certs/` is ignored by git. `BETTER_AUTH_URL` and `ADMIN_URL` in `.env` must use `https://`. The e2e stack and production are unaffected (their URLs are set explicitly; production's edge serves HTTP/2).
 
+Public demo from this computer: `scripts/tunnel.sh` builds and starts the production web, admin and worker against the local database and publishes them through two Cloudflare quick tunnels (random `https://….trycloudflare.com` addresses, printed at the end; new ones after each restart of the tunnels). `scripts/tunnel.sh stop` stops it. E-mails still go to Mailpit and file links point at the local storage container, so outside visitors can't open those; set real SMTP and R2 in `.env` for that.
+
 Seed accounts use `SEED_ACCOUNT_PASSWORD` from `.env`; seeding refuses `NODE_ENV=production`. Local Mailpit inbox (including magic links): http://localhost:8025.
 
 ```bash
