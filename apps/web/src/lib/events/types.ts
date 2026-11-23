@@ -8,10 +8,3 @@ export type EventSeatCount = {
 	seatsRemaining: number;
 	maxSeats: number;
 };
-
-export type EventSeatCountSource = {
-	getDisplaySeatCount: (
-		eventId: string,
-		fallback: EventSeatCount,
-	) => EventSeatCount;
-};

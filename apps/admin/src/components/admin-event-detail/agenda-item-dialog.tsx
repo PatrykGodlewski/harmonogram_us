@@ -2,7 +2,11 @@ import {
 	createAdminAgendaItemServer,
 	updateAdminAgendaItemServer,
 } from "@repo/api/admin/mutations";
-import type { AgendaItem, FilterOption } from "@repo/api/admin/queries";
+import type {
+	AgendaItem,
+	AgendaSession,
+	FilterOption,
+} from "@repo/api/admin/queries";
 import {
 	admin_dialog_add_title,
 	admin_dialog_edit_title,
@@ -121,18 +125,20 @@ const agendaItemFormSchema = z
 
 type AgendaItemFormValues = z.infer<typeof agendaItemFormSchema>;
 
+/** A new item in a session starts on the session's day, in its place. */
 function toFormValues(
 	item: AgendaItem | null,
 	eventDate: Date,
+	session: AgendaSession | null,
 ): AgendaItemFormValues {
 	if (!item) {
 		return {
 			title: "",
 			description: "",
-			date: toEventDateInput(eventDate),
+			date: toEventDateInput(session ? new Date(session.startsAt) : eventDate),
 			startTime: "",
 			endTime: "",
-			locationId: NONE_VALUE,
+			locationId: session?.locationId ?? NONE_VALUE,
 			maxSeats: "",
 			requiresRegistration: true,
 			speakers: [],
@@ -163,6 +169,8 @@ type AgendaItemDialogProps = {
 	eventId: string;
 	eventDate: Date;
 	item: AgendaItem | null;
+	/** New items go into this session (F33). */
+	session?: AgendaSession | null;
 	locations: FilterOption[];
 	onSaved: () => Promise<unknown>;
 };
@@ -173,6 +181,7 @@ export function AgendaItemDialog({
 	eventId,
 	eventDate,
 	item,
+	session = null,
 	locations,
 	onSaved,
 }: AgendaItemDialogProps) {
@@ -204,7 +213,9 @@ export function AgendaItemDialog({
 			};
 			return item
 				? updateAdminAgendaItemServer({ data: { id: item.id, ...payload } })
-				: createAdminAgendaItemServer({ data: { eventId, ...payload } });
+				: createAdminAgendaItemServer({
+						data: { eventId, sessionId: session?.id ?? null, ...payload },
+					});
 		},
 		onSuccess: async () => {
 			await onSaved();
@@ -217,7 +228,7 @@ export function AgendaItemDialog({
 	});
 
 	const form = useForm({
-		defaultValues: toFormValues(item, eventDate),
+		defaultValues: toFormValues(item, eventDate, session),
 		validators: { onSubmit: agendaItemFormSchema },
 		onSubmit: ({ value }) => {
 			saveMutation.mutate(value);
@@ -229,10 +240,10 @@ export function AgendaItemDialog({
 	const wasOpen = useRef(false);
 	useEffect(() => {
 		if (open && !wasOpen.current) {
-			form.reset(toFormValues(item, eventDate));
+			form.reset(toFormValues(item, eventDate, session));
 		}
 		wasOpen.current = open;
-	}, [open, item, eventDate, form]);
+	}, [open, item, eventDate, session, form]);
 
 	const disabled = saveMutation.isPending;
 	const fieldError = (errors: unknown[]) =>

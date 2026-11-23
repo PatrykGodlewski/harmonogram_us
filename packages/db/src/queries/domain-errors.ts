@@ -53,6 +53,9 @@ export const DOMAIN_ERROR_CODES = [
 	"FILE_TOO_LARGE",
 	"FILE_TYPE",
 	"FILES_NOT_CONFIGURED",
+	"SESSION_NOT_FOUND",
+	"ITEM_OUTSIDE_SESSION",
+	"SESSION_ITEMS_OUTSIDE",
 ] as const;
 
 export type DomainErrorCode = (typeof DOMAIN_ERROR_CODES)[number];

@@ -1,10 +1,11 @@
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 import { type DbExecutor, db, type TransactionClient } from "../client";
 import {
 	type AgendaMaterial,
 	type AgendaSpeaker,
 	agendaItemSeatCounts,
 	agendaItems,
+	agendaSessions,
 } from "../schema/agenda";
 import { eventLocations } from "../schema/event-lookups";
 import { events } from "../schema/events";
@@ -17,6 +18,8 @@ import {
 export type AgendaItem = {
 	id: string;
 	eventId: string;
+	/** The session the item belongs to (F33), or null outside any session. */
+	sessionId: string | null;
 	title: string;
 	description: string | null;
 	startsAt: Date;
@@ -33,6 +36,7 @@ export type AgendaItem = {
 
 export type AgendaItemInput = {
 	eventId: string;
+	sessionId?: string | null;
 	title: string;
 	description?: string | null;
 	startsAt: Date;
@@ -49,6 +53,7 @@ function selectAgendaItems(client: DbExecutor) {
 		.select({
 			id: agendaItems.id,
 			eventId: agendaItems.eventId,
+			sessionId: agendaItems.sessionId,
 			title: agendaItems.title,
 			description: agendaItems.description,
 			startsAt: agendaItems.startsAt,
@@ -106,16 +111,54 @@ async function assertWithinEventLimit(
 	}
 }
 
+/**
+ * SESSION_NOT_FOUND for a session of another event; ITEM_OUTSIDE_SESSION when the item
+ * does not fit in the session's times. Locks the session row, so a session's times and
+ * its items cannot change past each other.
+ */
+async function assertFitsSession(
+	tx: TransactionClient,
+	eventId: string,
+	sessionId: string,
+	startsAt: Date,
+	endsAt: Date,
+) {
+	const [session] = await tx.execute<{ starts_at: string; ends_at: string }>(
+		sql`SELECT starts_at, ends_at FROM ${agendaSessions}
+			WHERE ${agendaSessions.id} = ${sessionId} AND ${agendaSessions.eventId} = ${eventId}
+			FOR UPDATE`,
+	);
+	if (!session) {
+		throw new DomainError("SESSION_NOT_FOUND");
+	}
+	if (
+		startsAt < new Date(session.starts_at) ||
+		endsAt > new Date(session.ends_at)
+	) {
+		throw new DomainError("ITEM_OUTSIDE_SESSION");
+	}
+}
+
 export async function createAgendaItem(
 	input: AgendaItemInput,
 ): Promise<AgendaItem> {
 	try {
 		return await db.transaction(async (tx) => {
 			await assertWithinEventLimit(tx, input.eventId, input.maxSeats);
+			if (input.sessionId) {
+				await assertFitsSession(
+					tx,
+					input.eventId,
+					input.sessionId,
+					input.startsAt,
+					input.endsAt,
+				);
+			}
 			const [inserted] = await tx
 				.insert(agendaItems)
 				.values({
 					eventId: input.eventId,
+					sessionId: input.sessionId ?? null,
 					title: input.title,
 					description: input.description ?? null,
 					startsAt: input.startsAt,
@@ -145,13 +188,29 @@ export async function updateAgendaItem(
 	try {
 		return await db.transaction(async (tx) => {
 			const [existing] = await tx
-				.select({ eventId: agendaItems.eventId })
+				.select({
+					eventId: agendaItems.eventId,
+					sessionId: agendaItems.sessionId,
+					startsAt: agendaItems.startsAt,
+					endsAt: agendaItems.endsAt,
+				})
 				.from(agendaItems)
 				.where(eq(agendaItems.id, id));
 			if (!existing) {
 				return null;
 			}
 			await assertWithinEventLimit(tx, existing.eventId, input.maxSeats);
+			const sessionId =
+				input.sessionId === undefined ? existing.sessionId : input.sessionId;
+			if (sessionId) {
+				await assertFitsSession(
+					tx,
+					existing.eventId,
+					sessionId,
+					input.startsAt ?? existing.startsAt,
+					input.endsAt ?? existing.endsAt,
+				);
+			}
 			await tx
 				.update(agendaItems)
 				.set({ ...input, updatedAt: new Date() })

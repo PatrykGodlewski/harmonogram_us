@@ -186,6 +186,137 @@ export function nowListIndex<T extends AgendaTimed>(
 	return sorted.filter((item) => ms(item.startsAt) <= time).length;
 }
 
+/** One line of a programme with sessions (F33): a session with its items, or an item outside any session. */
+export type ProgrammeEntry<I, S> =
+	| { kind: "session"; session: S; items: Array<I & { parallel: boolean }> }
+	| { kind: "item"; item: I & { parallel: boolean } };
+
+/** Sessions and the items outside them, in order of start; each session carries its items. */
+export function programmeEntries<
+	I extends AgendaTimed & { sessionId: string | null },
+	S extends AgendaTimed,
+>(items: I[], sessions: S[]): ProgrammeEntry<I, S>[] {
+	const timed = [
+		...sessions.map((session) => ({
+			...session,
+			entry: {
+				kind: "session" as const,
+				session,
+				items: markParallel(
+					items.filter((item) => item.sessionId === session.id),
+				),
+			},
+		})),
+		...markParallel(items.filter((item) => item.sessionId === null)).map(
+			(item) => ({ ...item, entry: { kind: "item" as const, item } }),
+		),
+	];
+	return sortByStart(timed).map(({ entry }) => entry);
+}
+
+/** Where "now" goes among programme entries (a session counts by its own times), as `nowListIndex`. */
+export function programmeNowIndex<I extends AgendaTimed, S extends AgendaTimed>(
+	entries: ProgrammeEntry<I, S>[],
+	now: Date,
+): number | null {
+	return nowListIndex(
+		entries.map((entry) =>
+			entry.kind === "session" ? entry.session : entry.item,
+		),
+		now,
+	);
+}
+
+type Placed = { locationId: string | null; locationLabel: string | null };
+
+/** An item's place: its own, else its session's. */
+function placeOf<
+	I extends Placed & { sessionId: string | null },
+	S extends AgendaTimed & Placed,
+>(item: I, sessionById: Map<string, S>): Placed {
+	if (item.locationId || !item.sessionId) {
+		return item;
+	}
+	return sessionById.get(item.sessionId) ?? item;
+}
+
+/** The distinct places of a programme, in order of first use (items take their session's place). */
+export function programmePlaces<
+	I extends AgendaTimed & Placed & { sessionId: string | null },
+	S extends AgendaTimed & Placed,
+>(items: I[], sessions: S[]): { id: string; label: string }[] {
+	const sessionById = new Map(sessions.map((session) => [session.id, session]));
+	const timed = [
+		...sessions,
+		...items.map((item) => ({ ...item, ...placeOf(item, sessionById) })),
+	];
+	const places = new Map<string, string>();
+	for (const entry of sortByStart(timed)) {
+		if (entry.locationId && !places.has(entry.locationId)) {
+			places.set(entry.locationId, entry.locationLabel ?? entry.locationId);
+		}
+	}
+	return [...places].map(([id, label]) => ({ id, label }));
+}
+
+/**
+ * The part of a programme held in one place: items whose place matches, and sessions
+ * that have such an item or are held there themselves. `placeId` null keeps everything.
+ */
+export function filterByPlace<
+	I extends AgendaTimed & Placed & { sessionId: string | null },
+	S extends AgendaTimed & Placed,
+>(
+	items: I[],
+	sessions: S[],
+	placeId: string | null,
+): { items: I[]; sessions: S[] } {
+	if (placeId === null) {
+		return { items, sessions };
+	}
+	const sessionById = new Map(sessions.map((session) => [session.id, session]));
+	const kept = items.filter(
+		(item) => placeOf(item, sessionById).locationId === placeId,
+	);
+	return {
+		items: kept,
+		sessions: sessions.filter(
+			(session) =>
+				session.locationId === placeId ||
+				kept.some((item) => item.sessionId === session.id),
+		),
+	};
+}
+
+/** Distinct session titles in time order: the same zone on several days is one choice. */
+export function programmeSessionTitles<S extends AgendaTimed>(
+	sessions: S[],
+): string[] {
+	return [...new Set(sortByStart(sessions).map((session) => session.title))];
+}
+
+/** Sessions with the chosen title and their items; `title` null keeps everything. */
+export function filterBySession<
+	I extends AgendaTimed & { sessionId: string | null },
+	S extends AgendaTimed,
+>(
+	items: I[],
+	sessions: S[],
+	title: string | null,
+): { items: I[]; sessions: S[] } {
+	if (title === null) {
+		return { items, sessions };
+	}
+	const kept = sessions.filter((session) => session.title === title);
+	const ids = new Set(kept.map((session) => session.id));
+	return {
+		items: items.filter(
+			(item) => item.sessionId !== null && ids.has(item.sessionId),
+		),
+		sessions: kept,
+	};
+}
+
 /** Milliseconds until the next full minute (when a clock showing HH:MM must change). */
 export function msUntilNextMinute(now: Date): number {
 	return 60_000 - (now.getTime() % 60_000);

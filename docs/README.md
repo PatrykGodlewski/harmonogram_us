@@ -6,7 +6,7 @@ Shared agent rules live in [AGENTS.md](../AGENTS.md). Claude imports that file t
 | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | Product scope and acceptance criteria                                      | [Product spec](superpowers/specs/2026-11-19-produkt-design.md), then the relevant approved plan |
 | Package boundaries, API/auth, routing, i18n, config, metrics, deployment   | [Architecture](architecture.md)                                                                 |
-| Capacity, registration, groups, waitlists, Electric or queued jobs         | [Data-flow invariants](data-flows.md)                                                           |
+| Capacity, registration, groups, waitlists, page refresh or queued jobs     | [Data-flow invariants](data-flows.md)                                                           |
 | Security process, licence, dependency and CI controls                      | [Security](security.md)                                                                         |
 | Plan creation/reconciliation, execution, resuming, completion, Superpowers | [Workflow](workflow.md)                                                                         |
 | Test selection, test-writing standards and when to run checks              | [Testing](testing.md)                                                                           |
@@ -38,7 +38,10 @@ Planning references (not a live completion tracker):
 12. [Public API and widget (F24)](superpowers/plans/2026-11-22-api-widzet.md) (plan 12; see its verification summary).
 13. [Teams meetings (F23)](superpowers/plans/2026-11-22-teams.md) (plan 13; see its verification summary).
 14. [File storage, materials (F14) and speaker files (F19)](superpowers/plans/2026-11-22-materialy.md) (plan 14; see its verification summary).
-15. Later priority-one work: profile language, campus calendar/ICS/Open Graph, accessibility and GDPR; consult the spec before planning.
+15. [Replace ElectricSQL with polling](superpowers/plans/2026-11-22-bez-electric.md) (plan 15; see its verification summary).
+16. [Programme sessions (F33)](superpowers/plans/2026-11-22-sesje.md) (plan 16; see its verification summary).
+17. [Secure SDLC review remediation](superpowers/plans/2026-11-23-poprawki-przegladu-sdlc.md) (plan 17; in progress 23 November).
+18. Later priority-one work: profile language, campus calendar/ICS/Open Graph, accessibility and GDPR; consult the spec before planning.
 
 Historical implementation context moved out of `CLAUDE.md`: F5 capacity/waitlist/promotion and account registrations; F6 registration email with ticket links; F11 ticket QR (`ticket_code`, scanning handled by organiser plan); F18 list/calendar agenda with parallel sessions (`layoutAgenda` in `@repo/ui/agenda`); F26 teacher-led group registration; F27 agenda-item registration. Related account/ticket/agenda work: [plan](superpowers/plans/2026-11-19-moje-zapisy-bilety-agenda.md). These are inherited implementation notes, **not a claim that tests were rerun during the documentation refactor**. Verify current code and tests before deciding what remains.
 

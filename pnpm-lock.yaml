@@ -8,7 +8,6 @@ overrides:
   react: ^19.2.5
   react-dom: ^19.2.5
   vite: 8.3.8
-  '@tanstack/db': 0.6.8
 
 importers:
 
@@ -147,9 +146,6 @@ importers:
       '@repo/api':
         specifier: workspace:*
         version: link:../../packages/api
-      '@repo/collections':
-        specifier: workspace:*
-        version: link:../../packages/collections
       '@repo/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -168,9 +164,6 @@ importers:
       '@repo/ui':
         specifier: workspace:*
         version: link:../../packages/ui
-      '@tanstack/react-db':
-        specifier: 0.1.83
-        version: 0.1.83(react@19.3.1)(typescript@6.0.3)
       '@tanstack/react-form':
         specifier: ^1.33.5
         version: 1.33.5(@tanstack/react-start@1.169.7(esbuild@0.28.2)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(rolldown@1.2.19)(vite@8.3.8(@types/node@25.9.9)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -454,40 +447,6 @@ importers:
       unpdf:
         specifier: ^2.2.1
         version: 2.2.1
-      vitest:
-        specifier: ^5.1.1
-        version: 5.1.1(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
-
-  packages/collections:
-    dependencies:
-      '@electric-sql/client':
-        specifier: 1.5.20
-        version: 1.5.20
-      '@tanstack/db':
-        specifier: 0.6.8
-        version: 0.6.8(typescript@6.0.3)
-      '@tanstack/electric-db-collection':
-        specifier: 0.3.6
-        version: 0.3.6(typescript@6.0.3)
-      '@tanstack/react-db':
-        specifier: 0.1.83
-        version: 0.1.83(react@19.3.1)(typescript@6.0.3)
-      zod:
-        specifier: ^4.6.7
-        version: 4.6.7
-    devDependencies:
-      '@repo/config':
-        specifier: workspace:*
-        version: link:../config
-      '@types/react':
-        specifier: ^19.3.0
-        version: 19.3.0
-      react:
-        specifier: ^19.2.5
-        version: 19.3.1
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
       vitest:
         specifier: ^5.1.1
         version: 5.1.1(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
@@ -1116,10 +1075,6 @@ packages:
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
 
-  '@electric-sql/client@1.5.20':
-    resolution: {integrity: sha512-Ftf+ze/rZK9dBzvZqW7wrS74aQBToUlhQeUFm7KCTfOCkNJZ+7iZMm9JW/NjyIQjPOz4ApXg3VWOpeCbzsU3IQ==}
-    hasBin: true
-
   '@emnapi/core@1.11.1':
     resolution: {integrity: sha512-RSvbQmHzdKzNsLYa/wHrbc3KN4sYLKAdPZxqiM2HATqv/SBk2/ENSHpvXGaLOMcsAyz0poEGqkmmKYG3OWiJEQ==}
 
@@ -1673,9 +1628,6 @@ packages:
     peerDependencies:
       react: ^19.2.5
       react-dom: ^19.2.5
-
-  '@microsoft/fetch-event-source@2.0.1':
-    resolution: {integrity: sha512-W6CLUJ2eBMw3Rec70qrsEW0jOm/3twwJv21mrmj2yORiaVmVYGS4sSS5yUwvQc1ZlDLYGPnClVWmUUMagKNsfA==}
 
   '@napi-rs/wasm-runtime@1.2.6':
     resolution: {integrity: sha512-mRyDmEw9/fCDXCGfL1sbgIw/GUK0PVxRW4YwgPN61F3LQ+fSyoBFarJVzgGyhF6kRzEQZ0FejDqm4WLXSeqQmw==}
@@ -2864,11 +2816,6 @@ packages:
   '@rolldown/pluginutils@1.1.1':
     resolution: {integrity: sha512-glFIJDvLNDtJhT9qrMFWLPbvS+skxgt4L0K8Ei2YtnhPysAJnsI7nyxSJxKj4ADeKX0OLjC4ntRkwpLOoS3rwA==}
 
-  '@rollup/rollup-darwin-arm64@4.68.8':
-    resolution: {integrity: sha512-YmBUNjgm5bsjOByO+H1TFbuGZe+ZnHcYtPXYj9+L1cwTu/BG8zjuUzO2PH9KwS85P0UH+WJDSb+mQ2hqjp5uBQ==}
-    cpu: [arm64]
-    os: [darwin]
-
   '@selderee/plugin-htmlparser2@0.11.0':
     resolution: {integrity: sha512-P33hHGdldxGabLFjPPpaTxVolMrzrcegejx+0GxjrIb9Zv48D8yAIA/QTDR2dFl7Uz7urX8aX6+5bCZslr+gWQ==}
 
@@ -3066,16 +3013,6 @@ packages:
     peerDependencies:
       vite: 8.3.8
 
-  '@tanstack/db-ivm@0.1.18':
-    resolution: {integrity: sha512-+pZJiRKdoKRM5Epq9T7otD9ZJl82pRFauo7LKuJGrarjVKQ7r+QQlPe3kGdN9LEKSnuNGIWjX9OOY4M8kH4eLw==}
-    peerDependencies:
-      typescript: '>=4.7'
-
-  '@tanstack/db@0.6.8':
-    resolution: {integrity: sha512-1dzwxYH7jizvpOzVsVmxZ8dGwMPDaA+YcinEmAszoUYF7mgSL0RiIiGHFBAc0WyVvHES7vSHg6x0WslX8C+TTQ==}
-    peerDependencies:
-      typescript: '>=4.7'
-
   '@tanstack/devtools-client@0.0.6':
     resolution: {integrity: sha512-f85ZJXJnDIFOoykG/BFIixuAevJovCvJF391LPs6YjBAPhGYC50NWlx1y4iF/UmK5/cCMx+/JqI5SBOz7FanQQ==}
     engines: {node: '>=18'}
@@ -3096,9 +3033,6 @@ packages:
     peerDependencies:
       vite: 8.3.8
 
-  '@tanstack/electric-db-collection@0.3.6':
-    resolution: {integrity: sha512-mphfXJo0Z5BVP8WzQzyLPnc3ZqDXuVOz9S4TkmGhigWz1ZbDNelAew8wdrcYxYAfdcaiSFxztyjhKhA1mLj8xA==}
-
   '@tanstack/form-core@1.33.5':
     resolution: {integrity: sha512-3dfx9MBP0aq5sXKteikG629X9oviptrQj0IFRk9YGcb+lB7Kv5x8S17oOSk1wUWgjQZ4xVJEMbKwOAODymocgA==}
 
@@ -3114,20 +3048,11 @@ packages:
     resolution: {integrity: sha512-y/xtNPNt/YeyoVxE/JCx+T7yjEzpezmbb+toK8DDD1P4m7Kzs5YR956+7OKexG3f8aXgC3rLZl7b1V+yNUSy5w==}
     engines: {node: '>=18'}
 
-  '@tanstack/pacer-lite@0.2.2':
-    resolution: {integrity: sha512-eQ1MyLKCHyXiH7NbdmB80W77OhiMgGBUb+qDx/8WMGbwg5Lf/NlfD0TfNYAqY77i8V3AxoDoYdICrQE5ADw4Yw==}
-    engines: {node: '>=18'}
-
   '@tanstack/query-core@5.108.2':
     resolution: {integrity: sha512-0l+0xDKqn71hfJBKaAvFP/X7WYM0TbscEk6nK1pHaWQUWUEA+WJD0VlT8wF+HIJANMV9B/DouPWwDnX3w/l9BA==}
 
   '@tanstack/query-devtools@5.108.2':
     resolution: {integrity: sha512-qQRiQJafltQijYhNGaQ+oFtoJS6L4UUr6P/Bdsv45P/Z2a0OeEJ9+53XGv2Z8Y/97yBeQfX14h69eZ3NaG8eqQ==}
-
-  '@tanstack/react-db@0.1.83':
-    resolution: {integrity: sha512-LNV0C7OARazooT2hLTr5anXo6tbEyX2rHZQ0j9HZ/iNBI+Tx/y19o5Nd3ooyAYz5LEHJJxb8iM8ZTVB/diGnXw==}
-    peerDependencies:
-      react: ^19.2.5
 
   '@tanstack/react-form@1.33.5':
     resolution: {integrity: sha512-LlRB28qJwO/QCGaHvWnbdh4haBgTFiZVmzA2uzxSBS3YA7/IqrQ6HOBK70CkFQ+DbflZ7NawsmSln13h5iIdTA==}
@@ -3304,9 +3229,6 @@ packages:
 
   '@tanstack/store@0.11.2':
     resolution: {integrity: sha512-sJ4mjol8uQsHV0gOJzzjwXfh2Fwm+Sz0+8deqiTm4jGbMdjzNSW+xZCFm0kUa870uhd8yi+DpKnZb5Kc4apa0Q==}
-
-  '@tanstack/store@0.9.3':
-    resolution: {integrity: sha512-8reSzl/qGWGGVKhBoxXPMWzATSbZLZFWhwBAFO9NAyp0TxzfBP0mIrGb8CP8KrQTmvzXlR/vFPPUrHTLBGyFyw==}
 
   '@tanstack/virtual-core@3.19.11':
     resolution: {integrity: sha512-/5iHb0RHBvj8Di59FDs4ESNm45jls33aZAi4zccVXZjc/6ZvwQP6nzEYeT6weXjTf9E6/vrp2JhYWRyO+ZP13A==}
@@ -3910,10 +3832,6 @@ packages:
 
   fraction.js@5.3.4:
     resolution: {integrity: sha512-1X1NTtiJphryn/uLQz3whtY6jK3fTqoE3ohKs0tT+Ujr1W59oopxmoEh7Lu5p6vBaPbgoM0bzveAW4Qi5RyWDQ==}
-
-  fractional-indexing@3.4.0:
-    resolution: {integrity: sha512-8J3glhz2rrpKG6KmI7wmJo3zH1VjeOpN+vTJSw1fOyO+Viqq3zX6/5NGh6oaZB2qIAYdOYuu5Dz9xp4faOO0Pg==}
-    engines: {node: ^14.13.1 || >=16.0.0}
 
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
@@ -4537,9 +4455,6 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
-
-  sorted-btree@1.8.1:
-    resolution: {integrity: sha512-395+XIP+wqNn3USkFSrNz7G3Ss/MXlZEqesxvzCRFwL14h6e8LukDHdLBePn5pwbm5OQ9vGu8mDyz2lLDIqamQ==}
 
   source-map-js@1.2.4:
     resolution: {integrity: sha512-J7ZjMvHd9O1fcT/5V09QWaaSl2BbWx3F6O08spde82Namf9UB0GxRVIPiNbVsdKkoizHiSpTodo3vp2bAy91MA==}
@@ -5272,12 +5187,6 @@ snapshots:
 
   '@drizzle-team/brocli@0.10.2': {}
 
-  '@electric-sql/client@1.5.20':
-    dependencies:
-      '@microsoft/fetch-event-source': 2.0.1
-    optionalDependencies:
-      '@rollup/rollup-darwin-arm64': 4.68.8
-
   '@emnapi/core@1.11.1':
     dependencies:
       '@emnapi/wasi-threads': 1.2.2
@@ -5672,8 +5581,6 @@ snapshots:
     dependencies:
       react: 19.3.1
       react-dom: 19.3.1(react@19.3.1)
-
-  '@microsoft/fetch-event-source@2.0.1': {}
 
   '@napi-rs/wasm-runtime@1.2.6(@emnapi/core@2.0.0-beta.2)(@emnapi/runtime@2.0.0-beta.2)':
     dependencies:
@@ -6743,9 +6650,6 @@ snapshots:
 
   '@rolldown/pluginutils@1.1.1': {}
 
-  '@rollup/rollup-darwin-arm64@4.68.8':
-    optional: true
-
   '@selderee/plugin-htmlparser2@0.11.0':
     dependencies:
       domhandler: 5.0.3
@@ -6909,19 +6813,6 @@ snapshots:
       tailwindcss: 4.3.5
       vite: 8.3.8(@types/node@25.9.9)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)
 
-  '@tanstack/db-ivm@0.1.18(typescript@6.0.3)':
-    dependencies:
-      fractional-indexing: 3.4.0
-      sorted-btree: 1.8.1
-      typescript: 6.0.3
-
-  '@tanstack/db@0.6.8(typescript@6.0.3)':
-    dependencies:
-      '@standard-schema/spec': 1.1.0
-      '@tanstack/db-ivm': 0.1.18(typescript@6.0.3)
-      '@tanstack/pacer-lite': 0.2.2
-      typescript: 6.0.3
-
   '@tanstack/devtools-client@0.0.6':
     dependencies:
       '@tanstack/devtools-event-client': 0.4.4
@@ -6953,17 +6844,6 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@tanstack/electric-db-collection@0.3.6(typescript@6.0.3)':
-    dependencies:
-      '@electric-sql/client': 1.5.20
-      '@standard-schema/spec': 1.1.0
-      '@tanstack/db': 0.6.8(typescript@6.0.3)
-      '@tanstack/store': 0.9.3
-      debug: 4.4.3
-    transitivePeerDependencies:
-      - supports-color
-      - typescript
-
   '@tanstack/form-core@1.33.5':
     dependencies:
       '@tanstack/devtools-event-client': 0.4.4
@@ -6977,8 +6857,6 @@ snapshots:
       remove-accents: 0.5.0
 
   '@tanstack/pacer-lite@0.1.1': {}
-
-  '@tanstack/pacer-lite@0.2.2': {}
 
   '@tanstack/query-core@5.108.2': {}
 
@@ -6994,14 +6872,6 @@ snapshots:
       solid-js: 1.9.20
       solid-transition-group: 0.2.3(solid-js@1.9.20)
       superjson: 2.2.7
-
-  '@tanstack/react-db@0.1.83(react@19.3.1)(typescript@6.0.3)':
-    dependencies:
-      '@tanstack/db': 0.6.8(typescript@6.0.3)
-      react: 19.3.1
-      use-sync-external-store: 1.7.0(react@19.3.1)
-    transitivePeerDependencies:
-      - typescript
 
   '@tanstack/react-form@1.33.5(@tanstack/react-start@1.169.7(esbuild@0.28.2)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(rolldown@1.2.19)(vite@8.3.8(@types/node@25.9.9)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
     dependencies:
@@ -7378,8 +7248,6 @@ snapshots:
       '@tanstack/router-core': 1.171.39
 
   '@tanstack/store@0.11.2': {}
-
-  '@tanstack/store@0.9.3': {}
 
   '@tanstack/virtual-core@3.19.11': {}
 
@@ -7888,8 +7756,6 @@ snapshots:
       path-exists: 4.0.0
 
   fraction.js@5.3.4: {}
-
-  fractional-indexing@3.4.0: {}
 
   fsevents@2.3.3:
     optional: true
@@ -8491,8 +8357,6 @@ snapshots:
       react-dom: 19.3.1(react@19.3.1)
     optionalDependencies:
       '@types/react': 19.3.0
-
-  sorted-btree@1.8.1: {}
 
   source-map-js@1.2.4: {}
 

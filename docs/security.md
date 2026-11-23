@@ -15,7 +15,7 @@ not OSI open source.
 
 | Area | What is in place | Where |
 |---|---|---|
-| Review | `main` accepts changes only through pull requests with green, up-to-date CI (`checks`, `unit`, `e2e`, `rust`) and resolved conversations; no force pushes or deletion; linear history. No approval count is required (a single maintainer cannot approve their own PR) and admins can bypass in an emergency; CODEOWNERS requests the maintainer's review on outside PRs | GitHub branch protection, `.github/CODEOWNERS` |
+| Review | `main` accepts changes only through pull requests with green, up-to-date CI (`checks`, `unit`, `e2e`, `rust`, and the three CodeQL analyses) and resolved conversations; no force pushes or deletion; linear history. No approval count is required (a single maintainer cannot approve their own PR) and admins can bypass in an emergency; CODEOWNERS requests the maintainer's review on outside PRs | GitHub branch protection, `.github/CODEOWNERS` |
 | Tests | TDD; a Playwright test per feature; Vitest against real Postgres; Rust unit, property and server tests | `docs/testing.md`, CI |
 | Code scanning | CodeQL (`security-extended`) for TypeScript, Rust and workflows on every push, PR and weekly | `.github/workflows/codeql.yml` |
 | Dependencies | Dependabot alerts and security updates; weekly grouped version updates (npm, cargo, Actions, Docker, Compose); dependency review blocks PRs adding high-severity vulnerabilities or unexpected licences; cargo-deny (advisories, licences, sources) | `.github/dependabot.yml`, `dependency-review.yml`, `deny.toml` |

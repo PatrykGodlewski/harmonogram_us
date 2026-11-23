@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { signInByEmail } from "../fixtures/auth";
 import { createTestEvent, createTestUser, uniqueEmail } from "../fixtures/data";
+import { LIVE_WAIT } from "../fixtures/live";
 import { open } from "../fixtures/navigation";
 
 test("[F5] zapis jednym kliknięciem i rezygnacja @uczestnik", async ({
@@ -105,6 +106,8 @@ test("[F5] po rezygnacji pierwsza osoba z listy awansuje @uczestnik", async ({
 test("[F5] awans z listy widać na otwartej stronie bez odświeżania @uczestnik", async ({
 	page,
 }, testInfo) => {
+	// Waits for a page refresh (up to 20 s) on top of the usual steps.
+	test.slow();
 	// Given B on the waitlist of a full 1-place event, with the event page open
 	const base = uniqueEmail(testInfo);
 	const event = await createTestEvent({ maxSeats: 1 });
@@ -123,8 +126,40 @@ test("[F5] awans z listy widać na otwartej stronie bez odświeżania @uczestnik
 	).toBeVisible();
 	// When A withdraws somewhere else
 	await unregisterFromEvent(event.id, a.id);
-	// Then B's open page shows the promotion
-	await expect(summary.getByText("Zarejestrowano")).toBeVisible();
+	// Then B's open page shows the promotion (within one refresh)
+	await expect(summary.getByText("Zarejestrowano")).toBeVisible(LIVE_WAIT);
+});
+
+test("[F5] liczba wolnych miejsc odświeża się na otwartej stronie, gdy zapisze się ktoś inny @uczestnik", async ({
+	page,
+}, testInfo) => {
+	// Waits for a page refresh (up to 20 s) on top of the usual steps.
+	test.slow();
+	// Given a visitor with the event page and the list open
+	const tag = crypto.randomUUID().slice(0, 6);
+	const event = await createTestEvent({ title: `Odczyt ${tag}`, maxSeats: 5 });
+	const other = await createTestUser(uniqueEmail(testInfo));
+	await open(page, `/pl/events/${event.id}`);
+	const summary = page.locator("section").first();
+	await expect(summary.getByText("Wolne miejsca: 5 / 5")).toBeVisible();
+	const listPage = await page.context().newPage();
+	await open(listPage, "/pl");
+	await listPage.getByPlaceholder("Wyszukaj wydarzenie...").fill(tag);
+	const card = listPage
+		.locator("[data-live-list]")
+		.locator('[data-slot="card"]')
+		.filter({ hasText: event.title });
+	await expect(card.getByText("5 / 5 wolnych miejsc")).toBeVisible();
+	// When someone else registers
+	const { registerForEvent } = await import(
+		"@repo/db/queries/event-registrations"
+	);
+	await registerForEvent(event.id, other.id, "pl");
+	// Then both open pages show one place fewer, without a reload
+	await expect(summary.getByText("Wolne miejsca: 4 / 5")).toBeVisible(
+		LIVE_WAIT,
+	);
+	await expect(card.getByText("4 / 5 wolnych miejsc")).toBeVisible(LIVE_WAIT);
 });
 
 test("[F5] szybkie zapisy na dwa wydarzenia z listy oba się udają", async ({

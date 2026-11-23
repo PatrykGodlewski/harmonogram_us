@@ -9,8 +9,6 @@ import {
 	eventDetailsQueryOptions,
 	eventsQueryKeyPrefix,
 } from "@repo/api/events/queries";
-import { agendaItemSeatCountsCollection } from "@repo/collections/agenda-item-seat-counts";
-import { eventSeatCountsCollection } from "@repo/collections/event-seat-counts";
 import {
 	events_item_register_success,
 	events_item_unregister_success,
@@ -100,7 +98,7 @@ function successMessage(
 ): string {
 	switch (action.type) {
 		case "register":
-			if (!("state" in result)) return events_register_success();
+			if (!result || !("state" in result)) return events_register_success();
 			if (result.state === "pending") return events_request_success();
 			return result.state === "waitlisted"
 				? events_join_waitlist_success()
@@ -114,20 +112,9 @@ function successMessage(
 	}
 }
 
-/** Electric did not confirm the transaction in time, or the stream closed (page left). */
-function isSyncUnconfirmed(error: unknown): boolean {
-	return (
-		error instanceof Error &&
-		(error.name === "TimeoutWaitingForTxIdError" ||
-			error.name === "StreamAbortedError")
-	);
-}
-
 /**
- * The one registration flow for every screen: call the server, wait until
- * Electric delivers the transaction on the collection the action changes, then
- * refresh the user's registrations. If Electric does not confirm in time, the
- * data is fetched again from the server instead.
+ * The one registration flow for every screen: call the server, then refetch
+ * the user's registrations, the event page and the lists it changed.
  */
 export function useRegistrationActions(): RegistrationActions {
 	const queryClient = useQueryClient();
@@ -148,17 +135,6 @@ export function useRegistrationActions(): RegistrationActions {
 		try {
 			const result = await runAction(action, invite);
 			toast.success(successMessage(action, result));
-			const collection =
-				action.type === "registerItem" || action.type === "unregisterItem"
-					? agendaItemSeatCountsCollection
-					: eventSeatCountsCollection;
-			try {
-				await collection.utils.awaitTxId(result.txid);
-			} catch (error) {
-				if (!isSyncUnconfirmed(error)) {
-					throw error;
-				}
-			}
 		} catch (error) {
 			showRegistrationErrorToast(error, events_register_full);
 		} finally {

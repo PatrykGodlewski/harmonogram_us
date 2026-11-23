@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 import { registerForEvent } from "@repo/db/queries/event-registrations";
 import { adminUrl, signInAsAdmin, signInByEmail } from "../fixtures/auth";
 import { createTestEvent, createTestUser, uniqueEmail } from "../fixtures/data";
+import { LIVE_WAIT } from "../fixtures/live";
 import { latestMessageTo } from "../fixtures/mailpit";
 import { open } from "../fixtures/navigation";
 
@@ -10,6 +11,8 @@ test("[F3] [F6] odwołanie zamyka zapisy, wysyła e-maile i zmienia stronę na �
 	browser,
 	page,
 }, testInfo) => {
+	// Waits for a page refresh (up to 20 s) on top of the usual steps.
+	test.slow();
 	const base = uniqueEmail(testInfo);
 	const password = randomBytes(18).toString("base64url");
 	const organizer = await createTestUser(`org-${base}`, {
@@ -53,9 +56,7 @@ test("[F3] [F6] odwołanie zamyka zapisy, wysyła e-maile i zmienia stronę na �
 	).toBeVisible();
 
 	// Then Z's page shows it without a reload, and registration is gone
-	await expect(z.getByText("Wydarzenie odwołane")).toBeVisible({
-		timeout: 15_000,
-	});
+	await expect(z.getByText("Wydarzenie odwołane")).toBeVisible(LIVE_WAIT);
 	await expect(
 		z
 			.locator("section")

@@ -1,7 +1,11 @@
 import { asc, eq, inArray } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "../src/client";
-import { createAgendaItem } from "../src/queries/agenda-items";
+import { createAgendaItem, listAgendaItems } from "../src/queries/agenda-items";
+import {
+	createAgendaSession,
+	listAgendaSessions,
+} from "../src/queries/agenda-sessions";
 import {
 	addEventOrganizer,
 	listEventOrganizers,
@@ -55,6 +59,49 @@ async function sourceEvent(organizerId: string) {
 }
 
 describe("duplicateEvent", () => {
+	it("copies the programme's sessions and keeps items in their copied sessions (F33)", async () => {
+		const owner = await createUser();
+		const sourceId = await sourceEvent(owner);
+		const session = await createAgendaSession({
+			eventId: sourceId,
+			title: "Ćwiczenia",
+			color: "green",
+			startsAt: new Date("2027-03-19T11:00:00Z"),
+			endsAt: new Date("2027-03-19T13:00:00Z"),
+		});
+		await createAgendaItem({
+			eventId: sourceId,
+			sessionId: session.id,
+			title: "Mikroskopy",
+			startsAt: new Date("2027-03-19T11:00:00Z"),
+			endsAt: new Date("2027-03-19T12:00:00Z"),
+		});
+
+		const { id } = await duplicateEvent({
+			eventId: sourceId,
+			date: TARGET,
+			actorId: owner,
+		});
+
+		const [copied] = await listAgendaSessions(id);
+		// 12:00 Warsaw in winter time, then 12:00 Warsaw in summer time
+		expect(copied).toMatchObject({
+			title: "Ćwiczenia",
+			color: "green",
+			startsAt: new Date("2027-04-02T10:00:00Z"),
+			endsAt: new Date("2027-04-02T12:00:00Z"),
+		});
+		expect(copied?.id).not.toBe(session.id);
+		const items = await listAgendaItems(id);
+		expect(
+			items.map((item) => [item.title, item.sessionId]),
+		).toEqual([
+			["Warsztat", null],
+			["Mikroskopy", copied?.id],
+		]);
+	});
+
+
 	it("copies the event as a draft at the new date, with the agenda at the same wall-clock times", async () => {
 		const owner = await createUser();
 		const sourceId = await sourceEvent(owner);

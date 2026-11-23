@@ -24,7 +24,7 @@ These are facts about the implementation, not claims that it is better in genera
 |---|---|---|
 | Primary target | Phones first: every participant and organiser screen is tested at 360 px | Desktop web application |
 | Stack | TypeScript; React 19, TanStack Start/Router/Query, PostgreSQL with Drizzle, Better Auth, pg-boss job queue, Tailwind | Python (Flask, SQLAlchemy), PostgreSQL, Celery, React in parts |
-| Live updates | Seat counts, cancellations and waitlist promotions update open pages without reload (ElectricSQL) | Page reloads |
+| Fresh data on open pages | Seat counts, cancellations and waitlist promotions refresh on open pages without a reload (every 15 s) | Page reloads |
 | Background work | E-mails and reminders go through a queue with retries, written in the same database transaction as the change | Celery tasks |
 | Heavy work | PDFs (tickets, certificates, attendance sheets) are rendered by a separate Rust service called over gRPC, so a burst of downloads does not slow the website | Generated in the web process |
 | Tests | Playwright acceptance test per feature (desktop and phone), Vitest against a real PostgreSQL | Python unit tests |
@@ -69,7 +69,7 @@ These are facts about the implementation, not claims that it is better in genera
 | Feature | Harmonogram US | Indico |
 |---|---|---|
 | Public list with search and filters | ✅ date, format, unit, type, place | ✅ category pages and search |
-| Live free-seat counts | ✅ | ❌ |
+| Free-seat counts that refresh on open pages | ✅ | ❌ |
 | ICS feed of all events | ✅ cancelled events stay in the feed, marked cancelled | ✅ iCal |
 | Private ICS feed of my registrations | ✅ | not verified |
 | "Add to calendar" for one event | ✅ | ✅ |
@@ -137,6 +137,7 @@ These are facts about the implementation, not claims that it is better in genera
 | Feature | Harmonogram US | Indico |
 |---|---|---|
 | Programme as list and calendar, parallel sessions, rooms, several days | ✅ with a live "now" line | ✅ timetable |
+| Programme sessions (theme, room, time), copied to another room and time | ✅ | ✅ sessions (no copy) |
 | Speakers with affiliation | ✅ | ✅ |
 | Links to materials per programme item | ✅ | ✅ |
 | Files and links for the whole event | ✅ PDF, office documents, images, ZIP up to 25 MB; downloads follow the event page's visibility | ✅ materials |
@@ -188,14 +189,14 @@ Full guide: [docs/development.md](docs/development.md). Architecture: [docs/arch
 ### Prerequisites
 
 - Node ≥ 22.12 and pnpm 10 (`corepack enable`)
-- Docker (Postgres, Mailpit, Electric and the Rust documents service run in Compose; no Rust toolchain needed)
+- Docker (Postgres, Mailpit, file storage and the Rust documents service run in Compose; no Rust toolchain needed)
 
 ### Setup
 
 ```bash
 pnpm install                 # also compiles translations and generates the gRPC client
 cp .env.example .env         # local defaults work; see the file for production values
-docker compose up -d         # Postgres, Mailpit (http://localhost:8025), Electric, documents
+docker compose up -d         # Postgres, Mailpit (http://localhost:8025), storage, documents
 pnpm db:migrate
 pnpm db:seed                 # sample events and accounts
 pnpm dev                     # web :3000, admin :3001, worker
@@ -218,7 +219,7 @@ pnpm dev                     # web :3000, admin :3001, worker
 
 ```
 apps/            web (public site), admin (management panel), worker (queued jobs)
-packages/        api, db, env, ui, i18n, jobs, collections, router-utils, rpc (gRPC client), config
+packages/        api, db, env, ui, i18n, jobs, router-utils, rpc (gRPC client), config
 services/        documents: Rust gRPC service that renders PDFs
 proto/           gRPC contracts shared by Rust and TypeScript (checked by buf)
 e2e/             Playwright tests, k6 load tests, test doubles (OIDC mock)

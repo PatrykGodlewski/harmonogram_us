@@ -1,10 +1,10 @@
 # Architecture
 
-Read the sections relevant to the task. Cross-cutting transaction and live-sync rules are in [data-flows.md](data-flows.md); commands are in [development.md](development.md).
+Read the sections relevant to the task. Cross-cutting transaction and page-refresh rules are in [data-flows.md](data-flows.md); commands are in [development.md](development.md).
 
 ## Workspace
 
-Packages are consumed as TypeScript source without a build step, through explicit `package.json#exports` subpaths. Add exports when adding public files, particularly in `collections`, `router-utils`, and `env`. Never add barrel files.
+Packages are consumed as TypeScript source without a build step, through explicit `package.json#exports` subpaths. Add exports when adding public files, particularly in `api`, `router-utils`, and `env`. Never add barrel files.
 
 | Package | Responsibility |
 | --- | --- |
@@ -14,21 +14,20 @@ Packages are consumed as TypeScript source without a build step, through explici
 | `@repo/ui` | shadcn primitives in `components/`, shared app-level UI in `composed/`. |
 | `@repo/i18n` | Paraglide; `src/paraglide/` is generated and gitignored. |
 | `@repo/router-utils` | Paraglide router rewrite, `requireAuthenticatedUser` for `beforeLoad`, root document head builders. |
-| `@repo/collections` | TanStack DB collections and Electric shapes/proxy. |
 | `@repo/jobs` | pg-boss queue names, payload schemas, `enqueue*` helpers (`@repo/jobs/client`) shared by API and worker. |
 
 ## Apps and server functions
 
-`apps/web` (port 3000) is the public event-discovery and registration site; event state and seat counts update live. `apps/admin` (3001) manages events, agenda, registrants and lookup data (faculties, rooms, event types). Use Indico event management as scope inspiration, with a simpler mobile-first UI.
+`apps/web` (port 3000) is the public event-discovery and registration site; open pages refresh event state and seat counts every 15 s. `apps/admin` (3001) manages events, agenda, registrants and lookup data (faculties, rooms, event types). Use Indico event management as scope inspiration, with a simpler mobile-first UI.
 
-Both apps have near-identical `vite.config.ts`, `router.tsx` and `server.ts` setups. Stack: TanStack Start SSR, Vite 8, Nitro, file-based TanStack Router, Query, DB/ElectricSQL, Drizzle/Postgres, Better Auth, Paraglide, Tailwind/shadcn, Biome. React Compiler runs through Babel.
+Both apps have near-identical `vite.config.ts`, `router.tsx` and `server.ts` setups. Stack: TanStack Start SSR, Vite 8, Nitro, file-based TanStack Router, Query, Drizzle/Postgres, Better Auth, Paraglide, Tailwind/shadcn, Biome. React Compiler runs through Babel.
 
 - `src/server.ts` wraps Start with `paraglideMiddleware`; `envDir` points to the workspace root; `~` aliases app `src`.
 - Never edit generated `routeTree.gen.ts`.
 - Better Auth is mounted at `routes/api/auth/$.ts` in each app.
 - Admin pages use the `_authenticated` layout; the layout only hides the panel, servers decide. Roles: `user.role` is `user | organizer | admin`. `organizer` (and `admin`) may **create** events; a row in `event_organizers` lets anyone **manage** that one event (co-organisers are added by e-mail); admins manage everything. `AuthenticatedUser` carries `role` and `hasPanelAccess`.
 - Event roles: an `event_organizers` row has `role` `manager` (runs the event) or `checkin` (a helper: scanner and attendance only; `assertCanCheckIn`). The panel event page shows helpers a door view (`access: "checkin"` on the admin event details).
-- Panel server functions use `panelQueryFn`/`panelActionFn` (`packages/api/src/auth/panel-middleware.ts`) and must call a check from `packages/api/src/auth/event-access.ts` in the handler: `assertCanManageEvent`, `assertCanManageAgendaItem`, `assertCanCreateEvents`, `assertCanDeleteEvent` (organisers delete only drafts; published events are cancelled). `packages/api/test/event-access.test.ts` fails if a panel function in `admin/*.ts` skips the check; add new files to its list. Lookups and roles (`admin/users.ts`) stay behind `adminMiddleware`.
+- Panel server functions use `panelQueryFn`/`panelActionFn` (`packages/api/src/auth/panel-middleware.ts`) and must call a check from `packages/api/src/auth/event-access.ts` in the handler: `assertCanManageEvent`, `assertCanManageAgendaItem`, `assertCanManageAgendaSession`, `assertCanCreateEvents`, `assertCanDeleteEvent` (organisers delete only drafts; published events are cancelled). `packages/api/test/event-access.test.ts` fails if a panel function in `admin/*.ts` skips the check; add new files to its list. Lookups and roles (`admin/users.ts`) stay behind `adminMiddleware`.
 - Event lifecycle: `events.status` is `draft | published | cancelled` (publishing needs a place and/or an online link for the attendance mode; cancelling is irreversible, keeps registrations and e-mails everyone). `events.visibility` `authenticated` hides an event from anonymous visitors; its page redirects to login. Public reads use `getEventById/getEventPage` with `audience: { kind: "public", signedIn }` (no drafts, no meeting link); the panel uses `{ kind: "manage" }`. The meeting link reaches only registered people (`getEventOnlineUrl` after `isRegisteredForEvent`).
 - Both roots render `HydrationMarker` (`<html data-hydrated="true">`); e2e waits for it before interacting.
 - `packages/api/src/procedures.ts` provides `publicQueryFn` (GET) and `protectedActionFn` (POST + `authMiddleware`); some mutations check `getCurrentSession()` inline.

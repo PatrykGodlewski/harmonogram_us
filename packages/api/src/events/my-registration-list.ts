@@ -5,6 +5,7 @@ import {
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { getCurrentUser } from "../auth/user";
+import { LIVE_REFRESH_MS } from "./live-refresh";
 
 export const fetchMyRegistrationListServer = createServerFn({
 	method: "GET",
@@ -21,4 +22,9 @@ export const myRegistrationListQueryOptions = queryOptions({
 	queryKey: ["my-registrations", "list"] as const,
 	queryFn: () => fetchMyRegistrationListServer(),
 	staleTime: 30_000,
+	// Polls only while a row waits on a waitlist: a promotion happens in someone else's action.
+	refetchInterval: (query) =>
+		query.state.data?.some((row) => row.state === "waitlisted")
+			? LIVE_REFRESH_MS
+			: false,
 });

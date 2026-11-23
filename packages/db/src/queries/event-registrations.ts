@@ -21,7 +21,6 @@ import {
 	hasRequiredQuestions,
 	saveAnswers,
 } from "./registration-answers";
-import { getCurrentTxId } from "./txid";
 import { findAccountByEmail } from "./users";
 
 /**
@@ -301,7 +300,7 @@ export async function registerForEvent(
 		byOrganizer = false,
 		answers = {},
 	}: { byOrganizer?: boolean; answers?: Answers } = {},
-): Promise<{ state: RegistrationState; txid: number }> {
+): Promise<{ state: RegistrationState }> {
 	try {
 		return await db.transaction(async (tx) => {
 			if (!(await lockEvent(tx, eventId))) {
@@ -328,7 +327,7 @@ export async function registerForEvent(
 			await notify(tx, hooks, [
 				{ registrationId, change: CHANGE_FOR_NEW_STATE[state] },
 			]);
-			return { state, txid: await getCurrentTxId(tx) };
+			return { state };
 		});
 	} catch (error) {
 		mapConstraintError(error, REGISTRATION_ERRORS);
@@ -340,7 +339,7 @@ export async function registerForAgendaItem(
 	userId: string,
 	locale: "pl" | "en",
 	hooks?: RegistrationHooks,
-): Promise<{ txid: number; eventRegistered: boolean }> {
+): Promise<{ eventRegistered: boolean }> {
 	try {
 		return await db.transaction(async (tx) => {
 			// Global lock order: event row, then items (by id), then group/member rows, then count rows.
@@ -433,7 +432,7 @@ export async function registerForAgendaItem(
 				userId,
 			});
 
-			return { txid: await getCurrentTxId(tx), eventRegistered };
+			return { eventRegistered };
 		});
 	} catch (error) {
 		mapConstraintError(error, REGISTRATION_ERRORS);
@@ -443,7 +442,7 @@ export async function registerForAgendaItem(
 export async function unregisterFromAgendaItem(
 	itemId: string,
 	userId: string,
-): Promise<{ txid: number }> {
+): Promise<void> {
 	return db.transaction(async (tx) => {
 		const [item] = await tx
 			.select({ eventId: agendaItems.eventId })
@@ -466,8 +465,6 @@ export async function unregisterFromAgendaItem(
 		if (!deleted) {
 			throw new DomainError("NOT_REGISTERED");
 		}
-
-		return { txid: await getCurrentTxId(tx) };
 	});
 }
 
@@ -476,7 +473,7 @@ export async function unregisterFromEvent(
 	eventId: string,
 	userId: string,
 	hooks?: RegistrationHooks,
-): Promise<{ txid: number }> {
+): Promise<void> {
 	return db.transaction(async (tx) => {
 		await lockEvent(tx, eventId);
 		const existing = await findEventRegistration(tx, eventId, userId);
@@ -496,7 +493,7 @@ async function withdraw(
 	eventId: string,
 	registrationId: string | null,
 	hooks?: RegistrationHooks,
-): Promise<{ txid: number }> {
+): Promise<void> {
 	if (!registrationId) {
 		throw new DomainError("NOT_REGISTERED");
 	}
@@ -505,7 +502,6 @@ async function withdraw(
 		.delete(eventRegistrations)
 		.where(eq(eventRegistrations.id, registrationId));
 	await promoteAndNotify(tx, eventId, hooks);
-	return { txid: await getCurrentTxId(tx) };
 }
 
 /**
@@ -515,7 +511,7 @@ async function withdraw(
 export async function withdrawRegistrationByLink(
 	registrationId: string,
 	hooks?: RegistrationHooks,
-): Promise<{ txid: number }> {
+): Promise<void> {
 	return db.transaction(async (tx) => {
 		const [found] = await tx
 			.select({ eventId: eventRegistrations.eventId })
@@ -540,7 +536,7 @@ export async function removeRegistrant(
 	eventId: string,
 	registrationId: string,
 	hooks?: RegistrationHooks,
-): Promise<{ txid: number }> {
+): Promise<void> {
 	return db.transaction(async (tx) => {
 		await lockEvent(tx, eventId);
 		const [row] = await tx
@@ -564,7 +560,7 @@ export async function removeRegistrants(
 	eventId: string,
 	registrationIds: string[],
 	hooks?: RegistrationHooks,
-): Promise<{ removed: number; txid: number }> {
+): Promise<{ removed: number }> {
 	return db.transaction(async (tx) => {
 		await lockEvent(tx, eventId);
 		await assertEventOpen(tx, eventId);
@@ -581,7 +577,7 @@ export async function removeRegistrants(
 						)
 						.returning({ id: eventRegistrations.id });
 		await promoteAndNotify(tx, eventId, hooks);
-		return { removed: removed.length, txid: await getCurrentTxId(tx) };
+		return { removed: removed.length };
 	});
 }
 
@@ -591,7 +587,7 @@ export async function addRegistrantByEmail(
 	email: string,
 	locale: "pl" | "en",
 	hooks?: RegistrationHooks,
-): Promise<{ state: RegistrationState; txid: number }> {
+): Promise<{ state: RegistrationState }> {
 	const user = await findAccountByEmail(email);
 	if (!user) {
 		throw new DomainError("USER_NOT_FOUND");

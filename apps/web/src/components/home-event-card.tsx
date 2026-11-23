@@ -16,17 +16,13 @@ import { AttendanceModeBadge } from "@repo/ui/composed/events/attendance-mode-ba
 import { Link } from "@tanstack/react-router";
 import { EventRegistrationButton } from "~/components/event-registration-button";
 import { formatEventDateForLocale } from "~/lib/events/format-event-date";
-import type {
-	EventSeatCountSource,
-	HomeEventListEvent,
-} from "~/lib/events/types";
+import type { HomeEventListEvent } from "~/lib/events/types";
 import type { EventRegistrationActions } from "~/lib/registration/use-event-list-registrations";
 
 type HomeEventCardProps = {
 	event: HomeEventListEvent;
 	user: { id: string; email: string } | null;
 	interactive: boolean;
-	seatCounts: EventSeatCountSource;
 	registrations: EventRegistrationActions;
 };
 
@@ -34,17 +30,9 @@ export function HomeEventCard({
 	event,
 	user,
 	interactive,
-	seatCounts,
 	registrations,
 }: HomeEventCardProps) {
-	const fallback = {
-		seatsRemaining: event.seatsRemaining,
-		maxSeats: event.maxSeats,
-	};
-	const { seatsRemaining, maxSeats } = seatCounts.getDisplaySeatCount(
-		event.id,
-		fallback,
-	);
+	const { seatsRemaining, maxSeats } = event;
 	const isCancelled = event.status === "cancelled";
 
 	return (
@@ -105,7 +93,6 @@ type HomeEventCardsProps = {
 	user: { id: string; email: string } | null;
 	refetching: boolean;
 	interactive: boolean;
-	seatCounts: EventSeatCountSource;
 	registrations: EventRegistrationActions;
 };
 
@@ -114,7 +101,6 @@ export function HomeEventCards({
 	user,
 	refetching,
 	interactive,
-	seatCounts,
 	registrations,
 }: HomeEventCardsProps) {
 	return (
@@ -129,7 +115,6 @@ export function HomeEventCards({
 					event={event}
 					user={user}
 					interactive={interactive}
-					seatCounts={seatCounts}
 					registrations={registrations}
 				/>
 			))}

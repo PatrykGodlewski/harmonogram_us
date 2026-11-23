@@ -20,25 +20,21 @@ import {
 	redirect,
 	useNavigate,
 } from "@tanstack/react-router";
-import { lazy, type ReactNode, Suspense, useEffect } from "react";
+import { type ReactNode, useEffect } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { ClientOnly } from "~/components/client-only";
 import { EventDetailsView } from "~/components/event-details/event-details-view";
 import { useEventDetailsRegistrations } from "~/lib/event-details/use-event-details-registrations";
 
-const EventDetailsLive = lazy(
-	() => import("~/components/event-details/event-details-live"),
-);
-
-const staticItemCounts = {
-	getItemCount: <T,>(_itemId: string, fallback: T) => fallback,
-};
-
 export const Route = createFileRoute("/events/$eventId")({
 	validateSearch: z.object({
 		joined: z.coerce.number().optional().catch(undefined),
 		agenda: z.enum(["list", "calendar"]).optional().catch(undefined),
+		/** Shows only the programme held in this place (F33). */
+		place: z.string().max(100).optional().catch(undefined),
+		/** Shows only the sessions with this title (F33). */
+		session: z.string().max(200).optional().catch(undefined),
 		/** The secret of an invite link (invite-only events). */
 		invite: z.string().max(128).optional().catch(undefined),
 	}),
@@ -129,40 +125,15 @@ function EventDetailsPage() {
 	}, [joined, invite, navigate]);
 	const registrations = useEventDetailsRegistrations(eventId, user?.id);
 
-	const props = {
-		event,
-		user,
-		registrations,
-		eventSeatCount: {
-			seatsRemaining: event.seatsRemaining,
-			maxSeats: event.maxSeats,
-		},
-	};
+	const props = { event, user, registrations };
 
+	// The query refetches every 15 s, so counts and cancellations stay current. Actions work after hydration.
 	return (
 		<PageShell>
 			<ClientOnly
-				fallback={
-					<EventDetailsView
-						{...props}
-						interactive={false}
-						itemCounts={staticItemCounts}
-						isCancelled={event.status === "cancelled"}
-					/>
-				}
+				fallback={<EventDetailsView {...props} interactive={false} />}
 			>
-				<Suspense
-					fallback={
-						<EventDetailsView
-							{...props}
-							interactive={false}
-							itemCounts={staticItemCounts}
-							isCancelled={event.status === "cancelled"}
-						/>
-					}
-				>
-					<EventDetailsLive {...props} />
-				</Suspense>
+				<EventDetailsView {...props} interactive />
 			</ClientOnly>
 		</PageShell>
 	);

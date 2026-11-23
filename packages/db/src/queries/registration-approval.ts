@@ -12,7 +12,6 @@ import {
 	type RegistrationHooks,
 } from "./event-registrations";
 import { lockEvent } from "./locks";
-import { getCurrentTxId } from "./txid";
 
 /** Rows of `eventId` among `ids` that are in one of `states`, oldest request first. */
 async function requestsIn(
@@ -59,7 +58,7 @@ export async function approveRegistrations(
 	eventId: string,
 	registrationIds: string[],
 	hooks?: RegistrationHooks,
-): Promise<{ approved: number; waitlisted: number; txid: number }> {
+): Promise<{ approved: number; waitlisted: number }> {
 	return db.transaction(async (tx) => {
 		await lockEvent(tx, eventId);
 		await assertEventOpen(tx, eventId);
@@ -90,7 +89,6 @@ export async function approveRegistrations(
 		return {
 			approved: placed.length,
 			waitlisted: waiting.length,
-			txid: await getCurrentTxId(tx),
 		};
 	});
 }
@@ -100,7 +98,7 @@ export async function rejectRegistrations(
 	eventId: string,
 	registrationIds: string[],
 	hooks?: RegistrationHooks,
-): Promise<{ rejected: number; txid: number }> {
+): Promise<{ rejected: number }> {
 	return db.transaction(async (tx) => {
 		await lockEvent(tx, eventId);
 		await assertEventOpen(tx, eventId);
@@ -113,6 +111,6 @@ export async function rejectRegistrations(
 			hooks,
 			requests.map((id) => ({ registrationId: id, change: "rejected" })),
 		);
-		return { rejected: requests.length, txid: await getCurrentTxId(tx) };
+		return { rejected: requests.length };
 	});
 }

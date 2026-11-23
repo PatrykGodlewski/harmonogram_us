@@ -4,7 +4,6 @@ import type { EventFiltersParams } from "@repo/api/events/schemas";
 import { HomeEventCards } from "~/components/home-event-card";
 import { HomeEventListShell } from "~/components/home-event-list-shell";
 import { useEventListData } from "~/lib/events/use-event-list-data";
-import { useEventSeatCounts } from "~/lib/events/use-event-seat-counts";
 import { useEventListRegistrations } from "~/lib/registration/use-event-list-registrations";
 
 export type HomeEventListLiveProps = {
@@ -12,7 +11,7 @@ export type HomeEventListLiveProps = {
 	user: { id: string; email: string } | null;
 };
 
-/** Client list: Electric seat counts + registration mutations. */
+/** Client list: the same data (refreshed every 15 s) with registration actions. */
 export default function HomeEventListLive({
 	filters,
 	user,
@@ -22,7 +21,6 @@ export default function HomeEventListLive({
 			filters,
 			userId: user?.id,
 		});
-	const seatCounts = useEventSeatCounts();
 	const registrations = useEventListRegistrations(user?.id);
 
 	return (
@@ -40,7 +38,6 @@ export default function HomeEventListLive({
 					user={user}
 					refetching={refetching}
 					interactive
-					seatCounts={seatCounts}
 					registrations={registrations}
 				/>
 			</div>

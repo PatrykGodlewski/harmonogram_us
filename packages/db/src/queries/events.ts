@@ -20,6 +20,7 @@ import {
 } from "../schema/events";
 import { registrationGroups } from "../schema/groups";
 import { type AgendaItem, listAgendaItems } from "./agenda-items";
+import { type AgendaSession, listAgendaSessions } from "./agenda-sessions";
 import {
 	CAPACITY_EDIT_ERRORS,
 	DomainError,
@@ -37,7 +38,6 @@ import {
 	type RegistrationHooks,
 } from "./event-registrations";
 import { lockEvent } from "./locks";
-import { getCurrentTxId } from "./txid";
 
 /**
  * Who is looking: the public site never sees drafts (nor signed-in-only events
@@ -559,6 +559,8 @@ export async function deleteEvent(id: string) {
 
 export type EventDetails = EventWithRelations & {
 	agenda: AgendaItem[];
+	/** Parts of the programme (F33); items point at them through `sessionId`. */
+	sessions: AgendaSession[];
 	questions: EventQuestion[];
 	/** Links for the whole event (F14); programme items carry their own. */
 	materials: AgendaMaterial[];
@@ -569,20 +571,23 @@ export async function getEventById(
 	id: string,
 	audience: EventAudience,
 ): Promise<EventDetails | null> {
-	const [[event], agenda, questions, [extras], files] = await Promise.all([
-		queryEvents({ audience }, id),
-		listAgendaItems(id),
-		listEventQuestions(id, "registration"),
-		db
-			.select({ materials: events.materials })
-			.from(events)
-			.where(eq(events.id, id)),
-		listEventFiles(id),
-	]);
+	const [[event], agenda, sessions, questions, [extras], files] =
+		await Promise.all([
+			queryEvents({ audience }, id),
+			listAgendaItems(id),
+			listAgendaSessions(id),
+			listEventQuestions(id, "registration"),
+			db
+				.select({ materials: events.materials })
+				.from(events)
+				.where(eq(events.id, id)),
+			listEventFiles(id),
+		]);
 	return event
 		? {
 				...event,
 				agenda,
+				sessions,
 				questions,
 				materials: extras?.materials ?? [],
 				files: files.map(({ id, name, size, agendaItemId }) => ({
@@ -646,7 +651,7 @@ export async function publishEvent(
 export async function cancelEvent(
 	eventId: string,
 	hooks?: RegistrationHooks,
-): Promise<{ txid: number }> {
+): Promise<void> {
 	return db.transaction(async (tx) => {
 		if (!(await lockEvent(tx, eventId))) {
 			throw new DomainError("EVENT_NOT_FOUND");
@@ -694,7 +699,6 @@ export async function cancelEvent(
 			hooks,
 			people.map((row) => ({ registrationId: row.id, change: "cancelled" })),
 		);
-		return { txid: await getCurrentTxId(tx) };
 	});
 }
 

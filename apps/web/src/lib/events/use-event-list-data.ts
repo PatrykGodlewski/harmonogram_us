@@ -14,8 +14,8 @@ export function useEventListData({ filters, userId }: UseEventListDataOptions) {
 
 	// Prefer loader-dehydrated data on SSR; only skeleton when there is no cached data yet.
 	const loading = eventsQuery.isPending && eventsQuery.data === undefined;
-	const refetching =
-		eventsQuery.isFetching && eventsQuery.data !== undefined && !loading;
+	// Busy only while the previous filter's results stand in, not during a background refresh.
+	const refetching = eventsQuery.isPlaceholderData;
 
 	return {
 		events: eventsQuery.data?.events ?? [],

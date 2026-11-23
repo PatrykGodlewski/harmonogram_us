@@ -9,6 +9,7 @@ import { events } from "@repo/db/schema/events";
 import { eq } from "drizzle-orm";
 import { signInByEmail } from "../fixtures/auth";
 import { createTestEvent, createTestUser, uniqueEmail } from "../fixtures/data";
+import { LIVE_WAIT } from "../fixtures/live";
 import { open } from "../fixtures/navigation";
 
 test("[F5] konto pokazuje moje nadchodzące i minione zapisy @uczestnik", async ({
@@ -96,6 +97,8 @@ test("[F5] konto pokazuje zapisy od razu, bez pustego stanu @uczestnik", async (
 test("[F5] awans z listy widać na otwartym koncie bez odświeżania @uczestnik", async ({
 	page,
 }, testInfo) => {
+	// Waits for a page refresh (up to 20 s) on top of the usual steps.
+	test.slow();
 	// Given a user on the waitlist with their account page open
 	const email = uniqueEmail(testInfo);
 	const user = await createTestUser(email);
@@ -112,8 +115,8 @@ test("[F5] awans z listy widać na otwartym koncie bez odświeżania @uczestnik"
 	await expect(card.getByText("Lista rezerwowa (pozycja 1)")).toBeVisible();
 	// When the other person withdraws
 	await unregisterFromEvent(event.id, other.id);
-	// Then the row shows the place and the ticket without a reload
-	await expect(card.getByText("Zarejestrowano")).toBeVisible();
+	// Then the row shows the place and the ticket without a reload (within one refresh)
+	await expect(card.getByText("Zarejestrowano")).toBeVisible(LIVE_WAIT);
 	await expect(card.getByRole("link", { name: "Bilet" })).toBeVisible();
 });
 

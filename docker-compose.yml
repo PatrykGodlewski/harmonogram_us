@@ -1,4 +1,4 @@
-# Development: `docker compose up -d` starts the services the apps need (db, mailpit, electric,
+# Development: `docker compose up -d` starts the services the apps need (db, mailpit, storage,
 # documents: the Rust PDF service, rebuilt with `docker compose up -d --build documents`).
 # Full stack (production images of web, admin and worker): `docker compose --profile app up -d --build`.
 # The e2e suite runs the full stack as a separate project on other ports: see e2e/README.md.
@@ -7,7 +7,6 @@
 x-app-env: &app-env
   NODE_ENV: production
   DATABASE_URL: postgresql://postgres:postgres@db:5432/harmonogram_us
-  ELECTRIC_URL: http://electric:3000
   SMTP_HOST: mailpit
   SMTP_PORT: "1025"
   DOCUMENTS_URL: http://documents:50051
@@ -38,7 +37,7 @@ x-app-build: &app-build
 
 services:
   db:
-    image: postgres:16-alpine
+    image: postgres:16-alpine@sha256:9d9e487c1bd6413c52ccb3c02f46c8e37fa1e1d1a32a84519eb4e68d0ad1da30
     restart: unless-stopped
     ports:
       - "${DB_PORT:-5432}:5432"
@@ -48,7 +47,6 @@ services:
       POSTGRES_DB: harmonogram_us
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    command: ["postgres", "-c", "wal_level=logical"]
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 2s
@@ -61,18 +59,6 @@ services:
       - "${SMTP_PORT_HOST:-1025}:1025"
       - "${MAILPIT_PORT:-8025}:8025"
 
-
-  electric:
-    image: electricsql/electric@sha256:efb6fa43859d67cb8c73439e0c8bc0f7a3daa467500fb06f2a924bcb2070c139
-    restart: unless-stopped
-    ports:
-      - "${ELECTRIC_PORT:-5133}:3000"
-    environment:
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/harmonogram_us
-      ELECTRIC_SECRET: ${ELECTRIC_SECRET}
-    depends_on:
-      db:
-        condition: service_healthy
 
   # S3-compatible file storage for development and e2e (SeaweedFS `weed mini`: creates the
   # bucket and the key pair on start). Same port inside and outside, see S3_ENDPOINT above.
@@ -127,7 +113,6 @@ services:
     restart: unless-stopped
     depends_on:
       db: { condition: service_healthy }
-      electric: { condition: service_started }
       mailpit: { condition: service_started }
       documents: { condition: service_healthy }
       storage: { condition: service_healthy }
@@ -170,7 +155,7 @@ services:
   # e2e only: a stand-in Microsoft Graph (e2e/teams-mock), reached as teams.localhost.
   teams-mock:
     profiles: [e2e]
-    image: node:22-alpine
+    image: node:22-alpine@sha256:1314fb30ec37592d5845e5a160d522c0e680972aa534549940b8d73bde88481a
     command: ["node", "/srv/server.mjs"]
     volumes:
       - ./e2e/teams-mock/server.mjs:/srv/server.mjs:ro
@@ -189,7 +174,7 @@ services:
   # app containers both reach it as oidc.localhost (Chrome maps *.localhost to this machine).
   oidc-mock:
     profiles: [e2e]
-    image: node:22-alpine
+    image: node:22-alpine@sha256:1314fb30ec37592d5845e5a160d522c0e680972aa534549940b8d73bde88481a
     command: ["node", "/srv/server.mjs"]
     volumes:
       - ./e2e/oidc-mock/server.mjs:/srv/server.mjs:ro

@@ -6,7 +6,7 @@ Applies to all agents and subagents. Keep this file short; put task-specific det
 
 Mobile-first campus events: `apps/web` (public), `apps/admin` (management), `apps/worker` (jobs). UI: Polish and English; GitHub issues: Polish. Indico inspires management scope, not product parity.
 
-pnpm 10 + Turbo, Node ≥22.12. TanStack Start/Router/Query/DB, ElectricSQL, Drizzle/Postgres, Better Auth, Paraglide, shadcn/Tailwind, Biome; React Compiler enabled.
+pnpm 10 + Turbo, Node ≥22.12. TanStack Start/Router/Query, Drizzle/Postgres, Better Auth, Paraglide, shadcn/Tailwind, Biome; React Compiler enabled.
 
 ## Working rules
 
@@ -19,7 +19,7 @@ pnpm 10 + Turbo, Node ≥22.12. TanStack Start/Router/Query/DB, ElectricSQL, Dri
 - Biome: tabs, double quotes, organized imports. Explicit public API types; `handle*` event handlers. Small functions/components, early returns, immutable updates; comments only for non-obvious intent.
 - Use `z.email()`. TanStack Form schema inputs must match form values; transform in `onSubmit`, not with mismatched coercion/optional fields.
 - UI text belongs in both `packages/i18n/messages/{pl,en}.json`; run `pnpm messages:compile`. Never edit generated `routeTree.gen.ts` or `src/paraglide/`.
-- Use pnpm/Turbo package task boundaries. Keep one `@tanstack/db` version via the root override; update dependent packages together.
+- Use pnpm/Turbo package task boundaries.
 - Commit messages: Conventional Commits, concise imperative description; body only when useful.
 
 ## Validation
@@ -31,6 +31,6 @@ Check off deliverables/update feature status only with acceptance evidence for t
 ## Read before touching
 
 - Package boundaries, server functions, auth, routing, i18n, config, deployment or metrics: [architecture](docs/architecture.md).
-- Registrations, capacity, waitlists, groups, Electric sync or queued jobs: [data-flow invariants](docs/data-flows.md). Never write seat-count tables directly; queue jobs inside the data transaction.
+- Registrations, capacity, waitlists, groups, page refresh or queued jobs: [data-flow invariants](docs/data-flows.md). Never write seat-count tables directly; queue jobs inside the data transaction.
 - Setup, commands, coding/review standards or adding UI components: [development](docs/development.md).
 - Feature status, plan order and known issues: [docs index](docs/README.md). Verify current code/tests; historical plans are not live status.

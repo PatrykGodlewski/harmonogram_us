@@ -134,7 +134,7 @@ describe("seat counts stay exact under concurrent writes", () => {
 		const itemActual = await actualItemRegistrations(itemId);
 		expect((await readEventCount(eventId))?.seatsRemaining).toBe(2 - eventActual);
 		expect((await readItemCount(itemId))?.registeredCount).toBe(itemActual);
-		await expect(registerForEvent(eventId, u3)).resolves.toHaveProperty("txid");
+		await expect(registerForEvent(eventId, u3)).resolves.toHaveProperty("state");
 	});
 
 	it("app: unregister-from-event and new item registrations don't deadlock", async () => {

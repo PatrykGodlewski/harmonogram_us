@@ -85,7 +85,6 @@ jobs:
           cp .env.example .env
           sed -i "s|^ENCRYPTION_KEY=.*|ENCRYPTION_KEY='$(openssl rand -base64 16)'|" .env
           sed -i "s|^BETTER_AUTH_SECRET=.*|BETTER_AUTH_SECRET='$(openssl rand -base64 32)'|" .env
-          sed -i "s|^ELECTRIC_SECRET=.*|ELECTRIC_SECRET='$(openssl rand -hex 16)'|" .env
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter e2e exec playwright install --with-deps chromium
       - run: pnpm e2e:up

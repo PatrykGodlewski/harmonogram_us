@@ -119,6 +119,7 @@ function AdminEventDetailPage() {
 						eventId={event.id}
 						eventDate={new Date(event.date)}
 						agenda={event.agenda}
+						sessions={event.sessions}
 						locations={filterOptions?.locations ?? []}
 						onChanged={handleChanged}
 						view={view}

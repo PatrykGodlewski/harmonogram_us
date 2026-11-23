@@ -6,6 +6,7 @@ import { Button } from "@repo/ui/components/button";
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
@@ -16,6 +17,10 @@ export interface AdminFormDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	title: string;
+	/** A line under the title explaining the form. */
+	description?: string;
+	/** The submit button's text (default „Zapisz”). */
+	submitLabel?: string;
 	children: ReactNode;
 	onSubmit: () => void;
 	isSubmitting?: boolean;
@@ -25,6 +30,8 @@ export function AdminFormDialog({
 	open,
 	onOpenChange,
 	title,
+	description,
+	submitLabel,
 	children,
 	onSubmit,
 	isSubmitting = false,
@@ -34,6 +41,9 @@ export function AdminFormDialog({
 			<DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg">
 				<DialogHeader>
 					<DialogTitle>{title}</DialogTitle>
+					{description ? (
+						<DialogDescription>{description}</DialogDescription>
+					) : null}
 				</DialogHeader>
 				<form
 					onSubmit={(event) => {
@@ -52,7 +62,7 @@ export function AdminFormDialog({
 							{admin_action_cancel()}
 						</Button>
 						<Button type="submit" disabled={isSubmitting}>
-							{admin_action_save()}
+							{submitLabel ?? admin_action_save()}
 						</Button>
 					</DialogFooter>
 				</form>
