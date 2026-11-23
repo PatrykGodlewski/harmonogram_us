@@ -5,8 +5,10 @@ import {
 	markParallel,
 	nowListIndex,
 	filterByPlace,
+	filterBySession,
 	programmeEntries,
 	programmePlaces,
+	programmeSessionTitles,
 	programmeNowIndex,
 	msUntilNextMinute,
 	nowMinuteOnDay,
@@ -288,6 +290,40 @@ describe("programme by place (F33)", () => {
 		const all = filterByPlace(items, sessions, null);
 		expect(all.items).toHaveLength(items.length);
 		expect(all.sessions).toHaveLength(2);
+	});
+});
+
+describe("programme by session (F33)", () => {
+	const session = (id: string, title: string, start: string, end: string) => ({
+		...item(id, start, end),
+		title,
+	});
+	const sessions = [
+		session("stage-fri", "Scena Główna", "10:00", "17:00"),
+		session("exact-fri", "Strefa Nauk Ścisłych", "09:00", "15:00"),
+		session("stage-sat", "Scena Główna", "18:00", "20:00"),
+	];
+	const items = [
+		{ ...item("Otwarcie", "09:00", "09:30"), sessionId: null },
+		{ ...item("Czarne dziury", "10:00", "10:45"), sessionId: "stage-fri" },
+		{ ...item("Kryptografia", "09:00", "10:00"), sessionId: "exact-fri" },
+		{ ...item("Koncert", "18:00", "19:00"), sessionId: "stage-sat" },
+	];
+
+	it("offers each session name once, in time order", () => {
+		expect(programmeSessionTitles(sessions)).toEqual([
+			"Strefa Nauk Ścisłych",
+			"Scena Główna",
+		]);
+	});
+
+	it("keeps the sessions with the chosen name and their items", () => {
+		const stage = filterBySession(items, sessions, "Scena Główna");
+		expect(stage.sessions.map((row) => row.id)).toEqual(["stage-fri", "stage-sat"]);
+		expect(stage.items.map((row) => row.id)).toEqual(["Czarne dziury", "Koncert"]);
+		const all = filterBySession(items, sessions, null);
+		expect(all.items).toHaveLength(4);
+		expect(all.sessions).toHaveLength(3);
 	});
 });
 

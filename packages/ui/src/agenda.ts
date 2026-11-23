@@ -288,6 +288,35 @@ export function filterByPlace<
 	};
 }
 
+/** Distinct session titles in time order: the same zone on several days is one choice. */
+export function programmeSessionTitles<S extends AgendaTimed>(
+	sessions: S[],
+): string[] {
+	return [...new Set(sortByStart(sessions).map((session) => session.title))];
+}
+
+/** Sessions with the chosen title and their items; `title` null keeps everything. */
+export function filterBySession<
+	I extends AgendaTimed & { sessionId: string | null },
+	S extends AgendaTimed,
+>(
+	items: I[],
+	sessions: S[],
+	title: string | null,
+): { items: I[]; sessions: S[] } {
+	if (title === null) {
+		return { items, sessions };
+	}
+	const kept = sessions.filter((session) => session.title === title);
+	const ids = new Set(kept.map((session) => session.id));
+	return {
+		items: items.filter(
+			(item) => item.sessionId !== null && ids.has(item.sessionId),
+		),
+		sessions: kept,
+	};
+}
+
 /** Milliseconds until the next full minute (when a clock showing HH:MM must change). */
 export function msUntilNextMinute(now: Date): number {
 	return 60_000 - (now.getTime() % 60_000);
