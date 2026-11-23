@@ -52,38 +52,39 @@
 **Files:** `packages/ui/src/agenda.ts:205`
 **Acceptance:** `pnpm --filter @repo/ui lint` clean; the CI run on the new `next` tip is green for all four jobs (`checks`, `unit`, `e2e`, `rust`).
 
-- [ ] Run `pnpm --filter @repo/ui lint`. Expect the single formatting error at `agenda.ts:205`: the formatter wants `items: markParallel(items.filter((item) => item.sessionId === session.id)),` wrapped into three lines.
-- [ ] Run `pnpm --filter @repo/ui exec biome check --write src/agenda.ts`. Check `git diff`: exactly that three-line wrap in `agenda.ts`, nothing else.
-- [ ] Run `pnpm --filter @repo/ui lint` (expect: `Checked 55 files … 0 errors`) and `pnpm lint` (expect: pass).
-- [ ] Commit `fix: format agenda.ts to Biome standard`, push `next`, and verify the CI run on that commit finishes green for all four jobs (`gh run watch <run-id>`).
+- [x] Run `pnpm --filter @repo/ui lint`. (Adjusted 23.11: the formatting error was already fixed by parallel F33 work `4cffe13` on `next` before this plan executed; lint passes clean.)
+- [x] Run `pnpm --filter @repo/ui exec biome check --write src/agenda.ts`. (N/A — applied by `4cffe13`.)
+- [x] Run `pnpm --filter @repo/ui lint` (expect: `Checked 55 files … 0 errors`) and `pnpm lint` (expect: pass). (Lint clean at tip; the full `pnpm lint` gate runs in Task 7.)
+- [x] Commit `fix: format agenda.ts to Biome standard`, push `next`, and verify the CI run on that commit finishes green for all four jobs. (CI gate for the tip is satisfied via Task 7 — this commit landed inside the parallel F33 work.)
 
 ### Task 2: Pin the node base images by digest
 
 **Files:** `Dockerfile:3`, `docker-compose.yml:158` (`teams-mock`), `docker-compose.yml:177` (`oidc-mock`).
 **Produces:** all three `node:22-alpine` references become `node:22-alpine@sha256:<digest>`; the "base images pinned by digest" row in `docs/security.md` becomes true for every image reference in the repo.
 
-- [ ] Resolve the current digest:
-  `TOKEN=$(curl -s "https://auth.docker.io/token?service=registry.docker.io&scope=repository:library/node:pull" | python3 -c "import sys,json;print(json.load(sys.stdin)['token'])") && curl -sI -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json" "https://registry-1.docker.io/v2/library/node/manifests/22-alpine" | grep -i docker-content-digest`
+- [x] Resolve the current digest:
+  `TOKEN=$(curl -s "https://auth.docker.io/token?service=registry.docker.io&scope=repository:library/node:pull" | python3 -c "import sys,json;print(json.load(sys.stdin)['token'])") && curl -sI -H "Authorization: Bearer ***" -H "Accept: application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json" "https://registry-1.docker.io/v2/library/node/manifests/22-alpine" | grep -i docker-content-digest`
   Expect one `sha256:` value. (23.11 value: `sha256:1314fb30ec37592d5845e5a160d522c0e680972aa534549940b8d73bde88481a`; re-resolve — the tag moves with point releases.)
-- [ ] Update the three references to `node:22-alpine@sha256:<digest>`. `git diff` shows exactly three lines.
-- [ ] Verify the digest resolves: `docker build --target runner -t harmonogram-digest-check .` (expect: build succeeds) and `docker compose pull teams-mock oidc-mock` (expect: pull succeeds).
-- [ ] Commit `build: pin node base images by digest` and push `next` (CI may run against the pinned images; a green or still-running `checks` is fine here — the full gate is Task 7). Record the commit SHA; Task 5's dismissal comment for alerts 3–6 cites it.
+- [x] Update the three references to `node:22-alpine@sha256:<digest>`. `git diff` shows exactly three lines.
+- [x] Verify the digest resolves: `docker build --target runner --build-arg APP=web -t harmonogram-digest-check .` (expect: build succeeds — the build requires `--build-arg APP=`; the first attempt without it fails at the `case` guard) and `COMPOSE_FILE=docker-compose.yml docker compose pull teams-mock oidc-mock` (expect: pull succeeds — a local-only untracked `docker-compose.override.yml` with a stale `electric` service breaks plain `docker compose` validation, so pin `COMPOSE_FILE` to the committed file).
+- [x] Commit `build: pin node base images by digest` and push `next` (CI may run against the pinned images; a green or still-running `checks` is fine here — the full gate is Task 7). Record the commit SHA; Task 5's dismissal comment for alerts 3–6 cites it. (Commit `58fddc9`; build image `8a73b3af8ec5`.)
 
 ### Task 3: CodeQL as a required check on `main`, documented
 
 **Files:** GitHub branch protection (API), `docs/security.md:18`.
 **Consumes:** `.github/workflows/codeql.yml` runs on `pull_request` (all PRs), so PRs can satisfy the new checks.
 
-- [ ] Baseline: `gh api repos/PatrykGodlewski/harmonogram_us/branches/main/protection` → contexts `checks`, `e2e`, `rust`, `unit`; `strict: true`. Save the full response for the diff.
-- [ ] PATCH the same endpoint with the full contexts list (replace, not append) keeping `strict`:
+- [x] Baseline: `gh api repos/PatrykGodlewski/harmonogram_us/branches/main/protection` → contexts `checks`, `e2e`, `rust`, `unit`; `strict: true`. Save the full response for the diff. (Done 23.11: contexts `checks, unit, e2e, rust`, strict true.)
+- [x] PATCH the same endpoint with the full contexts list (replace, not append) keeping `strict`:
 
   ```bash
   gh api -X PATCH repos/PatrykGodlewski/harmonogram_us/branches/main/protection --input - <<'EOF'
   {"required_status_checks":{"strict":true,"contexts":["checks","unit","e2e","rust","CodeQL / analyze (javascript-typescript)","CodeQL / analyze (rust)","CodeQL / analyze (actions)"]}}
   EOF
   ```
-- [ ] Re-GET and diff against the baseline: exactly the three `CodeQL / analyze (…)` contexts added, `strict` still true, push/deletion/linear-history rules unchanged.
-- [ ] Edit the Review row in `docs/security.md`: the CI list becomes `checks`, `unit`, `e2e`, `rust` and the three CodeQL analyses. Commit `docs: CodeQL analyses are required on main` and push `next`.
+  (Executed 23.11 via the sub-resource form `-X PATCH …/protection/required_status_checks -F required=true -F strict=true` with the same seven-context body; same effect.)
+- [x] Re-GET and diff against the baseline: exactly the three `CodeQL / analyze (…)` contexts added, `strict` still true, push/deletion/linear-history rules unchanged. (Re-GET: seven contexts, strict true.)
+- [x] Edit the Review row in `docs/security.md`: the CI list becomes `checks`, `unit`, `e2e`, `rust` and the three CodeQL analyses. Commit `docs: CodeQL analyses are required on main` and push `next`. (Commit `5b00da8`.)
 
 ### Task 4: Merge the rqrr 0.11.0 Dependabot PR (fixes the lru UAF)
 
@@ -91,32 +92,32 @@
 **Acceptance:** `Cargo.lock` on `next` shows `lru ≥ 0.18.2`; the CI `rust` job (cargo-deny) is green on the merge commit.
 **Produces:** the lru entry of OSV finding 5 is resolved; Task 5's alert-8 dismissal relies on this.
 
-- [ ] Verify PR #35 (`build(deps): Bump rqrr from 0.10.1 to 0.11.0`): state open, CI green (`gh pr view 35 --json statusCheckRollup` — 23.11: checks, rust, unit, e2e and the three CodeQL analyses all SUCCESS), diff limited to the rqrr version and lock file.
-- [ ] Merge: `gh pr merge 35 --squash --delete-branch` (authorized by plan approval).
-- [ ] Verify on the `next` tip: `Cargo.lock` contains `lru 0.18.` (rqrr 0.11.0 requires `lru ^0.18`; the advisory is fixed in 0.18.2) and the CI run on the merge commit is green, in particular the `rust` job.
+- [x] Verify PR #35 (`build(deps): Bump rqrr from 0.10.1 to 0.11.0`): state open, CI green (`gh pr view 35 --json statusCheckRollup` — 23.11: checks, rust, unit, e2e and the three CodeQL analyses all SUCCESS), diff limited to the rqrr version and lock file. (Verified 23.11 08:05: all ten checks pass, merge state CLEAN.)
+- [x] Merge: `gh pr merge 35 --squash --delete-branch` (authorized by plan approval). (Merged 23.11 as `bbed56d`.)
+- [x] Verify on the `next` tip: `Cargo.lock` contains `lru 0.18.` (rqrr 0.11.0 requires `lru ^0.18`; the advisory is fixed in 0.18.2) and the CI run on the merge commit is green, in particular the `rust` job. (Lock: `lru 0.18.5`, `rqrr 0.11.0`; CI gate covered by Task 7 on the tip.)
 
 ### Task 5: Triage the ten open code-scanning alerts
 
 **Files:** none (GitHub state only).
 **Prerequisites:** Task 2 (digest-pinning SHA) and Task 4 (lru fix) are on `next`.
-**Method:** for each alert, `gh api -X POST repos/PatrykGodlewski/harmonogram_us/code-scanning/alerts/<n>/dismissals --input -` with `{"state":"dismissed","state_reason":"<r>","state_comment":"<text>"}`. Record every response in the ledger; if an alert is already closed (404/422), note it and move on.
+**Method:** for each alert, `gh api -X PATCH repos/PatrykGodlewski/harmonogram_us/code-scanning/alerts/<n> --input -` with `{"state":"dismissed","dismissed_reason":"<r>","dismissed_comment":"<text>"}` (23.11 live API: the single-alert update is a `PATCH` on the alert resource; the `POST …/dismissals` sub-path 404s; `dismissed_reason` values: `false positive`, `won't fix`, `used in tests`, `mitigated`; **comments are capped at 280 characters**). Record every response in the ledger; if an alert is already closed (404/422), note it and move on.
 
-- [ ] Dismiss alert 1 (CodeQL `js/insufficient-password-hash`, `better-auth.ts:134`) — `false_positive`: "SHA-1 here is the HIBP breached-password k-anonymity query; only the 5-character prefix leaves the machine and the full password never does. Account password hashing is done by better-auth. No code change."
-- [ ] Dismiss alert 2 (Scorecard Fuzzing) — `won't_fix`: "Rust coverage is unit, property and server tests (docs/testing.md); the Scorecard Fuzzing check only detects Go/JS fuzz harnesses. No change planned."
-- [ ] Dismiss alerts 3–6 (Scorecard PinnedDependencies) — `fixed`: "node:22-alpine pinned by digest in Dockerfile and docker-compose.yml in <Task 2 SHA>; the next Scorecard run confirms no finding."
-- [ ] Dismiss alert 7 (Scorecard SAST) — `won't_fix`: "Transient: main has a single squashed commit; the check improves as PR history accumulates."
-- [ ] Dismiss alert 8 (Scorecard Vulnerabilities/OSV) — `won't_fix`: "lru 0.16.4 (RUSTSEC-2026-0253, use-after-free) fixed via rqrr 0.11.0 (PR #35; lru ≥ 0.18.2 in Cargo.lock). Remaining entries accepted: esbuild 0.18.20 is dev-only (via tsx → @esbuild-kit/core-utils; no runtime path, no upstream fix); chrono and rustybuzz are unmaintained flags reached via krilla and pass cargo-deny; ttf-parser is documented in deny.toml (RUSTSEC-2026-0192)."
-- [ ] Dismiss alert 9 (Scorecard CodeReview) — `won't_fix`: "Single-maintainer repository; CODEOWNERS review requests plus required conversation resolution are the current controls; revisit when a second maintainer joins."
-- [ ] Dismiss alert 10 (Scorecard CIIBestPractices) — `won't_fix`: "CII badge is not part of the approved process design (2026-11-21); CodeQL, Dependabot, Scorecard and dependency review are in place. Optional maturity item."
-- [ ] Verify: `gh api "repos/PatrykGodlewski/harmonogram_us/code-scanning/alerts?state=open"` → empty list.
+- [x] Dismiss alert 1 (CodeQL `js/insufficient-password-hash`, `better-auth.ts:134`) — `false_positive`: "SHA-1 here is the HIBP breached-password k-anonymity query; only the 5-character prefix leaves the machine and the full password never does. Account password hashing is done by better-auth. No code change."
+- [x] Dismiss alert 2 (Scorecard Fuzzing) — `won't_fix`: "Rust coverage is unit, property and server tests (docs/testing.md); the Scorecard Fuzzing check only detects Go/JS fuzz harnesses. No change planned."
+- [x] Dismiss alerts 3–6 (Scorecard PinnedDependencies) — `fixed`: "node:22-alpine pinned by digest in Dockerfile and docker-compose.yml in 58fddc9; the next Scorecard run confirms no finding." (API reason: `mitigated`.)
+- [x] Dismiss alert 7 (Scorecard SAST) — `won't_fix`: "Transient: main has a single squashed commit; the check improves as PR history accumulates."
+- [x] Dismiss alert 8 (Scorecard Vulnerabilities/OSV) — `won't_fix`: full rationale in the ledger; the alert comment is the 280-char-capped form: "lru 0.16.4 (RUSTSEC-2026-0253 UAF) fixed via rqrr 0.11.0 (PR #35; lru 0.18.5 in Cargo.lock). Accepted: esbuild 0.18.20 is dev-only (tsx toolchain, no runtime path); chrono/rustybuzz via krilla pass cargo-deny; ttf-parser documented in deny.toml."
+- [x] Dismiss alert 9 (Scorecard CodeReview) — `won't_fix`: "Single-maintainer repository; CODEOWNERS review requests plus required conversation resolution are the current controls; revisit when a second maintainer joins."
+- [x] Dismiss alert 10 (Scorecard CIIBestPractices) — `won't_fix`: "CII badge is not part of the approved process design (2026-11-21); CodeQL, Dependabot, Scorecard and dependency review are in place. Optional maturity item."
+- [x] Verify: `gh api "repos/PatrykGodlewski/harmonogram_us/code-scanning/alerts?state=open"` → empty list. (23.11: 0 open.)
 
 ### Task 6: Repository hygiene
 
 **Files:** GitHub state (stale ruleset), `docs/security.md` (verification only).
 
-- [ ] Re-verify the stale ruleset: `gh api repos/PatrykGodlewski/harmonogram_us/rulesets/17333180` → name "Main block", enforcement `disabled`, no rules. Delete: `gh api -X DELETE repos/PatrykGodlewski/harmonogram_us/rulesets/17333180`; re-GET → 404.
-- [ ] Verify secret-scanning push protection: try `gh api repos/PatrykGodlewski/harmonogram_us/security-and-analysis` (23.11: 404 — token scope). On 404, check the GitHub UI (Settings → Code security and analysis → Secret scanning → push protection), record the observed state in the ledger, and report it — do not claim it is on without evidence.
-- [ ] Confirm the "Not done yet" list in `docs/security.md` is still accurate (expected: no change; signed releases/SBOM/image signing remain deferred until the first release).
+- [x] Re-verify the stale ruleset: `gh api repos/PatrykGodlewski/harmonogram_us/rulesets/17333180` → name "Main block", enforcement `disabled`, no rules. Delete: `gh api -X DELETE repos/PatrykGodlewski/harmonogram_us/rulesets/17333180`; re-GET → 404. (Deleted 23.11; rulesets list now empty.)
+- [x] Verify secret-scanning push protection: try `gh api repos/PatrykGodlewski/harmonogram_us/security-and-analysis` (23.11: 404 — token scope). On 404, check the GitHub UI (Settings → Code security and analysis → Secret scanning → push protection), record the observed state in the ledger, and report it — do not claim it is on without evidence. (Verified ON via the repo object instead: `gh api repos/PatrykGodlewski/harmonogram_us --jq .security_and_analysis` → `secret_scanning.status: "enabled"`, `secret_scanning_push_protection.status: "enabled"`. The dedicated `secret-scanning/push-protection` REST route 404s on personal repos — the repo object is the authoritative source.)
+- [x] Confirm the "Not done yet" list in `docs/security.md` is still accurate (expected: no change; signed releases/SBOM/image signing remain deferred until the first release). (Still accurate: 0 releases/tags; other entries unchanged.)
 
 ### Task 7: Final verification and closure
 
