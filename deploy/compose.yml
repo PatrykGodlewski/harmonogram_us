@@ -1,0 +1,69 @@
+# Production on one server (see docs/deploy-azure.md). Images are built by
+# .github/workflows/images.yml; settings come from .env (deploy/.env.production).
+name: harmonogram
+
+x-app: &app
+  env_file: .env
+  restart: unless-stopped
+  environment:
+    NODE_ENV: production
+    DOCUMENTS_URL: http://documents:50051
+    # The free VM sizes have ~1 GB of memory: keep each Node process small.
+    NODE_OPTIONS: --max-old-space-size=256
+
+services:
+  caddy:
+    image: caddy@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8443:8443"
+    environment:
+      WEB_HOST: ${WEB_HOST:?set WEB_HOST in .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [web, admin]
+
+  # Applies database migrations before the apps start (exits when done).
+  migrate:
+    image: ${REGISTRY:?set REGISTRY}/harmonogram-web:${TAG:-main}
+    env_file: .env
+    command: ["pnpm", "--filter", "@repo/db", "db:migrate"]
+    restart: "no"
+
+  web:
+    <<: *app
+    image: ${REGISTRY}/harmonogram-web:${TAG:-main}
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      documents: { condition: service_healthy }
+
+  admin:
+    <<: *app
+    image: ${REGISTRY}/harmonogram-admin:${TAG:-main}
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      documents: { condition: service_healthy }
+
+  worker:
+    <<: *app
+    image: ${REGISTRY}/harmonogram-worker:${TAG:-main}
+    command: ["node", "dist/index.mjs"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+
+  documents:
+    image: ${REGISTRY}/harmonogram-documents:${TAG:-main}
+    env_file: .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/documents", "healthcheck"]
+      interval: 5s
+      retries: 30
+
+volumes:
+  caddy_data:
+  caddy_config:

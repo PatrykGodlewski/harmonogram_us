@@ -48,3 +48,13 @@ e2e/load/.run/
 
 # Local HTTPS certificates for the dev servers (mkcert)
 .certs/
+
+# Terraform state, plans and local settings (infra/)
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+terraform.tfvars
+# Production settings with secrets (deploy/)
+deploy/.env.production
+!deploy/.env.production.example
