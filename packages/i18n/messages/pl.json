@@ -818,5 +818,7 @@
 	"admin_session_back": "Wróć do wydarzenia",
 	"admin_session_empty": "Ta sesja nie ma jeszcze punktów programu.",
 	"admin_session_hint": "Sesja grupuje punkty programu z jednym tematem, miejscem i godzinami, np. wykłady albo ćwiczenia w jednej sali.",
-	"event_details_sessions": "Sesje"
+	"event_details_sessions": "Sesje",
+	"event_details_place": "Miejsce",
+	"event_details_all_places": "Wszystkie miejsca"
 }

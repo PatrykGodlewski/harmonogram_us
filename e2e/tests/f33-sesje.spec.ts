@@ -146,9 +146,8 @@ test("[F33] organizator dzieli program na sesje, wchodzi do sesji i kopiuje ją 
 	).toHaveCount(1);
 });
 
-test("[F33] uczestnik widzi program podzielony na sesje @uczestnik", async ({
-	page,
-}) => {
+/** An event with an opening, a lectures session in the hall and an exercises session in the lab. */
+async function programmeWithSessions() {
 	const tag = randomBytes(3).toString("hex");
 	const aula = `Aula ${tag}`;
 	const lab = `Lab 101 ${tag}`;
@@ -205,6 +204,13 @@ test("[F33] uczestnik widzi program podzielony na sesje @uczestnik", async ({
 		locationId: labId,
 	});
 
+	return { event, aula, lab, labId };
+}
+
+test("[F33] uczestnik widzi program podzielony na sesje @uczestnik", async ({
+	page,
+}) => {
+	const { event, aula, lab } = await programmeWithSessions();
 	await open(page, `/pl/events/${event.id}`);
 	// Each session is a labelled part of the programme with its theme and place
 	const lecturesPart = page.getByRole("region", { name: "Wykłady" });
@@ -230,4 +236,33 @@ test("[F33] uczestnik widzi program podzielony na sesje @uczestnik", async ({
 		"Wykłady",
 		"Ćwiczenia",
 	]);
+});
+
+test("[F33] uczestnik zawęża program do jednego miejsca @uczestnik", async ({
+	page,
+}) => {
+	const { event, lab, labId } = await programmeWithSessions();
+	await open(page, `/pl/events/${event.id}`);
+	const places = page.getByRole("group", { name: "Miejsce" });
+	await places.getByRole("button", { name: lab }).click();
+	// Only what happens there: its session and items
+	await expect(page).toHaveURL(new RegExp(`[?&]place=${labId}`));
+	await expect(page.getByRole("region", { name: "Ćwiczenia" })).toBeVisible();
+	await expect(page.getByRole("region", { name: "Wykłady" })).toHaveCount(0);
+	await expect(page.getByText("Otwarcie")).toHaveCount(0);
+	// The link keeps the choice
+	await page.reload();
+	await expect(
+		page
+			.getByRole("group", { name: "Miejsce" })
+			.getByRole("button", { name: lab }),
+	).toHaveAttribute("aria-pressed", "true");
+	await expect(page.getByRole("region", { name: "Wykłady" })).toHaveCount(0);
+	// And the whole programme comes back
+	await page
+		.getByRole("group", { name: "Miejsce" })
+		.getByRole("button", { name: "Wszystkie miejsca" })
+		.click();
+	await expect(page.getByRole("region", { name: "Wykłady" })).toBeVisible();
+	await expect(page.getByText("Otwarcie")).toBeVisible();
 });

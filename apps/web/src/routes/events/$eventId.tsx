@@ -31,6 +31,8 @@ export const Route = createFileRoute("/events/$eventId")({
 	validateSearch: z.object({
 		joined: z.coerce.number().optional().catch(undefined),
 		agenda: z.enum(["list", "calendar"]).optional().catch(undefined),
+		/** Shows only the programme held in this place (F33). */
+		place: z.string().max(100).optional().catch(undefined),
 		/** The secret of an invite link (invite-only events). */
 		invite: z.string().max(128).optional().catch(undefined),
 	}),
