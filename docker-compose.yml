@@ -155,7 +155,7 @@ services:
   # e2e only: a stand-in Microsoft Graph (e2e/teams-mock), reached as teams.localhost.
   teams-mock:
     profiles: [e2e]
-    image: node:22-alpine
+    image: node:22-alpine@sha256:1314fb30ec37592d5845e5a160d522c0e680972aa534549940b8d73bde88481a
     command: ["node", "/srv/server.mjs"]
     volumes:
       - ./e2e/teams-mock/server.mjs:/srv/server.mjs:ro
@@ -174,7 +174,7 @@ services:
   # app containers both reach it as oidc.localhost (Chrome maps *.localhost to this machine).
   oidc-mock:
     profiles: [e2e]
-    image: node:22-alpine
+    image: node:22-alpine@sha256:1314fb30ec37592d5845e5a160d522c0e680972aa534549940b8d73bde88481a
     command: ["node", "/srv/server.mjs"]
     volumes:
       - ./e2e/oidc-mock/server.mjs:/srv/server.mjs:ro
