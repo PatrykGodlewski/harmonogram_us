@@ -4,7 +4,9 @@ import {
 	layoutAgenda,
 	markParallel,
 	nowListIndex,
+	filterByPlace,
 	programmeEntries,
+	programmePlaces,
 	programmeNowIndex,
 	msUntilNextMinute,
 	nowMinuteOnDay,
@@ -247,6 +249,45 @@ describe("programme with sessions (F33)", () => {
 		);
 		expect(programmeNowIndex(onlySession, new Date(at("13:30")))).toBe(1);
 		expect(programmeNowIndex(onlySession, new Date(at("16:00")))).toBeNull();
+	});
+});
+
+describe("programme by place (F33)", () => {
+	const place = (id: string | null) => ({
+		locationId: id,
+		locationLabel: id ? id.toUpperCase() : null,
+	});
+	const sessions = [
+		{ ...item("Wykłady", "09:30", "13:00"), ...place("kat") },
+		{ ...item("Grupa 2", "13:30", "15:30"), ...place("sos") },
+	];
+	const items = [
+		{ ...item("Otwarcie", "09:00", "09:30"), ...place("kat"), sessionId: null },
+		{ ...item("Grafen", "09:30", "10:15"), ...place(null), sessionId: "Wykłady" },
+		{ ...item("Przerwa", "13:00", "13:30"), ...place(null), sessionId: null },
+		{ ...item("Mikroskopy", "13:30", "14:20"), ...place(null), sessionId: "Grupa 2" },
+		{ ...item("Gość w Chorzowie", "14:30", "15:00"), ...place("cho"), sessionId: "Grupa 2" },
+	];
+
+	it("lists the programme's places in time order; items take their session's place", () => {
+		expect(programmePlaces(items, sessions)).toEqual([
+			{ id: "kat", label: "KAT" },
+			{ id: "sos", label: "SOS" },
+			{ id: "cho", label: "CHO" },
+		]);
+	});
+
+	it("keeps only what happens in the chosen place", () => {
+		const sosnowiec = filterByPlace(items, sessions, "sos");
+		expect(sosnowiec.items.map((row) => row.id)).toEqual(["Mikroskopy"]);
+		expect(sosnowiec.sessions.map((row) => row.id)).toEqual(["Grupa 2"]);
+		const chorzow = filterByPlace(items, sessions, "cho");
+		// A session shows for an item of its own held elsewhere
+		expect(chorzow.items.map((row) => row.id)).toEqual(["Gość w Chorzowie"]);
+		expect(chorzow.sessions.map((row) => row.id)).toEqual(["Grupa 2"]);
+		const all = filterByPlace(items, sessions, null);
+		expect(all.items).toHaveLength(items.length);
+		expect(all.sessions).toHaveLength(2);
 	});
 });
 
