@@ -40,7 +40,8 @@ Planning references (not a live completion tracker):
 14. [File storage, materials (F14) and speaker files (F19)](superpowers/plans/2026-11-22-materialy.md) (plan 14; see its verification summary).
 15. [Replace ElectricSQL with polling](superpowers/plans/2026-11-22-bez-electric.md) (plan 15; see its verification summary).
 16. [Programme sessions (F33)](superpowers/plans/2026-11-22-sesje.md) (plan 16; see its verification summary).
-17. Later priority-one work: profile language, campus calendar/ICS/Open Graph, accessibility and GDPR; consult the spec before planning.
+17. [Secure SDLC review remediation](superpowers/plans/2026-11-23-poprawki-przegladu-sdlc.md) (plan 17; in progress 23 November).
+18. Later priority-one work: profile language, campus calendar/ICS/Open Graph, accessibility and GDPR; consult the spec before planning.
 
 Historical implementation context moved out of `CLAUDE.md`: F5 capacity/waitlist/promotion and account registrations; F6 registration email with ticket links; F11 ticket QR (`ticket_code`, scanning handled by organiser plan); F18 list/calendar agenda with parallel sessions (`layoutAgenda` in `@repo/ui/agenda`); F26 teacher-led group registration; F27 agenda-item registration. Related account/ticket/agenda work: [plan](superpowers/plans/2026-11-19-moje-zapisy-bilety-agenda.md). These are inherited implementation notes, **not a claim that tests were rerun during the documentation refactor**. Verify current code and tests before deciding what remains.
 
