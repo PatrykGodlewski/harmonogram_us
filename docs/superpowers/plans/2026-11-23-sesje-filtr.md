@@ -13,7 +13,14 @@
 ## Tasks
 
 ### Task 1: Helpers
-- [ ] Tests (`packages/ui/test/agenda.test.ts`): `programmeSessionTitles(sessions)` distinct titles in time order; `filterBySession(items, sessions, title)` keeps sessions with that title and their items; null keeps everything. Fail, implement, pass.
+- [x] Tests (`packages/ui/test/agenda.test.ts`): `programmeSessionTitles(sessions)` distinct titles in time order; `filterBySession(items, sessions, title)` keeps sessions with that title and their items; null keeps everything. Fail, implement, pass.
 
 ### Task 2: Select on the event page
-- [ ] e2e first: `[F33] uczestnik pokazuje tylko jedną sesję @uczestnik` (choose „Ćwiczenia”: only its region and items; URL keeps it; together with a place that has none of it → empty message; „Wszystkie sesje” restores). Fail, implement, pass; pl/en; full checks; push.
+- [x] e2e first: `[F33] uczestnik pokazuje tylko jedną sesję @uczestnik` (choose „Ćwiczenia”: only its region and items; URL keeps it; together with a place that has none of it → empty message; „Wszystkie sesje” restores). Fail, implement, pass; pl/en; full checks; push.
+
+## Verification summary (23.11)
+
+- Task 1: `programmeSessionTitles`/`filterBySession` tests RED→GREEN.
+- Task 2: `[F33] uczestnik pokazuje tylko jedną sesję` RED (no „Sesja” control) → GREEN on desktop and phone.
+- Checks: `pnpm test` db 274, api 168, worker 24, ui 39, rpc 3; web typecheck and lint clean; `pnpm e2e` on a freshly built stack: 208 passed, 1 skipped.
+
