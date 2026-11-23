@@ -33,6 +33,8 @@ export const Route = createFileRoute("/events/$eventId")({
 		agenda: z.enum(["list", "calendar"]).optional().catch(undefined),
 		/** Shows only the programme held in this place (F33). */
 		place: z.string().max(100).optional().catch(undefined),
+		/** Shows only the sessions with this title (F33). */
+		session: z.string().max(200).optional().catch(undefined),
 		/** The secret of an invite link (invite-only events). */
 		invite: z.string().max(128).optional().catch(undefined),
 	}),

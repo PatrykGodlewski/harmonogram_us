@@ -204,7 +204,7 @@ async function programmeWithSessions() {
 		locationId: labId,
 	});
 
-	return { event, aula, lab, labId };
+	return { event, aula, aulaId, lab, labId };
 }
 
 test("[F33] uczestnik widzi program podzielony na sesje @uczestnik", async ({
@@ -259,6 +259,38 @@ test("[F33] uczestnik zawęża program do jednego miejsca @uczestnik", async ({
 	).toHaveAttribute("aria-pressed", "true");
 	await expect(page.getByRole("region", { name: "Wykłady" })).toHaveCount(0);
 	// And the whole programme comes back
+	await page
+		.getByRole("group", { name: "Miejsce" })
+		.getByRole("button", { name: "Wszystkie miejsca" })
+		.click();
+	await expect(page.getByRole("region", { name: "Wykłady" })).toBeVisible();
+	await expect(page.getByText("Otwarcie")).toBeVisible();
+});
+
+test("[F33] uczestnik pokazuje tylko jedną sesję @uczestnik", async ({
+	page,
+}) => {
+	const { event, aula } = await programmeWithSessions();
+	await open(page, `/pl/events/${event.id}`);
+	await page.getByLabel("Sesja").selectOption({ label: "Ćwiczenia" });
+	// Only that session and its items
+	await expect(page).toHaveURL(/[?&]session=/);
+	await expect(page.getByRole("region", { name: "Ćwiczenia" })).toBeVisible();
+	await expect(page.getByRole("region", { name: "Wykłady" })).toHaveCount(0);
+	await expect(page.getByText("Otwarcie")).toHaveCount(0);
+	// The link keeps the choice
+	await page.reload();
+	await expect(page.getByLabel("Sesja")).toHaveValue("Ćwiczenia");
+	// Together with a place that has none of it, the page says so
+	await page
+		.getByRole("group", { name: "Miejsce" })
+		.getByRole("button", { name: aula })
+		.click();
+	await expect(
+		page.getByText("Nic z programu nie pasuje do wybranych filtrów."),
+	).toBeVisible();
+	// And the whole programme comes back
+	await page.getByLabel("Sesja").selectOption({ label: "Wszystkie sesje" });
 	await page
 		.getByRole("group", { name: "Miejsce" })
 		.getByRole("button", { name: "Wszystkie miejsca" })

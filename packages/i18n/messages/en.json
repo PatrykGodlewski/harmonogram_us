@@ -820,5 +820,8 @@
 	"admin_session_hint": "A session groups programme items with one theme, place and time, e.g. lectures or workshops in one room.",
 	"event_details_sessions": "Sessions",
 	"event_details_place": "Place",
-	"event_details_all_places": "All places"
+	"event_details_all_places": "All places",
+	"event_details_session": "Session",
+	"event_details_all_sessions": "All sessions",
+	"event_details_no_match": "Nothing in the programme matches the chosen filters."
 }

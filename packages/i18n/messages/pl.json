@@ -820,5 +820,8 @@
 	"admin_session_hint": "Sesja grupuje punkty programu z jednym tematem, miejscem i godzinami, np. wykłady albo ćwiczenia w jednej sali.",
 	"event_details_sessions": "Sesje",
 	"event_details_place": "Miejsce",
-	"event_details_all_places": "Wszystkie miejsca"
+	"event_details_all_places": "Wszystkie miejsca",
+	"event_details_session": "Sesja",
+	"event_details_all_sessions": "Wszystkie sesje",
+	"event_details_no_match": "Nic z programu nie pasuje do wybranych filtrów."
 }

@@ -1,14 +1,17 @@
 import {
 	event_details_agenda,
 	event_details_no_agenda,
+	event_details_no_match,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import {
 	filterByPlace,
+	filterBySession,
 	findOverlaps,
 	programmeEntries,
 	programmeNowIndex,
 	programmePlaces,
+	programmeSessionTitles,
 } from "@repo/ui/agenda";
 import { AgendaNowDivider, useNow } from "@repo/ui/composed/agenda-now";
 import {
@@ -28,6 +31,7 @@ import type {
 import { AgendaCalendar } from "./agenda-calendar";
 import { AgendaItemRow } from "./agenda-item-row";
 import { AgendaPlaceFilter } from "./agenda-place-filter";
+import { AgendaSessionFilter } from "./agenda-session-filter";
 
 const eventRoute = getRouteApi("/events/$eventId");
 
@@ -81,7 +85,17 @@ export function AgendaTimeline({
 			replace: true,
 			resetScroll: false,
 		});
-	const shown = filterByPlace(agenda, event.sessions, place);
+	const titles = programmeSessionTitles(event.sessions);
+	const sessionTitle =
+		search.session && titles.includes(search.session) ? search.session : null;
+	const handleSessionChange = (next: string | null) =>
+		void navigate({
+			search: (prev) => ({ ...prev, session: next ?? undefined }),
+			replace: true,
+			resetScroll: false,
+		});
+	const inPlace = filterByPlace(agenda, event.sessions, place);
+	const shown = filterBySession(inPlace.items, inPlace.sessions, sessionTitle);
 	const entries = programmeEntries(shown.items, shown.sessions);
 	const now = useNow();
 	const nowIndex = now ? programmeNowIndex(entries, now) : null;
@@ -118,15 +132,28 @@ export function AgendaTimeline({
 					<AgendaViewToggle value={view} onChange={handleViewChange} />
 				) : null}
 			</div>
-			{places.length > 1 ? (
-				<AgendaPlaceFilter
-					places={places}
-					value={place}
-					onChange={handlePlaceChange}
-				/>
+			{places.length > 1 || titles.length > 1 ? (
+				<div className="flex flex-col gap-2">
+					{places.length > 1 ? (
+						<AgendaPlaceFilter
+							places={places}
+							value={place}
+							onChange={handlePlaceChange}
+						/>
+					) : null}
+					{titles.length > 1 ? (
+						<AgendaSessionFilter
+							titles={titles}
+							value={sessionTitle}
+							onChange={handleSessionChange}
+						/>
+					) : null}
+				</div>
 			) : null}
 			{agenda.length === 0 ? (
 				<p className="text-muted-foreground">{event_details_no_agenda()}</p>
+			) : entries.length === 0 ? (
+				<p className="text-muted-foreground">{event_details_no_match()}</p>
 			) : view === "calendar" ? (
 				<AgendaCalendar
 					items={shown.items}
