@@ -22,6 +22,7 @@ import { adminMiddleware } from "../auth/admin-middleware";
 import { assertCanCheckIn, assertCanManageEvent } from "../auth/event-access";
 import { panelQueryFn } from "../auth/panel-middleware";
 import { appError } from "../errors";
+import { eventImagesEnabled } from "../event-images/queue";
 import {
 	ADMIN_EVENT_PAGE_SIZE,
 	adminEventIdSchema,
@@ -145,6 +146,8 @@ export const fetchAdminEventDetailsServer = panelQueryFn
 			inviteToken,
 			// A check-in helper gets a door view: scanner and attendance only.
 			access: canManage ? ("manage" as const) : ("checkin" as const),
+			// Off or without provider keys: no regenerate action.
+			imageGenerationEnabled: canManage && eventImagesEnabled(),
 		};
 	});
 
@@ -152,6 +155,9 @@ export const adminEventDetailsQueryOptions = (eventId: string) =>
 	queryOptions({
 		queryKey: ["admin", "event", eventId] as const,
 		queryFn: () => fetchAdminEventDetailsServer({ data: { eventId } }),
+		// A cover image is being generated: check until it is in.
+		refetchInterval: (query) =>
+			query.state.data?.imageStatus === "pending" ? 5_000 : false,
 	});
 
 export const fetchAdminEventRegistrantsServer = panelQueryFn

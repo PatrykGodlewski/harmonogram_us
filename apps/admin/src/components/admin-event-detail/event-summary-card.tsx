@@ -21,6 +21,7 @@ import { useState } from "react";
 import { EventFormDialog } from "../event-form-dialog";
 import { CancelEventButton } from "./cancel-event-button";
 import { DuplicateEventDialog } from "./duplicate-event-dialog";
+import { EventCover } from "./event-cover";
 import { InviteDialog } from "./invite-dialog";
 import { InviteLinkCard } from "./invite-link-card";
 import { MessageDialog } from "./message-dialog";
@@ -63,6 +64,8 @@ export function EventSummaryCard({ event, onChanged }: EventSummaryCardProps) {
 							: ""}
 					</p>
 				</div>
+				{/* The image route serves managers only. */}
+				{canManage ? <EventCover event={event} onChanged={onChanged} /> : null}
 				<dl className="grid grid-cols-2 border-t border-navy bg-manela">
 					<div className="border-r border-navy px-4 py-3">
 						<dt className="font-mono text-xs font-bold tracking-widest uppercase">
