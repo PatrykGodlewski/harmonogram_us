@@ -67,6 +67,10 @@
 
 (facts corrected during execution land here, with the task that needed correcting — children read this section before their task)
 
+- **fal API verified (24.11, fal.ai model page):** `POST https://fal.run/fal-ai/flux/schnell`, header `Authorization: Key *** value of `FAL_KEY` — **not** `Bearer`), JSON body: `prompt` (required), `image_size` — pass the object form `{ "width": 1024, "height": 576 }` (the enum `landscape_16_9` also exists), `seed` (integer; the response echoes the seed used), `output_format: "png"`; leave `num_inference_steps` at its default (4). Response JSON: `images: [{ url, content_type }]` — GET `images[0].url` to download the bytes — plus `seed`, `prompt`, `timings`.
+- **Cloudflare verified (24.11):** the old docs path (`workers-ai/models/text-to-image/flux-1-schnell`) is gone; the current page is `developers.cloudflare.com/workers-ai/models/flux-1-schnell/`. `POST https://api.cloudflare.com/client/v4/accounts/{CLOUDFLARE_ACCOUNT_ID}/ai/run/@cf/black-forest-labs/flux-1-schnell`, header `Authorization: Bearer {CLOUDFLARE_API_TOKEN}`, JSON body `{ prompt, width: 1024, height: 576, seed }`; the HTTP response **is** the image bytes (`application/octet-stream`). Default step count (the page documents no step parameter — do not send one).
+- **Anthropic:** Messages API `POST https://api.anthropic.com/v1/messages`, headers `x-api-key: *** ANTHROPIC_API_KEY>` and `anthropic-version: 2023-06-01`; body `{ model, max_tokens: 150, system, messages: [{ role: "user", content }] }` → `content[0].text`. Model `claude-haiku-5-5` is from the user spec (verify only at run time, not in tests).
+
 ## Tasks
 
 ### Task 1: Data layer — migration 0041, schema, queries, db tests
