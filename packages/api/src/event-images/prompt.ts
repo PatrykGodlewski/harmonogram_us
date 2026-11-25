@@ -5,8 +5,22 @@ import { env } from "@repo/env";
 export const DEFAULT_IMAGE_STYLE =
 	"flat editorial illustration, soft grain, wide composition, no text, no lettering, no watermark";
 
-const SYSTEM_PROMPT =
-	"You write prompts for a text-to-image model. You get the title and description of an event, in any language (often Polish). Reply in English with one short sentence (at most 40 words) describing a single scene that conveys the mood and setting of the event: the place, people, objects, light and atmosphere. Describe only what can be seen. Do not include text, letters, numbers, dates, names or logos. Reply with the scene only, without quotes or any preamble.";
+const SYSTEM_PROMPT = `You turn an event listing into one prompt for a text-to-image model.
+Output only the prompt: one line, in English, at most 60 words, whatever
+language the listing is in.
+
+Describe a single scene that captures the event's vibe:
+- type of place or setting
+- atmosphere and mood
+- lighting and time of day
+- 2 to 4 concrete visual elements
+- a color palette
+
+Never include people's names, brand names, logos, dates, prices, addresses,
+or any written words, letters or signs. Don't depict identifiable real people;
+show crowds, silhouettes or figures at a distance instead.
+If the listing is vague, infer the scene from the type of event. If there is no
+clue at all, describe a tasteful abstract scene in fitting colors.`;
 
 const MESSAGES_URL = "https://api.anthropic.com/v1/messages";
 const TIMEOUT_MS = 30_000;
