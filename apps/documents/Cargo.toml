@@ -13,7 +13,7 @@ tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "signal
 tokio-stream = { version = "0.1", features = ["net"] }
 subtle = "2"
 axum = { version = "0.8", default-features = false, features = ["http1", "tokio"] }
-prometheus-client = "0.24"
+prometheus-client = "0.26"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
 ttf-parser = "0.25"
