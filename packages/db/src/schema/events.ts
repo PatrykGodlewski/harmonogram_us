@@ -20,6 +20,8 @@ export type AttendanceMode = "onsite" | "online" | "hybrid";
  * their organisers and registrants).
  */
 export type EventVisibility = "public" | "authenticated" | "private";
+/** Generated cover image; null on the event means it was never requested. */
+export type EventImageStatus = "pending" | "ready" | "failed";
 
 export const events = pgTable(
 	"events",
@@ -74,6 +76,15 @@ export const events = pgTable(
 			.default("public"),
 		/** Secret of the invite link of a `private` event; a new one revokes the old link. */
 		inviteToken: text("invite_token").unique(),
+		/** App route serving the generated cover image. */
+		imageUrl: text("image_url"),
+		imagePrompt: text("image_prompt"),
+		imageSeed: integer("image_seed"),
+		imageStatus: text("image_status").$type<EventImageStatus>(),
+		/** Hash of the title, description and style the image was requested for. */
+		imageSourceHash: text("image_source_hash"),
+		/** Storage key of the image object; a replaced one is queued for deletion. */
+		imageKey: text("image_key"),
 		createdAt: timestamp("created_at", {
 			withTimezone: true,
 		})
@@ -101,6 +112,10 @@ export const events = pgTable(
 		check(
 			"events_attendance_mode_check",
 			sql`${table.attendanceMode} IN ('onsite', 'online', 'hybrid')`,
+		),
+		check(
+			"events_image_status_check",
+			sql`${table.imageStatus} IN ('pending', 'ready', 'failed')`,
 		),
 	],
 );
