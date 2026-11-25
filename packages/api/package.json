@@ -44,6 +44,7 @@
     "@types/nodemailer": "^8.0.2",
     "@types/react": "^19.3.0",
     "jsqr": "^1.4.0",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.3",
     "unpdf": "^2.2.1",
     "vitest": "^5.1.1"
