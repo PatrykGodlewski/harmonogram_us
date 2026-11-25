@@ -42,16 +42,24 @@ export async function storeEventImage(
 	return key;
 }
 
+/** The key's file in the local directory; throws for a key that would leave it. */
+export function localEventImagePath(
+	key: string,
+	dir: string = eventImageDir(),
+): string {
+	const root = resolve(dir);
+	const path = resolve(root, key);
+	if (!path.startsWith(`${root}${sep}`)) {
+		throw new Error("Stored file key is outside the image directory");
+	}
+	return path;
+}
+
 /** Deletes a key from the local directory (no bucket); a missing file counts as deleted. */
 export async function removeLocalEventImage(
 	key: string,
 	dir: string = eventImageDir(),
 ): Promise<void> {
-	const root = resolve(dir);
-	const path = resolve(root, key);
 	// Deletion keys come from a table shared with other files: never leave the directory.
-	if (!path.startsWith(`${root}${sep}`)) {
-		throw new Error("Stored file key is outside the image directory");
-	}
-	await rm(path, { force: true });
+	await rm(localEventImagePath(key, dir), { force: true });
 }

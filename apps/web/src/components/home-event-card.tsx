@@ -9,6 +9,7 @@ import { AttendanceModeBadge } from "@repo/ui/composed/events/attendance-mode-ba
 import { eventDateStamp } from "@repo/ui/time";
 import { cn } from "@repo/ui/utils";
 import { Link } from "@tanstack/react-router";
+import { EventCover } from "~/components/event-cover";
 import { EventRegistrationButton } from "~/components/event-registration-button";
 import { formatEventDateForLocale } from "~/lib/events/format-event-date";
 import type { HomeEventListEvent } from "~/lib/events/types";
@@ -51,6 +52,7 @@ export function HomeEventCard({
 				<span className="truncate">{event.typeLabel}</span>
 				<AttendanceModeBadge mode={event.attendanceMode} />
 			</div>
+			<EventCover event={event} className="border-b border-navy" />
 			<div className="grid flex-1 grid-cols-[4.5rem_1fr]">
 				{/* A ticket stub: the day in pixels, the month under it. */}
 				<p

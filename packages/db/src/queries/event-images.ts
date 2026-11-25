@@ -89,3 +89,14 @@ export async function failEventImage(
 		.set({ imageStatus: "failed" })
 		.where(and(eq(events.id, eventId), eq(events.imageSourceHash, sourceHash)));
 }
+
+/** The storage key of the event's image, only while it is `ready` (null otherwise). */
+export async function getReadyEventImageKey(
+	eventId: string,
+): Promise<string | null> {
+	const [row] = await db
+		.select({ key: events.imageKey })
+		.from(events)
+		.where(and(eq(events.id, eventId), eq(events.imageStatus, "ready")));
+	return row?.key ?? null;
+}
