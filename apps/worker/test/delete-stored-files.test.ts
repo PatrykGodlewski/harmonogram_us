@@ -26,6 +26,9 @@ function fakes(keys: string[], failing: string[] = []) {
 			if (failing.includes(key)) throw new Error("Storage DELETE failed: HTTP 500");
 			removed.push(key);
 		},
+		removeLocal: async () => {
+			throw new Error("not used with a bucket");
+		},
 		forget: async (forgotten) => {
 			for (const key of forgotten) pending.delete(key);
 		},
@@ -48,9 +51,19 @@ describe("deleteStoredFiles", () => {
 		expect([...pending]).toEqual(["b"]);
 	});
 
-	it("does nothing without storage", async () => {
-		const { deps, pending } = fakes(["a"]);
-		expect(await deleteStoredFiles({ ...deps, config: null })).toEqual({ deleted: 0, failed: 0 });
-		expect(pending.size).toBe(1);
+	it("deletes from the local image directory without a bucket", async () => {
+		const { deps, pending, removed } = fakes(["a"]);
+		const local: string[] = [];
+		const result = await deleteStoredFiles({
+			...deps,
+			config: null,
+			removeLocal: async (key) => {
+				local.push(key);
+			},
+		});
+		expect(result).toEqual({ deleted: 1, failed: 0 });
+		expect(local).toEqual(["a"]);
+		expect(removed).toEqual([]);
+		expect(pending.size).toBe(0);
 	});
 });

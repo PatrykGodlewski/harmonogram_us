@@ -1,3 +1,4 @@
+import { removeLocalEventImage } from "@repo/api/event-images/store";
 import { deleteObject, storageConfig } from "@repo/api/storage/s3";
 import {
 	forgetStoredFileDeletions,
@@ -13,6 +14,8 @@ export type DeleteStoredFilesDeps = {
 	config: ReturnType<typeof storageConfig>;
 	take: typeof takeStoredFileDeletions;
 	remove: typeof deleteObject;
+	/** Without a bucket only cover images are stored, in a local directory. */
+	removeLocal: (key: string) => Promise<void>;
 	forget: typeof forgetStoredFileDeletions;
 };
 
@@ -20,6 +23,7 @@ const defaultDeps = (): DeleteStoredFilesDeps => ({
 	config: storageConfig(),
 	take: takeStoredFileDeletions,
 	remove: deleteObject,
+	removeLocal: (key) => removeLocalEventImage(key),
 	forget: forgetStoredFileDeletions,
 });
 
@@ -28,16 +32,14 @@ export async function deleteStoredFiles(
 	deps: DeleteStoredFilesDeps = defaultDeps(),
 ): Promise<{ deleted: number; failed: number }> {
 	const { config } = deps;
-	if (!config) {
-		return { deleted: 0, failed: 0 };
-	}
+	const remove = config
+		? (key: string) => deps.remove(config, key)
+		: deps.removeLocal;
 	const keys = await deps.take(BATCH);
 	const deleted: string[] = [];
 	for (let start = 0; start < keys.length; start += PARALLEL) {
 		const chunk = keys.slice(start, start + PARALLEL);
-		const results = await Promise.allSettled(
-			chunk.map((key) => deps.remove(config, key)),
-		);
+		const results = await Promise.allSettled(chunk.map(remove));
 		deleted.push(
 			...chunk.filter((_, index) => results[index]?.status === "fulfilled"),
 		);
