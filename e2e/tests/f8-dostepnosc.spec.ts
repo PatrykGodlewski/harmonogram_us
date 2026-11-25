@@ -150,6 +150,8 @@ test("[F8] ekrany grupy spełniają WCAG AA @uczestnik", async ({
 test("[F8] ekrany organizatora spełniają WCAG AA @organizator", async ({
 	page,
 }, testInfo) => {
+	// Audits fifteen screens and dialogs in one session.
+	test.slow();
 	const email = uniqueEmail(testInfo);
 	const password = randomBytes(18).toString("base64url");
 	const organizer = await createTestUser(email, {
