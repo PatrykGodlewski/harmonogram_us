@@ -1,5 +1,4 @@
 import type { UniversitySignIn } from "@repo/api/auth/university";
-import { env } from "@repo/env/client";
 import {
 	auth_button_password_login,
 	auth_error_try_again,
@@ -30,8 +29,13 @@ import { Button } from "../components/button";
 import { FormMessage } from "../components/form-message";
 import { Input } from "../components/input";
 import { Label } from "../components/label";
-import { Captcha } from "./auth/captcha";
-import { formatFieldError, usePasswordLogin } from "./auth/password-login";
+import { useHumanCheck } from "./auth/human-check";
+import {
+	authClientError,
+	captchaHeaders,
+	formatFieldError,
+	usePasswordLogin,
+} from "./auth/password-login";
 import {
 	SignInFailed,
 	UniversitySignInButton,
@@ -59,6 +63,8 @@ export interface LoginProps {
 	university: UniversitySignIn;
 	/** A sign-in came back with an error (university refusal, expired link). */
 	failed?: boolean;
+	/** Inside another card (the event's registration page): no frame or heading of its own. */
+	embedded?: boolean;
 }
 
 const loginFormSchema = z.object({
@@ -66,12 +72,14 @@ const loginFormSchema = z.object({
 	password: z.string(),
 });
 
-export function Login({ redirectTo, university, failed }: LoginProps) {
+export function Login({
+	redirectTo,
+	university,
+	failed,
+	embedded = false,
+}: LoginProps) {
 	const [passwordPanelOpen, setPasswordPanelOpen] = React.useState(false);
-	const [captchaToken, setCaptchaToken] = React.useState<string | null>(null);
-	const captchaSiteKey = env.VITE_TURNSTILE_SITE_KEY;
-	const captchaEnabled = Boolean(captchaSiteKey);
-	const login = useLogin(redirectTo, captchaToken);
+	const login = useLogin(redirectTo);
 
 	const form = useForm({
 		defaultValues: {
@@ -102,7 +110,6 @@ export function Login({ redirectTo, university, failed }: LoginProps) {
 
 	const errorMessage = resolveLoginErrorMessage(login.status);
 	const isBusy = login.status.isLoading;
-	const isCaptchaMissing = captchaEnabled && !captchaToken;
 
 	const errorAlert = errorMessage
 		? {
@@ -113,8 +120,16 @@ export function Login({ redirectTo, university, failed }: LoginProps) {
 		: null;
 
 	return (
-		<div className="mx-auto max-w-sm rounded-lg border p-6">
-			<h1 className="mb-4 text-xl font-semibold">{auth_title_login()}</h1>
+		<div
+			className={
+				embedded
+					? undefined
+					: "mx-auto max-w-sm border border-navy bg-white p-6 shadow-[6px_6px_0_0_var(--navy)]"
+			}
+		>
+			{embedded ? null : (
+				<h1 className="mb-4 text-xl font-semibold">{auth_title_login()}</h1>
+			)}
 			{failed ? (
 				<div className="mb-4">
 					<SignInFailed />
@@ -190,7 +205,7 @@ export function Login({ redirectTo, university, failed }: LoginProps) {
 							<Button
 								type="submit"
 								className="w-full"
-								disabled={isBusy || isSubmitting || isCaptchaMissing}
+								disabled={isBusy || isSubmitting}
 							>
 								{auth_button_password_login()}
 							</Button>
@@ -198,7 +213,7 @@ export function Login({ redirectTo, university, failed }: LoginProps) {
 							<Button
 								type="submit"
 								className="w-full"
-								disabled={isBusy || isSubmitting || isCaptchaMissing}
+								disabled={isBusy || isSubmitting}
 							>
 								{isBusy || isSubmitting
 									? auth_submit_sending_magic_link()
@@ -207,10 +222,6 @@ export function Login({ redirectTo, university, failed }: LoginProps) {
 						)
 					}
 				</form.Subscribe>
-
-				{captchaSiteKey ? (
-					<Captcha siteKey={captchaSiteKey} onToken={setCaptchaToken} />
-				) : null}
 
 				<Button
 					type="button"
@@ -234,29 +245,30 @@ export function Login({ redirectTo, university, failed }: LoginProps) {
 	);
 }
 
-function useLogin(redirectTo: string, captchaToken: string | null) {
-	const passwordMutation = usePasswordLogin(redirectTo, captchaToken);
+function useLogin(redirectTo: string) {
+	const passwordMutation = usePasswordLogin(redirectTo);
+	const humanCheck = useHumanCheck();
 
 	const magicLinkMutation = useMutation({
-		mutationFn: async (email: string) => {
-			const { error } = await authClient.signIn.magicLink({
-				email,
-				callbackURL: redirectTo,
-				newUserCallbackURL: redirectTo,
-				errorCallbackURL: localizeHref("/login"),
-				metadata: {
-					locale: getLocale(),
-				},
-				fetchOptions: captchaToken
-					? {
-							headers: {
-								"x-captcha-response": captchaToken,
-							},
-						}
-					: undefined,
-			});
-			if (error) throw new Error(error.message ?? auth_login_link_failed());
-		},
+		mutationFn: (email: string) =>
+			humanCheck(async (token) => {
+				const { error } = await authClient.signIn.magicLink({
+					email,
+					callbackURL: redirectTo,
+					newUserCallbackURL: redirectTo,
+					errorCallbackURL: localizeHref("/login"),
+					metadata: {
+						locale: getLocale(),
+					},
+					fetchOptions: captchaHeaders(token),
+				});
+				if (error) {
+					throw authClientError(
+						error,
+						error.message ?? auth_login_link_failed(),
+					);
+				}
+			}),
 		onSuccess: () => {
 			toast.success(auth_status_success_title(), {
 				description: auth_magic_link_sent(),

@@ -92,6 +92,7 @@ export function AdminLayout({ children, isAdmin }: AdminLayoutProps) {
 				<SidebarHeader className="flex h-16 shrink-0 flex-row items-center border-b px-4 py-0 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
 					<AdminLogo
 						size="sm"
+						badgeClassName="text-green"
 						className="group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0"
 						textClassName="group-data-[collapsible=icon]:hidden"
 					/>
@@ -143,7 +144,7 @@ export function AdminLayout({ children, isAdmin }: AdminLayoutProps) {
 				</SidebarFooter>
 			</Sidebar>
 			<SidebarInset className="flex flex-col">
-				<header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+				<header className="flex h-16 shrink-0 items-center gap-2 border-b border-navy bg-cream px-4">
 					<SidebarTrigger className="-ml-1" />
 				</header>
 				<div className="flex flex-1 flex-col gap-6 p-6">{children}</div>

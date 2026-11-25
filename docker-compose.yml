@@ -1,7 +1,7 @@
 # Development: `docker compose up -d` starts the services the apps need (db, mailpit, storage,
 # documents: the Rust PDF service, rebuilt with `docker compose up -d --build documents`).
 # Full stack (production images of web, admin and worker): `docker compose --profile app up -d --build`.
-# The e2e suite runs the full stack as a separate project on other ports: see e2e/README.md.
+# The e2e suite runs the full stack as a separate project on other ports: see tooling/e2e/README.md.
 # Metrics: add `--profile observability` for Prometheus (scrapes /api/metrics, receives k6) and Grafana.
 
 x-app-env: &app-env
@@ -12,12 +12,12 @@ x-app-env: &app-env
   DOCUMENTS_URL: http://documents:50051
   BETTER_AUTH_URL: http://localhost:${WEB_PORT:-3000}
   ADMIN_URL: http://localhost:${ADMIN_PORT:-3001}
-  # University sign-in (OpenID Connect); set in .env, or by e2e/ports.env for the mock.
+  # University sign-in (OpenID Connect); set in .env, or by tooling/e2e/ports.env for the mock.
   UNIVERSITY_SSO_DISCOVERY_URL: ${UNIVERSITY_SSO_DISCOVERY_URL:-}
   UNIVERSITY_SSO_CLIENT_ID: ${UNIVERSITY_SSO_CLIENT_ID:-}
   UNIVERSITY_SSO_CLIENT_SECRET: ${UNIVERSITY_SSO_CLIENT_SECRET:-}
   UNIVERSITY_SSO_NAME: ${UNIVERSITY_SSO_NAME:-}
-  # Teams meetings through Microsoft Graph (F23); set in .env, or by e2e/ports.env for the stand-in.
+  # Teams meetings through Microsoft Graph (F23); set in .env, or by tooling/e2e/ports.env for the stand-in.
   TEAMS_TENANT_ID: ${TEAMS_TENANT_ID:-}
   TEAMS_CLIENT_ID: ${TEAMS_CLIENT_ID:-}
   TEAMS_CLIENT_SECRET: ${TEAMS_CLIENT_SECRET:-}
@@ -82,11 +82,11 @@ services:
         aliases: [storage.localhost]
     restart: unless-stopped
 
-  # Renders PDFs over gRPC (services/documents); needs DOCUMENTS_TOKEN from .env.
+  # Renders PDFs over gRPC (apps/documents); needs DOCUMENTS_TOKEN from .env.
   documents:
     build:
       context: .
-      dockerfile: services/documents/Dockerfile
+      dockerfile: apps/documents/Dockerfile
     env_file: .env
     ports:
       - "${DOCUMENTS_PORT:-50051}:50051"
@@ -152,13 +152,13 @@ services:
       mailpit: { condition: service_started }
       storage: { condition: service_healthy }
 
-  # e2e only: a stand-in Microsoft Graph (e2e/teams-mock), reached as teams.localhost.
+  # e2e only: a stand-in Microsoft Graph (tooling/e2e/teams-mock), reached as teams.localhost.
   teams-mock:
     profiles: [e2e]
     image: node:22-alpine@sha256:1314fb30ec37592d5845e5a160d522c0e680972aa534549940b8d73bde88481a
     command: ["node", "/srv/server.mjs"]
     volumes:
-      - ./e2e/teams-mock/server.mjs:/srv/server.mjs:ro
+      - ./tooling/e2e/teams-mock/server.mjs:/srv/server.mjs:ro
     environment:
       PORT: ${TEAMS_PORT:-18082}
       TENANT: ${TEAMS_TENANT_ID:-}
@@ -170,14 +170,14 @@ services:
       default:
         aliases: [teams.localhost]
 
-  # e2e only: a stand-in university sign-in server (e2e/oidc-mock). The browser and the
+  # e2e only: a stand-in university sign-in server (tooling/e2e/oidc-mock). The browser and the
   # app containers both reach it as oidc.localhost (Chrome maps *.localhost to this machine).
   oidc-mock:
     profiles: [e2e]
     image: node:22-alpine@sha256:1314fb30ec37592d5845e5a160d522c0e680972aa534549940b8d73bde88481a
     command: ["node", "/srv/server.mjs"]
     volumes:
-      - ./e2e/oidc-mock/server.mjs:/srv/server.mjs:ro
+      - ./tooling/e2e/oidc-mock/server.mjs:/srv/server.mjs:ro
     environment:
       PORT: ${OIDC_PORT:-18080}
       CLIENT_ID: ${UNIVERSITY_SSO_CLIENT_ID:-}

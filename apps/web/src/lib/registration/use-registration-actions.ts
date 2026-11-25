@@ -17,6 +17,7 @@ import {
 	events_register_success,
 	events_request_success,
 	events_unregister_success,
+	header_my_events,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import {
@@ -25,7 +26,7 @@ import {
 	useMutationState,
 	useQueryClient,
 } from "@tanstack/react-query";
-import { useSearch } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { showRegistrationErrorToast } from "~/lib/event-registration/errors";
 
@@ -118,6 +119,7 @@ function successMessage(
  */
 export function useRegistrationActions(): RegistrationActions {
 	const queryClient = useQueryClient();
+	const navigate = useNavigate();
 	const invite = useSearch({
 		strict: false,
 		select: (search) => search.invite,
@@ -134,7 +136,13 @@ export function useRegistrationActions(): RegistrationActions {
 	const execute = async (action: RegistrationAction) => {
 		try {
 			const result = await runAction(action, invite);
-			toast.success(successMessage(action, result));
+			toast.success(successMessage(action, result), {
+				// Where the registration now lives, one tap away.
+				action: {
+					label: header_my_events(),
+					onClick: () => void navigate({ to: "/my-events" }),
+				},
+			});
 		} catch (error) {
 			showRegistrationErrorToast(error, events_register_full);
 		} finally {

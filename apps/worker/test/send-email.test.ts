@@ -321,7 +321,7 @@ describe("declined requests", () => {
 		await rejectRegistrations(eventId, [registrationId]);
 		const { sent, deps } = capture();
 		await handleEmailJob({ kind: "registration", registrationId, change: "rejected" }, deps);
-		expect(sent[0]?.text).toContain("/pl/account");
+		expect(sent[0]?.text).toContain("/pl/my-events");
 		expect(sent[0]?.text).not.toContain(`/events/${eventId}`);
 	});
 

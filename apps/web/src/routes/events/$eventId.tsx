@@ -1,8 +1,5 @@
 import { myRegistrationsQueryOptions } from "@repo/api/events/my-registrations";
-import {
-	type EventDetails,
-	eventDetailsQueryOptions,
-} from "@repo/api/events/queries";
+import { eventDetailsQueryOptions } from "@repo/api/events/queries";
 import { siteUrlQueryOptions } from "@repo/api/site";
 import {
 	event_details_back,
@@ -10,21 +7,16 @@ import {
 	joined_toast,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
-import { studentsPageHead } from "@repo/router-utils/metadata/page-head";
+import { sharePreviewHead } from "@repo/router-utils/metadata/page-head";
 import { formatEventDateTime } from "@repo/ui/time";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import {
-	createFileRoute,
-	Link,
-	notFound,
-	redirect,
-	useNavigate,
-} from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useEffect } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { ClientOnly } from "~/components/client-only";
 import { EventDetailsView } from "~/components/event-details/event-details-view";
+import { loadEventDetails } from "~/lib/event-details/load-event-details";
 import { useEventDetailsRegistrations } from "~/lib/event-details/use-event-details-registrations";
 
 export const Route = createFileRoute("/events/$eventId")({
@@ -35,6 +27,12 @@ export const Route = createFileRoute("/events/$eventId")({
 		place: z.string().max(100).optional().catch(undefined),
 		/** Shows only the sessions with this title (F33). */
 		session: z.string().max(200).optional().catch(undefined),
+		/** Shows only what starts on this day, YYYY-MM-DD (multi-day programmes). */
+		day: z
+			.string()
+			.regex(/^\d{4}-\d{2}-\d{2}$/)
+			.optional()
+			.catch(undefined),
 		/** The secret of an invite link (invite-only events). */
 		invite: z.string().max(128).optional().catch(undefined),
 	}),
@@ -45,25 +43,12 @@ export const Route = createFileRoute("/events/$eventId")({
 		location,
 		deps,
 	}) => {
-		let event: EventDetails;
-		try {
-			event = await queryClient.ensureQueryData(
-				eventDetailsQueryOptions(params.eventId, deps.invite),
-			);
-		} catch (error) {
-			// A deleted or unknown event is a 404 page, not a server error.
-			if (error instanceof Error && error.message === "EVENT_NOT_FOUND") {
-				throw notFound();
-			}
-			// A signed-in-only event: sign in, then come back here.
-			if (error instanceof Error && error.message === "UNAUTHORIZED") {
-				throw redirect({
-					to: "/login",
-					search: { redirect: location.href },
-				});
-			}
-			throw error;
-		}
+		const event = await loadEventDetails(
+			queryClient,
+			params.eventId,
+			deps.invite,
+			location.href,
+		);
 		const [siteUrl] = await Promise.all([
 			queryClient.ensureQueryData(siteUrlQueryOptions),
 			user ? queryClient.ensureQueryData(myRegistrationsQueryOptions) : null,
@@ -78,21 +63,8 @@ export const Route = createFileRoute("/events/$eventId")({
 		};
 	},
 	// Link previews when the event is shared (Open Graph).
-	head: ({ loaderData }) => ({
-		meta: loaderData
-			? [
-					...studentsPageHead(loaderData.preview.title).meta,
-					{ name: "description", content: loaderData.preview.description },
-					{ property: "og:type", content: "website" },
-					{ property: "og:title", content: loaderData.preview.title },
-					{
-						property: "og:description",
-						content: loaderData.preview.description,
-					},
-					{ property: "og:url", content: loaderData.preview.url },
-				]
-			: [],
-	}),
+	head: ({ loaderData }) =>
+		loaderData ? sharePreviewHead(loaderData.preview) : { meta: [] },
 	component: EventDetailsPage,
 	errorComponent: EventDetailsError,
 	notFoundComponent: EventNotFound,
@@ -101,7 +73,10 @@ export const Route = createFileRoute("/events/$eventId")({
 function PageShell({ children }: { children: ReactNode }) {
 	return (
 		<div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4 sm:p-8">
-			<Link to="/" className="text-sm text-muted-foreground hover:underline">
+			<Link
+				to="/"
+				className="self-start font-mono text-sm font-bold underline-offset-4 hover:underline"
+			>
 				← {event_details_back()}
 			</Link>
 			{children}

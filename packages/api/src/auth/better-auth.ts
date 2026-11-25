@@ -140,7 +140,7 @@ async function isCompromisedPassword(
 			method: "GET",
 			headers: {
 				"Add-Padding": "true",
-				"User-Agent": "harmonogram-us-auth",
+				"User-Agent": "turnout-auth",
 			},
 		},
 	);

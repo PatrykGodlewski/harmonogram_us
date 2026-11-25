@@ -24,6 +24,7 @@ import { Route as AuthenticatedEventsEventIdRouteImport } from './routes/_authen
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiFilesFileIdRouteImport } from './routes/api/files/$fileId'
 import { Route as AuthenticatedEventsEventIdScanRouteImport } from './routes/_authenticated/events.$eventId_.scan'
+import { Route as ApiAgendaItemsItemIdImageRouteImport } from './routes/api/agenda-items/$itemId.image'
 import { Route as ApiEventsEventIdAttendanceRouteImport } from './routes/api/events/$eventId/attendance'
 import { Route as AuthenticatedEventsEventIdSessionsSessionIdRouteImport } from './routes/_authenticated/events.$eventId_.sessions.$sessionId'
 
@@ -106,6 +107,12 @@ const AuthenticatedEventsEventIdScanRoute =
     path: '/events/$eventId/scan',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const ApiAgendaItemsItemIdImageRoute =
+  ApiAgendaItemsItemIdImageRouteImport.update({
+    id: '/api/agenda-items/$itemId/image',
+    path: '/api/agenda-items/$itemId/image',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiEventsEventIdAttendanceRoute =
   ApiEventsEventIdAttendanceRouteImport.update({
     id: '/api/events/$eventId/attendance',
@@ -134,6 +141,7 @@ export interface FileRoutesByFullPath {
   '/api/files/$fileId': typeof ApiFilesFileIdRoute
   '/events/': typeof AuthenticatedEventsIndexRoute
   '/events/$eventId/scan': typeof AuthenticatedEventsEventIdScanRoute
+  '/api/agenda-items/$itemId/image': typeof ApiAgendaItemsItemIdImageRoute
   '/api/events/$eventId/attendance': typeof ApiEventsEventIdAttendanceRoute
   '/events/$eventId/sessions/$sessionId': typeof AuthenticatedEventsEventIdSessionsSessionIdRoute
 }
@@ -152,6 +160,7 @@ export interface FileRoutesByTo {
   '/api/files/$fileId': typeof ApiFilesFileIdRoute
   '/events': typeof AuthenticatedEventsIndexRoute
   '/events/$eventId/scan': typeof AuthenticatedEventsEventIdScanRoute
+  '/api/agenda-items/$itemId/image': typeof ApiAgendaItemsItemIdImageRoute
   '/api/events/$eventId/attendance': typeof ApiEventsEventIdAttendanceRoute
   '/events/$eventId/sessions/$sessionId': typeof AuthenticatedEventsEventIdSessionsSessionIdRoute
 }
@@ -172,6 +181,7 @@ export interface FileRoutesById {
   '/api/files/$fileId': typeof ApiFilesFileIdRoute
   '/_authenticated/events/': typeof AuthenticatedEventsIndexRoute
   '/_authenticated/events/$eventId_/scan': typeof AuthenticatedEventsEventIdScanRoute
+  '/api/agenda-items/$itemId/image': typeof ApiAgendaItemsItemIdImageRoute
   '/api/events/$eventId/attendance': typeof ApiEventsEventIdAttendanceRoute
   '/_authenticated/events/$eventId_/sessions/$sessionId': typeof AuthenticatedEventsEventIdSessionsSessionIdRoute
 }
@@ -192,6 +202,7 @@ export interface FileRouteTypes {
     | '/api/files/$fileId'
     | '/events/'
     | '/events/$eventId/scan'
+    | '/api/agenda-items/$itemId/image'
     | '/api/events/$eventId/attendance'
     | '/events/$eventId/sessions/$sessionId'
   fileRoutesByTo: FileRoutesByTo
@@ -210,6 +221,7 @@ export interface FileRouteTypes {
     | '/api/files/$fileId'
     | '/events'
     | '/events/$eventId/scan'
+    | '/api/agenda-items/$itemId/image'
     | '/api/events/$eventId/attendance'
     | '/events/$eventId/sessions/$sessionId'
   id:
@@ -229,6 +241,7 @@ export interface FileRouteTypes {
     | '/api/files/$fileId'
     | '/_authenticated/events/'
     | '/_authenticated/events/$eventId_/scan'
+    | '/api/agenda-items/$itemId/image'
     | '/api/events/$eventId/attendance'
     | '/_authenticated/events/$eventId_/sessions/$sessionId'
   fileRoutesById: FileRoutesById
@@ -241,6 +254,7 @@ export interface RootRouteChildren {
   ApiMetricsRoute: typeof ApiMetricsRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiFilesFileIdRoute: typeof ApiFilesFileIdRoute
+  ApiAgendaItemsItemIdImageRoute: typeof ApiAgendaItemsItemIdImageRoute
   ApiEventsEventIdAttendanceRoute: typeof ApiEventsEventIdAttendanceRoute
 }
 
@@ -351,6 +365,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEventsEventIdScanRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/api/agenda-items/$itemId/image': {
+      id: '/api/agenda-items/$itemId/image'
+      path: '/api/agenda-items/$itemId/image'
+      fullPath: '/api/agenda-items/$itemId/image'
+      preLoaderRoute: typeof ApiAgendaItemsItemIdImageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/events/$eventId/attendance': {
       id: '/api/events/$eventId/attendance'
       path: '/api/events/$eventId/attendance'
@@ -405,6 +426,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMetricsRoute: ApiMetricsRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiFilesFileIdRoute: ApiFilesFileIdRoute,
+  ApiAgendaItemsItemIdImageRoute: ApiAgendaItemsItemIdImageRoute,
   ApiEventsEventIdAttendanceRoute: ApiEventsEventIdAttendanceRoute,
 }
 export const routeTree = rootRouteImport

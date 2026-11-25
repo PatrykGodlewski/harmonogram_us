@@ -10,13 +10,20 @@ import {
 	timestamp,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
+import type { AgendaLanguage } from "../agenda-languages";
 import { authUsers } from "./better-auth";
-import { eventLocations } from "./event-lookups";
+import { eventFaculties, eventLocations, eventTypes } from "./event-lookups";
 import { eventRegistrations } from "./event-registrations";
 import { events } from "./events";
 
-/** Who speaks at a programme item ("dr Anna Nowak", "Instytut Fizyki"). */
-export type AgendaSpeaker = { name: string; affiliation?: string };
+/** Who leads a programme item: "dr Anna Nowak", institution "Instytut Fizyki", unit, short bio. */
+export type AgendaSpeaker = {
+	name: string;
+	affiliation?: string;
+	unit?: string;
+	bio?: string;
+};
+
 /** A link to slides, a recording or a paper. */
 export type AgendaMaterial = { label: string; url: string };
 
@@ -91,6 +98,26 @@ export const agendaItems = pgTable(
 			.$type<AgendaMaterial[]>()
 			.notNull()
 			.default([]),
+		/** Category ("Wykład", "Warsztaty"), from the same list as events. */
+		typeId: text("type_id").references(() => eventTypes.id, {
+			onDelete: "set null",
+		}),
+		/** The organising unit. */
+		facultyId: text("faculty_id").references(() => eventFaculties.id, {
+			onDelete: "set null",
+		}),
+		/** Field of knowledge ("Sztuka"), in the organiser's words. */
+		topic: text("topic"),
+		/** Who it is for ("dla wszystkich", "15+"), in the organiser's words. */
+		audience: text("audience"),
+		languages: text("languages")
+			.array()
+			.$type<AgendaLanguage[]>()
+			.notNull()
+			.default(sql`'{}'::text[]`),
+		/** Bucket key of the item's image; a trigger queues a replaced one for deletion. */
+		imageKey: text("image_key"),
+		imageAlt: text("image_alt"),
 		createdAt: timestamp("created_at", { withTimezone: true })
 			.notNull()
 			.defaultNow(),
@@ -99,6 +126,10 @@ export const agendaItems = pgTable(
 			.defaultNow(),
 	},
 	(table) => [
+		check(
+			"agenda_items_image_alt",
+			sql`${table.imageKey} IS NULL OR ${table.imageAlt} IS NOT NULL`,
+		),
 		index("agenda_items_event_starts_idx").on(table.eventId, table.startsAt),
 		index("agenda_items_session_idx").on(table.sessionId),
 		check(

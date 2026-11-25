@@ -70,8 +70,11 @@ export function MyProfile() {
 	};
 
 	return (
-		<section aria-labelledby={headingId} className="mt-6 rounded-lg border p-4">
-			<h2 id={headingId} className="mb-4 text-lg font-semibold">
+		<section
+			aria-labelledby={headingId}
+			className="border border-navy bg-white p-4"
+		>
+			<h2 id={headingId} className="mb-4 text-xl">
 				{profile_title()}
 			</h2>
 			<form onSubmit={handleSubmit} className="flex flex-col gap-4 sm:max-w-md">

@@ -14,6 +14,7 @@ import { Route as AccessibilityRouteImport } from './routes/accessibility'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LogoutRouteImport } from './routes/logout'
+import { Route as MyEventsRouteImport } from './routes/my-events'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as WidgetRouteImport } from './routes/widget'
@@ -32,10 +33,12 @@ import { Route as ApiCertificatesRegistrationIdRouteImport } from './routes/api/
 import { Route as ApiFilesFileIdRouteImport } from './routes/api/files/$fileId'
 import { Route as ApiV1EventsRouteImport } from './routes/api/v1/events'
 import { Route as RegistrationsRegistrationIdWithdrawRouteImport } from './routes/registrations.$registrationId.withdraw'
+import { Route as ApiAgendaItemsItemIdImageRouteImport } from './routes/api/agenda-items/$itemId.image'
 import { Route as ApiCalendarEventEventIdRouteImport } from './routes/api/calendar/event/$eventId'
 import { Route as ApiCalendarMyTokenRouteImport } from './routes/api/calendar/my/$token'
 import { Route as ApiTicketsRegistrationIdPdfRouteImport } from './routes/api/tickets/$registrationId/pdf'
 import { Route as EventsEventIdGroupsNewRouteImport } from './routes/events/$eventId_.groups.new'
+import { Route as EventsEventIdProgramItemIdRouteImport } from './routes/events/$eventId_.program.$itemId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -60,6 +63,11 @@ const LoginRoute = LoginRouteImport.update({
 const LogoutRoute = LogoutRouteImport.update({
   id: '/logout',
   path: '/logout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyEventsRoute = MyEventsRouteImport.update({
+  id: '/my-events',
+  path: '/my-events',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -154,6 +162,12 @@ const RegistrationsRegistrationIdWithdrawRoute =
     path: '/registrations/$registrationId/withdraw',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiAgendaItemsItemIdImageRoute =
+  ApiAgendaItemsItemIdImageRouteImport.update({
+    id: '/api/agenda-items/$itemId/image',
+    path: '/api/agenda-items/$itemId/image',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiCalendarEventEventIdRoute = ApiCalendarEventEventIdRouteImport.update({
   id: '/api/calendar/event/$eventId',
   path: '/api/calendar/event/$eventId',
@@ -175,6 +189,12 @@ const EventsEventIdGroupsNewRoute = EventsEventIdGroupsNewRouteImport.update({
   path: '/events/$eventId/groups/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EventsEventIdProgramItemIdRoute =
+  EventsEventIdProgramItemIdRouteImport.update({
+    id: '/events/$eventId_/program/$itemId',
+    path: '/events/$eventId/program/$itemId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -182,6 +202,7 @@ export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
+  '/my-events': typeof MyEventsRoute
   '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/widget': typeof WidgetRoute
@@ -200,10 +221,12 @@ export interface FileRoutesByFullPath {
   '/api/files/$fileId': typeof ApiFilesFileIdRoute
   '/api/v1/events': typeof ApiV1EventsRoute
   '/registrations/$registrationId/withdraw': typeof RegistrationsRegistrationIdWithdrawRoute
+  '/api/agenda-items/$itemId/image': typeof ApiAgendaItemsItemIdImageRoute
   '/api/calendar/event/$eventId': typeof ApiCalendarEventEventIdRoute
   '/api/calendar/my/$token': typeof ApiCalendarMyTokenRoute
   '/api/tickets/$registrationId/pdf': typeof ApiTicketsRegistrationIdPdfRoute
   '/events/$eventId/groups/new': typeof EventsEventIdGroupsNewRoute
+  '/events/$eventId/program/$itemId': typeof EventsEventIdProgramItemIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -211,6 +234,7 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
+  '/my-events': typeof MyEventsRoute
   '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/widget': typeof WidgetRoute
@@ -229,10 +253,12 @@ export interface FileRoutesByTo {
   '/api/files/$fileId': typeof ApiFilesFileIdRoute
   '/api/v1/events': typeof ApiV1EventsRoute
   '/registrations/$registrationId/withdraw': typeof RegistrationsRegistrationIdWithdrawRoute
+  '/api/agenda-items/$itemId/image': typeof ApiAgendaItemsItemIdImageRoute
   '/api/calendar/event/$eventId': typeof ApiCalendarEventEventIdRoute
   '/api/calendar/my/$token': typeof ApiCalendarMyTokenRoute
   '/api/tickets/$registrationId/pdf': typeof ApiTicketsRegistrationIdPdfRoute
   '/events/$eventId/groups/new': typeof EventsEventIdGroupsNewRoute
+  '/events/$eventId/program/$itemId': typeof EventsEventIdProgramItemIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -241,6 +267,7 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
+  '/my-events': typeof MyEventsRoute
   '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/widget': typeof WidgetRoute
@@ -259,10 +286,12 @@ export interface FileRoutesById {
   '/api/files/$fileId': typeof ApiFilesFileIdRoute
   '/api/v1/events': typeof ApiV1EventsRoute
   '/registrations/$registrationId/withdraw': typeof RegistrationsRegistrationIdWithdrawRoute
+  '/api/agenda-items/$itemId/image': typeof ApiAgendaItemsItemIdImageRoute
   '/api/calendar/event/$eventId': typeof ApiCalendarEventEventIdRoute
   '/api/calendar/my/$token': typeof ApiCalendarMyTokenRoute
   '/api/tickets/$registrationId/pdf': typeof ApiTicketsRegistrationIdPdfRoute
   '/events/$eventId_/groups/new': typeof EventsEventIdGroupsNewRoute
+  '/events/$eventId_/program/$itemId': typeof EventsEventIdProgramItemIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -272,6 +301,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/login'
     | '/logout'
+    | '/my-events'
     | '/privacy'
     | '/signup'
     | '/widget'
@@ -290,10 +320,12 @@ export interface FileRouteTypes {
     | '/api/files/$fileId'
     | '/api/v1/events'
     | '/registrations/$registrationId/withdraw'
+    | '/api/agenda-items/$itemId/image'
     | '/api/calendar/event/$eventId'
     | '/api/calendar/my/$token'
     | '/api/tickets/$registrationId/pdf'
     | '/events/$eventId/groups/new'
+    | '/events/$eventId/program/$itemId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -301,6 +333,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/login'
     | '/logout'
+    | '/my-events'
     | '/privacy'
     | '/signup'
     | '/widget'
@@ -319,10 +352,12 @@ export interface FileRouteTypes {
     | '/api/files/$fileId'
     | '/api/v1/events'
     | '/registrations/$registrationId/withdraw'
+    | '/api/agenda-items/$itemId/image'
     | '/api/calendar/event/$eventId'
     | '/api/calendar/my/$token'
     | '/api/tickets/$registrationId/pdf'
     | '/events/$eventId/groups/new'
+    | '/events/$eventId/program/$itemId'
   id:
     | '__root__'
     | '/'
@@ -330,6 +365,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/login'
     | '/logout'
+    | '/my-events'
     | '/privacy'
     | '/signup'
     | '/widget'
@@ -348,10 +384,12 @@ export interface FileRouteTypes {
     | '/api/files/$fileId'
     | '/api/v1/events'
     | '/registrations/$registrationId/withdraw'
+    | '/api/agenda-items/$itemId/image'
     | '/api/calendar/event/$eventId'
     | '/api/calendar/my/$token'
     | '/api/tickets/$registrationId/pdf'
     | '/events/$eventId_/groups/new'
+    | '/events/$eventId_/program/$itemId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -360,6 +398,7 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   LoginRoute: typeof LoginRoute
   LogoutRoute: typeof LogoutRoute
+  MyEventsRoute: typeof MyEventsRoute
   PrivacyRoute: typeof PrivacyRoute
   SignupRoute: typeof SignupRoute
   WidgetRoute: typeof WidgetRoute
@@ -378,10 +417,12 @@ export interface RootRouteChildren {
   ApiFilesFileIdRoute: typeof ApiFilesFileIdRoute
   ApiV1EventsRoute: typeof ApiV1EventsRoute
   RegistrationsRegistrationIdWithdrawRoute: typeof RegistrationsRegistrationIdWithdrawRoute
+  ApiAgendaItemsItemIdImageRoute: typeof ApiAgendaItemsItemIdImageRoute
   ApiCalendarEventEventIdRoute: typeof ApiCalendarEventEventIdRoute
   ApiCalendarMyTokenRoute: typeof ApiCalendarMyTokenRoute
   ApiTicketsRegistrationIdPdfRoute: typeof ApiTicketsRegistrationIdPdfRoute
   EventsEventIdGroupsNewRoute: typeof EventsEventIdGroupsNewRoute
+  EventsEventIdProgramItemIdRoute: typeof EventsEventIdProgramItemIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -419,6 +460,13 @@ declare module '@tanstack/react-router' {
       path: '/logout'
       fullPath: '/logout'
       preLoaderRoute: typeof LogoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-events': {
+      id: '/my-events'
+      path: '/my-events'
+      fullPath: '/my-events'
+      preLoaderRoute: typeof MyEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -547,6 +595,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RegistrationsRegistrationIdWithdrawRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/agenda-items/$itemId/image': {
+      id: '/api/agenda-items/$itemId/image'
+      path: '/api/agenda-items/$itemId/image'
+      fullPath: '/api/agenda-items/$itemId/image'
+      preLoaderRoute: typeof ApiAgendaItemsItemIdImageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/calendar/event/$eventId': {
       id: '/api/calendar/event/$eventId'
       path: '/api/calendar/event/$eventId'
@@ -575,6 +630,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsEventIdGroupsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/events/$eventId_/program/$itemId': {
+      id: '/events/$eventId_/program/$itemId'
+      path: '/events/$eventId/program/$itemId'
+      fullPath: '/events/$eventId/program/$itemId'
+      preLoaderRoute: typeof EventsEventIdProgramItemIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -584,6 +646,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRoute,
   LoginRoute: LoginRoute,
   LogoutRoute: LogoutRoute,
+  MyEventsRoute: MyEventsRoute,
   PrivacyRoute: PrivacyRoute,
   SignupRoute: SignupRoute,
   WidgetRoute: WidgetRoute,
@@ -603,10 +666,12 @@ const rootRouteChildren: RootRouteChildren = {
   ApiV1EventsRoute: ApiV1EventsRoute,
   RegistrationsRegistrationIdWithdrawRoute:
     RegistrationsRegistrationIdWithdrawRoute,
+  ApiAgendaItemsItemIdImageRoute: ApiAgendaItemsItemIdImageRoute,
   ApiCalendarEventEventIdRoute: ApiCalendarEventEventIdRoute,
   ApiCalendarMyTokenRoute: ApiCalendarMyTokenRoute,
   ApiTicketsRegistrationIdPdfRoute: ApiTicketsRegistrationIdPdfRoute,
   EventsEventIdGroupsNewRoute: EventsEventIdGroupsNewRoute,
+  EventsEventIdProgramItemIdRoute: EventsEventIdProgramItemIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

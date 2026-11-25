@@ -1,26 +1,26 @@
-# Harmonogram US
+# Turnout
 
 Campus event registration for universities, in Polish and English.
 
 ## Features
 
-What Harmonogram US does today, what it does not do yet, and how it compares with [Indico](https://getindico.io), the event system most universities use for this.
+What Turnout does today, what it does not do yet, and how it compares with [Indico](https://getindico.io), the event system most universities use for this.
 
 - **Snapshot:** 21 November 2026, branch `next`. There is no tagged release yet.
 - **Indico side:** taken from the Indico source (`master` at `f20ab92`, release 3.3.15), its changelog and learn.getindico.io. The detailed, sourced comparison is in [docs/indico-comparison.md](docs/indico-comparison.md).
-- **Our side:** every feature marked ✅ has a passing Playwright acceptance test named `[Fn] …` in `e2e/tests` (156 tests on desktop and 360 px phone viewports at this snapshot). Feature status and acceptance criteria are in the [product spec](docs/superpowers/specs/2026-11-19-produkt-design.md).
+- **Our side:** every feature marked ✅ has a passing Playwright acceptance test named `[Fn] …` in `tooling/e2e/tests` (156 tests on desktop and 360 px phone viewports at this snapshot). Feature status and acceptance criteria are in the [product spec](docs/superpowers/specs/2026-11-19-produkt-design.md).
 
 **Legend:** ✅ works · 🟡 partly · ❌ not built · ⏸ deliberately postponed. In the Indico column, ✅ means Indico has it.
 
 ### Scope
 
-Harmonogram US is for campus events: talks, workshops, open days, school visits. One installation serves one university. It does not try to cover everything Indico does; conference management (abstracts, peer review, room booking) is out of scope for now.
+Turnout is for campus events: talks, workshops, open days, school visits. One installation serves one university. It does not try to cover everything Indico does; conference management (abstracts, peer review, room booking) is out of scope for now.
 
 ### How it is built
 
 These are facts about the implementation, not claims that it is better in general.
 
-| | Harmonogram US | Indico |
+| | Turnout | Indico |
 |---|---|---|
 | Primary target | Phones first: every participant and organiser screen is tested at 360 px | Desktop web application |
 | Stack | TypeScript; React 19, TanStack Start/Router/Query, PostgreSQL with Drizzle, Better Auth, pg-boss job queue, Tailwind | Python (Flask, SQLAlchemy), PostgreSQL, Celery, React in parts |
@@ -37,7 +37,7 @@ These are facts about the implementation, not claims that it is better in genera
 
 #### Accounts and access
 
-| Feature | Harmonogram US | Indico |
+| Feature | Turnout | Indico |
 |---|---|---|
 | Sign in with an e-mail link (no password) | ✅ | not verified |
 | Local account with password | ✅ with breached-password check and CAPTCHA | ✅ |
@@ -53,7 +53,7 @@ These are facts about the implementation, not claims that it is better in genera
 
 #### Events
 
-| Feature | Harmonogram US | Indico |
+| Feature | Turnout | Indico |
 |---|---|---|
 | Draft, then publish | ✅ with a checklist that shows what is missing and fixes it in place | ❌ no event-level draft (admin-enabled "unlisted" events) |
 | Cancel an event | ✅ closes registration, e-mails everyone registered or waitlisted, keeps history | 🟡 a "cancelled" label, nobody is told |
@@ -66,7 +66,7 @@ These are facts about the implementation, not claims that it is better in genera
 
 #### Campus calendar
 
-| Feature | Harmonogram US | Indico |
+| Feature | Turnout | Indico |
 |---|---|---|
 | Public list with search and filters | ✅ date, format, unit, type, place | ✅ category pages and search |
 | Free-seat counts that refresh on open pages | ✅ | ❌ |
@@ -79,7 +79,7 @@ These are facts about the implementation, not claims that it is better in genera
 
 #### Registration
 
-| Feature | Harmonogram US | Indico |
+| Feature | Turnout | Indico |
 |---|---|---|
 | Register in one tap when there are no questions | ✅ | not verified |
 | Capacity limit | ✅ | ✅ |
@@ -96,7 +96,7 @@ These are facts about the implementation, not claims that it is better in genera
 
 #### E-mails
 
-| Feature | Harmonogram US | Indico |
+| Feature | Turnout | Indico |
 |---|---|---|
 | Confirmation, waitlist, promotion | ✅ | 🟡 confirmation (no waitlist) |
 | Approval and rejection | ✅ | ✅ |
@@ -107,7 +107,7 @@ These are facts about the implementation, not claims that it is better in genera
 
 #### Registrant management
 
-| Feature | Harmonogram US | Indico |
+| Feature | Turnout | Indico |
 |---|---|---|
 | Search and filter by state | ✅ | ✅ more filters and columns |
 | Add and remove people (waitlist moves up) | ✅ | ✅ (no waitlist) |
@@ -120,7 +120,7 @@ These are facts about the implementation, not claims that it is better in genera
 
 #### Tickets, check-in, certificates
 
-| Feature | Harmonogram US | Indico |
+| Feature | Turnout | Indico |
 |---|---|---|
 | Ticket page with QR code | ✅ | ✅ |
 | PDF ticket | ✅ with QR | ✅ |
@@ -134,7 +134,7 @@ These are facts about the implementation, not claims that it is better in genera
 
 #### Programme and speakers
 
-| Feature | Harmonogram US | Indico |
+| Feature | Turnout | Indico |
 |---|---|---|
 | Programme as list and calendar, parallel sessions, rooms, several days | ✅ with a live "now" line | ✅ timetable |
 | Programme sessions (theme, room, time), copied to another room and time | ✅ | ✅ sessions (no copy) |
@@ -150,7 +150,7 @@ These are facts about the implementation, not claims that it is better in genera
 
 #### Personal data and accessibility
 
-| Feature | Harmonogram US | Indico |
+| Feature | Turnout | Indico |
 |---|---|---|
 | Privacy notice at sign-up and privacy page (controller, basis, retention, rights) | ✅ text to be confirmed by the university's data protection officer | ✅ privacy settings |
 | Automatic deletion of registrations after a retention period | ✅ | ✅ data retention |
@@ -160,7 +160,7 @@ These are facts about the implementation, not claims that it is better in genera
 
 #### Integrations and reporting
 
-| Feature | Harmonogram US | Indico |
+| Feature | Turnout | Indico |
 |---|---|---|
 | Statistics for organisers | ✅ per event: registered, present, no-shows and their share, waitlisted, awaiting approval; administrators see events and registrations per month for 12 months | ✅ Matomo plugin (page views and downloads) |
 | Event change log | ❌ | ✅ |
@@ -218,18 +218,19 @@ pnpm dev                     # web :3000, admin :3001, worker
 ### Structure
 
 ```
-apps/            web (public site), admin (management panel), worker (queued jobs)
-packages/        api, db, env, ui, i18n, jobs, router-utils, rpc (gRPC client), config
-services/        documents: Rust gRPC service that renders PDFs
-proto/           gRPC contracts shared by Rust and TypeScript (checked by buf)
-e2e/             Playwright tests, k6 load tests, test doubles (OIDC mock)
+apps/            web (public site), admin (management panel), worker (queued jobs),
+                 documents (Rust gRPC service that renders PDFs)
+packages/        api, db, env, ui, i18n, jobs, router-utils, rpc (gRPC client), config,
+                 proto (gRPC contracts shared by Rust and TypeScript, checked by buf)
+tooling/         e2e (Playwright tests, k6 load tests, test doubles), scripts (repo tasks)
+infra/           Terraform for the hosting options
 observability/   Prometheus and Grafana configuration
 docs/            architecture, development, data flows, product spec and plans
 ```
 
 ## Licence and contributing
 
-Harmonogram US is licensed under the [Functional Source License, FSL-1.1-ALv2](LICENSE.md), the licence
+Turnout is licensed under the [Functional Source License, FSL-1.1-ALv2](LICENSE.md), the licence
 Sentry uses. You may use, change and self-host it for any purpose except offering it as a competing
 commercial product or service; every version becomes Apache-2.0 two years after it is published. It is
 source-available ("fair source"), not OSI open source.

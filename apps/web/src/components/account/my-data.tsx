@@ -72,7 +72,10 @@ export function MyData({ email }: { email: string }) {
 	const matches = confirmEmail.trim().toLowerCase() === email.toLowerCase();
 
 	return (
-		<section aria-labelledby={headingId} className="mt-6 rounded-lg border p-4">
+		<section
+			aria-labelledby={headingId}
+			className="border border-navy bg-white p-4"
+		>
 			<h2 id={headingId} className="mb-2 text-lg font-semibold">
 				{account_data_title()}
 			</h2>

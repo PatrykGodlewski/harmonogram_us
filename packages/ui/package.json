@@ -18,13 +18,15 @@
     },
     "./utils": "./src/utils.ts",
     "./time": "./src/time.ts",
+    "./languages": "./src/languages.ts",
     "./agenda": "./src/agenda.ts",
     "./tailwind": "./tailwind.css",
     "./app-errors": "./src/app-errors.ts",
     "./registrants-csv": "./src/registrants-csv.ts",
     "./registrant-stats": "./src/registrant-stats.ts",
     "./file-size": "./src/file-size.ts",
-    "./session-colors": "./src/session-colors.ts"
+    "./session-colors": "./src/session-colors.ts",
+    "./human-check-run": "./src/human-check-run.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",
@@ -35,6 +37,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@fontsource/pixelify-sans": "5.3.0",
+    "@fontsource/space-grotesk": "5.3.0",
+    "@fontsource/space-mono": "5.3.0",
     "@marsidev/react-turnstile": "^1.6.3",
     "@radix-ui/react-label": "^2.1.17",
     "@radix-ui/react-select": "^2.4.1",

@@ -1,5 +1,4 @@
 import type { UniversitySignIn } from "@repo/api/auth/university";
-import { env } from "@repo/env/client";
 import {
 	auth_field_confirm_password,
 	auth_field_email,
@@ -23,7 +22,6 @@ import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { createAuthClient } from "better-auth/client";
-import * as React from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Alert, AlertDescription, AlertTitle } from "../components/alert";
@@ -31,7 +29,8 @@ import { Button } from "../components/button";
 import { FormMessage } from "../components/form-message";
 import { Input } from "../components/input";
 import { Label } from "../components/label";
-import { Captcha } from "./auth/captcha";
+import { useHumanCheck } from "./auth/human-check";
+import { authClientError, captchaHeaders } from "./auth/password-login";
 import { UniversitySignInButton } from "./auth/university-sign-in";
 
 const authClient = createAuthClient();
@@ -108,10 +107,7 @@ function getRequestErrorMessage(error: unknown, fallback: string): string {
 }
 
 export function Signup({ redirectTo = "/account", university }: SignupProps) {
-	const [captchaToken, setCaptchaToken] = React.useState<string | null>(null);
-	const captchaSiteKey = env.VITE_TURNSTILE_SITE_KEY;
-	const captchaEnabled = Boolean(captchaSiteKey);
-	const signup = useSignup(localizeHref(redirectTo), captchaToken);
+	const signup = useSignup(localizeHref(redirectTo));
 
 	const form = useForm({
 		defaultValues: {
@@ -136,7 +132,6 @@ export function Signup({ redirectTo = "/account", university }: SignupProps) {
 
 	const errorMessage = resolveSignupErrorMessage(signup.status);
 	const isBusy = signup.status.isLoading;
-	const isCaptchaMissing = captchaEnabled && !captchaToken;
 	const errorAlert = errorMessage
 		? {
 				variant: "destructive" as const,
@@ -146,7 +141,7 @@ export function Signup({ redirectTo = "/account", university }: SignupProps) {
 		: null;
 
 	return (
-		<div className="mx-auto max-w-sm rounded-lg border p-6">
+		<div className="mx-auto max-w-sm border border-navy bg-white p-6 shadow-[6px_6px_0_0_var(--navy)]">
 			<h1 className="mb-4 text-xl font-semibold">{auth_title_signup()}</h1>
 			{university ? (
 				<div className="mb-4">
@@ -215,7 +210,7 @@ export function Signup({ redirectTo = "/account", university }: SignupProps) {
 							<Button
 								type="submit"
 								className="w-full"
-								disabled={isSubmittingSignup || isCaptchaMissing}
+								disabled={isSubmittingSignup}
 							>
 								{isSubmittingSignup
 									? auth_submit_signing_up()
@@ -224,10 +219,6 @@ export function Signup({ redirectTo = "/account", university }: SignupProps) {
 						);
 					}}
 				</form.Subscribe>
-
-				{captchaSiteKey ? (
-					<Captcha siteKey={captchaSiteKey} onToken={setCaptchaToken} />
-				) : null}
 
 				{errorAlert ? (
 					<Alert variant={errorAlert.variant}>
@@ -240,32 +231,29 @@ export function Signup({ redirectTo = "/account", university }: SignupProps) {
 	);
 }
 
-function useSignup(redirectTo: string, captchaToken: string | null) {
+function useSignup(redirectTo: string) {
 	const router = useRouter();
+	const humanCheck = useHumanCheck();
 
 	const signupMutation = useMutation({
-		mutationFn: async (data: SignupData) => {
-			try {
-				const { error } = await authClient.signUp.email({
-					email: data.email,
-					password: data.password,
-					name: data.email,
-					callbackURL: redirectTo,
-					fetchOptions: captchaToken
-						? {
-								headers: {
-									"x-captcha-response": captchaToken,
-								},
-							}
-						: undefined,
-				});
+		mutationFn: (data: SignupData) =>
+			humanCheck(async (token) => {
+				const { error } = await authClient.signUp
+					.email({
+						email: data.email,
+						password: data.password,
+						name: data.email,
+						callbackURL: redirectTo,
+						fetchOptions: captchaHeaders(token),
+					})
+					.catch((thrown: unknown) => ({ error: thrown }));
 				if (error) {
-					throw new Error(getRequestErrorMessage(error, auth_signup_failed()));
+					throw authClientError(
+						error,
+						getRequestErrorMessage(error, auth_signup_failed()),
+					);
 				}
-			} catch (error) {
-				throw new Error(getRequestErrorMessage(error, auth_signup_failed()));
-			}
-		},
+			}),
 		onSuccess: async () => {
 			toast.success(auth_success_account_created_title(), {
 				description: auth_success_account_created_message(),

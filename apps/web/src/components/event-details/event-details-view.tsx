@@ -1,3 +1,4 @@
+import { isEventClosed } from "~/lib/event-details/is-event-closed";
 import type {
 	EventDetailsData,
 	EventDetailsRegistrations,
@@ -21,8 +22,7 @@ export function EventDetailsView({
 }: EventDetailsViewProps) {
 	// Cancelled events close registration and say so at the top.
 	const isCancelled = event.status === "cancelled";
-	const isClosed =
-		isCancelled || new Date(event.effectiveEndsAt).getTime() <= Date.now();
+	const isClosed = isEventClosed(event);
 
 	return (
 		<div className="flex flex-col gap-8">

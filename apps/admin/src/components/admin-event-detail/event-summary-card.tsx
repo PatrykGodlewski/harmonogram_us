@@ -2,10 +2,11 @@ import type { AdminEventDetails } from "@repo/api/admin/queries";
 import {
 	admin_event_back,
 	admin_event_edit,
-	admin_event_places,
 	admin_event_status_draft,
 	admin_event_status_ended,
+	admin_registered_label,
 	admin_scan_open,
+	admin_seats_left_label,
 	admin_summary_requires_approval,
 	event_room,
 	event_status_cancelled,
@@ -42,15 +43,45 @@ export function EventSummaryCard({ event, onChanged }: EventSummaryCardProps) {
 		<section className="flex flex-col gap-3">
 			<Link
 				to="/events"
-				className="text-sm text-muted-foreground hover:underline"
+				className="self-start font-mono text-sm font-bold underline-offset-4 hover:underline"
 			>
 				← {admin_event_back()}
 			</Link>
-			<h1 className="text-2xl font-semibold tracking-tight">{event.title}</h1>
-			<p className="text-muted-foreground">
-				{formatEventDateTime(event.date, locale)}
-				{event.endsAt ? ` – ${formatEventDateTime(event.endsAt, locale)}` : ""}
-			</p>
+			<header className="border border-navy bg-green">
+				<div className="flex items-center justify-between gap-3 border-b border-navy px-3 py-1.5 font-mono text-[11px] font-bold tracking-widest uppercase">
+					<span className="truncate">{event.typeLabel}</span>
+					<AttendanceModeBadge mode={event.attendanceMode} />
+				</div>
+				<div className="flex flex-col gap-2 p-4 sm:p-6">
+					<h1 className="text-[clamp(1.5rem,5vw,2.25rem)] leading-tight">
+						{event.title}
+					</h1>
+					<p className="font-mono text-sm">
+						{formatEventDateTime(event.date, locale)}
+						{event.endsAt
+							? ` – ${formatEventDateTime(event.endsAt, locale)}`
+							: ""}
+					</p>
+				</div>
+				<dl className="grid grid-cols-2 border-t border-navy bg-manela">
+					<div className="border-r border-navy px-4 py-3">
+						<dt className="font-mono text-xs font-bold tracking-widest uppercase">
+							{admin_registered_label()}
+						</dt>
+						<dd className="font-pixel text-2xl tabular-nums">
+							{registered} / {event.maxSeats}
+						</dd>
+					</div>
+					<div className="px-4 py-3">
+						<dt className="font-mono text-xs font-bold tracking-widest uppercase">
+							{admin_seats_left_label()}
+						</dt>
+						<dd className="font-pixel text-2xl tabular-nums">
+							{event.seatsRemaining}
+						</dd>
+					</div>
+				</dl>
+			</header>
 			<div className="flex flex-wrap gap-2">
 				{event.status === "draft" ? (
 					<Badge>{admin_event_status_draft()}</Badge>
@@ -61,8 +92,6 @@ export function EventSummaryCard({ event, onChanged }: EventSummaryCardProps) {
 				{event.status === "published" && hasEnded ? (
 					<Badge variant="outline">{admin_event_status_ended()}</Badge>
 				) : null}
-				<AttendanceModeBadge mode={event.attendanceMode} />
-				<Badge variant="secondary">{event.typeLabel}</Badge>
 				{event.requiresApproval ? (
 					<Badge variant="outline">{admin_summary_requires_approval()}</Badge>
 				) : null}
@@ -76,9 +105,6 @@ export function EventSummaryCard({ event, onChanged }: EventSummaryCardProps) {
 					<Badge variant="outline">{event_room({ room: event.room })}</Badge>
 				) : null}
 			</div>
-			<p className="tabular-nums">
-				{admin_event_places({ registered, max: event.maxSeats })}
-			</p>
 			{event.inviteToken ? (
 				<InviteLinkCard
 					eventId={event.id}
@@ -89,7 +115,8 @@ export function EventSummaryCard({ event, onChanged }: EventSummaryCardProps) {
 			{canManage && event.status === "draft" ? (
 				<PublishChecklist event={event} onChanged={onChanged} />
 			) : null}
-			<div className="flex flex-wrap gap-2">
+			{/* Two equal columns on a phone instead of one button per row. */}
+			<div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
 				{event.status === "published" ? (
 					<Button variant="outline" asChild>
 						<Link to="/events/$eventId/scan" params={{ eventId: event.id }}>

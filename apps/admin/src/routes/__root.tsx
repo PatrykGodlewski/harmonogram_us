@@ -11,6 +11,7 @@ import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { createAdminRootDocumentHead } from "@repo/router-utils/metadata/admin-root-document-head";
 import { Toaster } from "@repo/ui/components/sonner";
 import { AdminHeader } from "@repo/ui/composed/admin-header";
+import { HumanCheckProvider } from "@repo/ui/composed/auth/human-check";
 import { HydrationMarker } from "@repo/ui/composed/hydration-marker";
 import type { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
@@ -90,7 +91,7 @@ function RootDocument({ children }: { children: ReactNode }) {
 				<HeadContent />
 			</head>
 			<body>
-				{children}
+				<HumanCheckProvider>{children}</HumanCheckProvider>
 				<Scripts />
 			</body>
 		</html>

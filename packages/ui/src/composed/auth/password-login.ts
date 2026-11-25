@@ -8,6 +8,7 @@ import { useMutation } from "@tanstack/react-query";
 import { createAuthClient } from "better-auth/client";
 import { toast } from "sonner";
 import { z } from "zod";
+import { useHumanCheck } from "./human-check";
 
 const authClient = createAuthClient();
 
@@ -56,33 +57,41 @@ type UsePasswordLoginOptions = {
 	showSuccessToast?: boolean;
 };
 
+/** Headers carrying the human-check token (Better Auth's captcha plugin reads them). */
+export function captchaHeaders(token: string | undefined) {
+	return token ? { headers: { "x-captcha-response": token } } : undefined;
+}
+
+/** Keeps the code next to the shown message, so a rejected human check can be retried. */
+export function authClientError(error: unknown, message: string): Error {
+	return Object.assign(new Error(message), {
+		code: parseAuthClientError(error).code ?? undefined,
+	});
+}
+
 export function usePasswordLogin(
 	redirectTo: string,
-	captchaToken: string | null,
 	options?: UsePasswordLoginOptions,
 ) {
 	const showSuccessToast = options?.showSuccessToast ?? true;
+	const humanCheck = useHumanCheck();
 
 	return useMutation({
-		mutationFn: async (data: PasswordLoginData) => {
-			const { error } = await authClient.signIn.email({
-				email: data.email,
-				password: data.password,
-				callbackURL: redirectTo,
-				fetchOptions: captchaToken
-					? {
-							headers: {
-								"x-captcha-response": captchaToken,
-							},
-						}
-					: undefined,
-			});
-			if (error) {
-				throw new Error(
-					resolvePasswordLoginErrorMessage(parseAuthClientError(error)),
-				);
-			}
-		},
+		mutationFn: (data: PasswordLoginData) =>
+			humanCheck(async (token) => {
+				const { error } = await authClient.signIn.email({
+					email: data.email,
+					password: data.password,
+					callbackURL: redirectTo,
+					fetchOptions: captchaHeaders(token),
+				});
+				if (error) {
+					throw authClientError(
+						error,
+						resolvePasswordLoginErrorMessage(parseAuthClientError(error)),
+					);
+				}
+			}),
 		onSuccess: () => {
 			if (showSuccessToast) {
 				toast.success(auth_success_logged_in_title(), {

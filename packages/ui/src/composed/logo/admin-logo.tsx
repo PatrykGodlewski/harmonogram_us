@@ -25,10 +25,10 @@ export function AdminLogo({
 			<LogoMark size={size} className={badgeClassName} />
 			{showText ? (
 				<div className={cn("min-w-0 leading-tight", textClassName)}>
-					<p className="truncate text-sm font-semibold tracking-wide text-foreground">
+					<p className="truncate font-pixel text-sm leading-none">
 						{header_brand()}
 					</p>
-					<p className="truncate text-xs text-muted-foreground">
+					<p className="truncate font-mono text-[11px] tracking-widest uppercase opacity-80">
 						{header_admin_subtitle()}
 					</p>
 				</div>

@@ -76,6 +76,15 @@ describe("presignDownload", () => {
 	});
 });
 
+describe("presignDownload inline", () => {
+	it("shows an image in the page instead of downloading it", async () => {
+		const url = new URL(
+			await presignDownload(CONFIG, "events/e1/items/i1", "image", { inline: true }),
+		);
+		expect(url.searchParams.get("response-content-disposition")).toBe("inline");
+	});
+});
+
 describe("contentDisposition", () => {
 	it("keeps Polish names through RFC 5987 with an ASCII fallback", () => {
 		expect(contentDisposition("Prezentacja żółć.pdf")).toBe(

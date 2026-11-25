@@ -4,20 +4,24 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { db } from "../src/client";
 import { effectiveEventEndSql } from "../src/queries/event-registrations";
 import { authUsers } from "../src/schema/better-auth";
+import { events } from "../src/schema/events";
 import {
 	accountSeeds,
 	APPROVAL_EVENT_ID,
+	CANCELLED_EVENT_ID,
 	CERTIFICATE_EVENT_ID,
-	FULL_EVENT_ID,
+	DRAFT_EVENT_ID,
 	groupSeeds,
 	INVITE_EVENT_ID,
 	LAST_SEAT_EVENT_ID,
 	LIVE_NOW_EVENT_ID,
-	PAST_ATTENDED_EVENT_ID,
-	SESSIONS_EVENT_ID,
 	WAITLIST_EVENT_ID,
 } from "../src/seed/data";
-import { generatedAccountSeeds } from "../src/seed/generated";
+import {
+	FESTIVAL_EVENT_ID,
+	FULL_FESTIVAL_ITEM_ID,
+} from "../src/seed/festival";
+import { participantAccountSeeds } from "../src/seed/participants";
 import { seedDatabase } from "../src/seed/seed";
 import { credentialHash, resetDb } from "./helpers";
 
@@ -65,6 +69,14 @@ describe("seedDatabase", () => {
 	// The checks below only read: seed once for all of them.
 	beforeAll(async () => {
 		await resetDb();
+		// Left over from the old bulk generator: a re-seed removes it.
+		await db.insert(events).values({
+			id: "gen-001",
+			title: "Stare wydarzenie",
+			date: new Date(),
+			maxSeats: 5,
+			typeId: await insertType(),
+		});
 		await seedDatabase({ password: PASSWORD, nodeEnv: "development" });
 	}, SEED_TIMEOUT);
 
@@ -78,12 +90,91 @@ describe("seedDatabase", () => {
 		SEED_TIMEOUT,
 	);
 
-	it("seeds the test accounts and the generated participants", async () => {
+	it("seeds a few showcase events, the test accounts and the participants", async () => {
 		const total = await counts();
 		expect(total?.users).toBe(
-			accountSeeds.length + generatedAccountSeeds.length,
+			accountSeeds.length + participantAccountSeeds.length,
 		);
-		expect(total?.events).toBeGreaterThanOrEqual(80);
+		expect(total?.events).toBeGreaterThanOrEqual(8);
+		expect(total?.events).toBeLessThanOrEqual(12);
+		const [old] = await db.execute<{ n: number }>(
+			sql`SELECT count(*)::int AS n FROM events WHERE id = 'gen-001'`,
+		);
+		expect(old?.n).toBe(0);
+	});
+
+	it("gives the festival a programme like a science festival's", async () => {
+		const [row] = await db.execute<{
+			items: number;
+			sessions: number;
+			days: number;
+			parallel: number;
+			detailed: number;
+			bios: number;
+			open: number;
+			outside_session: number;
+		}>(sql`
+			SELECT
+				(SELECT count(*)::int FROM agenda_items WHERE event_id = ${FESTIVAL_EVENT_ID}) AS items,
+				(SELECT count(*)::int FROM agenda_sessions WHERE event_id = ${FESTIVAL_EVENT_ID}) AS sessions,
+				(SELECT count(DISTINCT (starts_at AT TIME ZONE 'Europe/Warsaw')::date)::int
+					FROM agenda_items WHERE event_id = ${FESTIVAL_EVENT_ID}) AS days,
+				(SELECT count(*)::int FROM agenda_items a JOIN agenda_items b
+					ON a.event_id = b.event_id AND a.id < b.id
+					AND a.starts_at < b.ends_at AND b.starts_at < a.ends_at
+					WHERE a.event_id = ${FESTIVAL_EVENT_ID}) AS parallel,
+				(SELECT count(*)::int FROM agenda_items WHERE event_id = ${FESTIVAL_EVENT_ID}
+					AND type_id IS NOT NULL AND topic IS NOT NULL AND audience IS NOT NULL
+					AND cardinality(languages) > 0) AS detailed,
+				(SELECT count(*)::int FROM agenda_items WHERE event_id = ${FESTIVAL_EVENT_ID}
+					AND speakers @> '[{}]' AND speakers::text LIKE '%"bio"%') AS bios,
+				(SELECT count(*)::int FROM agenda_items WHERE event_id = ${FESTIVAL_EVENT_ID}
+					AND NOT requires_registration) AS open,
+				(SELECT count(*)::int FROM agenda_items a JOIN agenda_sessions s ON s.id = a.session_id
+					WHERE a.event_id = ${FESTIVAL_EVENT_ID}
+					AND (a.starts_at < s.starts_at OR a.ends_at > s.ends_at)) AS outside_session
+		`);
+		expect(row?.items).toBeGreaterThanOrEqual(50);
+		expect(row?.sessions).toBeGreaterThanOrEqual(10);
+		expect(row?.days).toBe(3);
+		expect(row?.parallel).toBeGreaterThan(20);
+		expect(row?.detailed).toBe(row?.items);
+		expect(row?.bios).toBeGreaterThan(10);
+		expect(row?.open).toBeGreaterThan(0);
+		expect(row?.outside_session).toBe(0);
+
+		const [full] = await db.execute<{ seats: number }>(sql`
+			SELECT seats_remaining AS seats FROM agenda_item_seat_counts
+			WHERE agenda_item_id = ${FULL_FESTIVAL_ITEM_ID}
+		`);
+		expect(full?.seats).toBe(0);
+	});
+
+	it(
+		"a re-seed removes programme parts no longer in the set",
+		async () => {
+			await db.execute(sql`
+				INSERT INTO agenda_items (id, event_id, title, starts_at, ends_at)
+				SELECT 'agenda-old', id, 'Stary punkt', date, date + interval '1 hour'
+				FROM events WHERE id = ${FESTIVAL_EVENT_ID}
+			`);
+			await seedDatabase({ password: PASSWORD, nodeEnv: "development" });
+			const [row] = await db.execute<{ n: number }>(
+				sql`SELECT count(*)::int AS n FROM agenda_items WHERE id = 'agenda-old'`,
+			);
+			expect(row?.n).toBe(0);
+		},
+		SEED_TIMEOUT,
+	);
+
+	it("has a cancelled event and a draft", async () => {
+		const rows = await db.execute<{ id: string; status: string }>(sql`
+			SELECT id, status FROM events WHERE id IN (${CANCELLED_EVENT_ID}, ${DRAFT_EVENT_ID}) ORDER BY id
+		`);
+		expect(Object.fromEntries(rows.map((row) => [row.id, row.status]))).toEqual({
+			[CANCELLED_EVENT_ID]: "cancelled",
+			[DRAFT_EVENT_ID]: "draft",
+		});
 	});
 
 	it("accounts with a password can sign in with it; the admin is an admin", async () => {
@@ -122,19 +213,12 @@ describe("seedDatabase", () => {
 		}
 	});
 
-	it("sets up the showcase states: last seat, waitlists, a full session, on now, attendance", async () => {
+	it("sets up the showcase states: last seat, a waitlist, on now, attendance", async () => {
 		expect(await seatsRemaining(LAST_SEAT_EVENT_ID)).toBe(1);
 		expect(await registrationStates(WAITLIST_EVENT_ID)).toEqual({
 			registered: 15,
 			waitlisted: 12,
 		});
-		expect((await registrationStates(FULL_EVENT_ID))?.waitlisted).toBe(2);
-
-		const [spanish] = await db.execute<{ seats: number }>(sql`
-			SELECT seats_remaining AS seats FROM agenda_item_seat_counts
-			WHERE agenda_item_id = ${`agenda-${SESSIONS_EVENT_ID}-spanish`}
-		`);
-		expect(spanish?.seats).toBe(0);
 
 		const [live] = await db.execute<{ on_now: boolean }>(sql`
 			SELECT date <= now() AND ends_at > now() AS on_now FROM events WHERE id = ${LIVE_NOW_EVENT_ID}
@@ -143,11 +227,11 @@ describe("seedDatabase", () => {
 
 		// Registrations of an ended event stay as its attendance record, and its dates are restored.
 		const [past] = await db.execute<{ ended: boolean }>(sql`
-			SELECT ends_at < now() AS ended FROM events WHERE id = ${PAST_ATTENDED_EVENT_ID}
+			SELECT ends_at < now() AS ended FROM events WHERE id = ${CERTIFICATE_EVENT_ID}
 		`);
 		expect(past?.ended).toBe(true);
 		expect(
-			(await registrationStates(PAST_ATTENDED_EVENT_ID))?.registered,
+			(await registrationStates(CERTIFICATE_EVENT_ID))?.registered,
 		).toBeGreaterThan(0);
 	});
 
@@ -208,3 +292,10 @@ describe("seedDatabase", () => {
 		).rejects.toThrow("Refusing to seed a production database");
 	});
 });
+
+async function insertType(): Promise<string> {
+	await db.execute(
+		sql`INSERT INTO event_types (id, slug, label) VALUES ('old', 'old', 'Old') ON CONFLICT DO NOTHING`,
+	);
+	return "old";
+}

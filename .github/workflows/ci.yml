@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [next, main]
+    branches: [main]
   pull_request:
 
 # Least privilege: jobs only read the repository.
@@ -27,15 +27,17 @@ jobs:
           cache: pnpm
       - run: cp .env.example .env
       - run: pnpm install --frozen-lockfile
+      - name: docs/status.json is current
+        run: node tooling/scripts/generate-status.mjs --check
       - run: pnpm lint
       - run: pnpm proto:lint
-      - name: No breaking change to the gRPC contract (proto/) since main
+      - name: No breaking change to the gRPC contract (packages/proto) since main
         run: |
           git fetch --depth=1 origin main
-          if git ls-tree -d origin/main proto | grep -q proto; then
-            pnpm --filter @repo/rpc exec buf breaking ../../proto --against '../../.git#ref=origin/main,subdir=proto'
+          if git ls-tree -d origin/main packages/proto | grep -q .; then
+            pnpm --filter @repo/rpc exec buf breaking ../proto --against '../../.git#ref=origin/main,subdir=packages/proto'
           else
-            echo "main has no proto/ yet: nothing to compare against"
+            echo "main has no packages/proto yet: nothing to compare against"
           fi
       - run: pnpm typecheck
       - run: pnpm build
@@ -96,6 +98,6 @@ jobs:
         with:
           name: playwright-report
           path: |
-            e2e/playwright-report
+            tooling/e2e/playwright-report
             e2e-compose.log
           if-no-files-found: ignore

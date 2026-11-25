@@ -5,10 +5,14 @@ import {
 	markParallel,
 	nowListIndex,
 	filterByPlace,
+	filterByDay,
 	filterBySession,
+	entriesByDay,
+	programmeDays,
 	programmeEntries,
 	programmePlaces,
 	programmeSessionTitles,
+	sessionLegend,
 	programmeNowIndex,
 	msUntilNextMinute,
 	nowMinuteOnDay,
@@ -324,6 +328,88 @@ describe("programme by session (F33)", () => {
 		const all = filterBySession(items, sessions, null);
 		expect(all.items).toHaveLength(4);
 		expect(all.sessions).toHaveLength(3);
+	});
+});
+
+describe("programme by day", () => {
+	const zone = "Europe/Warsaw";
+	const at = (iso: string) => iso;
+	const timed = (id: string, start: string, end: string) => ({
+		id,
+		title: id,
+		startsAt: at(start),
+		endsAt: at(end),
+	});
+	const sessions = [
+		{ ...timed("Scena pt", "2026-12-11T09:00:00Z", "2026-12-11T15:00:00Z"), color: "violet" },
+		{ ...timed("Scena sb", "2026-12-12T09:00:00Z", "2026-12-12T15:00:00Z"), color: "violet" },
+		{ ...timed("Dzieci sb", "2026-12-12T09:00:00Z", "2026-12-12T12:00:00Z"), color: "amber" },
+	];
+	const items = [
+		{ ...timed("Otwarcie", "2026-12-11T08:00:00Z", "2026-12-11T08:30:00Z"), sessionId: null },
+		{ ...timed("Wykład", "2026-12-11T09:00:00Z", "2026-12-11T10:00:00Z"), sessionId: "Scena pt" },
+		{ ...timed("Koncert", "2026-12-12T09:00:00Z", "2026-12-12T10:00:00Z"), sessionId: "Scena sb" },
+		// 23:30 UTC on the 12th is the 13th in Warsaw
+		{ ...timed("Nocny pokaz", "2026-12-12T23:30:00Z", "2026-12-13T00:30:00Z"), sessionId: null },
+	];
+
+	it("lists the programme's days in order, in the event time zone", () => {
+		expect(programmeDays(items, sessions, zone)).toEqual([
+			"2026-12-11",
+			"2026-12-12",
+			"2026-12-13",
+		]);
+	});
+
+	it("keeps only what starts on the chosen day", () => {
+		const saturday = filterByDay(items, sessions, "2026-12-12", zone);
+		expect(saturday.items.map((row) => row.id)).toEqual(["Koncert"]);
+		expect(saturday.sessions.map((row) => row.id)).toEqual(["Scena sb", "Dzieci sb"]);
+		expect(filterByDay(items, sessions, null, zone).items).toHaveLength(4);
+	});
+
+	it("groups programme entries by day, in order", () => {
+		const groups = entriesByDay(programmeEntries(items, sessions), zone);
+		expect(
+			groups.map((group) => [
+				group.day,
+				group.entries.map((entry) =>
+					entry.kind === "session" ? entry.session.id : entry.item.id,
+				),
+			]),
+		).toEqual([
+			["2026-12-11", ["Otwarcie", "Scena pt"]],
+			["2026-12-12", ["Dzieci sb", "Scena sb"]],
+			["2026-12-13", ["Nocny pokaz"]],
+		]);
+	});
+
+	it("keeps a session that runs past midnight whole, on the day it starts", () => {
+		const late = [
+			{ ...timed("Noc nauki", "2026-12-11T21:00:00Z", "2026-12-12T01:00:00Z"), color: "blue" },
+		];
+		const lateItems = [
+			{ ...timed("Przed północą", "2026-12-11T21:00:00Z", "2026-12-11T22:00:00Z"), sessionId: "Noc nauki" },
+			// 00:30 on Saturday in Warsaw, still inside Friday's session
+			{ ...timed("Po północy", "2026-12-11T23:30:00Z", "2026-12-12T00:30:00Z"), sessionId: "Noc nauki" },
+		];
+		expect(programmeDays(lateItems, late, zone)).toEqual(["2026-12-11"]);
+		const friday = filterByDay(lateItems, late, "2026-12-11", zone);
+		expect(friday.items.map((row) => row.id)).toEqual(["Przed północą", "Po północy"]);
+		expect(friday.sessions.map((row) => row.id)).toEqual(["Noc nauki"]);
+		expect(filterByDay(lateItems, late, "2026-12-12", zone).items).toEqual([]);
+	});
+
+	it("names each session once in the legend (same title and colour)", () => {
+		const legend = sessionLegend([
+			{ ...sessions[0], title: "Scena Główna" },
+			{ ...sessions[1], title: "Scena Główna" },
+			{ ...sessions[2], title: "Strefa Dzieci" },
+		]);
+		expect(legend).toEqual([
+			{ title: "Scena Główna", color: "violet" },
+			{ title: "Strefa Dzieci", color: "amber" },
+		]);
 	});
 });
 

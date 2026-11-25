@@ -36,15 +36,26 @@ coverage/
 packages/db/drizzle/
 
 # Playwright
-e2e/playwright-report/
-e2e/test-results/
-e2e/.fake-camera/
+tooling/e2e/playwright-report/
+tooling/e2e/test-results/
+tooling/e2e/.fake-camera/
 
 # Load test run data (sessions, payloads, k6 summaries)
-e2e/load/.run/
+tooling/e2e/load/.run/
 
 # Rust
 /target
 
-# Local HTTPS certificates for the dev servers (mkcert)
-.certs/
+
+# Terraform state, plans and local settings (infra/)
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+terraform.tfvars
+# Production settings with secrets (deploy/)
+deploy/.env.production
+!deploy/.env.production.example
+
+# e2e stack stamp (tooling/scripts/e2e.sh)
+.e2e/

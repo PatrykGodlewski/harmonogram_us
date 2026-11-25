@@ -78,10 +78,11 @@ describe("guest registration requests", () => {
 		expect(seen).toBe(token);
 	});
 
-	it("refuses events guests cannot join", async () => {
+	it("accepts guests on every published event; invite-only ones need the link", async () => {
+		// The e-mail link signs the guest in, so signed-in-only events take guests too.
 		const signedInOnly = await createEvent();
 		await db.update(events).set({ visibility: "authenticated" }).where(eq(events.id, signedInOnly));
-		expect(await rejectionCode(request(signedInOnly))).toBe("GUESTS_NOT_ALLOWED");
+		expect(await rejectionCode(request(signedInOnly))).toBe("RESOLVED");
 
 		const draft = await createEvent();
 		await db.update(events).set({ status: "draft" }).where(eq(events.id, draft));
@@ -91,7 +92,7 @@ describe("guest registration requests", () => {
 		await db.update(events).set({ visibility: "private", inviteToken: "secret-link" }).where(eq(events.id, inviteOnly));
 		expect(await rejectionCode(request(inviteOnly))).toBe("EVENT_NOT_FOUND");
 		expect(await rejectionCode(request(inviteOnly, { inviteToken: "secret-link" }))).toBe("RESOLVED");
-		expect(await db.select().from(guestRegistrationRequests)).toHaveLength(1);
+		expect(await db.select().from(guestRegistrationRequests)).toHaveLength(2);
 	});
 
 	it("refuses a missing required answer", async () => {

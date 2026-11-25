@@ -89,12 +89,12 @@ export async function handleEmailJob(
 					registration.eventDate,
 					registration.locale,
 				),
-				// Certificates are on the account page; a declined person may no longer open an invite-only event.
+				// Certificates are on the person's events page; a declined person may no longer open an invite-only event.
 				url:
 					job.change === "survey"
 						? surveyUrl(job.registrationId, registration.locale)
 						: job.change === "certificate" || job.change === "rejected"
-							? `${appUrl}/account`
+							? `${appUrl}/my-events`
 							: `${appUrl}/events/${registration.eventId}`,
 				ticketUrl:
 					registration.state === "registered" &&

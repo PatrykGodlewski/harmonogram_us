@@ -136,7 +136,7 @@ function SessionPage() {
 				eventDate={new Date(event.date)}
 				agenda={event.agenda.filter((item) => item.sessionId === session.id)}
 				session={session}
-				locations={filterOptions?.locations ?? []}
+				options={filterOptions}
 				onChanged={handleChanged}
 				view={view}
 				onViewChange={handleViewChange}

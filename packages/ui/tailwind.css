@@ -1,43 +1,70 @@
+@import "@fontsource/space-grotesk/400.css";
+@import "@fontsource/space-grotesk/500.css";
+@import "@fontsource/space-grotesk/700.css";
+@import "@fontsource/space-mono/400.css";
+@import "@fontsource/space-mono/700.css";
+@import "@fontsource/pixelify-sans/400.css";
+@import "@fontsource/pixelify-sans/600.css";
 @source "./src/**/*.{js,ts,jsx,tsx}";
 
 @custom-variant dark (&:is(.dark *));
 @plugin "tailwindcss-animate";
 
 :root {
-	--radius: 0.625rem;
-	--background: oklch(1 0 0);
-	--foreground: oklch(0.145 0 0);
-	--primary: oklch(0.205 0 0);
-	--primary-foreground: oklch(0.985 0 0);
-	--secondary: oklch(0.97 0 0);
-	--secondary-foreground: oklch(0.205 0 0);
-	--muted: oklch(0.97 0 0);
-	--muted-foreground: oklch(0.556 0 0);
-	--accent: oklch(0.97 0 0);
-	--accent-foreground: oklch(0.205 0 0);
-	--destructive: oklch(0.577 0.245 27.325);
-	--destructive-foreground: oklch(0.985 0 0);
-	--border: oklch(0.922 0 0);
-	--input: oklch(0.922 0 0);
-	--ring: oklch(0.708 0 0);
-	--card: oklch(1 0 0);
-	--card-foreground: oklch(0.145 0 0);
-	--popover: oklch(1 0 0);
-	--popover-foreground: oklch(0.145 0 0);
-	--sidebar: hsl(0 0% 98%);
-	--sidebar-foreground: hsl(240 5.3% 26.1%);
-	--sidebar-primary: hsl(240 5.9% 10%);
-	--sidebar-primary-foreground: hsl(0 0% 98%);
-	--sidebar-accent: hsl(240 4.8% 95.9%);
-	--sidebar-accent-foreground: hsl(240 5.9% 10%);
-	--sidebar-border: hsl(220 13% 91%);
-	--sidebar-ring: hsl(217.2 91.2% 59.8%);
+	/* Brand palette (packages/ui/src/palette.ts holds the same values for the contrast test). */
+	--manela: #fffcee;
+	--navy: #152a32;
+	--green: #00d47f;
+	--lime: #91ff00;
+	--purple: #c9b5ff;
+	--cream: #fff0b5;
+	--slate: #3f5560;
+
+	--radius: 0rem;
+	--background: var(--manela);
+	--foreground: var(--navy);
+	--primary: var(--navy);
+	--primary-foreground: var(--manela);
+	--secondary: var(--cream);
+	--secondary-foreground: var(--navy);
+	--muted: var(--cream);
+	--muted-foreground: var(--slate);
+	--accent: var(--purple);
+	--accent-foreground: var(--navy);
+	--destructive: #b3261e;
+	--destructive-foreground: #ffffff;
+	--border: var(--navy);
+	--input: var(--navy);
+	--ring: var(--navy);
+	--card: #ffffff;
+	--card-foreground: var(--navy);
+	--popover: #ffffff;
+	--popover-foreground: var(--navy);
+	--sidebar: var(--navy);
+	--sidebar-foreground: var(--manela);
+	--sidebar-primary: var(--green);
+	--sidebar-primary-foreground: var(--navy);
+	--sidebar-accent: #1f3a45;
+	--sidebar-accent-foreground: var(--manela);
+	--sidebar-border: #2b4a56;
+	--sidebar-ring: var(--green);
 }
 
 @theme inline {
+	--font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+	--font-mono: "Space Mono", ui-monospace, monospace;
+	--font-pixel: "Pixelify Sans", "Space Mono", ui-monospace, monospace;
+	--color-manela: var(--manela);
+	--color-navy: var(--navy);
+	--color-green: var(--green);
+	--color-lime: var(--lime);
+	--color-purple: var(--purple);
+	--color-cream: var(--cream);
+	--color-slate: var(--slate);
 	--radius-lg: var(--radius);
-	--radius-md: calc(var(--radius) - 2px);
-	--radius-sm: calc(var(--radius) - 4px);
+	--radius-md: var(--radius);
+	--radius-sm: var(--radius);
+	--radius-xl: var(--radius);
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
 	--color-primary: var(--primary);
@@ -67,13 +94,115 @@
 	--color-sidebar: var(--sidebar);
 }
 
-.dark {
-	--sidebar: hsl(240 5.9% 10%);
-	--sidebar-foreground: hsl(240 4.8% 95.9%);
-	--sidebar-primary: hsl(224.3 76.3% 48%);
-	--sidebar-primary-foreground: hsl(0 0% 100%);
-	--sidebar-accent: hsl(240 3.7% 15.9%);
-	--sidebar-accent-foreground: hsl(240 4.8% 95.9%);
-	--sidebar-border: hsl(240 3.7% 15.9%);
-	--sidebar-ring: hsl(217.2 91.2% 59.8%);
+
+@layer base {
+	body {
+		@apply bg-background font-sans text-foreground antialiased;
+	}
+	/* Pixel display type for page titles and section headings. */
+	h1,
+	h2 {
+		@apply font-pixel font-semibold;
+		overflow-wrap: break-word;
+	}
+}
+
+/* ——— Motion (names from the animation vocabulary). All of it stops with reduced motion. ——— */
+
+/* Marquee: a band that scrolls continuously; it holds still on hover and keyboard focus. */
+@keyframes marquee {
+	from {
+		transform: translateX(0);
+	}
+	to {
+		transform: translateX(-50%);
+	}
+}
+.animate-marquee {
+	animation: marquee 40s linear infinite;
+}
+.marquee-paused .animate-marquee,
+.group:hover .animate-marquee,
+.group:focus-within .animate-marquee {
+	animation-play-state: paused;
+}
+
+/* Stepped reveal: pixel headings uncover in steps, like a pixel display drawing. */
+@keyframes pixel-reveal {
+	from {
+		clip-path: inset(0 100% 0 0);
+	}
+	to {
+		clip-path: inset(0 0 0 0);
+	}
+}
+.animate-pixel-reveal {
+	animation: pixel-reveal 700ms steps(10, end) both;
+}
+
+/* Scroll reveal: items rise into place as they enter the viewport (scroll-driven).
+   Movement only, no fade: text keeps full contrast at every moment. */
+@keyframes rise-in {
+	from {
+		transform: translateY(24px);
+	}
+	to {
+		transform: none;
+	}
+}
+@supports (animation-timeline: view()) {
+	.scroll-reveal {
+		animation: rise-in linear both;
+		animation-timeline: view();
+		animation-range: entry 0% cover 25%;
+	}
+}
+
+/* Idle animation: pixels flip on and off slowly, in steps. */
+@keyframes pixel-flip {
+	0%,
+	70% {
+		opacity: 1;
+	}
+	71%,
+	100% {
+		opacity: 0;
+	}
+}
+.animate-pixel-flip {
+	animation: pixel-flip 6s steps(1, end) infinite;
+}
+
+/* View transition: the event title travels from its card to the event page. */
+::view-transition-group(*) {
+	animation-duration: 280ms;
+	animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	::view-transition-group(*),
+	::view-transition-old(*),
+	::view-transition-new(*) {
+		animation: none !important;
+	}
+	.animate-marquee,
+	.animate-pixel-reveal,
+	.animate-pixel-flip,
+	.scroll-reveal {
+		animation: none !important;
+	}
+	*,
+	*::before,
+	*::after {
+		transition-duration: 0.01ms !important;
+	}
+}
+
+
+/* Ruled grid background (cells of --grid-size, lines in --grid-line). */
+@utility bg-grid {
+	background-image:
+		linear-gradient(to right, var(--grid-line, currentColor) 1px, transparent 1px),
+		linear-gradient(to bottom, var(--grid-line, currentColor) 1px, transparent 1px);
+	background-size: var(--grid-size, 40px) var(--grid-size, 40px);
 }

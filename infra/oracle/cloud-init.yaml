@@ -1,0 +1,13 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+packages:
+  - docker.io
+  - docker-compose-v2
+runcmd:
+  # Oracle's Ubuntu images reject everything but SSH in the host firewall: open the web ports.
+  - iptables -I INPUT -p tcp -m multiport --dports 80,443,8443 -m conntrack --ctstate NEW -j ACCEPT
+  - netfilter-persistent save
+  - systemctl enable --now docker
+  - usermod -aG docker ubuntu
+  - mkdir -p /opt/harmonogram && chown ubuntu:ubuntu /opt/harmonogram

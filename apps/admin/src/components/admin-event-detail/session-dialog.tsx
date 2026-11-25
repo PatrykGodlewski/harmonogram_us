@@ -11,6 +11,7 @@ import {
 	admin_field_date,
 	admin_field_description,
 	admin_field_end_time,
+	admin_field_ends_next_day,
 	admin_field_none,
 	admin_field_room,
 	admin_field_start_time,
@@ -41,7 +42,8 @@ import { Textarea } from "@repo/ui/components/textarea";
 import { AdminFormDialog } from "@repo/ui/composed/admin/admin-form-dialog";
 import { SESSION_COLORS, sessionColorClasses } from "@repo/ui/session-colors";
 import {
-	fromEventWallTime,
+	endsNextDay,
+	fromEventWallTimeRange,
 	toEventDateInput,
 	toEventTimeInput,
 } from "@repo/ui/time";
@@ -82,8 +84,7 @@ const sessionFormSchema = z
 			!value.date ||
 			!value.startTime ||
 			!value.endTime ||
-			fromEventWallTime(value.date, value.endTime) >
-				fromEventWallTime(value.date, value.startTime),
+			value.endTime !== value.startTime,
 		{ path: ["endTime"], message: admin_error_end_before_start() },
 	);
 
@@ -142,8 +143,11 @@ export function SessionDialog({
 				title: values.title.trim(),
 				description: values.description.trim() || null,
 				color: values.color,
-				startsAt: fromEventWallTime(values.date, values.startTime),
-				endsAt: fromEventWallTime(values.date, values.endTime),
+				...fromEventWallTimeRange(
+					values.date,
+					values.startTime,
+					values.endTime,
+				),
 				locationId: values.locationId === NONE_VALUE ? null : values.locationId,
 			};
 			return session
@@ -283,6 +287,19 @@ export function SessionDialog({
 								onChange={(event) => field.handleChange(event.target.value)}
 							/>
 							{fieldError(field.state.meta.errors)}
+							<form.Subscribe
+								selector={(state) =>
+									endsNextDay(state.values.startTime, state.values.endTime)
+								}
+							>
+								{(nextDay) =>
+									nextDay ? (
+										<p className="mt-1 font-mono text-xs">
+											{admin_field_ends_next_day()}
+										</p>
+									) : null
+								}
+							</form.Subscribe>
 						</div>
 					)}
 				</form.Field>

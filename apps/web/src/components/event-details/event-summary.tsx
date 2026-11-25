@@ -35,7 +35,6 @@ import type {
 } from "~/lib/event-details/types";
 import type { EventSeatCount } from "~/lib/events/types";
 import { EditAnswersButton } from "./edit-answers-button";
-import { GuestRegistrationDialog } from "./guest-registration-dialog";
 import { LoginToRegisterButton } from "./login-to-register-button";
 import { UnregisterEventDialog } from "./unregister-event-dialog";
 
@@ -69,30 +68,43 @@ export function EventSummary({
 			{isCancelled ? (
 				<div
 					role="status"
-					className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 font-medium text-destructive"
+					className="border border-navy bg-destructive p-4 font-mono font-bold text-white"
 				>
 					{event_cancelled_banner()}
 				</div>
 			) : null}
-			<div className="flex flex-col gap-2">
-				<h1 className="text-2xl font-semibold tracking-tight">{event.title}</h1>
-				<p className="text-muted-foreground">
-					{formatEventDateTime(event.date, locale)}
-				</p>
-				<div className="flex flex-wrap gap-2">
+			<header className="border border-navy bg-green">
+				<div className="flex items-center justify-between gap-3 border-b border-navy px-3 py-1.5 font-mono text-[11px] font-bold tracking-widest uppercase">
+					<span className="truncate">{event.typeLabel}</span>
 					<AttendanceModeBadge mode={event.attendanceMode} />
-					<Badge variant="secondary">{event.typeLabel}</Badge>
-					{event.facultyLabel ? (
-						<Badge variant="outline">{event.facultyLabel}</Badge>
-					) : null}
-					{event.locationLabel ? (
-						<Badge variant="outline">{event.locationLabel}</Badge>
-					) : null}
-					{event.room ? (
-						<Badge variant="outline">{event_room({ room: event.room })}</Badge>
-					) : null}
 				</div>
-			</div>
+				<div className="flex flex-col gap-3 p-5 sm:p-8">
+					<h1
+						className="animate-pixel-reveal text-[clamp(1.75rem,6vw,3rem)] leading-tight break-words"
+						style={{ viewTransitionName: `event-title-${event.id}` }}
+					>
+						{event.title}
+					</h1>
+					<p className="font-mono text-sm sm:text-base">
+						{formatEventDateTime(event.date, locale)}
+					</p>
+				</div>
+				{event.facultyLabel || event.locationLabel || event.room ? (
+					<div className="flex flex-wrap gap-2 border-t border-navy bg-manela px-5 py-3 sm:px-8">
+						{event.locationLabel ? (
+							<Badge variant="outline">{event.locationLabel}</Badge>
+						) : null}
+						{event.room ? (
+							<Badge variant="outline">
+								{event_room({ room: event.room })}
+							</Badge>
+						) : null}
+						{event.facultyLabel ? (
+							<Badge variant="outline">{event.facultyLabel}</Badge>
+						) : null}
+					</div>
+				) : null}
+			</header>
 
 			{event.description ? (
 				<p className="max-w-prose whitespace-pre-line">{event.description}</p>
@@ -122,9 +134,13 @@ export function EventSummary({
 				</div>
 			) : null}
 
-			<div className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
+			<div className="flex flex-col gap-3 border border-navy bg-cream p-4 shadow-[6px_6px_0_0_var(--navy)] sm:flex-row sm:items-center sm:justify-between">
 				{isClosed ? null : (
-					<p className="tabular-nums" aria-live="polite" aria-atomic="true">
+					<p
+						className="font-mono font-bold tabular-nums"
+						aria-live="polite"
+						aria-atomic="true"
+					>
 						{event_details_places_left({
 							remaining: seatCount.seatsRemaining,
 							max: seatCount.maxSeats,
@@ -226,18 +242,8 @@ function EventRegistrationAction({
 	}
 
 	if (!user) {
-		// Sign in, or register as a guest with a confirmation link (F17); signed-in-only
-		// events never reach anonymous visitors (their page sends them to sign in).
-		return (
-			<div className="flex flex-col gap-2 sm:flex-row">
-				<LoginToRegisterButton eventId={eventId} />
-				<GuestRegistrationDialog
-					eventId={eventId}
-					questions={questions}
-					interactive={interactive}
-				/>
-			</div>
-		);
+		// One button: the sign-in page offers an account or an e-mail link (F17).
+		return <LoginToRegisterButton eventId={eventId} />;
 	}
 
 	if (registrations.isEventRegistered) {
