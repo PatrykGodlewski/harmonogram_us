@@ -34,6 +34,7 @@ import {
 } from "../auth/event-access";
 import { panelActionFn } from "../auth/panel-middleware";
 import { appError, withDomainErrors } from "../errors";
+import { eventImageHooks } from "../event-images/queue";
 import { registrationEmailHooks } from "../notifications/registration-hooks";
 import {
 	createAgendaItemSchema,
@@ -54,7 +55,10 @@ export const createAdminEventServer = panelActionFn
 	.validator((input: unknown) => createEventSchema.parse(input))
 	.handler(async ({ data, context }) => {
 		await assertCanCreateEvents(context.user);
-		return createEvent({ ...data, organizerId: context.user.id });
+		return createEvent(
+			{ ...data, organizerId: context.user.id },
+			eventImageHooks(),
+		);
 	});
 
 export const updateAdminEventServer = panelActionFn
@@ -62,7 +66,7 @@ export const updateAdminEventServer = panelActionFn
 	.handler(async ({ data, context }) => {
 		await assertCanManageEvent(context.user, data.id);
 		const event = await withDomainErrors(() =>
-			updateEvent(data, registrationEmailHooks),
+			updateEvent(data, registrationEmailHooks, eventImageHooks()),
 		);
 		if (!event) {
 			throw appError("NOT_FOUND");

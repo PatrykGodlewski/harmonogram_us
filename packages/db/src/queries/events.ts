@@ -313,7 +313,18 @@ export type CreateEventInput = {
 	organizerId: string | null;
 };
 
-export async function createEvent(input: CreateEventInput) {
+/** Called inside the transaction after an event is created or updated (cover images). */
+export type EventSaveHooks = {
+	onEventSaved(
+		tx: TransactionClient,
+		event: { id: string; title: string; description: string | null },
+	): Promise<void>;
+};
+
+export async function createEvent(
+	input: CreateEventInput,
+	saveHooks?: EventSaveHooks,
+) {
 	return db.transaction(async (tx) => {
 		const [event] = await tx
 			.insert(events)
@@ -349,6 +360,9 @@ export async function createEvent(input: CreateEventInput) {
 			await tx
 				.insert(eventOrganizers)
 				.values({ eventId: event.id, userId: input.organizerId });
+		}
+		if (event) {
+			await saveHooks?.onEventSaved(tx, event);
 		}
 		return event;
 	});
@@ -462,6 +476,7 @@ export type UpdateEventInput = {
 export async function updateEvent(
 	input: UpdateEventInput,
 	hooks?: RegistrationHooks,
+	saveHooks?: EventSaveHooks,
 ) {
 	const { id, ...values } = input;
 	try {
@@ -547,6 +562,9 @@ export async function updateEvent(
 						});
 					}
 				}
+			}
+			if (event) {
+				await saveHooks?.onEventSaved(tx, event);
 			}
 			return event ?? null;
 		});
