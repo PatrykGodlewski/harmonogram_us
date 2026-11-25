@@ -1,4 +1,4 @@
-// The e2e stack runs as its own compose project (e2e/ports.env); fixtures and load tests
+// The e2e stack runs as its own compose project (tooling/e2e/ports.env); fixtures and load tests
 // reach its database directly. Import this before anything that reads env.
 process.env.DATABASE_URL ??=
 	"postgresql://postgres:postgres@localhost:15432/harmonogram_us";

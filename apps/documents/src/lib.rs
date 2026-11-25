@@ -16,7 +16,7 @@ pub mod sheet;
 pub mod telemetry;
 pub mod ticket;
 
-/// Generated from `proto/harmonogram/documents/v1/documents.proto`.
+/// Generated from `packages/proto/harmonogram/documents/v1/documents.proto`.
 pub mod proto {
     tonic::include_proto!("harmonogram.documents.v1");
 }

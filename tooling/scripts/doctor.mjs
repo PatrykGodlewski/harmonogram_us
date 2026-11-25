@@ -7,7 +7,7 @@ import { connect } from "node:net";
 import { dirname, join, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const DEV = "harmonogram_us";
 const E2E = "harmonogram-e2e";
 const HEALTHCHECKED = ["db", "documents", "storage", "mailpit"];
@@ -245,10 +245,10 @@ async function checkE2eStack(running) {
 			"skip",
 			"e2e stack",
 			`project ${E2E} not running`,
-			"scripts/e2e.sh ensure",
+			"tooling/scripts/e2e.sh ensure",
 		);
 	for (const port of [3100, 3101])
-		await checkHttp("e2e", port, "scripts/e2e.sh logs");
+		await checkHttp("e2e", port, "tooling/scripts/e2e.sh logs");
 	const list = services(E2E);
 	checkHealth("e2e", list, ["db"]);
 	// Credentials come from the container's own POSTGRES_* environment (set in docker-compose.yml).
@@ -278,10 +278,10 @@ async function checkE2eStack(running) {
 			"warn",
 			"e2e journal",
 			"seeded without the drizzle journal",
-			"scripts/e2e.sh ensure will reset it (or pnpm e2e:down for a clean stack)",
+			"tooling/scripts/e2e.sh ensure will reset it (or pnpm e2e:down for a clean stack)",
 		);
 	} else {
-		report("fail", "e2e journal", "query failed", "scripts/e2e.sh logs db");
+		report("fail", "e2e journal", "query failed", "tooling/scripts/e2e.sh logs db");
 	}
 }
 

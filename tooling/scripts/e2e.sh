@@ -1,11 +1,11 @@
 #!/bin/sh
-# Drives the e2e stack (compose project "harmonogram-e2e"); see e2e/README.md.
-#   scripts/e2e.sh ensure [--force]          reuse a healthy, current stack; rebuild only when code changed
-#   scripts/e2e.sh run [--force] [args...]   ensure, then playwright test with the given args
-#   scripts/e2e.sh logs [service] [--tail N] container logs (default: all services, last 100 lines)
+# Drives the e2e stack (compose project "harmonogram-e2e"); see tooling/e2e/README.md.
+#   tooling/scripts/e2e.sh ensure [--force]          reuse a healthy, current stack; rebuild only when code changed
+#   tooling/scripts/e2e.sh run [--force] [args...]   ensure, then playwright test with the given args
+#   tooling/scripts/e2e.sh logs [service] [--tail N] container logs (default: all services, last 100 lines)
 set -eu
 
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 
 # The committed compose file is the source of truth: a local docker-compose.override.yml
 # (picked up automatically by plain `docker compose`) must not change the e2e stack.
@@ -14,11 +14,11 @@ export COMPOSE_FILE=docker-compose.yml
 SERVICES="db mailpit storage documents teams-mock oidc-mock web admin worker"
 HEALTHCHECKED="db mailpit storage documents"
 STAMP_FILE=.e2e/stack-stamp
-# Everything baked into the images; e2e/ (tests, bind-mounted mocks) needs no rebuild.
+# Everything baked into the images; tooling/e2e/ (tests, bind-mounted mocks) needs no rebuild.
 STAMP_PATHS="apps packages proto services Dockerfile pnpm-lock.yaml Cargo.toml Cargo.lock"
 
 compose() {
-	docker compose -p harmonogram-e2e --env-file .env --env-file e2e/ports.env \
+	docker compose -p harmonogram-e2e --env-file .env --env-file tooling/e2e/ports.env \
 		--profile app --profile e2e "$@"
 }
 
@@ -59,7 +59,7 @@ psql_e2e() {
 
 migrate_db() {
 	# ports.env is a compose env file, not a shell script (unquoted values with spaces).
-	db_port=$(sed -n 's/^DB_PORT=//p' e2e/ports.env)
+	db_port=$(sed -n 's/^DB_PORT=//p' tooling/e2e/ports.env)
 	db_url="postgresql://postgres:postgres@localhost:${db_port:-15432}/harmonogram_us"
 	# drizzle-kit keeps its journal in the "drizzle" schema.
 	journal=$(psql_e2e -d harmonogram_us -tAc "SELECT to_regclass('drizzle.__drizzle_migrations') IS NOT NULL")

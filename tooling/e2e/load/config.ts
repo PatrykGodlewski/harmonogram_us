@@ -1,4 +1,4 @@
-/** Shared settings of the load tests (see e2e/load/README.md). */
+/** Shared settings of the load tests (see tooling/e2e/load/README.md). */
 export const LOAD = {
 	webUrl: process.env.E2E_WEB_URL ?? "http://localhost:3100",
 	composeProject: "harmonogram-e2e",

@@ -1,4 +1,4 @@
-/** Server-only: the client for the Rust documents service (services/documents). */
+/** Server-only: the client for the Rust documents service (apps/documents). */
 import {
 	type Client,
 	Code,
@@ -12,7 +12,7 @@ import { DocumentService } from "./gen/harmonogram/documents/v1/documents_pb";
 
 export type DocumentsClient = Client<typeof DocumentService>;
 
-/** Matches the service's own limit (services/documents/src/limits.rs). */
+/** Matches the service's own limit (apps/documents/src/limits.rs). */
 const MAX_MESSAGE_BYTES = 64 * 1024 * 1024;
 const DEADLINE_MS = 5000;
 

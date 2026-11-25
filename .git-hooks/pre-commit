@@ -1,6 +1,6 @@
 #!/bin/sh
 # Pre-commit: Biome on staged files in Biome's scope, then typecheck of every
-# workspace package with staged changes. Installed by scripts/install-hooks.mjs.
+# workspace package with staged changes. Installed by tooling/scripts/install-hooks.mjs.
 set -eu
 
 cd "$(git rev-parse --show-toplevel)"
@@ -41,7 +41,7 @@ for file in $staged; do
 	case "$file" in
 	*/routeTree.gen.ts | *paraglide/* | packages/rpc/src/gen/* | packages/db/src/migrations/* | \
 		*/styles.css | */app.css | *project.inlang/.meta.json | *project.inlang/cache/*) ;;
-	src/* | */src/* | */messages/*.json | e2e/*.ts | */e2e/*.ts | vite.config.ts | */vite.config.ts | \
+	src/* | */src/* | */messages/*.json | */e2e/*.ts | vite.config.ts | */vite.config.ts | \
 		index.html | */index.html | *project.inlang/*)
 		biome_files="$biome_files$file$nl"
 		;;
@@ -51,11 +51,12 @@ for file in $staged; do
 	apps/web/*) add_package web ;;
 	apps/admin/*) add_package admin ;;
 	apps/worker/*) add_package worker ;;
+	packages/proto/*) ;;
 	packages/*/*)
 		dir=${file#packages/}
 		add_package "@repo/${dir%%/*}"
 		;;
-	e2e/*) add_package e2e ;;
+	tooling/e2e/*) add_package e2e ;;
 	esac
 done
 

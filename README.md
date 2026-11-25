@@ -8,7 +8,7 @@ What Turnout does today, what it does not do yet, and how it compares with [Indi
 
 - **Snapshot:** 21 November 2026, branch `next`. There is no tagged release yet.
 - **Indico side:** taken from the Indico source (`master` at `f20ab92`, release 3.3.15), its changelog and learn.getindico.io. The detailed, sourced comparison is in [docs/indico-comparison.md](docs/indico-comparison.md).
-- **Our side:** every feature marked ✅ has a passing Playwright acceptance test named `[Fn] …` in `e2e/tests` (156 tests on desktop and 360 px phone viewports at this snapshot). Feature status and acceptance criteria are in the [product spec](docs/superpowers/specs/2026-11-19-produkt-design.md).
+- **Our side:** every feature marked ✅ has a passing Playwright acceptance test named `[Fn] …` in `tooling/e2e/tests` (156 tests on desktop and 360 px phone viewports at this snapshot). Feature status and acceptance criteria are in the [product spec](docs/superpowers/specs/2026-11-19-produkt-design.md).
 
 **Legend:** ✅ works · 🟡 partly · ❌ not built · ⏸ deliberately postponed. In the Indico column, ✅ means Indico has it.
 
@@ -218,11 +218,12 @@ pnpm dev                     # web :3000, admin :3001, worker
 ### Structure
 
 ```
-apps/            web (public site), admin (management panel), worker (queued jobs)
-packages/        api, db, env, ui, i18n, jobs, router-utils, rpc (gRPC client), config
-services/        documents: Rust gRPC service that renders PDFs
-proto/           gRPC contracts shared by Rust and TypeScript (checked by buf)
-e2e/             Playwright tests, k6 load tests, test doubles (OIDC mock)
+apps/            web (public site), admin (management panel), worker (queued jobs),
+                 documents (Rust gRPC service that renders PDFs)
+packages/        api, db, env, ui, i18n, jobs, router-utils, rpc (gRPC client), config,
+                 proto (gRPC contracts shared by Rust and TypeScript, checked by buf)
+tooling/         e2e (Playwright tests, k6 load tests, test doubles), scripts (repo tasks)
+infra/           Terraform for the hosting options
 observability/   Prometheus and Grafana configuration
 docs/            architecture, development, data flows, product spec and plans
 ```

@@ -1,6 +1,6 @@
 # Public demo from this computer: the production build of web, admin and worker behind
 # Cloudflare quick tunnels (https://<random>.trycloudflare.com, no account needed).
-# Start and stop with scripts/tunnel.sh; it fills in PUBLIC_WEB_URL / PUBLIC_ADMIN_URL.
+# Start and stop with tooling/scripts/tunnel.sh; it fills in PUBLIC_WEB_URL / PUBLIC_ADMIN_URL.
 services:
   web:
     # Reached through the tunnel only: no ports here, so the dev servers keep 3000/3001.

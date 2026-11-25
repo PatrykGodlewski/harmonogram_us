@@ -21,7 +21,7 @@ Shared agent rules live in [AGENTS.md](../AGENTS.md). Claude imports that file t
 
 The product spec defines F1–F27, priorities, acceptance criteria, conflicts and deferred monetisation. Indico is inspiration, not a parity target. GitHub issues are in Polish; inspect current issues with `gh issue list` when relevant.
 
-Machine-readable feature status is the generated [`status.json`](status.json): per F number, the spec status, plans, open/total checkboxes, e2e files and last-touched commit. Regenerate it with `node scripts/generate-status.mjs` after changing the spec table, a plan or an e2e file; CI runs `--check` (it ignores the history fields `revision` and `lastTouched`). It counts tracked files only, and only plans whose first line contains `(F<N>)`.
+Machine-readable feature status is the generated [`status.json`](status.json): per F number, the spec status, plans, open/total checkboxes, e2e files and last-touched commit. Regenerate it with `node tooling/scripts/generate-status.mjs` after changing the spec table, a plan or an e2e file; CI runs `--check` (it ignores the history fields `revision` and `lastTouched`). It counts tracked files only, and only plans whose first line contains `(F<N>)`.
 
 Before starting/resuming a plan, reconcile it with approved decisions, current code/tests and its existing ledger using the [workflow](workflow.md). Plan checkboxes and spec statuses require evidence; adding these policies does not audit or certify existing features. Keep one execution ledger per plan, with a durable verification summary in the tracked plan at closure.
 

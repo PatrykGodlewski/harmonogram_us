@@ -22,7 +22,7 @@ There are no releases yet. Security fixes go to `next` (development) and `main`.
 
 ## Scope
 
-In scope: this repository's code and configuration (`apps/`, `packages/`, `services/`, `proto/`,
+In scope: this repository's code and configuration (`apps/`, `packages/`, `tooling/`,
 Docker and CI files), including authentication, registration, personal data handling and the
 internal gRPC service.
 

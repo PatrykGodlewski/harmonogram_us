@@ -6,7 +6,7 @@
 # Exit: 0 all selected gates passed, 1 any gate failed, 2 usage error (unknown gate/argument).
 set -u
 
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 
 GATES="lint typecheck test build rust e2e"
 
@@ -22,7 +22,7 @@ gate_command() {
 	test) echo "pnpm test" ;;
 	build) echo "pnpm build" ;;
 	rust) echo "pnpm rust:lint && pnpm rust:test" ;;
-	e2e) echo "scripts/e2e.sh ensure && pnpm e2e" ;;
+	e2e) echo "tooling/scripts/e2e.sh ensure && pnpm e2e" ;;
 	esac
 }
 

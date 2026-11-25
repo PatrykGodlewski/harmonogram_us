@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Public demo from this computer over Cloudflare quick tunnels (docs/development.md).
-# Usage: scripts/tunnel.sh        start (or refresh) and print the two addresses
-#        scripts/tunnel.sh stop   stop the demo (the dev database keeps running)
+# Usage: tooling/scripts/tunnel.sh        start (or refresh) and print the two addresses
+#        tooling/scripts/tunnel.sh stop   stop the demo (the dev database keeps running)
 set -euo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 
 compose=(docker compose -f docker-compose.yml -f docker-compose.tunnel.yml --profile app)
 

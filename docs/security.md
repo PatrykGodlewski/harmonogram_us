@@ -24,7 +24,7 @@ not OSI open source.
 | Secrets | GitHub secret scanning with push protection; secrets only in `.env` (gitignored) and platform variables; `@repo/env` validates them and keeps server values out of the browser | repository settings, `packages/env` |
 | Posture | OpenSSF Scorecard weekly and on `main`, results published | `.github/workflows/scorecard.yml` |
 | Application | Rate limits, CAPTCHA, disposable-address and breached-password checks; account pre-hijacking protection; permission checks enforced by a test over every panel function; personal data retention and deletion; internal gRPC service on the private network with a per-service token | `docs/architecture.md` |
-| Containers | Base images pinned by digest; the documents service runs as a non-root user | `Dockerfile`, `services/documents/Dockerfile` |
+| Containers | Base images pinned by digest; the documents service runs as a non-root user | `Dockerfile`, `apps/documents/Dockerfile` |
 
 ## Not done yet
 

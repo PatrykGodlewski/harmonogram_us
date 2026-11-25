@@ -7,11 +7,11 @@ import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const PRODUCT_SPEC = "docs/superpowers/specs/2026-11-19-produkt-design.md";
 const SPECS_DIR = "docs/superpowers/specs";
 const PLANS_DIR = "docs/superpowers/plans";
-const E2E_DIR = "e2e/tests";
+const E2E_DIR = "tooling/e2e/tests";
 const MESSAGES = {
 	"packages/i18n/messages/pl.json": "TODO: tekst po polsku",
 	"packages/i18n/messages/en.json": "TODO: English text",

@@ -4,11 +4,11 @@ Applies to all agents and subagents. Keep this file short; put task-specific det
 
 ## Project
 
-Mobile-first campus events: `apps/web` (public), `apps/admin` (management), `apps/worker` (jobs). UI: Polish and English; GitHub issues: Polish. Indico inspires management scope, not product parity.
+Mobile-first campus events: `apps/web` (public), `apps/admin` (management), `apps/worker` (jobs), `apps/documents` (Rust PDF service). Shared libraries and the gRPC contract (`packages/proto`) live in `packages/`; dev-only workspaces (`tooling/e2e`, `tooling/scripts`) in `tooling/`; Terraform in `infra/`. UI: Polish and English; GitHub issues: Polish. Indico inspires management scope, not product parity.
 
 pnpm 10 + Turbo, Node ≥22.12. TanStack Start/Router/Query, Drizzle/Postgres, Better Auth, Paraglide, shadcn/Tailwind, Biome; React Compiler enabled.
 
-Directory guides: `e2e/AGENTS.md`, `packages/api/AGENTS.md`, `packages/db/AGENTS.md`, `apps/web/AGENTS.md`, `apps/admin/AGENTS.md`. Read the one that matches where you work.
+Directory guides: `tooling/e2e/AGENTS.md`, `packages/api/AGENTS.md`, `packages/db/AGENTS.md`, `apps/web/AGENTS.md`, `apps/admin/AGENTS.md`. Read the one that matches where you work.
 
 ## Working rules
 

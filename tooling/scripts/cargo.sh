@@ -2,7 +2,7 @@
 # Runs cargo for the Rust workspace: the local toolchain if installed (rust-toolchain.toml
 # pins the version), otherwise the same version in Docker, so contributors need only Docker.
 set -eu
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 if command -v cargo >/dev/null 2>&1; then
 	exec cargo "$@"
 fi

@@ -36,12 +36,12 @@ coverage/
 packages/db/drizzle/
 
 # Playwright
-e2e/playwright-report/
-e2e/test-results/
-e2e/.fake-camera/
+tooling/e2e/playwright-report/
+tooling/e2e/test-results/
+tooling/e2e/.fake-camera/
 
 # Load test run data (sessions, payloads, k6 summaries)
-e2e/load/.run/
+tooling/e2e/load/.run/
 
 # Rust
 /target
@@ -57,5 +57,5 @@ terraform.tfvars
 deploy/.env.production
 !deploy/.env.production.example
 
-# e2e stack stamp (scripts/e2e.sh)
+# e2e stack stamp (tooling/scripts/e2e.sh)
 .e2e/

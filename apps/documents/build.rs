@@ -1,6 +1,6 @@
-//! Compiles the shared contract in `proto/` (no system `protoc` needed).
+//! Compiles the shared contract in `packages/proto/` (no system `protoc` needed).
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let proto_root = "../../proto";
+    let proto_root = "../../packages/proto";
     println!("cargo:rerun-if-changed={proto_root}");
     let files = protox::compile(
         [format!(

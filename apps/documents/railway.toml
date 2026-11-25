@@ -2,10 +2,10 @@
 # Web and admin reach it at DOCUMENTS_URL=http://documents.railway.internal:50051.
 [build]
 builder = "DOCKERFILE"
-dockerfilePath = "/services/documents/Dockerfile"
+dockerfilePath = "/apps/documents/Dockerfile"
 watchPatterns = [
-  "/services/documents/**",
-  "/proto/**",
+  "/apps/documents/**",
+  "/packages/proto/**",
   "/Cargo.toml",
   "/Cargo.lock",
 ]

@@ -21,7 +21,7 @@ Run `pnpm env:doctor` first after a clone and after any environment failure. It 
 
 `pnpm install` points `core.hooksPath` at the committed `.git-hooks/` (only when unset; an existing local `core.hooksPath` wins). The pre-commit hook runs Biome on staged files in Biome's scope and `turbo typecheck` for each workspace package with staged changes. Bypass only with `git commit --no-verify` and give the reason in the commit body.
 
-Public demo from this computer: `scripts/tunnel.sh` builds and starts the production web, admin and worker against the local database and publishes them through two Cloudflare quick tunnels (random `https://….trycloudflare.com` addresses, printed at the end; new ones after each restart of the tunnels). `scripts/tunnel.sh stop` stops it. E-mails still go to Mailpit and file links point at the local storage container, so outside visitors can't open those; set real SMTP and R2 in `.env` for that.
+Public demo from this computer: `tooling/scripts/tunnel.sh` builds and starts the production web, admin and worker against the local database and publishes them through two Cloudflare quick tunnels (random `https://….trycloudflare.com` addresses, printed at the end; new ones after each restart of the tunnels). `tooling/scripts/tunnel.sh stop` stops it. E-mails still go to Mailpit and file links point at the local storage container, so outside visitors can't open those; set real SMTP and R2 in `.env` for that.
 
 Seed accounts use `SEED_ACCOUNT_PASSWORD` from `.env`; seeding refuses `NODE_ENV=production`. Local Mailpit inbox (including magic links): http://localhost:8025.
 
@@ -31,28 +31,28 @@ pnpm db:account --email a@b.pl --role admin
 
 Creates/updates an account and prints a generated password unless `--password` or `--link-only` is used.
 
-University sign-in is OpenID Connect, configured only through `UNIVERSITY_SSO_*` in `.env` (see `.env.example`; redirect URI `<BETTER_AUTH_URL>/api/auth/callback/university`). The public site's login and signup show the button only when it is configured; the admin panel keeps e-mail and password (the callback lands on the public site's origin). A university sign-in joins the account with the same e-mail and counts the address as verified. The e2e stack runs a stand-in server (`e2e/oidc-mock`, compose profile `e2e`) reachable as `oidc.localhost:18080` from both the browser and the containers.
+University sign-in is OpenID Connect, configured only through `UNIVERSITY_SSO_*` in `.env` (see `.env.example`; redirect URI `<BETTER_AUTH_URL>/api/auth/callback/university`). The public site's login and signup show the button only when it is configured; the admin panel keeps e-mail and password (the callback lands on the public site's origin). A university sign-in joins the account with the same e-mail and counts the address as verified. The e2e stack runs a stand-in server (`tooling/e2e/oidc-mock`, compose profile `e2e`) reachable as `oidc.localhost:18080` from both the browser and the containers.
 
 File storage (F14, F19) is an S3-compatible bucket set by `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` (`S3_REGION`, default `auto`); with any of the four unset, uploads are hidden and file links answer 404. `docker compose up -d` starts `storage` (SeaweedFS `weed mini`, pinned by digest) on port 8333 with the bucket and keys from `.env.example`, data in the `storage_data` volume. App containers and the browser both reach it as `storage.localhost:{STORAGE_PORT}` (e2e: 18083), so presigned links work from both. Production: Cloudflare R2 — create a bucket with EU jurisdiction, an R2 API token with Object Read & Write on that bucket only, and set `S3_ENDPOINT=https://<account-id>.eu.r2.cloudflarestorage.com` plus the token's keys on web, admin and worker. The bucket stays private (no public access, no CORS).
 
-Teams meetings (F23) are configured only through `TEAMS_*` (see `.env.example`). University IT creates an app registration with the Microsoft Graph application permission `OnlineMeetings.ReadWrite.All` and grants an application access policy to the account in `TEAMS_ORGANIZER_ID`; the meetings belong to that account. The panel then offers "Utwórz spotkanie w Teams" where an online or hybrid event's link is entered (publish checklist, edit form). The e2e stack runs a stand-in Graph (`e2e/teams-mock`, compose profile `e2e`, `teams.localhost:18082`; `TEAMS_LOGIN_URL`/`TEAMS_GRAPH_URL` point at it) that lists created meetings at `/__meetings`.
+Teams meetings (F23) are configured only through `TEAMS_*` (see `.env.example`). University IT creates an app registration with the Microsoft Graph application permission `OnlineMeetings.ReadWrite.All` and grants an application access policy to the account in `TEAMS_ORGANIZER_ID`; the meetings belong to that account. The panel then offers "Utwórz spotkanie w Teams" where an online or hybrid event's link is entered (publish checklist, edit form). The e2e stack runs a stand-in Graph (`tooling/e2e/teams-mock`, compose profile `e2e`, `teams.localhost:18082`; `TEAMS_LOGIN_URL`/`TEAMS_GRAPH_URL` point at it) that lists created meetings at `/__meetings`.
 
 ### Rust documents service
 
-PDFs (tickets, certificates, attendance sheets) are rendered by `services/documents`, a Rust gRPC service; the contract is `proto/` and the generated TypeScript client is `@repo/rpc`. You need only Docker: `docker compose up -d` builds and starts it, and the apps and `@repo/api`/`@repo/rpc` tests reach it at `DOCUMENTS_URL` with `DOCUMENTS_TOKEN` (both in `.env.example`). After changing the renderer or `proto/`, run `docker compose up -d --build documents`.
+PDFs (tickets, certificates, attendance sheets) are rendered by `apps/documents`, a Rust gRPC service; the contract is `packages/proto/` and the generated TypeScript client is `@repo/rpc`. You need only Docker: `docker compose up -d` builds and starts it, and the apps and `@repo/api`/`@repo/rpc` tests reach it at `DOCUMENTS_URL` with `DOCUMENTS_TOKEN` (both in `.env.example`). After changing the renderer or `packages/proto/`, run `docker compose up -d --build documents`.
 
 ```bash
 pnpm rust:test               # cargo test (local cargo, else the pinned rust image in Docker)
 pnpm rust:lint               # cargo fmt --check + clippy -D warnings
-pnpm proto:lint              # buf lint proto/
-pnpm --filter @repo/rpc generate   # after editing proto/
+pnpm proto:lint              # buf lint packages/proto/
+pnpm --filter @repo/rpc generate   # after editing packages/proto/
 ```
 
 Contract changes must stay backwards compatible (CI runs `buf breaking` against `main`); a breaking change needs a new package version (`v2`).
 
 ## Starting a feature
 
-`pnpm scaffold <slug> [F<n>]` creates the spec stub (`docs/superpowers/specs/<date>-<slug>-design.md`), the plan stub in the [workflow](workflow.md) task structure, a red-by-design `[F<n>]` e2e file (`e2e/tests/f<n>-<slug>.spec.ts`) and `scaffold_f<n>_placeholder` i18n keys in both message files, with the next free F number (from e2e files, product-spec rows and plan titles, including untracked work). It checks everything first: a taken number or an existing file exits 1 and writes nothing.
+`pnpm scaffold <slug> [F<n>]` creates the spec stub (`docs/superpowers/specs/<date>-<slug>-design.md`), the plan stub in the [workflow](workflow.md) task structure, a red-by-design `[F<n>]` e2e file (`tooling/e2e/tests/f<n>-<slug>.spec.ts`) and `scaffold_f<n>_placeholder` i18n keys in both message files, with the next free F number (from e2e files, product-spec rows and plan titles, including untracked work). It checks everything first: a taken number or an existing file exits 1 and writes nothing.
 
 ## Common commands
 
@@ -86,9 +86,9 @@ CI (`.github/workflows/ci.yml`) runs lint, `buf` lint and breaking checks, typec
 Follow the [testing policy](testing.md) for acceptance coverage, test-first execution and completion checks. The [workflow](workflow.md) defines when to check off a task or update the product spec.
 
 ```bash
-scripts/e2e.sh ensure        # reuse a healthy stack, rebuild + migrate only when code changed
-scripts/e2e.sh run tests/f5-zapisy.spec.ts --project=telefon   # ensure, then one spec
-scripts/e2e.sh logs web --tail 50                              # container logs
+tooling/scripts/e2e.sh ensure        # reuse a healthy stack, rebuild + migrate only when code changed
+tooling/scripts/e2e.sh run tests/f5-zapisy.spec.ts --project=telefon   # ensure, then one spec
+tooling/scripts/e2e.sh logs web --tail 50                              # container logs
 pnpm e2e:up                  # manual: always rebuild production images, start stack, migrate
 pnpm e2e
 pnpm e2e:down                # stop e2e stack AND delete its data
@@ -97,9 +97,9 @@ pnpm load:stress             # informational stepped ramp
 pnpm observability:up        # Prometheus + Grafana for e2e
 ```
 
-The e2e Compose project is `harmonogram-e2e`. Ports come from `e2e/ports.env`: web 3100, admin 3101, Mailpit 18025. The stack uses built images, not live source: **go through `scripts/e2e.sh ensure` or `run`**, which rebuild only when code changed. `pnpm e2e:up` and `pnpm e2e:down` remain the manual alternatives. Details: [e2e stack](../e2e/README.md).
+The e2e Compose project is `harmonogram-e2e`. Ports come from `tooling/e2e/ports.env`: web 3100, admin 3101, Mailpit 18025. The stack uses built images, not live source: **go through `tooling/scripts/e2e.sh ensure` or `run`**, which rebuild only when code changed. `pnpm e2e:up` and `pnpm e2e:down` remain the manual alternatives. Details: [e2e stack](../e2e/README.md).
 
-Playwright projects: `komputer` (1280 px) and `telefon` (360 px). The phone project selects `@uczestnik` and `@organizator`; tag organiser tests accordingly. Wait for the app's hydration marker before interactions. See `e2e/playwright.config.ts` and existing fixtures/tests for current patterns.
+Playwright projects: `komputer` (1280 px) and `telefon` (360 px). The phone project selects `@uczestnik` and `@organizator`; tag organiser tests accordingly. Wait for the app's hydration marker before interactions. See `tooling/e2e/playwright.config.ts` and existing fixtures/tests for current patterns.
 
 Load tests: spike 500 users competing for 50 places and a two-minute steady run; stress ramps to 400 users, stopping at p95 >2 s or errors >5%. Details: [load testing](../e2e/load/README.md). Prometheus: http://localhost:19090; Grafana: http://localhost:13002. `pnpm load` streams metrics there when observability is up.
 

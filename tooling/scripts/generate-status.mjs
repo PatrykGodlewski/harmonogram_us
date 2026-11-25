@@ -6,10 +6,10 @@ import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const SPEC = "docs/superpowers/specs/2026-11-19-produkt-design.md";
 const PLANS_DIR = "docs/superpowers/plans";
-const E2E_DIR = "e2e/tests";
+const E2E_DIR = "tooling/e2e/tests";
 const OUT = "docs/status.json";
 // Derived from git history: differs between the generating commit and the
 // commit that lands the file, and in CI's shallow clone. Informational only.
@@ -146,7 +146,7 @@ function featureDiff(committed, regenerated) {
 function check(status) {
 	const path = join(ROOT, OUT);
 	if (!existsSync(path)) {
-		console.error(`${OUT} is missing: run node scripts/generate-status.mjs`);
+		console.error(`${OUT} is missing: run node tooling/scripts/generate-status.mjs`);
 		return 1;
 	}
 	const committed = JSON.parse(readFileSync(path, "utf8"));
@@ -165,7 +165,7 @@ function check(status) {
 		`${OUT} is stale (- committed, + regenerated; revision/lastTouched ignored):`,
 	);
 	console.error(diff);
-	console.error("Fix: node scripts/generate-status.mjs, then commit the file.");
+	console.error("Fix: node tooling/scripts/generate-status.mjs, then commit the file.");
 	return 1;
 }
 

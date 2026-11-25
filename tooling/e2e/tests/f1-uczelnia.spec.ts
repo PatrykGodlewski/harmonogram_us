@@ -6,7 +6,7 @@ import { and, eq } from "drizzle-orm";
 import { createTestEvent, createTestUser, uniqueEmail } from "../fixtures/data";
 import { open } from "../fixtures/navigation";
 
-/** The e2e stack's university (e2e/ports.env, e2e/oidc-mock). */
+/** The e2e stack's university (tooling/e2e/ports.env, tooling/e2e/oidc-mock). */
 const UNIVERSITY = "Uniwersytet Testowy";
 
 async function signInAtUniversity(

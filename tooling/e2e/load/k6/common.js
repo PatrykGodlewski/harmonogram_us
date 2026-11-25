@@ -1,6 +1,6 @@
 import http from "k6/http";
 
-/** Written by e2e/load/setup.ts: sessions, payloads and server function ids. */
+/** Written by tooling/e2e/load/setup.ts: sessions, payloads and server function ids. */
 export const run = JSON.parse(open("../.run/run.json"));
 
 /** Calls a server function the way the browser does (same origin, seroval JSON body). */

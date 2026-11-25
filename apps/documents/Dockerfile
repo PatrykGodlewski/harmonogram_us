@@ -6,8 +6,8 @@ FROM rust:1.100-slim-bookworm@sha256:7c7d4eb4d05b7781187a327809466cfddf29753f6de
 WORKDIR /src
 # rust-toolchain.toml is left out: this image already is the pinned version.
 COPY Cargo.toml Cargo.lock ./
-COPY proto proto
-COPY services/documents services/documents
+COPY packages/proto packages/proto
+COPY apps/documents apps/documents
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
 	--mount=type=cache,target=/src/target \
 	cargo build --release --locked -p documents \

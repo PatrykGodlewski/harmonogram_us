@@ -7,7 +7,7 @@ import {
 } from "../src/admin/attendance-sheet-document";
 
 // Renders through the documents service: `docker compose up -d documents`.
-// Page splitting is tested in Rust (services/documents/src/sheet.rs).
+// Page splitting is tested in Rust (apps/documents/src/sheet.rs).
 async function renderAttendanceSheetPdf(input: AttendanceSheetInput): Promise<Uint8Array> {
 	const { pdf } = await documentsClient().renderAttendanceSheet(attendanceSheetRequest(input));
 	return pdf;
