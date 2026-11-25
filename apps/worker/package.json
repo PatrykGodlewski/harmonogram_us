@@ -19,7 +19,7 @@
     "@repo/i18n": "workspace:*",
     "@repo/jobs": "workspace:*",
     "@repo/ui": "workspace:*",
-    "pg-boss": "^12.38.2"
+    "pg-boss": "^12.39.0"
   },
   "devDependencies": {
     "@repo/config": "workspace:*",
