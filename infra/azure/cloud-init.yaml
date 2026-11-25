@@ -1,0 +1,13 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+packages:
+  - docker.io
+  - docker-compose-v2
+runcmd:
+  # The free VM sizes have about 1 GB of memory: swap keeps the Node apps from running out.
+  - fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+  - echo '/swapfile none swap sw 0 0' >> /etc/fstab
+  - systemctl enable --now docker
+  - usermod -aG docker ${admin_username}
+  - mkdir -p /opt/harmonogram && chown ${admin_username}:${admin_username} /opt/harmonogram

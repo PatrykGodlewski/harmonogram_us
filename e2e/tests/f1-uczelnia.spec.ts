@@ -33,10 +33,11 @@ test("[F1] logowanie kontem uczelni łączy konto po adresie e-mail @uczestnik",
 	const event = await createTestEvent({});
 	await registerForEvent(event.id, user.id, "pl");
 
-	await open(page, "/pl/login?redirect=/account");
+	// Without a destination the person lands on their own events, registration included
+	await open(page, "/pl/login");
 	await signInAtUniversity(page, { email: email.toUpperCase() });
 
-	await expect(page).toHaveURL(/\/pl\/account/);
+	await expect(page).toHaveURL(/\/pl\/my-events/);
 	await expect(page.getByText(event.title).first()).toBeVisible();
 });
 

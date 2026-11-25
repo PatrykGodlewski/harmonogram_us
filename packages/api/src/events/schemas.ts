@@ -1,3 +1,4 @@
+import { AGENDA_LANGUAGES } from "@repo/db/agenda-languages";
 import { z } from "zod";
 import { optionalIdSchema } from "../admin/optional-id-schema";
 
@@ -161,10 +162,27 @@ export const eventPageSchema = eventIdSchema.extend({ invite: inviteSchema });
 
 export const agendaItemIdSchema = z.object({ agendaItemId: z.string().min(1) });
 
+/** Limits of a programme item's fields, shared by the panel's form and the server. */
+export const AGENDA_ITEM_LIMITS = {
+	title: 500,
+	description: 5000,
+	/** Speakers and links per item. */
+	rows: 20,
+	/** A speaker's name, institution or unit; a link's label. */
+	shortText: 200,
+	bio: 3000,
+	url: 2000,
+	/** Field of knowledge, audience. */
+	detail: 100,
+	imageAlt: 200,
+} as const;
+
+const L = AGENDA_ITEM_LIMITS;
+
 const agendaItemFields = {
 	/** The session the item belongs to (F33); null takes it out of its session. */
 	sessionId: z.string().min(1).nullable().optional(),
-	title: z.string().min(1).max(500),
+	title: z.string().min(1).max(L.title),
 	description: descriptionSchema,
 	startsAt: z.coerce.date(),
 	endsAt: z.coerce.date(),
@@ -174,20 +192,30 @@ const agendaItemFields = {
 	speakers: z
 		.array(
 			z.object({
-				name: z.string().trim().min(1).max(200),
-				affiliation: z.string().trim().max(200).optional(),
+				name: z.string().trim().min(1).max(L.shortText),
+				affiliation: z.string().trim().max(L.shortText).optional(),
+				unit: z.string().trim().max(L.shortText).optional(),
+				bio: z.string().trim().max(L.bio).optional(),
 			}),
 		)
-		.max(20)
+		.max(L.rows)
 		.optional(),
 	materials: z
 		.array(
 			z.object({
-				label: z.string().trim().min(1).max(200),
-				url: z.url({ protocol: /^https?$/ }).max(2000),
+				label: z.string().trim().min(1).max(L.shortText),
+				url: z.url({ protocol: /^https?$/ }).max(L.url),
 			}),
 		)
-		.max(20)
+		.max(L.rows)
+		.optional(),
+	typeId: z.string().min(1).nullable().optional(),
+	facultyId: z.string().min(1).nullable().optional(),
+	topic: z.string().trim().max(L.detail).nullable().optional(),
+	audience: z.string().trim().max(L.detail).nullable().optional(),
+	languages: z
+		.array(z.enum(AGENDA_LANGUAGES))
+		.max(AGENDA_LANGUAGES.length)
 		.optional(),
 };
 

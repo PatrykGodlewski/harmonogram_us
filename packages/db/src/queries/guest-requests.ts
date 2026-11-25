@@ -30,7 +30,7 @@ function sameSecret(given: string, expected: string): boolean {
 
 /**
  * Whether a guest may join the event now: open (EVENT_NOT_FOUND / _CANCELLED / _ENDED),
- * not signed-in only (GUESTS_NOT_ALLOWED), and for invite-only events the current invite
+ * and for invite-only events the current invite
  * link (EVENT_NOT_FOUND). Checked when asking and again when confirming (a link can be
  * revoked or the event changed within the 24 hours).
  */
@@ -50,9 +50,6 @@ async function assertGuestsMayJoin(
 		.where(eq(events.id, eventId));
 	if (!event) {
 		throw new DomainError("EVENT_NOT_FOUND");
-	}
-	if (event.visibility === "authenticated") {
-		throw new DomainError("GUESTS_NOT_ALLOWED");
 	}
 	if (
 		event.visibility === "private" &&
@@ -79,7 +76,7 @@ export async function assertGuestRequestStillValid(
 /**
  * Stores a guest's request and returns the token for the confirmation link (only its hash
  * is kept). Refuses events a guest cannot join: not open (EVENT_NOT_FOUND / _CANCELLED /
- * _ENDED), signed-in only (GUESTS_NOT_ALLOWED), invite-only without its link
+ * _ENDED), invite-only without its link
  * (EVENT_NOT_FOUND), and answers that miss a required question (ANSWERS_INVALID).
  * `onCreated` runs in the same transaction (queue the confirmation e-mail there).
  */

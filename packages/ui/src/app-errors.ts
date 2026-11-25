@@ -15,6 +15,8 @@ import {
 	error_answers_invalid,
 	error_approval_required,
 	error_captcha,
+	error_captcha_cancelled,
+	error_captcha_unavailable,
 	error_email_not_allowed,
 	error_email_not_verified,
 	error_event_files_limit,
@@ -29,7 +31,8 @@ import {
 	error_group_not_found,
 	error_group_places_unavailable,
 	error_guest_link_invalid,
-	error_guests_not_allowed,
+	error_image_too_large,
+	error_image_type,
 	error_invitation_invalid,
 	error_item_not_in_group,
 	error_item_outside_session,
@@ -98,7 +101,6 @@ const APP_ERROR_MESSAGES: Record<AppErrorCode, () => string> = {
 	EVENT_INCOMPLETE: admin_error_event_incomplete,
 	EVENT_NOT_DRAFT: admin_error_event_not_draft,
 	EVENT_CANCELLED: event_cancelled_closed,
-	GUESTS_NOT_ALLOWED: error_guests_not_allowed,
 	GUEST_LINK_INVALID: error_guest_link_invalid,
 	WITHDRAW_LINK_INVALID: error_withdraw_link_invalid,
 	EVENT_ALREADY_CANCELLED: admin_error_event_already_cancelled,
@@ -122,6 +124,8 @@ const APP_ERROR_MESSAGES: Record<AppErrorCode, () => string> = {
 	EVENT_FILES_LIMIT: error_event_files_limit,
 	FILE_TOO_LARGE: error_file_too_large,
 	FILE_TYPE: error_file_type,
+	IMAGE_TYPE: error_image_type,
+	IMAGE_TOO_LARGE: error_image_too_large,
 	FILES_NOT_CONFIGURED: error_files_not_configured,
 	SESSION_NOT_FOUND: error_session_not_found,
 	ITEM_OUTSIDE_SESSION: error_item_outside_session,
@@ -132,19 +136,23 @@ const APP_ERROR_MESSAGES: Record<AppErrorCode, () => string> = {
 	RATE_LIMITED: error_rate_limited,
 	CAPTCHA_REQUIRED: error_captcha,
 	CAPTCHA_FAILED: error_captcha,
+	CAPTCHA_UNAVAILABLE: error_captcha_unavailable,
+	CAPTCHA_CANCELLED: error_captcha_cancelled,
 	EMAIL_NOT_ALLOWED: error_email_not_allowed,
 	REAUTH_REQUIRED: error_reauth_required,
 };
 
 /** The error code carried by a server error (`Error(code)` or a `{ code }` body), if any. */
 export function getAppErrorCode(error: unknown): AppErrorCode | null {
-	const candidate =
-		error instanceof Error
-			? error.message
-			: error && typeof error === "object" && "code" in error
-				? (error as { code: unknown }).code
-				: null;
-	return isAppErrorCode(candidate) ? candidate : null;
+	if (error instanceof Error && isAppErrorCode(error.message)) {
+		return error.message;
+	}
+	// An error with a readable message may carry its code beside it.
+	const code =
+		error && typeof error === "object" && "code" in error
+			? (error as { code: unknown }).code
+			: null;
+	return isAppErrorCode(code) ? code : null;
 }
 
 /** User-facing message for a known error code, otherwise `fallback()`. */

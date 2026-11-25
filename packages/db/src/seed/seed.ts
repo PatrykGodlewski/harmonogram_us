@@ -6,15 +6,16 @@ import {
 	groupSeeds,
 	registrationSeeds,
 } from "./data";
-import { seedAgenda, seedEvents } from "./events";
 import {
-	generatedAccountSeeds,
-	generatedAgendaItemSeeds,
-	generatedAgendaRegistrationSeeds,
-	generatedEventSeeds,
-	generatedRegistrationSeeds,
-} from "./generated";
+	removeStaleAgenda,
+	removeStaleEvents,
+	seedAgenda,
+	seedEvents,
+	seedSessions,
+} from "./events";
+import { festivalItemSeeds, festivalSessionSeeds } from "./festival";
 import { seedEventLookups } from "./lookups";
+import { participantAccountSeeds } from "./participants";
 import {
 	seedAccounts,
 	seedAgendaRegistrations,
@@ -23,7 +24,7 @@ import {
 	seedShowcase,
 } from "./people";
 
-/** Seeds sample data and local test accounts. Idempotent; refuses to touch production. */
+/** Seeds the showcase events and local test accounts. Idempotent; refuses to touch production. */
 export async function seedDatabase(options: {
 	password: string;
 	nodeEnv: string;
@@ -32,26 +33,19 @@ export async function seedDatabase(options: {
 		throw new Error("Refusing to seed a production database");
 	}
 	const now = new Date();
-	const allEvents = [...eventSeeds, ...generatedEventSeeds];
 	await seedEventLookups();
-	await seedEvents(allEvents, now);
-	await seedAgenda(
-		[...agendaItemSeeds, ...generatedAgendaItemSeeds],
-		allEvents,
-		now,
-	);
+	await removeStaleEvents(eventSeeds);
+	await seedEvents(eventSeeds, now);
+	const items = [...agendaItemSeeds, ...festivalItemSeeds];
+	await removeStaleAgenda(eventSeeds, festivalSessionSeeds, items);
+	await seedSessions(festivalSessionSeeds, eventSeeds, now);
+	await seedAgenda(items, eventSeeds, now);
 	const accounts = await seedAccounts(
-		[...accountSeeds, ...generatedAccountSeeds],
+		[...accountSeeds, ...participantAccountSeeds],
 		options.password,
 	);
-	await seedRegistrations(
-		[...registrationSeeds, ...generatedRegistrationSeeds],
-		accounts,
-	);
-	await seedAgendaRegistrations(
-		[...agendaRegistrationSeeds, ...generatedAgendaRegistrationSeeds],
-		accounts,
-	);
+	await seedRegistrations(registrationSeeds, accounts);
+	await seedAgendaRegistrations(agendaRegistrationSeeds, accounts);
 	await seedGroups(groupSeeds, accounts);
 	await seedShowcase(eventSeeds, accounts);
 }

@@ -1,13 +1,20 @@
 import {
 	event_details_agenda,
+	event_details_all_days,
+	event_details_all_places,
+	event_details_day,
 	event_details_no_agenda,
 	event_details_no_match,
+	event_details_place,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import {
+	entriesByDay,
+	filterByDay,
 	filterByPlace,
 	filterBySession,
 	findOverlaps,
+	programmeDays,
 	programmeEntries,
 	programmeNowIndex,
 	programmePlaces,
@@ -18,20 +25,28 @@ import {
 	type AgendaViewMode,
 	AgendaViewToggle,
 } from "@repo/ui/composed/agenda-view-toggle";
-import { sessionColorClasses } from "@repo/ui/session-colors";
-import { formatEventTime } from "@repo/ui/time";
-import { cn } from "@repo/ui/utils";
+import {
+	EVENT_TIME_ZONE,
+	formatEventDay,
+	formatEventDayLong,
+	toEventDateInput,
+} from "@repo/ui/time";
 import { getRouteApi } from "@tanstack/react-router";
 import * as React from "react";
+import { itemSeatCount } from "~/lib/event-details/item-seats";
 import type {
 	AgendaItemData,
 	EventDetailsData,
 	EventDetailsRegistrations,
 } from "~/lib/event-details/types";
 import { AgendaCalendar } from "./agenda-calendar";
+import { AgendaFilterChips } from "./agenda-filter-chips";
 import { AgendaItemRow } from "./agenda-item-row";
-import { AgendaPlaceFilter } from "./agenda-place-filter";
+import { AgendaSessionBlock } from "./agenda-session-block";
 import { AgendaSessionFilter } from "./agenda-session-filter";
+
+/** More items than this on screen, and sessions start folded to their header. */
+const FOLD_ABOVE_ITEMS = 10;
 
 const eventRoute = getRouteApi("/events/$eventId");
 
@@ -94,17 +109,41 @@ export function AgendaTimeline({
 			replace: true,
 			resetScroll: false,
 		});
+	// The days of the whole programme, each with a moment on it to name it by.
+	const days = programmeDays(agenda, event.sessions, EVENT_TIME_ZONE);
+	const momentOf = new Map<string, Date | string>();
+	for (const entry of [...event.sessions, ...agenda]) {
+		const key = toEventDateInput(new Date(entry.startsAt));
+		if (!momentOf.has(key)) momentOf.set(key, entry.startsAt);
+	}
+	const day = search.day && days.includes(search.day) ? search.day : null;
+	const handleDayChange = (next: string | null) =>
+		void navigate({
+			search: (prev) => ({ ...prev, day: next ?? undefined }),
+			replace: true,
+			resetScroll: false,
+		});
 	const inPlace = filterByPlace(agenda, event.sessions, place);
-	const shown = filterBySession(inPlace.items, inPlace.sessions, sessionTitle);
+	const inSession = filterBySession(
+		inPlace.items,
+		inPlace.sessions,
+		sessionTitle,
+	);
+	const shown = filterByDay(
+		inSession.items,
+		inSession.sessions,
+		day,
+		EVENT_TIME_ZONE,
+	);
 	const entries = programmeEntries(shown.items, shown.sessions);
+	const multiDay = days.length > 1;
+	const groups = multiDay
+		? entriesByDay(entries, EVENT_TIME_ZONE)
+		: [{ day: "", entries }];
+	const folded = shown.items.length > FOLD_ABOVE_ITEMS && sessionTitle === null;
 	const now = useNow();
 	const nowIndex = now ? programmeNowIndex(entries, now) : null;
 	const overlaps = findOverlaps(event.agenda, registrations.registeredItemIds);
-	const seatCountOf = (item: AgendaItemData) => ({
-		seatsRemaining: item.seatsRemaining,
-		maxSeats: item.maxSeats,
-		registeredCount: item.registeredCount,
-	});
 	const renderRow = (
 		item: AgendaItemData & { parallel: boolean },
 		as: "li" | "div",
@@ -118,7 +157,7 @@ export function AgendaTimeline({
 			user={user}
 			interactive={interactive}
 			eventClosed={eventClosed}
-			seatCount={seatCountOf(item)}
+			seatCount={itemSeatCount(item)}
 			overlapsWith={overlaps.get(item.id)}
 			registrations={registrations}
 		/>
@@ -132,11 +171,25 @@ export function AgendaTimeline({
 					<AgendaViewToggle value={view} onChange={handleViewChange} />
 				) : null}
 			</div>
-			{places.length > 1 || titles.length > 1 ? (
+			{multiDay || places.length > 1 || titles.length > 1 ? (
 				<div className="flex flex-col gap-2">
+					{multiDay ? (
+						<AgendaFilterChips
+							label={event_details_day()}
+							allLabel={event_details_all_days()}
+							options={days.map((key) => ({
+								id: key,
+								label: formatEventDay(momentOf.get(key) ?? key, locale),
+							}))}
+							value={day}
+							onChange={handleDayChange}
+						/>
+					) : null}
 					{places.length > 1 ? (
-						<AgendaPlaceFilter
-							places={places}
+						<AgendaFilterChips
+							label={event_details_place()}
+							allLabel={event_details_all_places()}
+							options={places}
 							value={place}
 							onChange={handlePlaceChange}
 						/>
@@ -158,67 +211,64 @@ export function AgendaTimeline({
 				<AgendaCalendar
 					items={shown.items}
 					sessions={shown.sessions}
-					seatCountOf={seatCountOf}
+					seatCountOf={itemSeatCount}
 					registrations={registrations}
 					interactive={interactive}
 					renderDetails={renderRow}
 				/>
 			) : (
-				<ol className="divide-y">
-					{entries.map((entry, index) => (
-						<React.Fragment
-							key={entry.kind === "session" ? entry.session.id : entry.item.id}
-						>
-							{index === nowIndex && now ? (
-								<AgendaNowDivider now={now} />
+				<div className="flex flex-col gap-4">
+					{groups.map((group) => (
+						<div key={group.day || "all"} className="flex flex-col gap-1">
+							{multiDay ? (
+								<h3 className="font-semibold first-letter:uppercase">
+									{formatEventDayLong(
+										momentOf.get(group.day) ?? group.day,
+										locale,
+									)}
+								</h3>
 							) : null}
-							{entry.kind === "session" ? (
-								<li className="py-3">
-									<section
-										aria-labelledby={`session-${entry.session.id}`}
-										className="flex gap-3"
-									>
-										<span
-											aria-hidden
-											className={cn(
-												"w-1.5 shrink-0 rounded-full",
-												sessionColorClasses[entry.session.color].bar,
-											)}
-										/>
-										<div className="flex min-w-0 flex-1 flex-col gap-1">
-											<p className="text-sm text-muted-foreground tabular-nums">
-												{formatEventTime(entry.session.startsAt, locale)}–
-												{formatEventTime(entry.session.endsAt, locale)}
-												{entry.session.locationLabel
-													? ` · ${entry.session.locationLabel}`
-													: ""}
-											</p>
-											<h3
-												id={`session-${entry.session.id}`}
-												className="font-semibold break-words"
-											>
-												{entry.session.title}
-											</h3>
-											{entry.session.description ? (
-												<p className="text-sm text-muted-foreground break-words">
-													{entry.session.description}
-												</p>
+							<ol className="divide-y">
+								{group.entries.map((entry) => {
+									const index = entries.indexOf(entry);
+									return (
+										<React.Fragment
+											key={
+												entry.kind === "session"
+													? entry.session.id
+													: entry.item.id
+											}
+										>
+											{index === nowIndex && now ? (
+												<AgendaNowDivider now={now} />
 											) : null}
-											<ol className="divide-y">
-												{entry.items.map((item) => renderRow(item, "li"))}
-											</ol>
-										</div>
-									</section>
-								</li>
-							) : (
-								renderRow(entry.item, "li")
-							)}
-						</React.Fragment>
+											{entry.kind === "session" ? (
+												<AgendaSessionBlock
+													// A new fold rule (filters changed) starts the block afresh.
+													key={String(folded)}
+													session={entry.session}
+													itemCount={entry.items.length}
+													headingLevel={multiDay ? 4 : 3}
+													defaultFolded={folded}
+													locale={locale}
+												>
+													{entry.items.map((item) => renderRow(item, "li"))}
+												</AgendaSessionBlock>
+											) : (
+												renderRow(entry.item, "li")
+											)}
+										</React.Fragment>
+									);
+								})}
+								{group === groups.at(-1) &&
+								nowIndex === entries.length &&
+								now ? (
+									<AgendaNowDivider now={now} />
+								) : null}
+							</ol>
+						</div>
 					))}
-					{nowIndex === entries.length && now ? (
-						<AgendaNowDivider now={now} />
-					) : null}
-				</ol>
+				</div>
 			)}
 		</section>
 	);

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { signInByEmail, waitForCaptcha } from "../fixtures/auth";
+import { signInByEmail } from "../fixtures/auth";
 import { createTestUser, isEmailVerified, uniqueEmail } from "../fixtures/data";
 import { latestMessageTo } from "../fixtures/mailpit";
 import { open } from "../fixtures/navigation";
@@ -25,7 +25,6 @@ test("[F1] rejestracja konta hasłem wysyła e-mail weryfikacyjny", async ({
 	await page.getByLabel("E-mail").fill(email);
 	await page.getByLabel("Hasło", { exact: true }).fill("Kampus-Haslo-2026!x");
 	await page.getByLabel("Potwierdź hasło").fill("Kampus-Haslo-2026!x");
-	await waitForCaptcha(page);
 	await page.getByRole("button", { name: "Zarejestruj się" }).last().click();
 	// Then a verification e-mail arrives and its link verifies the address
 	const message = await latestMessageTo(email);

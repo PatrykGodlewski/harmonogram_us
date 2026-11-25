@@ -15,7 +15,7 @@ export type GuestRegistrationInput = {
 
 /**
  * Stores the request (holds no place) and queues the confirmation e-mail in the same
- * transaction; domain errors (GUESTS_NOT_ALLOWED, ANSWERS_INVALID, …) propagate.
+ * transaction; domain errors (EVENT_NOT_FOUND, ANSWERS_INVALID, …) propagate.
  */
 export async function requestGuestRegistration(
 	input: GuestRegistrationInput,

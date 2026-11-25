@@ -1,0 +1,421 @@
+{
+  "features": {
+    "F1": {
+      "e2e": [
+        "e2e/tests/f1-logowanie.spec.ts",
+        "e2e/tests/f1-profil.spec.ts",
+        "e2e/tests/f1-uczelnia.spec.ts"
+      ],
+      "lastTouched": "89b4f33",
+      "openTasks": 0,
+      "plans": [],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "gotowe (21.11): link e-mail, hasło, weryfikacja adresu; profil z imieniem i językiem — zmiana przełącza interfejs, e-maile idą w języku profilu (`e2e/tests/f1-logowanie.spec.ts`, `f1-profil.spec.ts`); logowanie kontem uczelni przez OpenID Connect, łączy konto po adresie e-mail, włączane konfiguracją `UNIVERSITY_SSO_*` (`f1-uczelnia.spec.ts`, 21.11, Plan 6); panel administracyjny tylko hasłem",
+      "totalTasks": 0
+    },
+    "F2": {
+      "e2e": [
+        "e2e/tests/f2-organizatorzy.spec.ts",
+        "e2e/tests/f2-widocznosc.spec.ts"
+      ],
+      "lastTouched": "e209a1e",
+      "openTasks": 0,
+      "plans": [],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "gotowe (20.11): role uczestnik/organizator/admin, współorganizatorzy po e-mailu, wydarzenia tylko dla zalogowanych; panel organizatora w `apps/admin` (`e2e/tests/f2-organizatorzy.spec.ts`, `f2-widocznosc.spec.ts`)",
+      "totalTasks": 0
+    },
+    "F3": {
+      "e2e": [
+        "e2e/tests/f3-cykl-wydarzenia.spec.ts",
+        "e2e/tests/f3-duplikowanie.spec.ts",
+        "e2e/tests/f3-edycja.spec.ts",
+        "e2e/tests/f3-odwolanie.spec.ts",
+        "e2e/tests/f3-strona-wydarzenia-panel.spec.ts",
+        "e2e/tests/f3-szkic-i-publikacja.spec.ts"
+      ],
+      "lastTouched": "89b4f33",
+      "openTasks": 0,
+      "plans": [],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "gotowe (20.11): szkic, publikacja, odwołanie, duplikowanie, link online i forma wydarzenia (`e2e/tests/f3-szkic-i-publikacja.spec.ts`, `f3-odwolanie.spec.ts`, `f3-duplikowanie.spec.ts`, `f3-cykl-wydarzenia.spec.ts`)",
+      "totalTasks": 0
+    },
+    "F4": {
+      "e2e": [
+        "e2e/tests/f4-kalendarz.spec.ts",
+        "e2e/tests/f4-lista-wydarzen.spec.ts"
+      ],
+      "lastTouched": "89b4f33",
+      "openTasks": 0,
+      "plans": [],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "gotowe (20.11): lista z wyszukiwaniem i filtrami (jednostka, typ, miejsce, termin: dziś / 7 / 30 dni, forma), subskrypcja ICS (wszystkie i moje zapisy), „Dodaj do kalendarza”, Open Graph (`e2e/tests/f4-lista-wydarzen.spec.ts`, `f4-kalendarz.spec.ts`); bez widoku kalendarza miesiąca",
+      "totalTasks": 0
+    },
+    "F5": {
+      "e2e": [
+        "e2e/tests/f5-moje-wydarzenia.spec.ts",
+        "e2e/tests/f5-moje-zapisy.spec.ts",
+        "e2e/tests/f5-zapisy.spec.ts"
+      ],
+      "lastTouched": "89b4f33",
+      "openTasks": 0,
+      "plans": [],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "działa: zapis, limit, współbieżność, rezygnacja, lista rezerwowa z automatycznym awansem, moje zapisy na koncie (`queries/event-registrations.ts`, `queries/my-registrations.ts`, `e2e/tests/f5-*.spec.ts`)",
+      "totalTasks": 0
+    },
+    "F6": {
+      "e2e": [
+        "e2e/tests/f6-powiadomienia.spec.ts"
+      ],
+      "lastTouched": "f47753e",
+      "openTasks": 0,
+      "plans": [],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "gotowe (20.11): potwierdzenie, lista rezerwowa, awans i odwołanie (`e2e/tests/f6-powiadomienia.spec.ts`, `f3-odwolanie.spec.ts`)",
+      "totalTasks": 0
+    },
+    "F7": {
+      "e2e": [
+        "e2e/tests/f7-panel-od-razu.spec.ts",
+        "e2e/tests/f7-wiadomosc.spec.ts",
+        "e2e/tests/f7-zapisani.spec.ts"
+      ],
+      "lastTouched": "a34967f",
+      "openTasks": 0,
+      "plans": [],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "gotowe (20.11): lista z wyszukiwaniem i filtrem, ręczne dodanie i usunięcie, CSV, wiadomość do zapisanych (`e2e/tests/f7-zapisani.spec.ts`, `f7-wiadomosc.spec.ts`)",
+      "totalTasks": 0
+    },
+    "F8": {
+      "e2e": [
+        "e2e/tests/f8-dostepnosc.spec.ts",
+        "e2e/tests/f8-wyglad.spec.ts"
+      ],
+      "lastTouched": "fad43ab",
+      "openTasks": 0,
+      "plans": [],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "gotowe (21.11): audyt WCAG 2.1 i 2.2 AA każdego ekranu uczestnika i organizatora oraz głównych okien dialogowych (pytania przy zapisie, usuwanie konta, formularze wydarzenia, pytania, wiadomość, zaproszenia, osoba, punkt programu, odpowiedzi, duplikowanie, odwołanie, słowniki): axe bez naruszeń, tytuły stron, reflow 320 px, zapis i panel samą klawiaturą z widocznym fokusem, powrót fokusu po zamknięciu okna; deklaracja dostępności po polsku i angielsku, stopka z linkami (`e2e/tests/f8-dostepnosc.spec.ts`); bez audytu eksperckiego i reguły lint na teksty spoza tłumaczeń; treść deklaracji do potwierdzenia przez uczelnię",
+      "totalTasks": 0
+    },
+    "F9": {
+      "e2e": [
+        "e2e/tests/f9-rodo.spec.ts"
+      ],
+      "lastTouched": "89b4f33",
+      "openTasks": 0,
+      "plans": [],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "gotowe (20.11): klauzula przy zapisie, strona informacji o danych, automatyczne usuwanie zapisów po `REGISTRATION_RETENTION_DAYS`, eksport i usunięcie konta (`e2e/tests/f9-rodo.spec.ts`); treść informacji do potwierdzenia przez IOD uczelni",
+      "totalTasks": 0
+    },
+    "F10": {
+      "e2e": [
+        "e2e/tests/f10-pytania.spec.ts"
+      ],
+      "lastTouched": "30c49d0",
+      "openTasks": 0,
+      "plans": [],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "gotowe (21.11): pytania tekst / wybór / tak-nie, wymagane albo opcjonalne, kolejność; bez pytań zapis jednym kliknięciem; odpowiedzi na liście, w CSV/XLSX i w eksporcie danych; edycja odpowiedzi przez uczestnika i organizatora (`e2e/tests/f10-pytania.spec.ts`)",
+      "totalTasks": 0
+    },
+    "F11": {
+      "e2e": [
+        "e2e/tests/f11-bilety.spec.ts",
+        "e2e/tests/f11-skaner.spec.ts"
+      ],
+      "lastTouched": "89b4f33",
+      "openTasks": 0,
+      "plans": [],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "gotowe (20.11): bilet z QR, skaner kamerą w panelu i ręczne odhaczanie obecności (`e2e/tests/f11-bilety.spec.ts`, `f11-skaner.spec.ts`)",
+      "totalTasks": 0
+    },
+    "F12": {
+      "e2e": [
+        "e2e/tests/f12-zaswiadczenia.spec.ts"
+      ],
+      "lastTouched": "89b4f33",
+      "openTasks": 0,
+      "plans": [],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "gotowe (21.11): PDF dla obecnych po zakończeniu wydarzenia z włączonymi zaświadczeniami, pobieranie z konta, e-mail po wydarzeniu, także przy późnym odhaczeniu (`e2e/tests/f12-zaswiadczenia.spec.ts`); dostępne do usunięcia danych zapisu (F9)",
+      "totalTasks": 0
+    },
+    "F13": {
+      "e2e": [
+        "e2e/tests/f13-przypomnienia.spec.ts"
+      ],
+      "lastTouched": "95d13fe",
+      "openTasks": 0,
+      "plans": [],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "gotowe (20.11): przypomnienie (domyślnie dzień przed; 1 h, 2 dni albo wyłączone), e-mail o zmianie terminu lub miejsca ze starą i nową wartością (`e2e/tests/f13-przypomnienia.spec.ts`)",
+      "totalTasks": 0
+    },
+    "F14": {
+      "e2e": [
+        "e2e/tests/f14-materialy.spec.ts"
+      ],
+      "lastTouched": "8eacbce",
+      "openTasks": 0,
+      "plans": [],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "gotowe (22.11): karta „Materiały” w panelu (pliki do 25 MB: PDF, dokumenty, prezentacje, arkusze, tekst, obrazy, ZIP; linki), sekcja „Materiały” na stronie wydarzenia; pobieranie według widoczności wydarzenia (szkic tylko w panelu), pliki w kubełku S3 (Cloudflare R2, lokalnie SeaweedFS) (`e2e/tests/f14-materialy.spec.ts`, Plan 14)",
+      "totalTasks": 0
+    },
+    "F15": {
+      "e2e": [
+        "e2e/tests/f15-statystyki.spec.ts"
+      ],
+      "lastTouched": "5d8ce20",
+      "openTasks": 0,
+      "plans": [],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "gotowe (21.11): karta „Statystyki” przy wydarzeniu (zapisani, obecni, rezerwowi, czekający; nieobecni i ich odsetek po zakończeniu); aktywność z 12 miesięcy na stronie głównej panelu dla administratora (wydarzenia bez szkiców, zapisy bez odrzuconych, miesiące w strefie uczelni) (`e2e/tests/f15-statystyki.spec.ts`, `packages/db/test/activity.test.ts`); zapisy usunięte zgodnie z RODO nie są liczone",
+      "totalTasks": 0
+    },
+    "F16": {
+      "e2e": [],
+      "lastTouched": null,
+      "openTasks": 0,
+      "plans": [],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "odrzucone (22.11): bez integracji z Indico, decyzja użytkownika",
+      "totalTasks": 0
+    },
+    "F17": {
+      "e2e": [
+        "e2e/tests/f17-goscie.spec.ts"
+      ],
+      "lastTouched": "b61676f",
+      "openTasks": 0,
+      "plans": [],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "gotowe (21.11; 23.11: jedno miejsce zapisu — przycisk „Zarejestruj się” prowadzi do logowania z wyborem „Mam konto lub je założę” (domyślnie) albo „Bez konta — wyślij mi link”, na każdym opublikowanym wydarzeniu, także tylko dla zalogowanych): imię, e-mail, pytania, klauzula, CAPTCHA w tle; prośba nie zajmuje miejsca, link (24 h, jednorazowy) potwierdza przyciskiem, zapisuje zwykłą ścieżką (limit, lista rezerwowa, akceptacja) i loguje; link „Zrezygnuj z zapisu” w e-mailach zapisu (podpisany, z przyciskiem) (`e2e/tests/f17-goscie.spec.ts`); bez formularza dla wydarzeń tylko dla zalogowanych",
+      "totalTasks": 0
+    },
+    "F18": {
+      "e2e": [
+        "e2e/tests/f18-program-admin.spec.ts",
+        "e2e/tests/f18-program-organizator.spec.ts",
+        "e2e/tests/f18-program.spec.ts",
+        "e2e/tests/f18-szczegoly-punktu.spec.ts"
+      ],
+      "lastTouched": "fad43ab",
+      "openTasks": 0,
+      "plans": [],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "gotowe (21.11): program z salami jako lista albo kalendarz, równoległe sesje, podział na dni, prelegenci przy punktach programu (`e2e/tests/f18-program.spec.ts`, `f19-prelegenci.spec.ts`)",
+      "totalTasks": 0
+    },
+    "F19": {
+      "e2e": [
+        "e2e/tests/f19-prelegenci.spec.ts"
+      ],
+      "lastTouched": "8eacbce",
+      "openTasks": 0,
+      "plans": [
+        "docs/superpowers/plans/2026-11-22-materialy.md"
+      ],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "gotowe (22.11): prelegenci z afiliacją, linki i pliki przy punktach programu (`e2e/tests/f19-prelegenci.spec.ts`, `f14-materialy.spec.ts`, Plan 14); bez katalogu prelegentów i bez przesyłania plików przez samych prelegentów",
+      "totalTasks": 7
+    },
+    "F20": {
+      "e2e": [
+        "e2e/tests/f20-ankiety.spec.ts"
+      ],
+      "lastTouched": "285852b",
+      "openTasks": 0,
+      "plans": [
+        "docs/superpowers/plans/2026-11-22-ankiety.md"
+      ],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "gotowe (22.11): pytania ankiety (ocena 1–5, wybór, tak/nie, tekst) w panelu; po wydarzeniu zapisani dostają e-mail z osobistym linkiem (działa też dla gości), jedna anonimowa odpowiedź na osobę przez 30 dni; podsumowanie: średnia i rozkład ocen, liczby i odsetki, odpowiedzi tekstowe (`e2e/tests/f20-ankiety.spec.ts`, Plan 11)",
+      "totalTasks": 14
+    },
+    "F21": {
+      "e2e": [],
+      "lastTouched": null,
+      "openTasks": 0,
+      "plans": [],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "brak",
+      "totalTasks": 0
+    },
+    "F22": {
+      "e2e": [],
+      "lastTouched": null,
+      "openTasks": 0,
+      "plans": [],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "brak",
+      "totalTasks": 0
+    },
+    "F23": {
+      "e2e": [
+        "e2e/tests/f23-teams.spec.ts"
+      ],
+      "lastTouched": "18580a8",
+      "openTasks": 0,
+      "plans": [
+        "docs/superpowers/plans/2026-11-22-teams.md"
+      ],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "gotowe (22.11): „Utwórz spotkanie w Teams” w panelu (lista przed publikacją, edycja wydarzenia) dla wydarzeń online i hybrydowych; spotkanie przez Microsoft Graph na koncie organizatora uczelni, link widzą tylko zapisani; włączane konfiguracją `TEAMS_*` (`e2e/tests/f23-teams.spec.ts`, Plan 13)",
+      "totalTasks": 6
+    },
+    "F24": {
+      "e2e": [
+        "e2e/tests/f24-api-widzet.spec.ts"
+      ],
+      "lastTouched": "bdec742",
+      "openTasks": 0,
+      "plans": [
+        "docs/superpowers/plans/2026-11-22-api-widzet.md"
+      ],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "gotowe (22.11): `GET /api/v1/events` (JSON, filtry: wydział, typ, limit; CORS) i widżet w iframe `/{język}/widget` z najbliższymi wydarzeniami; tylko opublikowane wydarzenia otwarte dla wszystkich (`e2e/tests/f24-api-widzet.spec.ts`, `docs/embedding.md`, Plan 12)",
+      "totalTasks": 9
+    },
+    "F25": {
+      "e2e": [],
+      "lastTouched": null,
+      "openTasks": 0,
+      "plans": [],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "brak",
+      "totalTasks": 0
+    },
+    "F26": {
+      "e2e": [
+        "e2e/tests/f26-rejestracja-grupowa.spec.ts"
+      ],
+      "lastTouched": "78a5817",
+      "openTasks": 0,
+      "plans": [],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "działa (`packages/db/src/queries/groups.ts`, `group-members.ts`, testy Vitest)",
+      "totalTasks": 0
+    },
+    "F27": {
+      "e2e": [
+        "e2e/tests/f27-punkty-programu.spec.ts"
+      ],
+      "lastTouched": "b50a4db",
+      "openTasks": 0,
+      "plans": [],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "działa (`queries/event-registrations.ts`, `agenda-items.test.ts`, `e2e/tests/f27-punkty-programu.spec.ts`)",
+      "totalTasks": 0
+    },
+    "F28": {
+      "e2e": [
+        "e2e/tests/f28-akcje-grupowe.spec.ts"
+      ],
+      "lastTouched": "e12a7f6",
+      "openTasks": 0,
+      "plans": [],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "gotowe (20.11): zaznaczanie, odhaczanie obecności, wiadomość do zaznaczonych, usuwanie z awansem listy, XLSX (`e2e/tests/f28-akcje-grupowe.spec.ts`)",
+      "totalTasks": 0
+    },
+    "F29": {
+      "e2e": [
+        "e2e/tests/f29-pomocnik.spec.ts"
+      ],
+      "lastTouched": "9915a4f",
+      "openTasks": 0,
+      "plans": [],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "gotowe (20.11): pomocnik od wejścia (rola przy wydarzeniu), widok wejścia: skaner i obecność (`e2e/tests/f29-pomocnik.spec.ts`)",
+      "totalTasks": 0
+    },
+    "F30": {
+      "e2e": [
+        "e2e/tests/f30-akceptacja.spec.ts"
+      ],
+      "lastTouched": "89b4f33",
+      "openTasks": 0,
+      "plans": [],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "gotowe (21.11): zapis „czeka”, akceptacja i odrzucenie pojedynczo i grupowo, e-maile; przy pełnym wydarzeniu akceptacja daje listę rezerwową (`e2e/tests/f30-akceptacja.spec.ts`)",
+      "totalTasks": 0
+    },
+    "F31": {
+      "e2e": [
+        "e2e/tests/f31-cykliczne.spec.ts"
+      ],
+      "lastTouched": "7fe5c44",
+      "openTasks": 0,
+      "plans": [],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "gotowe (21.11): co tydzień albo co miesiąc do 12 szkiców, wybór: program, organizatorzy; godzina lokalna zachowana przy zmianie czasu (`e2e/tests/f31-cykliczne.spec.ts`)",
+      "totalTasks": 0
+    },
+    "F32": {
+      "e2e": [
+        "e2e/tests/f32-zaproszenia.spec.ts"
+      ],
+      "lastTouched": "f59aba2",
+      "openTasks": 0,
+      "plans": [],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "gotowe (21.11): wydarzenie tylko z zaproszeniem, link (kopiuj, zmień), zaproszenia e-mailem (`e2e/tests/f32-zaproszenia.spec.ts`)",
+      "totalTasks": 0
+    },
+    "F33": {
+      "e2e": [
+        "e2e/tests/f33-sesje.spec.ts"
+      ],
+      "lastTouched": "fffa863",
+      "openTasks": 0,
+      "plans": [
+        "docs/superpowers/plans/2026-11-22-sesje.md"
+      ],
+      "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
+      "status": "gotowe (22.11): `queries/agenda-sessions.ts`, `e2e/tests/f33-sesje.spec.ts`",
+      "totalTasks": 10
+    },
+    "F34": {
+      "e2e": [],
+      "lastTouched": "d3ed4d3",
+      "openTasks": 35,
+      "plans": [
+        "docs/superpowers/plans/2026-11-23-pomocnik-opisow.md"
+      ],
+      "spec": null,
+      "status": null,
+      "totalTasks": 35
+    },
+    "F35": {
+      "e2e": [],
+      "lastTouched": "d3ed4d3",
+      "openTasks": 27,
+      "plans": [
+        "docs/superpowers/plans/2026-11-23-tresc-dwujezyczna.md"
+      ],
+      "spec": null,
+      "status": null,
+      "totalTasks": 27
+    },
+    "F36": {
+      "e2e": [],
+      "lastTouched": "d3ed4d3",
+      "openTasks": 34,
+      "plans": [
+        "docs/superpowers/plans/2026-11-23-rekomendacje-wydarzen.md"
+      ],
+      "spec": null,
+      "status": null,
+      "totalTasks": 34
+    }
+  },
+  "revision": "fad43ab"
+}

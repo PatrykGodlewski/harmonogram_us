@@ -15,6 +15,8 @@ import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
 import { formatEventTime } from "@repo/ui/time";
 import { cn } from "@repo/ui/utils";
+import { Link, useSearch } from "@tanstack/react-router";
+import { isItemFull } from "~/lib/event-details/item-seats";
 import type {
 	AgendaItemData,
 	EventDetailsData,
@@ -52,8 +54,11 @@ export function AgendaItemRow({
 	registrations,
 }: AgendaItemRowProps) {
 	const locale = getLocale();
-	const isFull =
-		seatCount.seatsRemaining !== null && seatCount.seatsRemaining <= 0;
+	const invite = useSearch({
+		strict: false,
+		select: (search) => search.invite,
+	});
+	const isFull = isItemFull(seatCount);
 
 	return (
 		<Tag
@@ -68,7 +73,16 @@ export function AgendaItemRow({
 					{formatEventTime(item.endsAt, locale)}
 					{item.locationLabel ? ` · ${item.locationLabel}` : ""}
 				</p>
-				<p className="font-medium">{item.title}</p>
+				<p className="font-medium">
+					<Link
+						to="/events/$eventId/program/$itemId"
+						params={{ eventId, itemId: item.id }}
+						search={{ invite }}
+						className="underline-offset-4 hover:underline"
+					>
+						{item.title}
+					</Link>
+				</p>
 				{item.speakers.length > 0 ? (
 					<ul aria-label={agenda_speakers()} className="text-sm">
 						{item.speakers.map((speaker, index) => (
@@ -86,33 +100,11 @@ export function AgendaItemRow({
 					</ul>
 				) : null}
 				{item.description ? (
-					<p className="text-sm text-muted-foreground">{item.description}</p>
+					<p className="line-clamp-2 text-sm text-muted-foreground">
+						{item.description}
+					</p>
 				) : null}
-				{item.materials.length > 0 || files.length > 0 ? (
-					<ul
-						aria-label={agenda_materials()}
-						className="flex flex-wrap gap-x-3 gap-y-1 text-sm"
-					>
-						{item.materials.map((material, index) => (
-							// biome-ignore lint/suspicious/noArrayIndexKey: a static list that may repeat a link
-							<li key={index}>
-								<a
-									href={material.url}
-									target="_blank"
-									rel="noopener noreferrer"
-									className="underline underline-offset-2"
-								>
-									{material.label}
-								</a>
-							</li>
-						))}
-						{files.map((file) => (
-							<li key={file.id}>
-								<FileLink file={file} />
-							</li>
-						))}
-					</ul>
-				) : null}
+				<AgendaItemMaterials item={item} files={files} />
 				{item.requiresRegistration && seatCount.maxSeats !== null ? (
 					<p
 						className="text-sm tabular-nums"
@@ -158,7 +150,7 @@ type AgendaItemActionProps = {
 	registrations: EventDetailsRegistrations;
 };
 
-function AgendaItemAction({
+export function AgendaItemAction({
 	item,
 	eventId,
 	user,
@@ -217,5 +209,42 @@ function AgendaItemAction({
 		>
 			{isFull ? event_details_full() : events_register()}
 		</Button>
+	);
+}
+
+type AgendaItemMaterialsProps = {
+	item: Pick<AgendaItemData, "materials">;
+	files: EventDetailsData["files"];
+};
+
+/** The item's links and the speakers' files (F19). */
+export function AgendaItemMaterials({ item, files }: AgendaItemMaterialsProps) {
+	if (item.materials.length === 0 && files.length === 0) {
+		return null;
+	}
+	return (
+		<ul
+			aria-label={agenda_materials()}
+			className="flex flex-wrap gap-x-3 gap-y-1 text-sm"
+		>
+			{item.materials.map((material, index) => (
+				// biome-ignore lint/suspicious/noArrayIndexKey: a static list that may repeat a link
+				<li key={index}>
+					<a
+						href={material.url}
+						target="_blank"
+						rel="noopener noreferrer"
+						className="underline underline-offset-2"
+					>
+						{material.label}
+					</a>
+				</li>
+			))}
+			{files.map((file) => (
+				<li key={file.id}>
+					<FileLink file={file} />
+				</li>
+			))}
+		</ul>
 	);
 }

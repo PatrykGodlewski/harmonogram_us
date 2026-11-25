@@ -46,5 +46,16 @@ e2e/load/.run/
 # Rust
 /target
 
-# Local HTTPS certificates for the dev servers (mkcert)
-.certs/
+
+# Terraform state, plans and local settings (infra/)
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+terraform.tfvars
+# Production settings with secrets (deploy/)
+deploy/.env.production
+!deploy/.env.production.example
+
+# e2e stack stamp (scripts/e2e.sh)
+.e2e/

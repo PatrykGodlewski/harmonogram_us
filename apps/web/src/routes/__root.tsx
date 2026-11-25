@@ -4,14 +4,13 @@ import { ensureCurrentUser } from "@repo/api/auth/current-user-query";
 import { syncDocumentLocale } from "@repo/i18n/localization/sync-document-locale";
 import {
 	error_title,
-	footer_accessibility,
-	footer_privacy,
 	go_home,
 	not_found_title,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { createStudentsRootDocumentHead } from "@repo/router-utils/metadata/students-root-document-head";
 import { Toaster } from "@repo/ui/components/sonner";
+import { HumanCheckProvider } from "@repo/ui/composed/auth/human-check";
 import { Header } from "@repo/ui/composed/header";
 import { HydrationMarker } from "@repo/ui/composed/hydration-marker";
 import type { QueryClient } from "@tanstack/react-query";
@@ -26,11 +25,12 @@ import {
 } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import appCss from "~/app.css?url";
+import { SiteFooter } from "~/components/site-footer";
 
 function NotFound() {
 	return (
 		<div className="flex min-h-[50vh] flex-col items-center justify-center gap-4">
-			<h1 className="text-2xl font-bold">{not_found_title()}</h1>
+			<h1 className="text-3xl">{not_found_title()}</h1>
 			<Link to="/" className="text-primary hover:underline">
 				{go_home()}
 			</Link>
@@ -41,7 +41,7 @@ function NotFound() {
 function ErrorComponent({ error }: { error: unknown }) {
 	return (
 		<div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 p-8">
-			<h1 className="text-xl font-bold text-red-600">{error_title()}</h1>
+			<h1 className="text-2xl text-destructive">{error_title()}</h1>
 			<p className="text-muted-foreground">
 				{error instanceof Error ? error.message : String(error)}
 			</p>
@@ -84,14 +84,7 @@ function RootComponent() {
 			<ReactQueryDevtools buttonPosition="bottom-right" />
 			<Header user={user} />
 			<Outlet />
-			<footer className="mx-auto flex w-full max-w-4xl flex-wrap gap-x-4 gap-y-1 px-4 py-6 text-sm text-muted-foreground">
-				<Link to="/privacy" className="underline underline-offset-2">
-					{footer_privacy()}
-				</Link>
-				<Link to="/accessibility" className="underline underline-offset-2">
-					{footer_accessibility()}
-				</Link>
-			</footer>
+			<SiteFooter />
 			<Toaster />
 			<HydrationMarker />
 		</>
@@ -105,7 +98,7 @@ function RootDocument({ children }: { children: ReactNode }) {
 				<HeadContent />
 			</head>
 			<body>
-				{children}
+				<HumanCheckProvider>{children}</HumanCheckProvider>
 				<Scripts />
 			</body>
 		</html>

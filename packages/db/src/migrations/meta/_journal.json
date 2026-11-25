@@ -281,6 +281,13 @@
       "when": 1795374646885,
       "tag": "0039_agenda_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1795548329772,
+      "tag": "0040_agenda_item_details",
+      "breakpoints": true
     }
   ]
 }

@@ -7,11 +7,17 @@ const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const REFLOW_WIDTH = 320;
 
 async function settle(page: Page) {
-	// Mid-fade colours read as low contrast: check the settled page.
+	// Mid-fade colours read as low contrast: check the settled page. Ambient loops
+	// (marquee, pixel flips) and scroll-driven reveals never finish, so they don't count.
 	await page.waitForFunction(() =>
 		document
 			.getAnimations()
-			.every((animation) => animation.playState !== "running"),
+			.every(
+				(animation) =>
+					animation.playState !== "running" ||
+					animation.effect?.getComputedTiming().iterations === Infinity ||
+					!(animation.timeline instanceof DocumentTimeline),
+			),
 	);
 }
 

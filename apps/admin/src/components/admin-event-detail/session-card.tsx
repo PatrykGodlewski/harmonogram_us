@@ -27,12 +27,14 @@ import {
 } from "@repo/ui/components/alert-dialog";
 import { Button } from "@repo/ui/components/button";
 import { sessionColorClasses } from "@repo/ui/session-colors";
-import { formatEventTime } from "@repo/ui/time";
+import { formatEventDay, formatEventTime } from "@repo/ui/time";
 import { cn } from "@repo/ui/utils";
 import { Link } from "@tanstack/react-router";
 
 type SessionCardProps = {
 	session: AgendaSession;
+	/** Multi-day programmes: the card names its day. */
+	showDay: boolean;
 	itemCount: number;
 	deleting: boolean;
 	onCopy: () => void;
@@ -43,6 +45,7 @@ type SessionCardProps = {
 /** A session in the event's programme: its theme, time and place, and what can be done with it. */
 export function SessionCard({
 	session,
+	showDay,
 	itemCount,
 	deleting,
 	onCopy,
@@ -62,6 +65,7 @@ export function SessionCard({
 			<div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
 				<div className="flex min-w-0 flex-col gap-0.5">
 					<p className="text-sm text-muted-foreground tabular-nums">
+						{showDay ? `${formatEventDay(session.startsAt, locale)} · ` : ""}
 						{formatEventTime(session.startsAt, locale)}–
 						{formatEventTime(session.endsAt, locale)}
 						{session.locationLabel ? ` · ${session.locationLabel}` : ""}

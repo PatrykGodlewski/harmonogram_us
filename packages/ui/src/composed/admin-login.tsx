@@ -1,4 +1,3 @@
-import { env } from "@repo/env/client";
 import {
 	auth_error_try_again,
 	auth_feedback_admin_login,
@@ -14,14 +13,13 @@ import {
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { useForm } from "@tanstack/react-form";
 import { useRouter } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { z } from "zod";
 import { Alert, AlertDescription, AlertTitle } from "../components/alert";
 import { Button } from "../components/button";
 import { FormMessage } from "../components/form-message";
 import { Input } from "../components/input";
 import { Label } from "../components/label";
-import { Captcha } from "./auth/captcha";
 import { formatFieldError, usePasswordLogin } from "./auth/password-login";
 
 export interface AdminLoginProps {
@@ -30,10 +28,6 @@ export interface AdminLoginProps {
 
 export function AdminLogin({ redirectTo }: AdminLoginProps) {
 	const router = useRouter();
-	const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-	const captchaSiteKey = env.VITE_TURNSTILE_SITE_KEY;
-	const captchaEnabled = Boolean(captchaSiteKey);
-	const isCaptchaMissing = captchaEnabled && !captchaToken;
 	const locale = getLocale();
 
 	const adminLoginSchema = useMemo(() => {
@@ -44,7 +38,7 @@ export function AdminLogin({ redirectTo }: AdminLoginProps) {
 		});
 	}, [locale]);
 
-	const passwordLogin = usePasswordLogin(redirectTo, captchaToken, {
+	const passwordLogin = usePasswordLogin(redirectTo, {
 		onSuccess: () => {
 			void router.navigate({ to: redirectTo });
 		},
@@ -73,7 +67,7 @@ export function AdminLogin({ redirectTo }: AdminLoginProps) {
 		: null;
 
 	return (
-		<div className="mx-auto max-w-sm rounded-lg border p-6">
+		<div className="mx-auto max-w-sm border border-navy bg-white p-6 shadow-[6px_6px_0_0_var(--navy)]">
 			<h1 className="mb-4 text-xl font-semibold">{auth_title_admin_login()}</h1>
 			<form
 				className="space-y-4"
@@ -134,16 +128,12 @@ export function AdminLogin({ redirectTo }: AdminLoginProps) {
 					)}
 				</form.Field>
 
-				{captchaSiteKey ? (
-					<Captcha siteKey={captchaSiteKey} onToken={setCaptchaToken} />
-				) : null}
-
 				<form.Subscribe selector={(s) => s.isSubmitting}>
 					{(isSubmitting) => (
 						<Button
 							type="submit"
 							className="w-full"
-							disabled={isBusy || isSubmitting || isCaptchaMissing}
+							disabled={isBusy || isSubmitting}
 						>
 							{isBusy || isSubmitting
 								? auth_submit_logging_in()

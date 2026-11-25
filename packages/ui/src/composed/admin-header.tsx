@@ -11,10 +11,13 @@ export interface AdminHeaderProps {
 
 export function AdminHeader({ user }: AdminHeaderProps) {
 	return (
-		<header className="border-b bg-background">
+		<header className="border-b border-navy bg-navy text-manela">
 			<nav className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
 				<Link to="/" className="flex min-w-0 items-center gap-3">
-					<AdminLogo />
+					<AdminLogo
+						badgeClassName="text-green"
+						textClassName="sr-only sm:not-sr-only"
+					/>
 				</Link>
 
 				<div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
@@ -24,7 +27,7 @@ export function AdminHeader({ user }: AdminHeaderProps) {
 							<Link to="/logout">{header_logout()}</Link>
 						</Button>
 					) : (
-						<Button asChild variant="ghost" size="sm">
+						<Button asChild variant="ghost" size="sm" className="text-manela">
 							<Link to="/login" search={{ redirect: undefined }}>
 								{header_login()}
 							</Link>

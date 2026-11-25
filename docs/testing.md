@@ -39,7 +39,7 @@ Select applicable cases: success, malformed input, permissions/ownership, empty/
 | During a task                                          | New/changed test first, then relevant test files and affected package lint/typecheck; inspect actual results                                     |
 | After simplification or a review fix                   | Regression test(s) and affected suites/checks again                                                                                              |
 | Shared-package or cross-cutting change                 | Checks for affected consumers, not just the producing package                                                                                    |
-| Closing a feature implementation plan / before merge   | `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, rebuilt e2e stack and `pnpm e2e`; tie local or CI evidence to the final implementation |
+| Closing a feature implementation plan / before merge   | `pnpm validate` (lint + `buf`, typecheck, test, build, Rust, e2e on a current stack); tie local or CI evidence to the final implementation       |
 | Documentation-only or narrowly scoped non-runtime task | Appropriate document/config checks; explain omitted application checks                                                                           |
 
 Use pnpm/Turbo package boundaries (`pnpm --filter <package> …`) before broad checks. Do not run the entire monorepo after every small edit. A filtered run proves only its selected scope: inspect test/project counts; zero selected tests is not a pass. A build does not replace typechecking.
@@ -50,7 +50,7 @@ Evidence may come from observed local execution or inspected CI for the same cod
 
 DB integration tests auto-create/migrate and truncate **only `harmonogram_us_test`**. Inspect configuration before destructive setup; never use the dev or production DB. Do not run destructive suites concurrently against the same database unless their isolation explicitly supports it.
 
-Playwright uses the separate `harmonogram-e2e` Compose stack and its disposable application database; do not confuse it with the Vitest DB or the development stack. Root scripts/`e2e/ports.env` own its connection settings. Run `pnpm e2e:up` after implementation changes, then `pnpm e2e`; source edits are not hot-reloaded into built images. Preserve failure artifacts before rebuilding or tearing down.
+Playwright uses the separate `harmonogram-e2e` Compose stack and its disposable application database; do not confuse it with the Vitest DB or the development stack. Root scripts/`e2e/ports.env` own its connection settings. Run `pnpm e2e:up` after implementation changes, then `pnpm e2e`; source edits are not hot-reloaded into built images. Iterate on a single spec with `scripts/e2e.sh run <spec> [--project=…]`, which rebuilds only when code changed, and never with the full suite. Preserve failure artifacts before rebuilding or tearing down.
 
 `e2e/playwright.config.ts` defines `komputer` (1280 px) and `telefon` (360 px). Ensure required tagged tests were selected in both applicable projects. Use existing Mailpit and navigation fixtures. Never treat a passing desktop-only filter as mobile acceptance evidence.
 

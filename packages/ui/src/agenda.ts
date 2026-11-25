@@ -317,6 +317,93 @@ export function filterBySession<
 	};
 }
 
+/** The day (YYYY-MM-DD) something starts on, in `timeZone`. */
+function dayOf(value: Date | string, timeZone: string): string {
+	return zonedParts(new Date(value), timeZone).day;
+}
+
+/**
+ * The days a programme runs on, in order. A session counts on the day it starts (with all
+ * its items, even past midnight); an item outside sessions on its own start day.
+ */
+export function programmeDays<
+	I extends AgendaTimed & { sessionId: string | null },
+	S extends AgendaTimed,
+>(items: I[], sessions: S[], timeZone: string): string[] {
+	const loose = items.filter((item) => item.sessionId === null);
+	return [
+		...new Set(
+			sortByStart([...loose, ...sessions]).map((entry) =>
+				dayOf(entry.startsAt, timeZone),
+			),
+		),
+	];
+}
+
+/**
+ * What happens on `day` (YYYY-MM-DD in `timeZone`): sessions starting that day with their
+ * items, and items outside sessions starting that day. `day` null keeps everything.
+ */
+export function filterByDay<
+	I extends AgendaTimed & { sessionId: string | null },
+	S extends AgendaTimed,
+>(
+	items: I[],
+	sessions: S[],
+	day: string | null,
+	timeZone: string,
+): { items: I[]; sessions: S[] } {
+	if (day === null) {
+		return { items, sessions };
+	}
+	const kept = sessions.filter(
+		(session) => dayOf(session.startsAt, timeZone) === day,
+	);
+	const keptIds = new Set(kept.map((session) => session.id));
+	return {
+		items: items.filter((item) =>
+			item.sessionId === null
+				? dayOf(item.startsAt, timeZone) === day
+				: keptIds.has(item.sessionId),
+		),
+		sessions: kept,
+	};
+}
+
+/** Programme entries grouped by the day they start on, keeping their order. */
+export function entriesByDay<I extends AgendaTimed, S extends AgendaTimed>(
+	entries: ProgrammeEntry<I, S>[],
+	timeZone: string,
+): { day: string; entries: ProgrammeEntry<I, S>[] }[] {
+	const groups: { day: string; entries: ProgrammeEntry<I, S>[] }[] = [];
+	for (const entry of entries) {
+		const day = dayOf(
+			entry.kind === "session" ? entry.session.startsAt : entry.item.startsAt,
+			timeZone,
+		);
+		const last = groups.at(-1);
+		if (last?.day === day) {
+			last.entries.push(entry);
+		} else {
+			groups.push({ day, entries: [entry] });
+		}
+	}
+	return groups;
+}
+
+/** One legend entry per session title and colour, in time order. */
+export function sessionLegend<S extends AgendaTimed & { color: unknown }>(
+	sessions: S[],
+): { title: string; color: S["color"] }[] {
+	const seen = new Set<string>();
+	return sortByStart(sessions).flatMap((session) => {
+		const key = `${session.title}\u0000${String(session.color)}`;
+		if (seen.has(key)) return [];
+		seen.add(key);
+		return [{ title: session.title, color: session.color }];
+	});
+}
+
 /** Milliseconds until the next full minute (when a clock showing HH:MM must change). */
 export function msUntilNextMinute(now: Date): number {
 	return 60_000 - (now.getTime() % 60_000);

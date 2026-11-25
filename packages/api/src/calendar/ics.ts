@@ -53,7 +53,7 @@ export function toIcs(events: IcsEvent[], calendarName: string): string {
 	const lines = [
 		"BEGIN:VCALENDAR",
 		"VERSION:2.0",
-		"PRODID:-//Harmonogram//Wydarzenia//PL",
+		"PRODID:-//Turnout//Wydarzenia//PL",
 		"CALSCALE:GREGORIAN",
 		"METHOD:PUBLISH",
 		`X-WR-CALNAME:${escapeText(calendarName)}`,

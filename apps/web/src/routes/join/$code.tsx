@@ -1,7 +1,5 @@
-import { Turnstile } from "@marsidev/react-turnstile";
 import { joinGroupServer } from "@repo/api/groups/mutations";
 import { joinGroupInfoQueryOptions } from "@repo/api/groups/queries";
-import { env } from "@repo/env/client";
 import {
 	error_group_not_found,
 	events_register_full,
@@ -19,6 +17,7 @@ import { appErrorMessage } from "@repo/ui/app-errors";
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
 import { Label } from "@repo/ui/components/label";
+import { useHumanCheck } from "@repo/ui/composed/auth/human-check";
 import { formatEventDateTime } from "@repo/ui/time";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -40,15 +39,16 @@ function JoinGroupPage() {
 	const locale = getLocale();
 	const info = useQuery(joinGroupInfoQueryOptions(code));
 	const [email, setEmail] = useState("");
-	const [captchaToken, setCaptchaToken] = useState<string | undefined>();
-	const captchaSiteKey = env.VITE_TURNSTILE_SITE_KEY;
+	const humanCheck = useHumanCheck();
 	const validEmail = z.email().safeParse(email.trim()).success;
 
 	const join = useMutation({
 		mutationFn: () =>
-			joinGroupServer({
-				data: { code, email: email.trim(), turnstileToken: captchaToken },
-			}),
+			humanCheck((token) =>
+				joinGroupServer({
+					data: { code, email: email.trim(), turnstileToken: token },
+				}),
+			),
 	});
 
 	const shell = (children: ReactNode) => (
@@ -108,22 +108,12 @@ function JoinGroupPage() {
 							onChange={(event) => setEmail(event.target.value)}
 						/>
 					</div>
-					{captchaSiteKey ? (
-						<Turnstile siteKey={captchaSiteKey} onSuccess={setCaptchaToken} />
-					) : null}
 					{join.isError ? (
 						<p className="text-sm text-destructive" role="alert">
 							{appErrorMessage(join.error, events_register_full)}
 						</p>
 					) : null}
-					<Button
-						type="submit"
-						disabled={
-							!validEmail ||
-							join.isPending ||
-							(Boolean(captchaSiteKey) && !captchaToken)
-						}
-					>
+					<Button type="submit" disabled={!validEmail || join.isPending}>
 						{join_submit()}
 					</Button>
 				</form>

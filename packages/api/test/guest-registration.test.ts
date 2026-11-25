@@ -49,12 +49,12 @@ describe("requestGuestRegistration", () => {
 		expect(url.searchParams.get("token")).toMatch(/^[\w-]{43}$/);
 	});
 
-	it("queues nothing when the event refuses guests", async () => {
+	it("queues nothing when the event takes no registrations", async () => {
 		const eventId = await createEvent();
-		await db.update(events).set({ visibility: "authenticated" }).where(eq(events.id, eventId));
+		await db.update(events).set({ status: "draft" }).where(eq(events.id, eventId));
 		await expect(
 			requestGuestRegistration({ eventId, email: "g@x.test", name: "G", locale: "en", answers: {} }),
-		).rejects.toThrow("GUESTS_NOT_ALLOWED");
+		).rejects.toThrow("EVENT_NOT_FOUND");
 		expect(await queuedEmails()).toHaveLength(0);
 	});
 });
@@ -112,7 +112,7 @@ describe("POST /guest-registration/confirm", () => {
 		expect(await second.json()).toMatchObject({ code: "GUEST_LINK_INVALID" });
 	});
 
-	it("re-checks access at confirmation: a revoked invite link or a signed-in-only switch", async () => {
+	it("re-checks access at confirmation: a revoked invite link refuses, a signed-in-only switch does not", async () => {
 		const { createGuestRequest } = await import("@repo/db/queries/guest-requests");
 		const inviteOnly = await createEvent();
 		await db
@@ -134,10 +134,13 @@ describe("POST /guest-registration/confirm", () => {
 
 		const publicEvent = await createEvent();
 		const token = await guestToken(publicEvent, "later@x.test");
+		// Becoming signed-in only does not stop a guest: the link signs them in.
 		await db.update(events).set({ visibility: "authenticated" }).where(eq(events.id, publicEvent));
 		const switched = await confirm(token);
-		expect(await switched.json()).toMatchObject({ code: "GUESTS_NOT_ALLOWED" });
-		expect(await registrationOf(publicEvent, "later@x.test")).toBeUndefined();
+		expect(switched.status).toBe(200);
+		expect(await registrationOf(publicEvent, "later@x.test")).toMatchObject({
+			state: "registered",
+		});
 	});
 
 	it("puts the guest on the waitlist when the event filled up meanwhile", async () => {

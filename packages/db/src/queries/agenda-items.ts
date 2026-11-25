@@ -1,4 +1,5 @@
 import { asc, eq, sql } from "drizzle-orm";
+import type { AgendaLanguage } from "../agenda-languages";
 import { type DbExecutor, db, type TransactionClient } from "../client";
 import {
 	type AgendaMaterial,
@@ -7,7 +8,11 @@ import {
 	agendaItems,
 	agendaSessions,
 } from "../schema/agenda";
-import { eventLocations } from "../schema/event-lookups";
+import {
+	eventFaculties,
+	eventLocations,
+	eventTypes,
+} from "../schema/event-lookups";
 import { events } from "../schema/events";
 import {
 	CAPACITY_EDIT_ERRORS,
@@ -30,6 +35,16 @@ export type AgendaItem = {
 	requiresRegistration: boolean;
 	speakers: AgendaSpeaker[];
 	materials: AgendaMaterial[];
+	typeId: string | null;
+	typeLabel: string | null;
+	facultyId: string | null;
+	facultyLabel: string | null;
+	topic: string | null;
+	audience: string | null;
+	languages: AgendaLanguage[];
+	/** The image is served by `/api/agenda-items/{id}/image`; its key stays on the server. */
+	hasImage: boolean;
+	imageAlt: string | null;
 	seatsRemaining: number | null;
 	registeredCount: number;
 };
@@ -46,6 +61,11 @@ export type AgendaItemInput = {
 	requiresRegistration?: boolean;
 	speakers?: AgendaSpeaker[];
 	materials?: AgendaMaterial[];
+	typeId?: string | null;
+	facultyId?: string | null;
+	topic?: string | null;
+	audience?: string | null;
+	languages?: AgendaLanguage[];
 };
 
 function selectAgendaItems(client: DbExecutor) {
@@ -64,11 +84,22 @@ function selectAgendaItems(client: DbExecutor) {
 			requiresRegistration: agendaItems.requiresRegistration,
 			speakers: agendaItems.speakers,
 			materials: agendaItems.materials,
+			typeId: agendaItems.typeId,
+			typeLabel: eventTypes.label,
+			facultyId: agendaItems.facultyId,
+			facultyLabel: eventFaculties.label,
+			topic: agendaItems.topic,
+			audience: agendaItems.audience,
+			languages: agendaItems.languages,
+			hasImage: sql<boolean>`${agendaItems.imageKey} IS NOT NULL`,
+			imageAlt: agendaItems.imageAlt,
 			seatsRemaining: agendaItemSeatCounts.seatsRemaining,
 			registeredCount: agendaItemSeatCounts.registeredCount,
 		})
 		.from(agendaItems)
 		.leftJoin(eventLocations, eq(agendaItems.locationId, eventLocations.id))
+		.leftJoin(eventTypes, eq(agendaItems.typeId, eventTypes.id))
+		.leftJoin(eventFaculties, eq(agendaItems.facultyId, eventFaculties.id))
 		.leftJoin(
 			agendaItemSeatCounts,
 			eq(agendaItems.id, agendaItemSeatCounts.agendaItemId),
@@ -168,6 +199,11 @@ export async function createAgendaItem(
 					requiresRegistration: input.requiresRegistration ?? true,
 					speakers: input.speakers ?? [],
 					materials: input.materials ?? [],
+					typeId: input.typeId ?? null,
+					facultyId: input.facultyId ?? null,
+					topic: input.topic ?? null,
+					audience: input.audience ?? null,
+					languages: input.languages ?? [],
 				})
 				.returning({ id: agendaItems.id });
 			const item = inserted ? await getAgendaItem(tx, inserted.id) : null;
@@ -220,6 +256,37 @@ export async function updateAgendaItem(
 	} catch (error) {
 		mapConstraintError(error, CAPACITY_EDIT_ERRORS);
 	}
+}
+
+/**
+ * Sets (or with null removes) the item's image; returns false for an unknown item. The
+ * previous object is queued for deletion by a trigger.
+ */
+export async function setAgendaItemImage(
+	id: string,
+	image: { key: string; alt: string } | null,
+): Promise<boolean> {
+	const updated = await db
+		.update(agendaItems)
+		.set({
+			imageKey: image?.key ?? null,
+			imageAlt: image?.alt ?? null,
+			updatedAt: new Date(),
+		})
+		.where(eq(agendaItems.id, id))
+		.returning({ id: agendaItems.id });
+	return updated.length > 0;
+}
+
+/** The item's event and image key, for serving the image. */
+export async function getAgendaItemImage(
+	id: string,
+): Promise<{ eventId: string; imageKey: string | null } | null> {
+	const [row] = await db
+		.select({ eventId: agendaItems.eventId, imageKey: agendaItems.imageKey })
+		.from(agendaItems)
+		.where(eq(agendaItems.id, id));
+	return row ?? null;
 }
 
 export async function deleteAgendaItem(

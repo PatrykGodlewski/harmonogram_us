@@ -81,18 +81,24 @@ export async function deleteObject(
 	}
 }
 
-/** A short-lived signed GET that downloads the object under `filename`. */
+/** How long a signed download link works: long enough to start the download. */
+export const SIGNED_URL_SECONDS = 60;
+
+/** A short-lived signed GET that downloads the object under `filename`, or shows it inline. */
 export async function presignDownload(
 	config: StorageConfig,
 	key: string,
 	filename: string,
-	expiresSeconds = 60,
+	options: { inline?: boolean; expiresSeconds?: number } = {},
 ): Promise<string> {
 	const url = new URL(objectUrl(config, key));
-	url.searchParams.set("X-Amz-Expires", String(expiresSeconds));
+	url.searchParams.set(
+		"X-Amz-Expires",
+		String(options.expiresSeconds ?? SIGNED_URL_SECONDS),
+	);
 	url.searchParams.set(
 		"response-content-disposition",
-		contentDisposition(filename),
+		options.inline ? "inline" : contentDisposition(filename),
 	);
 	const signed = await client(config).sign(url.toString(), {
 		method: "GET",

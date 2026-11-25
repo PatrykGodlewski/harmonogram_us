@@ -83,7 +83,7 @@ test("[F3] [F6] odwołanie zamyka zapisy, wysyła e-maile i zmienia stronę na �
 	).toBeVisible();
 	const xPage = await (await browser.newContext()).newPage();
 	await signInByEmail(xPage, `x-${base}`);
-	await open(xPage, "/pl/account");
+	await open(xPage, "/pl/my-events");
 	const entry = xPage
 		.getByRole("region", { name: "Nadchodzące" })
 		.getByRole("listitem")

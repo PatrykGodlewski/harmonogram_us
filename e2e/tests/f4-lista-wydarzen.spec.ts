@@ -1,6 +1,14 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import { createTestEvent } from "../fixtures/data";
 import { open } from "../fixtures/navigation";
+
+/** On a phone the filters fold behind a button. */
+async function openFilters(page: Page) {
+	const toggle = page.getByRole("button", { name: /^Filtry/ });
+	if (await toggle.isVisible()) {
+		await toggle.click();
+	}
+}
 
 test("[F4] wyszukiwanie i filtr wydziału zawężają listę @uczestnik", async ({
 	page,
@@ -23,6 +31,7 @@ test("[F4] wyszukiwanie i filtr wydziału zawężają listę @uczestnik", async 
 	await expect(page.getByText(second.title)).toHaveCount(0);
 	// When filtering by the second event's faculty instead
 	await page.getByPlaceholder("Wyszukaj wydarzenie...").fill(tag);
+	await openFilters(page);
 	await page.getByRole("combobox").filter({ hasText: "Wydział" }).click();
 	await page.getByRole("option", { name: `Wydział Chemii ${tag}` }).click();
 	// Then only the second is listed
@@ -85,6 +94,7 @@ test("[F4] filtry kiedy i forma zawężają listę @uczestnik", async ({
 
 	await open(page, `/pl?search=${tag}`);
 	await expect(page.getByText(later.title)).toBeVisible();
+	await openFilters(page);
 
 	// Each filter announces its name and its current value to screen readers
 	await expect(
@@ -102,4 +112,39 @@ test("[F4] filtry kiedy i forma zawężają listę @uczestnik", async ({
 	await page.getByRole("option", { name: "Online" }).click();
 	await expect(page.getByText(soon.title)).toHaveCount(0);
 	await expect(page.getByText(online.title)).toBeVisible();
+});
+
+test("[F4] wyszukiwarka nie gubi znaków w trakcie pisania @uczestnik", async ({
+	page,
+}) => {
+	const tag = crypto.randomUUID().slice(0, 6);
+	const event = await createTestEvent({ title: `Koncert chóru ${tag}` });
+	await open(page, "/pl");
+	const search = page.getByRole("searchbox", {
+		name: "Wyszukaj wydarzenie...",
+	});
+	// Pauses longer than the debounce: the list reloads while the person keeps typing
+	await search.pressSequentially(`Koncert chóru ${tag}`, { delay: 400 });
+	await expect(search).toHaveValue(`Koncert chóru ${tag}`);
+	await expect(page.getByRole("link", { name: event.title })).toBeVisible();
+	// The clear button empties the search
+	await page.getByRole("button", { name: "Wyczyść wyszukiwanie" }).click();
+	await expect(search).toHaveValue("");
+	await expect(page).not.toHaveURL(/search=/);
+});
+
+test("[F4] aktywne filtry są podsumowane i można je usunąć @uczestnik", async ({
+	page,
+}) => {
+	await open(page, "/pl?whenFilter=7d&modeFilter=online");
+	const active = page.getByRole("list", { name: "Aktywne filtry" });
+	await expect(active.getByRole("listitem")).toHaveCount(2);
+	await active
+		.getByRole("button", { name: "Usuń filtr: Termin: Najbliższe 7 dni" })
+		.click();
+	await expect(page).not.toHaveURL(/whenFilter/);
+	await expect(page).toHaveURL(/modeFilter=online/);
+	await page.getByRole("button", { name: "Wyczyść filtry" }).click();
+	await expect(page).not.toHaveURL(/modeFilter/);
+	await expect(active).toHaveCount(0);
 });

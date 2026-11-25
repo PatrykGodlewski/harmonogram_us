@@ -5,7 +5,6 @@ const STATUS: Partial<Record<AppErrorCode, number>> = {
 	UNAUTHORIZED: 401,
 	WITHDRAW_LINK_INVALID: 400,
 	GUEST_LINK_INVALID: 400,
-	GUESTS_NOT_ALLOWED: 403,
 	REAUTH_REQUIRED: 401,
 	FORBIDDEN: 403,
 	NOT_GROUP_OWNER: 403,
@@ -29,6 +28,8 @@ const STATUS: Partial<Record<AppErrorCode, number>> = {
 	ITEM_OUTSIDE_SESSION: 400,
 	SESSION_ITEMS_OUTSIDE: 400,
 	FILE_TOO_LARGE: 413,
+	IMAGE_TYPE: 400,
+	IMAGE_TOO_LARGE: 413,
 };
 
 /** A client-facing error: the code travels as the message, `status` becomes the HTTP status. */

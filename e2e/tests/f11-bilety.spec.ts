@@ -40,7 +40,7 @@ test("[F11] bilet z kodem QR na koncie @uczestnik", async ({
 
 	// When they open the ticket from their account
 	await signInByEmail(page, email);
-	await open(page, "/pl/account");
+	await open(page, "/pl/my-events");
 	await page
 		.getByRole("listitem")
 		.filter({ hasText: event.title })

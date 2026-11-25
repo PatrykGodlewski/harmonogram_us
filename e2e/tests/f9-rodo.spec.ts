@@ -5,7 +5,7 @@ import { db } from "@repo/db/client";
 import { registerForEvent } from "@repo/db/queries/event-registrations";
 import { authUsers } from "@repo/db/schema/better-auth";
 import { eq } from "drizzle-orm";
-import { signInByEmail, waitForCaptcha } from "../fixtures/auth";
+import { signInByEmail } from "../fixtures/auth";
 import { createTestEvent, createTestUser, uniqueEmail } from "../fixtures/data";
 import { open } from "../fixtures/navigation";
 
@@ -51,7 +51,7 @@ test("[F9] eksport zawiera moje zapisy, a po usunięciu konta logowanie nie dzia
 	await registerForEvent(event.id, user.id, "pl");
 
 	await signInByEmail(page, email);
-	await open(page, "/pl/account");
+	await open(page, "/pl/account?tab=privacy");
 	const data = page.getByRole("region", { name: "Twoje dane" });
 
 	// The export holds my registration
@@ -79,7 +79,6 @@ test("[F9] eksport zawiera moje zapisy, a po usunięciu konta logowanie nie dzia
 	await page.getByRole("button", { name: "Pokaż logowanie hasłem" }).click();
 	await page.getByLabel("E-mail").fill(email);
 	await page.getByLabel("Hasło", { exact: true }).fill(password);
-	await waitForCaptcha(page);
 	await page.getByRole("button", { name: "Zaloguj się hasłem" }).click();
 	await expect(page.getByRole("alert").first()).toBeVisible();
 	await expect(page).toHaveURL(/\/login/);

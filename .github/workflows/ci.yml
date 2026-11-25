@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [next, main]
+    branches: [main]
   pull_request:
 
 # Least privilege: jobs only read the repository.
@@ -27,6 +27,8 @@ jobs:
           cache: pnpm
       - run: cp .env.example .env
       - run: pnpm install --frozen-lockfile
+      - name: docs/status.json is current
+        run: node scripts/generate-status.mjs --check
       - run: pnpm lint
       - run: pnpm proto:lint
       - name: No breaking change to the gRPC contract (proto/) since main

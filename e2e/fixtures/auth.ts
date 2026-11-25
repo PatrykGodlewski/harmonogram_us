@@ -6,7 +6,6 @@ import { open } from "./navigation";
 export async function signInByEmail(page: Page, email: string): Promise<void> {
 	await open(page, "/pl/login");
 	await page.getByLabel("E-mail").fill(email);
-	await waitForCaptcha(page);
 	await page
 		.getByRole("button", { name: "Wyślij bezpieczny link logowania" })
 		.click();
@@ -18,16 +17,6 @@ export async function signInByEmail(page: Page, email: string): Promise<void> {
 	);
 	expect(link, "magic link in the e-mail").toBeTruthy();
 	await open(page, link ?? "");
-}
-
-/** Waits until the CAPTCHA widget (Cloudflare test keys pass automatically) has produced its token. */
-export async function waitForCaptcha(page: Page): Promise<void> {
-	await expect(page.locator('input[name="cf-turnstile-response"]')).toHaveValue(
-		/.+/,
-		{
-			timeout: 15_000,
-		},
-	);
 }
 
 /** The admin panel's address (its own app and origin). */
@@ -44,7 +33,6 @@ export async function signInAsAdmin(
 	await open(page, adminUrl("/pl/login"));
 	await page.getByLabel("E-mail").fill(email);
 	await page.getByLabel("Hasło", { exact: true }).fill(password);
-	await waitForCaptcha(page);
 	await page.getByRole("button", { name: "Zaloguj się", exact: true }).click();
 	// The panel navigates itself after signing in: let that page finish before the test moves on.
 	await page.waitForURL((url) => !url.pathname.endsWith("/login"), {

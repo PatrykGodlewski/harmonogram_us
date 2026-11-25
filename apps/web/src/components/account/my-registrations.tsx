@@ -19,7 +19,12 @@ import {
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
-import { formatEventDateTime, formatEventTime } from "@repo/ui/time";
+import {
+	eventDateStamp,
+	formatEventDateTime,
+	formatEventTime,
+} from "@repo/ui/time";
+import { cn } from "@repo/ui/utils";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import * as React from "react";
@@ -46,10 +51,8 @@ export function MyRegistrations({ userId }: { userId: string }) {
 		.reverse();
 
 	return (
-		<section className="mt-6 rounded-lg border p-4">
-			<h2 className="mb-4 text-lg font-semibold">
-				{account_my_registrations()}
-			</h2>
+		<section className="flex flex-col gap-4">
+			<h2 className="mb-4 text-xl">{account_my_registrations()}</h2>
 			{registrations.length === 0 ? (
 				<p className="text-sm text-muted-foreground">
 					{account_registrations_empty()}
@@ -80,7 +83,10 @@ function RegistrationGroup({
 	const headingId = React.useId();
 	return (
 		<section aria-labelledby={headingId} className="flex flex-col gap-2">
-			<h3 id={headingId} className="text-sm font-medium text-muted-foreground">
+			<h3
+				id={headingId}
+				className="font-mono text-xs font-bold tracking-widest uppercase"
+			>
 				{title}
 			</h3>
 			{rows.length === 0 ? (
@@ -88,7 +94,7 @@ function RegistrationGroup({
 					{account_section_empty()}
 				</p>
 			) : (
-				<ul className="divide-y">
+				<ul className="flex flex-col gap-3">
 					{rows.map((row) => (
 						<RegistrationRow
 							key={row.registrationId}
@@ -106,10 +112,10 @@ function RegistrationGroup({
 function RegistrationArchive({ rows }: { rows: MyRegistrationListItem[] }) {
 	return (
 		<details className="group flex flex-col gap-2">
-			<summary className="cursor-pointer text-sm font-medium text-muted-foreground">
+			<summary className="cursor-pointer font-mono text-xs font-bold tracking-widest uppercase">
 				{account_archive({ count: rows.length })}
 			</summary>
-			<ul className="mt-2 divide-y">
+			<ul className="mt-3 flex flex-col gap-3">
 				{rows.map((row) => (
 					<RegistrationRow
 						key={row.registrationId}
@@ -149,67 +155,89 @@ function RegistrationRow({
 	const actions = useRegistrationActions();
 	const handleWithdraw = () => actions.unregister(row.eventId);
 	const isCancelled = row.eventStatus === "cancelled";
+	const stamp = eventDateStamp(row.date, locale);
 
 	return (
-		<li className="flex flex-col gap-3 py-3 sm:flex-row sm:items-start sm:justify-between">
-			<div className="flex flex-col gap-1">
-				<p className="font-medium">{row.title}</p>
-				<p className="text-sm text-muted-foreground tabular-nums">
-					{formatEventDateTime(row.date, locale)}
-					{row.locationLabel ? ` · ${row.locationLabel}` : ""}
-				</p>
-				<div className="flex flex-wrap gap-2">
-					{isCancelled ? (
-						<Badge variant="destructive">{event_status_cancelled()}</Badge>
-					) : null}
-					<Badge variant={row.state === "registered" ? "default" : "secondary"}>
-						{stateLabel(row)}
-					</Badge>
-				</div>
-				{row.items.length > 0 ? (
-					<ul className="text-sm text-muted-foreground">
-						{row.items.map((item) => (
-							<li key={item.id} className="tabular-nums">
-								{formatEventTime(item.startsAt, locale)} {item.title}
-							</li>
-						))}
-					</ul>
-				) : null}
-			</div>
-			<div className="flex flex-wrap gap-2 sm:shrink-0">
-				<Button size="sm" variant="outline" asChild>
-					<Link to="/events/$eventId" params={{ eventId: row.eventId }}>
-						{account_open_event()}
-					</Link>
-				</Button>
-				{row.state === "registered" && !isCancelled && !archived ? (
-					<Button size="sm" variant="outline" asChild>
-						<Link
-							to="/tickets/$registrationId"
-							params={{ registrationId: row.registrationId }}
+		<li
+			className={cn(
+				"grid grid-cols-[4.5rem_1fr] border border-navy",
+				archived ? "bg-manela" : "bg-white",
+			)}
+		>
+			{/* A ticket stub: the day in pixels, the month under it. */}
+			<p
+				aria-hidden
+				className="flex flex-col items-center justify-center gap-1 border-r border-dashed border-navy py-3"
+			>
+				<span className="font-pixel text-3xl leading-none tabular-nums">
+					{stamp.day}
+				</span>
+				<span className="font-mono text-xs font-bold tracking-widest uppercase">
+					{stamp.month}
+				</span>
+			</p>
+			<div className="flex min-w-0 flex-col gap-3 p-3 sm:flex-row sm:items-start sm:justify-between">
+				<div className="flex min-w-0 flex-col gap-1">
+					<p className="font-bold break-words">{row.title}</p>
+					<p className="text-sm text-muted-foreground tabular-nums">
+						{formatEventDateTime(row.date, locale)}
+						{row.locationLabel ? ` · ${row.locationLabel}` : ""}
+					</p>
+					<div className="flex flex-wrap gap-2">
+						{isCancelled ? (
+							<Badge variant="destructive">{event_status_cancelled()}</Badge>
+						) : null}
+						<Badge
+							variant={row.state === "registered" ? "default" : "secondary"}
 						>
-							{account_ticket()}
+							{stateLabel(row)}
+						</Badge>
+					</div>
+					{row.items.length > 0 ? (
+						<ul className="text-sm text-muted-foreground">
+							{row.items.map((item) => (
+								<li key={item.id} className="tabular-nums">
+									{formatEventTime(item.startsAt, locale)} {item.title}
+								</li>
+							))}
+						</ul>
+					) : null}
+				</div>
+				<div className="flex flex-wrap gap-2 sm:shrink-0">
+					<Button size="sm" variant="outline" asChild>
+						<Link to="/events/$eventId" params={{ eventId: row.eventId }}>
+							{account_open_event()}
 						</Link>
 					</Button>
-				) : null}
-				{row.certificateAvailable ? (
-					<Button size="sm" variant="outline" asChild>
-						<a href={`/api/certificates/${row.registrationId}`} download>
-							{certificate_download()}
-						</a>
-					</Button>
-				) : null}
-				{canWithdraw && !isCancelled && row.state !== "rejected" ? (
-					<UnregisterEventDialog onConfirm={handleWithdraw}>
-						<Button
-							size="sm"
-							variant="outline"
-							disabled={actions.isPending("unregister", row.eventId)}
-						>
-							{events_unregister()}
+					{row.state === "registered" && !isCancelled && !archived ? (
+						<Button size="sm" variant="outline" asChild>
+							<Link
+								to="/tickets/$registrationId"
+								params={{ registrationId: row.registrationId }}
+							>
+								{account_ticket()}
+							</Link>
 						</Button>
-					</UnregisterEventDialog>
-				) : null}
+					) : null}
+					{row.certificateAvailable ? (
+						<Button size="sm" variant="outline" asChild>
+							<a href={`/api/certificates/${row.registrationId}`} download>
+								{certificate_download()}
+							</a>
+						</Button>
+					) : null}
+					{canWithdraw && !isCancelled && row.state !== "rejected" ? (
+						<UnregisterEventDialog onConfirm={handleWithdraw}>
+							<Button
+								size="sm"
+								variant="outline"
+								disabled={actions.isPending("unregister", row.eventId)}
+							>
+								{events_unregister()}
+							</Button>
+						</UnregisterEventDialog>
+					) : null}
+				</div>
 			</div>
 		</li>
 	);

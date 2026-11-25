@@ -150,9 +150,14 @@ describe("panel server functions check event access", () => {
 		"../src/admin/invitations.ts",
 		"../src/admin/questions.ts",
 		"../src/admin/sessions.ts",
+		"../src/admin/materials.ts",
+		"../src/admin/agenda-item-image.ts",
 	];
 	/** Panel-wide reads that are not about one event. */
-	const panelWide = ["fetchAdminEventFilterOptionsServer"];
+	const panelWide = [
+		"fetchAdminEventFilterOptionsServer",
+		"fetchFilesAvailableServer",
+	];
 	const checks =
 		/assertCanManageEvent|assertCanCheckIn|assertCanManageAgendaItem|assertCanManageAgendaSession|assertCanManageQuestion|assertCanCreateEvents|assertCanDeleteEvent|listManagedEventIds/;
 

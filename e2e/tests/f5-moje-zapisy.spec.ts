@@ -38,7 +38,7 @@ test("[F5] konto pokazuje moje nadchodzące i minione zapisy @uczestnik", async 
 
 	// When they open their account
 	await signInByEmail(page, email);
-	await open(page, "/pl/account");
+	await open(page, "/pl/my-events");
 
 	// Then upcoming and past registrations are listed with their state
 	const upcomingSection = page.getByRole("region", { name: "Nadchodzące" });
@@ -88,7 +88,7 @@ test("[F5] konto pokazuje zapisy od razu, bez pustego stanu @uczestnik", async (
 	await registerForEvent(event.id, user.id, "pl");
 	await signInByEmail(page, email);
 	// When the account page is rendered on the server
-	const html = await (await page.request.get("/pl/account")).text();
+	const html = await (await page.request.get("/pl/my-events")).text();
 	// Then it already lists the registration
 	expect(html).toContain(event.title);
 	expect(html).not.toContain("Nie masz jeszcze żadnych zapisów.");
@@ -107,7 +107,7 @@ test("[F5] awans z listy widać na otwartym koncie bez odświeżania @uczestnik"
 	await registerForEvent(event.id, other.id, "pl");
 	await registerForEvent(event.id, user.id, "pl");
 	await signInByEmail(page, email);
-	await open(page, "/pl/account");
+	await open(page, "/pl/my-events");
 	const card = page
 		.getByRole("region", { name: "Nadchodzące" })
 		.getByRole("listitem")

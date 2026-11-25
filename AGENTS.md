@@ -8,6 +8,8 @@ Mobile-first campus events: `apps/web` (public), `apps/admin` (management), `app
 
 pnpm 10 + Turbo, Node ≥22.12. TanStack Start/Router/Query, Drizzle/Postgres, Better Auth, Paraglide, shadcn/Tailwind, Biome; React Compiler enabled.
 
+Directory guides: `e2e/AGENTS.md`, `packages/api/AGENTS.md`, `packages/db/AGENTS.md`, `apps/web/AGENTS.md`, `apps/admin/AGENTS.md`. Read the one that matches where you work.
+
 ## Working rules
 
 - Scope comes from the [product spec](docs/superpowers/specs/2026-11-19-produkt-design.md) and approved decisions/plan. Follow [workflow](docs/workflow.md) for feature work: reconcile spec, plan, code/tests and existing ledger before starting/resuming. One active plan (~10 tasks), one ledger, inline execution, final fresh-context review. No temporary solutions or speculative code.

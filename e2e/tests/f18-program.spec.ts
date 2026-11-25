@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectAccessible } from "../fixtures/a11y";
 import { signInByEmail } from "../fixtures/auth";
 import { createTestEvent, createTestUser, uniqueEmail } from "../fixtures/data";
 import { open } from "../fixtures/navigation";
@@ -41,11 +42,11 @@ test("[F18] program w widoku listy i kalendarza @uczestnik", async ({
 		return {
 			sameRow: boxA !== null && boxA.y === boxB?.y,
 			sideBySide: boxA !== null && boxB !== null && boxA.x !== boxB.x,
-			inside:
-				boxA !== null &&
-				boxB !== null &&
-				boxA.x + boxA.width <= width &&
-				boxB.x + boxB.width <= width,
+			// Parallel items may scroll sideways inside the grid, never the page itself
+			inside: await page.evaluate(
+				(viewport) => document.documentElement.scrollWidth <= viewport,
+				width,
+			),
 		};
 	};
 	await expect
@@ -125,4 +126,49 @@ test("[F18] bieżąca godzina w kalendarzu zmienia się z każdą minutą @uczes
 			name: label(new Date(minuteStart + 60_000)),
 		}),
 	).toBeVisible({ timeout: 1_000 });
+});
+
+test("[F18] trwający ostatni punkt programu nie psuje listy @uczestnik", async ({
+	page,
+}) => {
+	// An event that started an hour ago; its last item is running now
+	const event = await createTestEvent({
+		startsInDays: 0,
+		agenda: [
+			{ title: "Otwarcie", startHour: -1, durationMinutes: 30 },
+			{ title: "Panel trwa", startHour: -0.25, durationMinutes: 60 },
+		],
+	});
+	await open(page, `/pl/events/${event.id}`);
+	await expect(page.getByText("Panel trwa")).toBeVisible();
+	// The "now" line after the last item stays inside the list (WCAG checks list markup)
+	await expectAccessible(
+		page,
+		"program z trwającym ostatnim punktem",
+		event.title,
+	);
+});
+
+test("[F18] kalendarz z równoległymi punktami jest czytelny na telefonie @uczestnik", async ({
+	page,
+}) => {
+	const event = await createTestEvent({
+		agenda: ["A", "B", "C", "D"].map((letter) => ({
+			title: `Warsztat równoległy ${letter}`,
+			startHour: 1,
+		})),
+	});
+	await open(page, `/pl/events/${event.id}?agenda=calendar`);
+	const block = page.getByRole("button", { name: /Warsztat równoległy A/ });
+	await expect(block).toBeVisible();
+	// Parallel items never squeeze below a readable width: the grid scrolls sideways instead
+	const width = await block.evaluate(
+		(element) => element.getBoundingClientRect().width,
+	);
+	expect(width).toBeGreaterThanOrEqual(140);
+	await expectAccessible(
+		page,
+		"kalendarz z równoległymi punktami",
+		event.title,
+	);
 });

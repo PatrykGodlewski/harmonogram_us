@@ -132,7 +132,7 @@ test("[F30] odrzucony widzi decyzję i nie może się wypisać @uczestnik", asyn
 		.where(eq(eventRegistrations.userId, user.id));
 	await signInByEmail(page, email);
 
-	await open(page, "/pl/account");
+	await open(page, "/pl/my-events");
 	const row = page.getByRole("listitem").filter({ hasText: event.title });
 	await expect(row.getByText("Odrzucone")).toBeVisible();
 	await expect(row.getByRole("button", { name: "Wypisz się" })).toBeHidden();

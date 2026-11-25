@@ -85,7 +85,7 @@ test("[F12] obecny pobiera zaświadczenie, nieobecny nie @uczestnik", async ({
 		.where(eq(events.id, event.id));
 
 	await signInByEmail(page, `present-${base}`);
-	await open(page, "/pl/account");
+	await open(page, "/pl/my-events");
 	await page.getByText(/^Archiwum \(\d+\)$/).click();
 	const row = page.getByRole("listitem").filter({ hasText: event.title });
 	const link = row.getByRole("link", { name: "Pobierz zaświadczenie" });
@@ -116,7 +116,7 @@ test("[F12] obecny pobiera zaświadczenie, nieobecny nie @uczestnik", async ({
 		`/api/certificates/${absentRow?.id ?? ""}`,
 	);
 	expect(refused.status()).toBe(404);
-	await open(other, "/pl/account");
+	await open(other, "/pl/my-events");
 	await expect(
 		other.getByRole("link", { name: "Pobierz zaświadczenie" }),
 	).toHaveCount(0);
@@ -153,7 +153,9 @@ test("[F12] po wydarzeniu obecni dostają e-mail z zaświadczeniem", async () =>
 		subject: "Zaświadczenie",
 	});
 	expect(message.subject).toContain(event.title);
-	expect(message.links.some((href) => href.endsWith("/pl/account"))).toBe(true);
+	expect(message.links.some((href) => href.endsWith("/pl/my-events"))).toBe(
+		true,
+	);
 	const response = await fetch(
 		`${process.env.E2E_MAILPIT_URL ?? "http://localhost:18025"}/api/v1/search?query=${encodeURIComponent(`to:"absent-${base}" subject:"Zaświadczenie"`)}`,
 	);

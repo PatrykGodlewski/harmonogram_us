@@ -104,7 +104,7 @@ test("[F3] pełny cykl: admin tworzy, uczestnik się zapisuje, wydarzenie się k
 	await expect(
 		user.getByText("To wydarzenie już się odbyło.").first(),
 	).toBeVisible();
-	await open(user, "/pl/account");
+	await open(user, "/pl/my-events");
 	await user.getByText(/^Archiwum \(\d+\)$/).click();
 	await expect(
 		user.locator("details").filter({ hasText: "Archiwum" }).getByText(title),
@@ -124,7 +124,7 @@ test("[F3] pełny cykl: admin tworzy, uczestnik się zapisuje, wydarzenie się k
 	).toHaveCount(0);
 
 	// Then it disappears from the participant's account and its page says it's gone
-	await open(user, "/pl/account");
+	await open(user, "/pl/my-events");
 	await expect(user.getByText(toDelete.title)).toHaveCount(0);
 	const gone = await user.request.get(`/pl/events/${toDelete.id}`);
 	expect(gone.status()).toBe(404);

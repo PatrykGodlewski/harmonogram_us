@@ -5,6 +5,7 @@ import {
 	event_details_sessions,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
+import { sessionLegend } from "@repo/ui/agenda";
 import {
 	Dialog,
 	DialogContent,
@@ -16,6 +17,7 @@ import { sessionColorClasses } from "@repo/ui/session-colors";
 import { formatEventTime } from "@repo/ui/time";
 import { cn } from "@repo/ui/utils";
 import * as React from "react";
+import { isItemFull } from "~/lib/event-details/item-seats";
 import type {
 	AgendaItemData,
 	EventDetailsRegistrations,
@@ -37,9 +39,6 @@ type AgendaCalendarProps = {
 	) => React.ReactNode;
 };
 
-const isFull = (seatCount: ItemSeatCount) =>
-	seatCount.seatsRemaining !== null && seatCount.seatsRemaining <= 0;
-
 /** The public agenda as a time grid; a tapped item opens with its registration. */
 export function AgendaCalendar({
 	items,
@@ -59,6 +58,11 @@ export function AgendaCalendar({
 	};
 
 	const colorOf = new Map(sessions.map((row) => [row.id, row.color]));
+	const placeOf = new Map(sessions.map((row) => [row.id, row.locationLabel]));
+	const placeLabel = (item: AgendaItemData) =>
+		item.locationLabel ??
+		(item.sessionId ? placeOf.get(item.sessionId) : null) ??
+		null;
 	const sessionBorder = (item: AgendaItemData) => {
 		const color = item.sessionId ? colorOf.get(item.sessionId) : undefined;
 		return color ? sessionColorClasses[color].border : undefined;
@@ -71,16 +75,19 @@ export function AgendaCalendar({
 					aria-label={event_details_sessions()}
 					className="flex flex-wrap gap-x-4 gap-y-1 text-sm"
 				>
-					{sessions.map((session) => (
-						<li key={session.id} className="flex items-center gap-1.5">
+					{sessionLegend(sessions).map((entry) => (
+						<li
+							key={`${entry.title}-${entry.color}`}
+							className="flex items-center gap-1.5"
+						>
 							<span
 								aria-hidden
 								className={cn(
 									"size-3 rounded-full",
-									sessionColorClasses[session.color].bar,
+									sessionColorClasses[entry.color].bar,
 								)}
 							/>
-							{session.title}
+							{entry.title}
 						</li>
 					))}
 				</ul>
@@ -92,8 +99,8 @@ export function AgendaCalendar({
 				blockClassName={(item) =>
 					cn(
 						registrations.registeredItemIds.has(item.id)
-							? "border-primary bg-primary/10"
-							: isFull(seatCountOf(item)) && "bg-muted text-muted-foreground",
+							? "bg-lime"
+							: isItemFull(seatCountOf(item)) && "bg-cream",
 						sessionBorder(item),
 					)
 				}
@@ -101,14 +108,17 @@ export function AgendaCalendar({
 					const seatCount = seatCountOf(item);
 					return (
 						<>
-							<span className="tabular-nums text-muted-foreground">
+							<span className="font-mono tabular-nums">
 								{formatEventTime(item.startsAt, locale)}–
 								{formatEventTime(item.endsAt, locale)}
 							</span>
-							<span className="line-clamp-2 font-medium">{item.title}</span>
+							<span className="line-clamp-3 font-bold">{item.title}</span>
+							{placeLabel(item) ? (
+								<span className="truncate">{placeLabel(item)}</span>
+							) : null}
 							{item.requiresRegistration && seatCount.maxSeats !== null ? (
 								<span className="tabular-nums">
-									{isFull(seatCount)
+									{isItemFull(seatCount)
 										? event_details_full()
 										: event_details_places_left({
 												remaining: seatCount.seatsRemaining ?? 0,

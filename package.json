@@ -16,7 +16,7 @@
   "scripts": {
     "deps:bump": "taze major -r -f -l -w",
     "messages:compile": "pnpm --filter @repo/i18n run compile",
-    "prepare": "pnpm run messages:compile && pnpm --filter @repo/rpc generate",
+    "prepare": "pnpm run messages:compile && pnpm --filter @repo/rpc generate && node scripts/install-hooks.mjs",
     "dev": "turbo dev --filter=web --filter=admin --filter=worker",
     "build": "turbo build",
     "lint": "turbo lint",
@@ -31,6 +31,9 @@
     "e2e:up": "docker compose -p harmonogram-e2e --env-file .env --env-file e2e/ports.env --profile app --profile e2e up -d --build --wait --remove-orphans && DATABASE_URL=postgresql://postgres:postgres@localhost:15432/harmonogram_us pnpm --filter @repo/db db:migrate",
     "e2e:down": "docker compose -p harmonogram-e2e --env-file .env --env-file e2e/ports.env --profile app --profile e2e down -v",
     "e2e": "pnpm --filter e2e e2e",
+    "env:doctor": "node scripts/doctor.mjs",
+    "validate": "sh scripts/validate.sh",
+    "scaffold": "node scripts/scaffold.mjs",
     "db:account": "pnpm --filter @repo/db db:account",
     "load": "pnpm --filter e2e load",
     "load:stress": "pnpm --filter e2e load:stress",

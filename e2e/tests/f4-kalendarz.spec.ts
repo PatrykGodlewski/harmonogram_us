@@ -48,7 +48,7 @@ test("[F4] plik ICS zawiera wydarzenie z poprawnym terminem i linkiem @uczestnik
 
 	// The personal subscription on the account page lists my registration
 	await signInByEmail(page, email);
-	await open(page, "/pl/account");
+	await open(page, "/pl/my-events");
 	const feed = page.getByRole("textbox", {
 		name: "Adres subskrypcji moich zapisów",
 	});

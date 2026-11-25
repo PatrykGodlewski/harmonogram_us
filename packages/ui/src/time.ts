@@ -25,6 +25,44 @@ export function formatEventTime(date: Date | string, locale: string): string {
 	});
 }
 
+/** A day for a chip: "sob., 12.12" / "Sat, 12/12", in the event time zone. */
+export function formatEventDay(date: Date | string, locale: string): string {
+	return toDate(date).toLocaleDateString(locale, {
+		timeZone: EVENT_TIME_ZONE,
+		weekday: "short",
+		day: "numeric",
+		month: locale === "pl" ? "2-digit" : "numeric",
+	});
+}
+
+/** A date for a stamp: day number and short month ("12", "gru"), in the event time zone. */
+export function eventDateStamp(
+	date: Date | string,
+	locale: string,
+): { day: string; month: string } {
+	const parts = new Intl.DateTimeFormat(locale, {
+		timeZone: EVENT_TIME_ZONE,
+		day: "numeric",
+		month: "short",
+	}).formatToParts(toDate(date));
+	const part = (type: string) =>
+		parts.find((entry) => entry.type === type)?.value.replace(".", "") ?? "";
+	return { day: part("day"), month: part("month") };
+}
+
+/** A day for a heading: "sobota, 12 grudnia" / "Saturday, December 12". */
+export function formatEventDayLong(
+	date: Date | string,
+	locale: string,
+): string {
+	return toDate(date).toLocaleDateString(locale, {
+		timeZone: EVENT_TIME_ZONE,
+		weekday: "long",
+		day: "numeric",
+		month: "long",
+	});
+}
+
 /** "Nov 25, 2026, 10:00": date and time in the event time zone, the app's standard format. */
 export function formatEventDateTime(
 	date: Date | string,
@@ -83,4 +121,27 @@ export function fromEventWallTime(date: string, time: string): Date {
 	// Re-check the offset at the resulting instant to handle DST changes.
 	const first = asUtc - zoneOffsetMs(new Date(asUtc));
 	return new Date(asUtc - zoneOffsetMs(new Date(first)));
+}
+
+/** Whether a same-day range of `HH:mm` times ends after midnight (23:00–01:30). */
+export function endsNextDay(startTime: string, endTime: string): boolean {
+	return Boolean(startTime && endTime && endTime < startTime);
+}
+
+/** Start and end of a programme slot on `date`; an end before the start is on the next day. */
+export function fromEventWallTimeRange(
+	date: string,
+	startTime: string,
+	endTime: string,
+): { startsAt: Date; endsAt: Date } {
+	const [year, month, day] = date.split("-").map(Number);
+	const endDate = endsNextDay(startTime, endTime)
+		? new Date(Date.UTC(year ?? 0, (month ?? 1) - 1, (day ?? 1) + 1))
+				.toISOString()
+				.slice(0, 10)
+		: date;
+	return {
+		startsAt: fromEventWallTime(date, startTime),
+		endsAt: fromEventWallTime(endDate, endTime),
+	};
 }

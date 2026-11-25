@@ -237,6 +237,11 @@ export async function copyAgendaSession(
 					requiresRegistration: item.requiresRegistration,
 					speakers: item.speakers,
 					materials: item.materials,
+					typeId: item.typeId,
+					facultyId: item.facultyId,
+					topic: item.topic,
+					audience: item.audience,
+					languages: item.languages,
 				})),
 			);
 		}

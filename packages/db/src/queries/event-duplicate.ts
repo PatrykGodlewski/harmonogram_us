@@ -170,6 +170,14 @@ async function copyEvent(
 					requiresRegistration: agendaItems.requiresRegistration,
 					speakers: agendaItems.speakers,
 					materials: agendaItems.materials,
+					typeId: agendaItems.typeId,
+					facultyId: agendaItems.facultyId,
+					topic: agendaItems.topic,
+					audience: agendaItems.audience,
+					languages: agendaItems.languages,
+					// The image stays with the source (its object would be deleted twice).
+					imageKey: sql<string | null>`null`.as("image_key"),
+					imageAlt: sql<string | null>`null`.as("image_alt"),
 					createdAt: sql<Date>`now()`.as("created_at"),
 					updatedAt: sql<Date>`now()`.as("updated_at"),
 				})

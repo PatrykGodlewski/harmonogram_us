@@ -34,7 +34,7 @@ PDFs slows the rest of the site (the Rust documents service, Plan 7).
 **Reports and Prometheus.** Every scenario writes an HTML report (k6 web dashboard) and a JSON
 summary to `load/.run/`. With `pnpm observability:up` running, k6 also streams its metrics to
 Prometheus (remote write), next to the apps' own metrics, and Grafana shows both on the
-"Harmonogram" dashboard (http://localhost:13002 for the e2e stack).
+"Turnout" dashboard (http://localhost:13002 for the e2e stack).
 
 Settings are in `config.ts`; run data and k6 summaries go to `load/.run/` (gitignored).
 Server functions are same-origin RPC (TanStack Start docs), so k6 sends the browser's

@@ -1,0 +1,11 @@
+# Automatic HTTPS (Let's Encrypt) for the server's name. The public site is on 443;
+# the admin panel on 8443 is its own origin, as ADMIN_URL requires.
+{$WEB_HOST} {
+	encode zstd gzip
+	reverse_proxy web:3000
+}
+
+{$WEB_HOST}:8443 {
+	encode zstd gzip
+	reverse_proxy admin:3000
+}

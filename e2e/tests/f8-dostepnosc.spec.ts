@@ -26,6 +26,12 @@ test("[F8] publiczne ekrany spełniają WCAG AA @uczestnik", async ({ page }) =>
 
 	await audit(page, "/pl", "lista", SITE);
 	await audit(page, `/pl/events/${event.id}`, "wydarzenie", event.title);
+	await audit(
+		page,
+		`/pl/events/${event.id}/program/${event.itemIds[0]}`,
+		"punkt programu",
+		"Otwarcie",
+	);
 	await audit(page, "/pl/login", "logowanie", "Logowanie");
 	await audit(page, "/pl/signup", "rejestracja", "Rejestracja");
 	await audit(page, "/pl/privacy", "dane osobowe", "Informacja o danych");
@@ -42,12 +48,17 @@ test("[F8] publiczne ekrany spełniają WCAG AA @uczestnik", async ({ page }) =>
 		"Accessibility statement",
 	);
 
-	// Guests (F17): the form on the event page, the confirm and withdraw pages.
-	await open(page, `/pl/events/${event.id}`);
-	await page.getByRole("button", { name: "Zapisz się bez konta" }).click();
-	await page.getByRole("dialog").waitFor();
-	await expectAccessibleOverlay(page, "zapis bez konta");
-	await page.keyboard.press("Escape");
+	// Registering (F17): the event's sign-in page with both choices, the confirm and
+	// withdraw pages.
+	await audit(
+		page,
+		`/pl/login?redirect=/events/${event.id}&event=${event.id}`,
+		"zapis na wydarzenie: konto",
+		"Logowanie",
+	);
+	await page.getByRole("radio", { name: "Bez konta — wyślij mi link" }).check();
+	await page.getByRole("form", { name: "Zapis bez konta" }).waitFor();
+	await expectAccessible(page, "zapis na wydarzenie: bez konta", "Logowanie");
 	await audit(
 		page,
 		"/pl/guest/confirm?token=x",
@@ -79,6 +90,7 @@ test("[F8] ekrany zalogowanego uczestnika spełniają WCAG AA @uczestnik", async
 
 	await signInByEmail(page, email);
 	await audit(page, "/pl/account", "konto", "Konto");
+	await audit(page, "/pl/my-events", "moje wydarzenia", "Moje wydarzenia");
 	await page.getByRole("link", { name: "Bilet" }).first().click();
 	await page.getByRole("heading", { level: 1 }).waitFor();
 	await expectAccessible(page, "bilet", "Bilet");
@@ -240,7 +252,7 @@ test("[F8] zapis i bilet obsługiwane samą klawiaturą @uczestnik", async ({
 	await expect(
 		page.locator("section").first().getByText("Zarejestrowano"),
 	).toBeVisible();
-	await open(page, "/pl/account");
+	await open(page, "/pl/my-events");
 	await tabTo(page, "Bilet");
 	await page.keyboard.press("Enter");
 	await expect(page).toHaveURL(/\/pl\/tickets\//);
@@ -277,7 +289,7 @@ test("[F8] okno otwarte dotknięciem oddaje fokus przyciskowi (Safari) @uczestni
 	const email = uniqueEmail(testInfo);
 	await createTestUser(email);
 	await signInByEmail(page, email);
-	await open(page, "/pl/account");
+	await open(page, "/pl/account?tab=privacy");
 
 	// Safari and iOS do not focus a button on click or tap: open it the same way.
 	const trigger = page.getByRole("button", { name: "Usuń konto", exact: true });

@@ -1,3 +1,4 @@
+import { calendar_scroll_hint } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import type { ReactNode } from "react";
 import {
@@ -6,13 +7,17 @@ import {
 	layoutAgenda,
 	nowMinuteOnDay,
 } from "../agenda";
-import { EVENT_TIME_ZONE, formatEventDate } from "../time";
+import { EVENT_TIME_ZONE, formatEventDayLong } from "../time";
 import { cn } from "../utils";
 import { AgendaNowLine, useNow } from "./agenda-now";
 
 /** Grid scale: pixels per minute; a block is never shorter than a touch target. */
 const PX_PER_MINUTE = 1.6;
 const MIN_BLOCK_PX = 44;
+/** Parallel items never get narrower than this: the day scrolls sideways instead. */
+const LANE_MIN_PX = 152;
+/** Width of the hour labels column. */
+const HOURS_PX = 48;
 
 type AgendaCalendarGridProps<T extends AgendaTimed> = {
 	items: T[];
@@ -28,7 +33,8 @@ type AgendaCalendarGridProps<T extends AgendaTimed> = {
 
 /**
  * The agenda as a time grid, one per day in the installation time zone. Items that run
- * at the same time sit side by side; an item that runs alone uses the full width.
+ * at the same time sit side by side, each at least LANE_MIN_PX wide (a busy day scrolls
+ * sideways, its hours pinned on the left); an item that runs alone uses the full width.
  */
 export function AgendaCalendarGrid<T extends AgendaTimed>({
 	items,
@@ -45,62 +51,71 @@ export function AgendaCalendarGrid<T extends AgendaTimed>({
 
 	return (
 		<div className="flex flex-col gap-6">
-			{days.map((day) => (
-				<div key={day.day} className="flex flex-col gap-2">
-					{days.length > 1 ? (
-						<h3 className="text-sm font-medium">
-							{formatEventDate(day.items[0]?.startsAt ?? day.day, locale)}
-						</h3>
-					) : null}
-					<div className="flex">
-						<HourLabels
-							startMinute={day.startMinute}
-							endMinute={day.endMinute}
-						/>
-						<div
-							className="relative flex-1 border-l"
-							style={{
-								height: (day.endMinute - day.startMinute) * PX_PER_MINUTE,
-							}}
-						>
-							<HourLines
+			{days.map((day) => {
+				const lanes = Math.max(1, ...day.items.map((item) => item.lanes));
+				return (
+					<section key={day.day} className="flex flex-col gap-2">
+						{days.length > 1 ? (
+							<h3 className="border border-navy bg-navy px-3 py-1.5 font-mono text-xs font-bold tracking-widest text-manela uppercase">
+								{formatEventDayLong(day.items[0]?.startsAt ?? day.day, locale)}
+							</h3>
+						) : null}
+						{lanes >= 3 ? (
+							<p className={cn("font-mono text-xs", lanes <= 4 && "md:hidden")}>
+								{calendar_scroll_hint()} <span aria-hidden>→</span>
+							</p>
+						) : null}
+						<div className="flex overflow-x-auto overscroll-x-contain border border-navy bg-white">
+							<HourLabels
 								startMinute={day.startMinute}
 								endMinute={day.endMinute}
 							/>
-							{now ? (
-								<NowLine
-									now={now}
+							<div
+								className="relative flex-1 border-l border-navy"
+								style={{
+									height: (day.endMinute - day.startMinute) * PX_PER_MINUTE,
+									minWidth: lanes * LANE_MIN_PX,
+								}}
+							>
+								<HourLines
 									startMinute={day.startMinute}
-									minute={nowMinuteOnDay(day, now, EVENT_TIME_ZONE)}
+									endMinute={day.endMinute}
 								/>
-							) : null}
-							{day.items.map((item) => (
-								<button
-									key={item.id}
-									type="button"
-									disabled={disabled}
-									onClick={() => onSelect(item)}
-									className={cn(
-										"absolute flex flex-col gap-0.5 overflow-hidden rounded-md border bg-card p-1.5 text-left text-xs shadow-xs transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-										blockClassName?.(item),
-									)}
-									style={{
-										top: (item.startMinute - day.startMinute) * PX_PER_MINUTE,
-										height: Math.max(
-											MIN_BLOCK_PX,
-											(item.endMinute - item.startMinute) * PX_PER_MINUTE - 2,
-										),
-										left: `calc(${(item.lane / item.lanes) * 100}% + 2px)`,
-										width: `calc(${100 / item.lanes}% - 4px)`,
-									}}
-								>
-									{renderBlock(item)}
-								</button>
-							))}
+								{now ? (
+									<NowLine
+										now={now}
+										startMinute={day.startMinute}
+										minute={nowMinuteOnDay(day, now, EVENT_TIME_ZONE)}
+									/>
+								) : null}
+								{day.items.map((item) => (
+									<button
+										key={item.id}
+										type="button"
+										disabled={disabled}
+										onClick={() => onSelect(item)}
+										className={cn(
+											"absolute flex flex-col gap-0.5 overflow-hidden border border-l-4 border-navy bg-white p-1.5 text-left text-xs transition-[translate,box-shadow] duration-100 ease-out hover:-translate-y-px hover:shadow-[3px_3px_0_0_var(--navy)] focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-navy",
+											blockClassName?.(item),
+										)}
+										style={{
+											top: (item.startMinute - day.startMinute) * PX_PER_MINUTE,
+											height: Math.max(
+												MIN_BLOCK_PX,
+												(item.endMinute - item.startMinute) * PX_PER_MINUTE - 2,
+											),
+											left: `calc(${(item.lane / item.lanes) * 100}% + 2px)`,
+											width: `calc(${100 / item.lanes}% - 4px)`,
+										}}
+									>
+										{renderBlock(item)}
+									</button>
+								))}
+							</div>
 						</div>
-					</div>
-				</div>
-			))}
+					</section>
+				);
+			})}
 		</div>
 	);
 }
@@ -137,8 +152,11 @@ function HourLabels({
 	return (
 		<div
 			aria-hidden="true"
-			className="relative w-12 shrink-0 text-xs text-muted-foreground tabular-nums"
-			style={{ height: (endMinute - startMinute) * PX_PER_MINUTE }}
+			className="sticky left-0 z-20 shrink-0 bg-white font-mono text-xs tabular-nums"
+			style={{
+				height: (endMinute - startMinute) * PX_PER_MINUTE,
+				width: HOURS_PX,
+			}}
 		>
 			{hoursBetween(startMinute, endMinute).map((minute) => (
 				<span
@@ -164,7 +182,7 @@ function HourLines({
 		<div
 			key={minute}
 			aria-hidden="true"
-			className="absolute inset-x-0 border-t border-dashed"
+			className="absolute inset-x-0 border-t border-dashed border-navy/30"
 			style={{ top: (minute - startMinute) * PX_PER_MINUTE }}
 		/>
 	));

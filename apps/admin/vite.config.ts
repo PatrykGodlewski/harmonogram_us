@@ -6,11 +6,9 @@ import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 import { devtools } from "@tanstack/devtools-vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
-import basicSsl from "@vitejs/plugin-basic-ssl";
 import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react";
 import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
-import { devCertificate } from "../../packages/config/dev-certificate.js";
 import { paraglideRouteStrategies } from "../../packages/i18n/paraglide-route-strategies.js";
 import { paraglideUrlPatterns } from "../../packages/i18n/paraglide-url-patterns.js";
 
@@ -18,7 +16,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
 const i18nRoot = path.resolve(__dirname, "../../packages/i18n");
 const workspaceRoot = path.resolve(__dirname, "../..");
-const certificate = devCertificate(workspaceRoot);
 /** @opentelemetry/api as the Prometheus client (in @repo/api) resolves it, but its ESM build. */
 const requireFromApi = createRequire(
 	path.join(workspaceRoot, "packages/api/package.json"),
@@ -60,13 +57,10 @@ export default defineConfig({
 		babel({ presets: [reactCompilerPreset()] }),
 		tailwindcss(),
 		nitro({ rollupConfig: { external: [/^@sentry\//] } }),
-		// HTTPS (and so HTTP/2) in dev: see packages/config/dev-certificate.js.
-		certificate ? null : basicSsl(),
 	],
 	server: {
 		port: 3001,
 		strictPort: true,
-		https: certificate,
 		fs: {
 			allow: [workspaceRoot],
 		},

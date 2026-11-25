@@ -7,7 +7,7 @@ vulnerability: [SECURITY.md](../SECURITY.md).
 ## Licence
 
 [FSL-1.1-ALv2](../LICENSE.md) (the Functional Source License, as Sentry uses). Anyone may use, change and
-self-host Harmonogram US, except to offer it as a competing commercial product or service; each version
+self-host Turnout, except to offer it as a competing commercial product or service; each version
 becomes Apache-2.0 two years after it is published. The project is source-available ("fair source"),
 not OSI open source.
 

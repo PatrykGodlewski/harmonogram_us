@@ -42,11 +42,13 @@ export function EventStatsCard({
 			<h2 id={headingId} className="text-lg font-semibold">
 				{stats_title()}
 			</h2>
-			<dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+			<dl className="grid grid-cols-2 border-t border-l border-navy bg-white sm:grid-cols-3">
 				{rows.map(([label, value]) => (
-					<div key={label} className="rounded-lg border p-3">
-						<dt className="text-sm text-muted-foreground">{label}</dt>
-						<dd className="text-2xl font-semibold tabular-nums">{value}</dd>
+					<div key={label} className="border-r border-b border-navy p-3">
+						<dt className="font-mono text-xs font-bold tracking-wider uppercase">
+							{label}
+						</dt>
+						<dd className="font-pixel text-3xl tabular-nums">{value}</dd>
 					</div>
 				))}
 			</dl>

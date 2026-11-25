@@ -52,21 +52,29 @@ export async function fileDownloadResponse(
 	});
 }
 
+type CanSee = (eventId: string) => Promise<boolean>;
+
 /** The public site: whoever can open the event page (`invite` for invite-only events). */
+export async function visitorCanSee(
+	invite: string | undefined,
+): Promise<CanSee> {
+	const session = await getCurrentSession();
+	return (eventId) => canViewEvent(eventId, session?.user.id ?? null, invite);
+}
+
+/** The panel: the event's managers, drafts included. */
+export async function managerCanSee(): Promise<CanSee> {
+	const user = await getCurrentUser();
+	return async (eventId) => (user ? canManageEvent(user, eventId) : false);
+}
+
 export async function publicFileResponse(
 	fileId: string,
 	invite: string | undefined,
 ): Promise<Response> {
-	const session = await getCurrentSession();
-	return fileDownloadResponse(fileId, (eventId) =>
-		canViewEvent(eventId, session?.user.id ?? null, invite),
-	);
+	return fileDownloadResponse(fileId, await visitorCanSee(invite));
 }
 
-/** The panel: the event's managers, drafts included. */
 export async function panelFileResponse(fileId: string): Promise<Response> {
-	const user = await getCurrentUser();
-	return fileDownloadResponse(fileId, async (eventId) =>
-		user ? canManageEvent(user, eventId) : false,
-	);
+	return fileDownloadResponse(fileId, await managerCanSee());
 }

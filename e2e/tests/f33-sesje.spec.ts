@@ -298,3 +298,139 @@ test("[F33] uczestnik pokazuje tylko jedną sesję @uczestnik", async ({
 	await expect(page.getByRole("region", { name: "Wykłady" })).toBeVisible();
 	await expect(page.getByText("Otwarcie")).toBeVisible();
 });
+
+/** A 3-day festival: a long science zone and the main stage on Friday, the stage on Saturday, a finale on Sunday. */
+async function festival(organizerId?: string) {
+	const event = await createTestEvent({ organizerId });
+	const { db } = await import("@repo/db/client");
+	const { events } = await import("@repo/db/schema/events");
+	const { eq } = await import("drizzle-orm");
+	const [row] = await db
+		.select({ date: events.date })
+		.from(events)
+		.where(eq(events.id, event.id));
+	// Days start at 09:00 in Warsaw (the day after the event's start), whatever the hour
+	// the test runs, so no session spills past midnight into the next day.
+	const start = new Date(row?.date ?? Date.now());
+	start.setUTCDate(start.getUTCDate() + 1);
+	start.setUTCHours(8, 0, 0, 0);
+	const at = (day: number, hours: number) =>
+		new Date(start.getTime() + (day * 24 + hours) * 3_600_000);
+	const session = async (title: string, day: number, items: number) => {
+		const created = await createAgendaSession({
+			eventId: event.id,
+			title,
+			color: title.startsWith("Scena") ? "violet" : "blue",
+			startsAt: at(day, 0),
+			endsAt: at(day, items + 1),
+		});
+		for (let index = 0; index < items; index += 1) {
+			await createAgendaItem({
+				eventId: event.id,
+				sessionId: created.id,
+				title: `${title} — punkt ${index + 1}`,
+				startsAt: at(day, index),
+				endsAt: at(day, index + 0.75),
+			});
+		}
+	};
+	await session("Scena Główna", 0, 3);
+	await session("Strefa Nauk", 0, 8);
+	await session("Scena Główna", 1, 2);
+	await createAgendaItem({
+		eventId: event.id,
+		title: "Finał festiwalu",
+		startsAt: at(2, 1),
+		endsAt: at(2, 2),
+	});
+	const dayName = (day: number, options: Intl.DateTimeFormatOptions) =>
+		at(day, 0).toLocaleDateString("pl", {
+			timeZone: "Europe/Warsaw",
+			...options,
+		});
+	return { event, dayName };
+}
+
+test("[F33] uczestnik wybiera dzień festiwalu @uczestnik", async ({ page }) => {
+	const { event, dayName } = await festival();
+	await open(page, `/pl/events/${event.id}`);
+	// Each day is named
+	for (const day of [0, 1, 2]) {
+		await expect(
+			page.getByRole("heading", {
+				level: 3,
+				name: dayName(day, { weekday: "long", day: "numeric", month: "long" }),
+			}),
+		).toBeVisible();
+	}
+	// A long programme starts with sessions folded to their header
+	const science = page.getByRole("region", { name: "Strefa Nauk" });
+	await expect(science.getByText("Strefa Nauk — punkt 1")).toBeHidden();
+	await science
+		.getByRole("button", { name: "Pokaż punkty programu (8)" })
+		.click();
+	await expect(science.getByText("Strefa Nauk — punkt 1")).toBeVisible();
+	await expect(
+		science.getByRole("button", { name: "Ukryj punkty programu" }),
+	).toHaveAttribute("aria-expanded", "true");
+
+	// Choosing Saturday shows only Saturday
+	const saturday = dayName(1, {
+		weekday: "short",
+		day: "numeric",
+		month: "2-digit",
+	});
+	await page
+		.getByRole("group", { name: "Dzień" })
+		.getByRole("button", { name: saturday })
+		.click();
+	await expect(page).toHaveURL(/[?&]day=\d{4}-\d{2}-\d{2}/);
+	await expect(page.getByRole("region", { name: "Scena Główna" })).toHaveCount(
+		1,
+	);
+	await expect(page.getByRole("region", { name: "Strefa Nauk" })).toHaveCount(
+		0,
+	);
+	await expect(page.getByText("Finał festiwalu")).toHaveCount(0);
+	// A short day shows its items, even after the long programme started folded
+	await expect(page.getByText("Scena Główna — punkt 1")).toBeVisible();
+
+	// The calendar's legend names each session once
+	await page
+		.getByRole("group", { name: "Dzień" })
+		.getByRole("button", { name: "Wszystkie dni" })
+		.click();
+	await page.getByRole("button", { name: "Kalendarz" }).click();
+	await expect(
+		page.getByRole("list", { name: "Sesje" }).getByRole("listitem"),
+	).toHaveText(["Scena Główna", "Strefa Nauk"]);
+});
+
+test("[F33] organizator widzi dni programu i daty sesji @organizator", async ({
+	page,
+}, testInfo) => {
+	const email = uniqueEmail(testInfo);
+	const password = randomBytes(18).toString("base64url");
+	const organizer = await createTestUser(email, {
+		role: "organizer",
+		password,
+	});
+	const { event, dayName } = await festival(organizer.id);
+	await signInAsAdmin(page, email, password);
+	await open(page, adminUrl(`/pl/events/${event.id}`));
+	const programme = page.getByRole("region", { name: "Program" });
+	for (const day of [0, 1, 2]) {
+		await expect(
+			programme.getByRole("heading", {
+				level: 3,
+				name: dayName(day, { weekday: "long", day: "numeric", month: "long" }),
+			}),
+		).toBeVisible();
+	}
+	// Each session card says which day it is on
+	await expect(
+		programme.getByRole("listitem").filter({ hasText: "Strefa Nauk" }),
+	).toContainText(
+		dayName(0, { weekday: "short", day: "numeric", month: "2-digit" }),
+	);
+});
