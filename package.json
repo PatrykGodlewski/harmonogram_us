@@ -3,6 +3,9 @@
   "private": true,
   "type": "module",
   "pnpm": {
+    "ignoredBuiltDependencies": [
+      "lefthook"
+    ],
     "onlyBuiltDependencies": [
       "esbuild",
       "lightningcss"
