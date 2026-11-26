@@ -1,6 +1,7 @@
 import { eq, sql } from "drizzle-orm";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@repo/db/client";
+import { setEventImage } from "@repo/db/queries/event-images";
 import { createEvent, updateEvent } from "@repo/db/queries/events";
 import { authUsers } from "@repo/db/schema/better-auth";
 import { eventOrganizers } from "@repo/db/schema/event-organizers";
@@ -81,6 +82,7 @@ function pipeline(overrides: Partial<PipelineDeps> = {}): PipelineDeps {
 		prompt: async (title) => `scene of ${title}, ${STYLE}`,
 		generate: async () => ({ bytes: PNG, mimeType: "image/png" }),
 		store: async (eventId) => `event-images/${eventId}/${++stored}`,
+		save: setEventImage,
 		seed: randomSeed,
 		...overrides,
 	};
@@ -157,6 +159,19 @@ describe("the worker", () => {
 		const deps = pipeline({
 			generate: async () => {
 				throw new Error("Image provider HTTP 500");
+			},
+		});
+		expect(await generateEventImage({ eventId, force: false }, deps)).toBe("failed");
+		expect(await imageRow(eventId)).toMatchObject({ status: "failed", key: null });
+		error.mockRestore();
+	});
+
+	it("marks the event failed when saving the image fails", async () => {
+		const error = vi.spyOn(console, "error").mockImplementation(() => {});
+		const eventId = await newEvent();
+		const deps = pipeline({
+			save: async () => {
+				throw new Error("connection lost");
 			},
 		});
 		expect(await generateEventImage({ eventId, force: false }, deps)).toBe("failed");

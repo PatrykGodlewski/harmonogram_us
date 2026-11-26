@@ -61,7 +61,8 @@ export async function markImagePending(
 
 /**
  * Saves a generated image. It becomes `ready` only if no newer source was requested
- * meanwhile; otherwise it shows until the newer one arrives.
+ * meanwhile; otherwise the status stays as it is (`pending`), and nothing is served
+ * until the newer image is saved.
  */
 export async function setEventImage(
 	eventId: string,

@@ -1,3 +1,4 @@
+import { eventImagesEnabled } from "@repo/api/event-images/queue";
 import { missingForPublish } from "@repo/db/queries/event-completeness";
 import {
 	canManageEvent,
@@ -22,7 +23,6 @@ import { adminMiddleware } from "../auth/admin-middleware";
 import { assertCanCheckIn, assertCanManageEvent } from "../auth/event-access";
 import { panelQueryFn } from "../auth/panel-middleware";
 import { appError } from "../errors";
-import { eventImagesEnabled } from "../event-images/queue";
 import {
 	ADMIN_EVENT_PAGE_SIZE,
 	adminEventIdSchema,

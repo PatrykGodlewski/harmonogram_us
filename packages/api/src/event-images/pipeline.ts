@@ -24,6 +24,7 @@ export type PipelineDeps = {
 		options: GenerateImageOptions,
 	) => Promise<GeneratedImage>;
 	store: (eventId: string, image: GeneratedImage) => Promise<string>;
+	save: typeof setEventImage;
 	seed: () => number;
 };
 
@@ -32,6 +33,7 @@ const defaultDeps = (): PipelineDeps => ({
 	prompt: (title, description) => buildImagePrompt(title, description),
 	generate: (prompt, options) => generateImage(prompt, options),
 	store: (eventId, image) => storeEventImage(eventId, image),
+	save: setEventImage,
 	seed: randomSeed,
 });
 
@@ -40,7 +42,7 @@ const SIZE = { width: 1024, height: 576 };
 
 /**
  * Generates the image from the event's current text (a queued job may predate an edit).
- * A provider or storage failure marks the event failed; the placeholder stays.
+ * A provider, storage or save failure marks the event failed; the placeholder stays.
  */
 export async function generateEventImage(
 	job: EventImageJob,
@@ -58,21 +60,20 @@ export async function generateEventImage(
 	await markImagePending(db, job.eventId, hash);
 	const prompt = await deps.prompt(source.title, source.description);
 	const seed = deps.seed();
-	let key: string;
 	try {
 		const image = await deps.generate(prompt, { seed, ...SIZE });
-		key = await deps.store(job.eventId, image);
+		const key = await deps.store(job.eventId, image);
+		await deps.save(job.eventId, {
+			key,
+			url: `/api/event-images/${job.eventId}`,
+			prompt,
+			seed,
+			sourceHash: hash,
+		});
 	} catch (error) {
 		console.error(`[event-images] event ${job.eventId} failed:`, error);
 		await failEventImage(job.eventId, hash);
 		return "failed";
 	}
-	await setEventImage(job.eventId, {
-		key,
-		url: `/api/event-images/${job.eventId}`,
-		prompt,
-		seed,
-		sourceHash: hash,
-	});
 	return "ready";
 }

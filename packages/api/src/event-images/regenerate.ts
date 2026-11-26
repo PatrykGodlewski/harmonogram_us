@@ -49,5 +49,7 @@ export async function regenerateEventImage(
 
 export const regenerateEventImageServer = panelActionFn
 	.validator((input: unknown) => eventIdActionSchema.parse(input))
-	// regenerateEventImage checks access first (assertCanManageEvent).
-	.handler(({ data, context }) => regenerateEventImage(context.user, data.id));
+	.handler(async ({ data, context }) => {
+		await assertCanManageEvent(context.user, data.id);
+		await regenerateEventImage(context.user, data.id);
+	});

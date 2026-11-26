@@ -30,8 +30,8 @@ describe("local image directory", () => {
 
 		await removeLocalEventImage(key, dir);
 		await expect(readFile(join(dir, key))).rejects.toThrow();
-		// Already gone counts as deleted.
-		await expect(removeLocalEventImage(key, dir)).resolves.toBeUndefined();
+		// A missing file is not a deletion: the key may name an object in a bucket.
+		await expect(removeLocalEventImage(key, dir)).rejects.toThrow("ENOENT");
 	});
 
 	it("refuses a key outside the directory", async () => {

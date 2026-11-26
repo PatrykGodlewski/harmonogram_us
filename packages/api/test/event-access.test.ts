@@ -152,6 +152,7 @@ describe("panel server functions check event access", () => {
 		"../src/admin/sessions.ts",
 		"../src/admin/materials.ts",
 		"../src/admin/agenda-item-image.ts",
+		"../src/event-images/regenerate.ts",
 	];
 	/** Panel-wide reads that are not about one event. */
 	const panelWide = [

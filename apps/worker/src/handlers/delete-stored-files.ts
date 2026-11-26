@@ -14,7 +14,10 @@ export type DeleteStoredFilesDeps = {
 	config: ReturnType<typeof storageConfig>;
 	take: typeof takeStoredFileDeletions;
 	remove: typeof deleteObject;
-	/** Without a bucket only cover images are stored, in a local directory. */
+	/**
+	 * Without a bucket only cover images are stored, in a local directory. Rejects
+	 * unless the file existed and was removed, so other keys stay queued.
+	 */
 	removeLocal: (key: string) => Promise<void>;
 	forget: typeof forgetStoredFileDeletions;
 };

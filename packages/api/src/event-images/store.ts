@@ -55,11 +55,14 @@ export function localEventImagePath(
 	return path;
 }
 
-/** Deletes a key from the local directory (no bucket); a missing file counts as deleted. */
+/**
+ * Deletes a key from the local directory (no bucket). Throws when the file is missing:
+ * the key may name an object in a bucket, whose deletion record must stay.
+ */
 export async function removeLocalEventImage(
 	key: string,
 	dir: string = eventImageDir(),
 ): Promise<void> {
 	// Deletion keys come from a table shared with other files: never leave the directory.
-	await rm(localEventImagePath(key, dir), { force: true });
+	await rm(localEventImagePath(key, dir));
 }

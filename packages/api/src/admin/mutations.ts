@@ -1,3 +1,4 @@
+import { eventImageHooks } from "@repo/api/event-images/queue";
 import {
 	createAgendaItem,
 	deleteAgendaItem,
@@ -34,7 +35,6 @@ import {
 } from "../auth/event-access";
 import { panelActionFn } from "../auth/panel-middleware";
 import { appError, withDomainErrors } from "../errors";
-import { eventImageHooks } from "../event-images/queue";
 import { registrationEmailHooks } from "../notifications/registration-hooks";
 import {
 	createAgendaItemSchema,

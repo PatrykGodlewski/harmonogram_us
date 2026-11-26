@@ -1,4 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { removeLocalEventImage } from "@repo/api/event-images/store";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
 	type DeleteStoredFilesDeps,
 	deleteStoredFiles,
@@ -65,5 +69,36 @@ describe("deleteStoredFiles", () => {
 		expect(local).toEqual(["a"]);
 		expect(removed).toEqual([]);
 		expect(pending.size).toBe(0);
+	});
+
+	describe("without a bucket, on a real directory", () => {
+		let dir: string;
+
+		beforeEach(async () => {
+			dir = await mkdtemp(join(tmpdir(), "stored-files-"));
+		});
+
+		afterEach(async () => {
+			await rm(dir, { recursive: true, force: true });
+		});
+
+		it("forgets only keys whose local file existed and was removed", async () => {
+			const present = "event-images/e1/present";
+			await mkdir(join(dir, "event-images/e1"), { recursive: true });
+			await writeFile(join(dir, present), "png");
+			const missing = "event-files/e1/in-the-bucket";
+			const outside = "../outside";
+			const { deps, pending } = fakes([present, missing, outside]);
+
+			const result = await deleteStoredFiles({
+				...deps,
+				config: null,
+				removeLocal: (key) => removeLocalEventImage(key, dir),
+			});
+
+			expect(result).toEqual({ deleted: 1, failed: 2 });
+			expect([...pending]).toEqual([missing, outside]);
+			await expect(readFile(join(dir, present))).rejects.toThrow("ENOENT");
+		});
 	});
 });
