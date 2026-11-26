@@ -97,11 +97,11 @@ pnpm load:stress             # informational stepped ramp
 pnpm observability:up        # Prometheus + Grafana for e2e
 ```
 
-The e2e Compose project is `harmonogram-e2e`. Ports come from `tooling/e2e/ports.env`: web 3100, admin 3101, Mailpit 18025. The stack uses built images, not live source: **go through `tooling/scripts/e2e.sh ensure` or `run`**, which rebuild only when code changed. `pnpm e2e:up` and `pnpm e2e:down` remain the manual alternatives. Details: [e2e stack](../e2e/README.md).
+The e2e Compose project is `harmonogram-e2e`. Ports come from `tooling/e2e/ports.env`: web 3100, admin 3101, Mailpit 18025. The stack uses built images, not live source: **go through `tooling/scripts/e2e.sh ensure` or `run`**, which rebuild only when code changed. `pnpm e2e:up` and `pnpm e2e:down` remain the manual alternatives. Details: [e2e stack](../tooling/e2e/README.md).
 
 Playwright projects: `komputer` (1280 px) and `telefon` (360 px). The phone project selects `@uczestnik` and `@organizator`; tag organiser tests accordingly. Wait for the app's hydration marker before interactions. See `tooling/e2e/playwright.config.ts` and existing fixtures/tests for current patterns.
 
-Load tests: spike 500 users competing for 50 places and a two-minute steady run; stress ramps to 400 users, stopping at p95 >2 s or errors >5%. Details: [load testing](../e2e/load/README.md). Prometheus: http://localhost:19090; Grafana: http://localhost:13002. `pnpm load` streams metrics there when observability is up.
+Load tests: spike 500 users competing for 50 places and a two-minute steady run; stress ramps to 400 users, stopping at p95 >2 s or errors >5%. Details: [load testing](../tooling/e2e/load/README.md). Prometheus: http://localhost:19090; Grafana: http://localhost:13002. `pnpm load` streams metrics there when observability is up.
 
 ## Adding UI and maintaining code
 

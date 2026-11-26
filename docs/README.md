@@ -14,10 +14,12 @@ Shared agent rules live in [AGENTS.md](../AGENTS.md). Claude imports that file t
 | Setup, commands, UI components and code simplification                     | [Development](development.md)                                                                   |
 | Production deployment (one server, Terraform): Oracle Always Free or Azure | [Oracle](deploy-oracle.md), [Azure](deploy-azure.md)                                            |
 | Public API and embeddable widget (F24)                                     | [Embedding](embedding.md)                                                                       |
-| Load-test details                                                          | [Load-test guide](../e2e/load/README.md)                                                        |
+| Load-test details                                                          | [Load-test guide](../tooling/e2e/load/README.md)                                                        |
 | Where we stand against Indico (snapshot with sources)                     | [Indico comparison](indico-comparison.md)                                                       |
 
 ## Product and plan context
+
+What is left and in which order, for sessions that finish the open plans: [handoff](handoff.md).
 
 The product spec defines F1–F27, priorities, acceptance criteria, conflicts and deferred monetisation. Indico is inspiration, not a parity target. GitHub issues are in Polish; inspect current issues with `gh issue list` when relevant.
 
