@@ -13,9 +13,11 @@ export COMPOSE_FILE=docker-compose.yml
 
 SERVICES="db mailpit storage documents teams-mock oidc-mock web admin worker"
 HEALTHCHECKED="db mailpit storage documents"
-STAMP_FILE=.e2e/stack-stamp
+# There is one stack per machine, shared by all worktrees of a clone, so its stamp lives in the
+# git common directory: every worktree reads the same file and rebuilds a stack another one built.
+STAMP_FILE="$(git rev-parse --git-common-dir)/e2e-stack-stamp"
 # Everything baked into the images; tooling/e2e/ (tests, bind-mounted mocks) needs no rebuild.
-STAMP_PATHS="apps packages proto services Dockerfile pnpm-lock.yaml Cargo.toml Cargo.lock"
+STAMP_PATHS="apps packages Dockerfile pnpm-lock.yaml Cargo.toml Cargo.lock"
 
 compose() {
 	docker compose -p harmonogram-e2e --env-file .env --env-file tooling/e2e/ports.env \
