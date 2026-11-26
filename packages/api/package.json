@@ -22,7 +22,7 @@
     "@repo/i18n": "workspace:*",
     "@repo/jobs": "workspace:*",
     "@repo/rpc": "workspace:*",
-    "@tanstack/react-query": "^5.108.2",
+    "@tanstack/react-query": "^5.108.3",
     "@tanstack/react-start": "^1.169.7",
     "aws4fetch": "^1.0.20",
     "better-auth": "^1.7.27",
