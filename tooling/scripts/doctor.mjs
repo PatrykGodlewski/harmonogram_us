@@ -182,6 +182,19 @@ function checkEnv() {
 			);
 }
 
+function checkGitHooks() {
+	if (run("git", ["config", "--local", "core.hooksPath"]) === ".git-hooks")
+		return report("fail", "git hooks", "core.hooksPath still points at .git-hooks", "pnpm install");
+	const hooksPath = run("git", ["config", "core.hooksPath"]);
+	if (hooksPath)
+		return report("warn", "git hooks", `custom core.hooksPath ${hooksPath}`, "lefthook hooks are not used; unset it and run pnpm install");
+	const common = run("git", ["rev-parse", "--path-format=absolute", "--git-common-dir"]);
+	const hook = common && join(common, "hooks", "pre-commit");
+	hook && existsSync(hook) && readFileSync(hook, "utf8").includes("lefthook")
+		? report("pass", "git hooks", "lefthook pre-commit installed")
+		: report("fail", "git hooks", "pre-commit hook missing", "pnpm install");
+}
+
 function checkHealth(label, list, names) {
 	for (const name of names) {
 		const service = list.find((s) => s.Service === name);
@@ -327,6 +340,7 @@ async function checkPorts(running) {
 checkVersions();
 const dockerOk = checkDocker();
 checkEnv();
+checkGitHooks();
 if (dockerOk) {
 	const projects = JSON.parse(
 		run("docker", ["compose", "ls", "--format", "json"]) ?? "[]",
