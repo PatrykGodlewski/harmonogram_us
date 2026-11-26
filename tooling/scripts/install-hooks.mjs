@@ -11,9 +11,9 @@ function git(args) {
 	}).trim();
 }
 
-function readHooksPath() {
+function readHooksPath(...scope) {
 	try {
-		return git(["config", "--local", "core.hooksPath"]);
+		return git(["config", ...scope, "core.hooksPath"]);
 	} catch {
 		return "";
 	}
@@ -25,14 +25,16 @@ try {
 	process.exit(0);
 }
 
-const current = readHooksPath();
-if (current && current !== LEGACY_HOOKS_PATH) {
+if (readHooksPath("--local") === LEGACY_HOOKS_PATH)
+	git(["config", "--local", "--unset", "core.hooksPath"]);
+
+const effective = readHooksPath();
+if (effective) {
 	console.log(
-		`git hooks: lefthook hooks not installed, custom core.hooksPath is set (${current})`,
+		`git hooks: lefthook hooks not installed, custom core.hooksPath is set (${effective})`,
 	);
 	process.exit(0);
 }
-if (current) git(["config", "--local", "--unset", "core.hooksPath"]);
 
 try {
 	execFileSync("pnpm", ["exec", "lefthook", "install"], { stdio: "inherit" });
