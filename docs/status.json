@@ -6,7 +6,7 @@
         "tooling/e2e/tests/f1-profil.spec.ts",
         "tooling/e2e/tests/f1-uczelnia.spec.ts"
       ],
-      "lastTouched": null,
+      "lastTouched": "da2dfe4",
       "openTasks": 0,
       "plans": [],
       "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
@@ -18,7 +18,7 @@
         "tooling/e2e/tests/f2-organizatorzy.spec.ts",
         "tooling/e2e/tests/f2-widocznosc.spec.ts"
       ],
-      "lastTouched": null,
+      "lastTouched": "da2dfe4",
       "openTasks": 0,
       "plans": [],
       "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
@@ -34,7 +34,7 @@
         "tooling/e2e/tests/f3-strona-wydarzenia-panel.spec.ts",
         "tooling/e2e/tests/f3-szkic-i-publikacja.spec.ts"
       ],
-      "lastTouched": null,
+      "lastTouched": "da2dfe4",
       "openTasks": 0,
       "plans": [],
       "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
@@ -46,7 +46,7 @@
         "tooling/e2e/tests/f4-kalendarz.spec.ts",
         "tooling/e2e/tests/f4-lista-wydarzen.spec.ts"
       ],
-      "lastTouched": null,
+      "lastTouched": "da2dfe4",
       "openTasks": 0,
       "plans": [],
       "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
@@ -59,7 +59,7 @@
         "tooling/e2e/tests/f5-moje-zapisy.spec.ts",
         "tooling/e2e/tests/f5-zapisy.spec.ts"
       ],
-      "lastTouched": null,
+      "lastTouched": "da2dfe4",
       "openTasks": 0,
       "plans": [],
       "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
@@ -70,7 +70,7 @@
       "e2e": [
         "tooling/e2e/tests/f6-powiadomienia.spec.ts"
       ],
-      "lastTouched": null,
+      "lastTouched": "da2dfe4",
       "openTasks": 0,
       "plans": [],
       "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
@@ -83,7 +83,7 @@
         "tooling/e2e/tests/f7-wiadomosc.spec.ts",
         "tooling/e2e/tests/f7-zapisani.spec.ts"
       ],
-      "lastTouched": null,
+      "lastTouched": "da2dfe4",
       "openTasks": 0,
       "plans": [],
       "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
@@ -93,9 +93,10 @@
     "F8": {
       "e2e": [
         "tooling/e2e/tests/f8-dostepnosc.spec.ts",
+        "tooling/e2e/tests/f8-piksele.spec.ts",
         "tooling/e2e/tests/f8-wyglad.spec.ts"
       ],
-      "lastTouched": null,
+      "lastTouched": "8a7baed",
       "openTasks": 0,
       "plans": [],
       "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
@@ -106,7 +107,7 @@
       "e2e": [
         "tooling/e2e/tests/f9-rodo.spec.ts"
       ],
-      "lastTouched": null,
+      "lastTouched": "da2dfe4",
       "openTasks": 0,
       "plans": [],
       "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
@@ -117,7 +118,7 @@
       "e2e": [
         "tooling/e2e/tests/f10-pytania.spec.ts"
       ],
-      "lastTouched": null,
+      "lastTouched": "da2dfe4",
       "openTasks": 0,
       "plans": [],
       "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
@@ -129,7 +130,7 @@
         "tooling/e2e/tests/f11-bilety.spec.ts",
         "tooling/e2e/tests/f11-skaner.spec.ts"
       ],
-      "lastTouched": null,
+      "lastTouched": "da2dfe4",
       "openTasks": 0,
       "plans": [],
       "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
@@ -140,7 +141,7 @@
       "e2e": [
         "tooling/e2e/tests/f12-zaswiadczenia.spec.ts"
       ],
-      "lastTouched": null,
+      "lastTouched": "da2dfe4",
       "openTasks": 0,
       "plans": [],
       "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
@@ -151,7 +152,7 @@
       "e2e": [
         "tooling/e2e/tests/f13-przypomnienia.spec.ts"
       ],
-      "lastTouched": null,
+      "lastTouched": "da2dfe4",
       "openTasks": 0,
       "plans": [],
       "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
@@ -162,7 +163,7 @@
       "e2e": [
         "tooling/e2e/tests/f14-materialy.spec.ts"
       ],
-      "lastTouched": null,
+      "lastTouched": "da2dfe4",
       "openTasks": 0,
       "plans": [],
       "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
@@ -173,7 +174,7 @@
       "e2e": [
         "tooling/e2e/tests/f15-statystyki.spec.ts"
       ],
-      "lastTouched": null,
+      "lastTouched": "da2dfe4",
       "openTasks": 0,
       "plans": [],
       "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
@@ -193,7 +194,7 @@
       "e2e": [
         "tooling/e2e/tests/f17-goscie.spec.ts"
       ],
-      "lastTouched": null,
+      "lastTouched": "da2dfe4",
       "openTasks": 0,
       "plans": [],
       "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
@@ -207,7 +208,7 @@
         "tooling/e2e/tests/f18-program.spec.ts",
         "tooling/e2e/tests/f18-szczegoly-punktu.spec.ts"
       ],
-      "lastTouched": null,
+      "lastTouched": "da2dfe4",
       "openTasks": 0,
       "plans": [],
       "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
@@ -218,7 +219,7 @@
       "e2e": [
         "tooling/e2e/tests/f19-prelegenci.spec.ts"
       ],
-      "lastTouched": "912f638",
+      "lastTouched": "da2dfe4",
       "openTasks": 0,
       "plans": [
         "docs/superpowers/plans/2026-11-22-materialy.md"
@@ -231,7 +232,7 @@
       "e2e": [
         "tooling/e2e/tests/f20-ankiety.spec.ts"
       ],
-      "lastTouched": "912f638",
+      "lastTouched": "da2dfe4",
       "openTasks": 0,
       "plans": [
         "docs/superpowers/plans/2026-11-22-ankiety.md"
@@ -262,7 +263,7 @@
       "e2e": [
         "tooling/e2e/tests/f23-teams.spec.ts"
       ],
-      "lastTouched": "912f638",
+      "lastTouched": "da2dfe4",
       "openTasks": 0,
       "plans": [
         "docs/superpowers/plans/2026-11-22-teams.md"
@@ -275,7 +276,7 @@
       "e2e": [
         "tooling/e2e/tests/f24-api-widzet.spec.ts"
       ],
-      "lastTouched": "912f638",
+      "lastTouched": "da2dfe4",
       "openTasks": 0,
       "plans": [
         "docs/superpowers/plans/2026-11-22-api-widzet.md"
@@ -297,7 +298,7 @@
       "e2e": [
         "tooling/e2e/tests/f26-rejestracja-grupowa.spec.ts"
       ],
-      "lastTouched": null,
+      "lastTouched": "da2dfe4",
       "openTasks": 0,
       "plans": [],
       "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
@@ -308,7 +309,7 @@
       "e2e": [
         "tooling/e2e/tests/f27-punkty-programu.spec.ts"
       ],
-      "lastTouched": null,
+      "lastTouched": "da2dfe4",
       "openTasks": 0,
       "plans": [],
       "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
@@ -319,7 +320,7 @@
       "e2e": [
         "tooling/e2e/tests/f28-akcje-grupowe.spec.ts"
       ],
-      "lastTouched": null,
+      "lastTouched": "da2dfe4",
       "openTasks": 0,
       "plans": [],
       "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
@@ -330,7 +331,7 @@
       "e2e": [
         "tooling/e2e/tests/f29-pomocnik.spec.ts"
       ],
-      "lastTouched": null,
+      "lastTouched": "da2dfe4",
       "openTasks": 0,
       "plans": [],
       "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
@@ -341,7 +342,7 @@
       "e2e": [
         "tooling/e2e/tests/f30-akceptacja.spec.ts"
       ],
-      "lastTouched": null,
+      "lastTouched": "da2dfe4",
       "openTasks": 0,
       "plans": [],
       "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
@@ -352,7 +353,7 @@
       "e2e": [
         "tooling/e2e/tests/f31-cykliczne.spec.ts"
       ],
-      "lastTouched": null,
+      "lastTouched": "da2dfe4",
       "openTasks": 0,
       "plans": [],
       "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
@@ -363,7 +364,7 @@
       "e2e": [
         "tooling/e2e/tests/f32-zaproszenia.spec.ts"
       ],
-      "lastTouched": null,
+      "lastTouched": "da2dfe4",
       "openTasks": 0,
       "plans": [],
       "spec": "docs/superpowers/specs/2026-11-19-produkt-design.md",
@@ -374,7 +375,7 @@
       "e2e": [
         "tooling/e2e/tests/f33-sesje.spec.ts"
       ],
-      "lastTouched": "4e34a1d",
+      "lastTouched": "da2dfe4",
       "openTasks": 0,
       "plans": [
         "docs/superpowers/plans/2026-11-22-sesje.md"
@@ -385,7 +386,7 @@
     },
     "F34": {
       "e2e": [],
-      "lastTouched": "a47a283",
+      "lastTouched": "da2dfe4",
       "openTasks": 35,
       "plans": [
         "docs/superpowers/plans/2026-11-23-pomocnik-opisow.md"
@@ -396,7 +397,7 @@
     },
     "F35": {
       "e2e": [],
-      "lastTouched": "a47a283",
+      "lastTouched": "da2dfe4",
       "openTasks": 27,
       "plans": [
         "docs/superpowers/plans/2026-11-23-tresc-dwujezyczna.md"
@@ -407,7 +408,7 @@
     },
     "F36": {
       "e2e": [],
-      "lastTouched": "a47a283",
+      "lastTouched": "da2dfe4",
       "openTasks": 34,
       "plans": [
         "docs/superpowers/plans/2026-11-23-rekomendacje-wydarzen.md"
@@ -417,5 +418,5 @@
       "totalTasks": 34
     }
   },
-  "revision": "bfc4578"
+  "revision": "8a7baed"
 }
