@@ -14,6 +14,7 @@ const CLOUDFLARE: ImageProvider = {
 	accountId: "acc",
 	token: "cf-token",
 };
+const FAL_URL = "https://fal.run/fal-ai/flux/schnell";
 const CF_URL =
 	"https://api.cloudflare.com/client/v4/accounts/acc/ai/run/@cf/black-forest-labs/flux-1-schnell";
 
@@ -37,7 +38,7 @@ const bytes = () => new Response(PNG, { headers: { "content-type": "image/png" }
 describe("fal", () => {
 	it("posts the prompt with key auth, size object and seed, then downloads images[0].url", async () => {
 		const fetch = vi.fn<ProviderDeps["fetch"]>(async (url) =>
-			String(url).startsWith("https://fal.run") ? falResult() : bytes(),
+			String(url) === FAL_URL ? falResult() : bytes(),
 		);
 		const image = await generateImage(
 			"a scene",
@@ -46,7 +47,7 @@ describe("fal", () => {
 		);
 
 		const [url, init] = fetch.mock.calls[0] as Call;
-		expect(url).toBe("https://fal.run/fal-ai/flux/schnell");
+		expect(url).toBe(FAL_URL);
 		expect(init?.method).toBe("POST");
 		expect(init?.headers).toMatchObject({
 			Authorization: "Key fal-key",
@@ -66,7 +67,7 @@ describe("fal", () => {
 
 	it("draws a random 32-bit seed when none is given", async () => {
 		const fetch = vi.fn<ProviderDeps["fetch"]>(async (url) =>
-			String(url).startsWith("https://fal.run") ? falResult() : bytes(),
+			String(url) === FAL_URL ? falResult() : bytes(),
 		);
 		await generateImage("a scene", SIZE, deps(FAL, fetch));
 		const { seed } = JSON.parse(String((fetch.mock.calls[0] as Call)[1]?.body));
