@@ -48,7 +48,7 @@ function toJson(event: PublicEvent, locale: Locale) {
 
 export type PublicEventsDeps = { list: typeof listUpcomingPublicEvents };
 
-/** `GET /api/v1/events`: upcoming public events as JSON; 400 for bad parameters. */
+/** `GET /api/v1/events`: upcoming public events as JSON; 400 for bad parameters, 500 when the query fails. */
 export async function publicEventsResponse(
 	request: Request,
 	deps: PublicEventsDeps = { list: listUpcomingPublicEvents },
@@ -62,11 +62,17 @@ export async function publicEventsResponse(
 		);
 	}
 	const { limit, faculty, type, lang } = parsed.data;
-	const events = await deps.list(new Date(), {
-		limit,
-		...(faculty ? { facultySlug: faculty } : {}),
-		...(type ? { typeSlug: type } : {}),
-	});
-	const locale = lang ?? baseLocale;
-	return json({ events: events.map((event) => toJson(event, locale)) });
+	try {
+		const events = await deps.list(new Date(), {
+			limit,
+			...(faculty ? { facultySlug: faculty } : {}),
+			...(type ? { typeSlug: type } : {}),
+		});
+		const locale = lang ?? baseLocale;
+		return json({ events: events.map((event) => toJson(event, locale)) });
+	} catch (error) {
+		// Answered here so the response keeps its CORS header; the cause stays in the log.
+		console.error("[public-api] events query failed:", error);
+		return json({ error: "INTERNAL" }, 500);
+	}
 }

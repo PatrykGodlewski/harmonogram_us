@@ -801,6 +801,7 @@
 	"widget_title": "Najbliższe wydarzenia",
 	"widget_empty": "Brak nadchodzących wydarzeń.",
 	"widget_all_events": "Wszystkie wydarzenia",
+	"widget_new_tab": "(otwiera się w nowej karcie)",
 	"error_teams_not_configured": "Spotkania Teams nie są skonfigurowane w tej instalacji.",
 	"error_teams_not_online": "Spotkanie Teams można utworzyć tylko dla wydarzenia online lub hybrydowego.",
 	"error_teams_failed": "Nie udało się utworzyć spotkania w Teams. Spróbuj ponownie albo wklej link ręcznie.",

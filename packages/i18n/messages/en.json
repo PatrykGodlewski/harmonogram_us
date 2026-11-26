@@ -801,6 +801,7 @@
 	"widget_title": "Upcoming events",
 	"widget_empty": "No upcoming events.",
 	"widget_all_events": "All events",
+	"widget_new_tab": "(opens in a new tab)",
 	"error_teams_not_configured": "Teams meetings are not set up in this installation.",
 	"error_teams_not_online": "A Teams meeting can only be created for an online or hybrid event.",
 	"error_teams_failed": "The Teams meeting could not be created. Try again or paste a link yourself.",

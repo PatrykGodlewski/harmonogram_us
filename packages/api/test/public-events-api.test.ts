@@ -1,7 +1,7 @@
 import { env } from "@repo/env";
 import { baseLocale } from "@repo/i18n/paraglide/runtime";
 import type { PublicEvent } from "@repo/db/queries/public-events";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { publicEventsResponse } from "../src/public/events-api";
 
 const EVENT: PublicEvent = {
@@ -69,6 +69,31 @@ describe("public events API", () => {
 			expect(res.headers.get("access-control-allow-origin")).toBe("*");
 			expect(await res.json()).toHaveProperty("error");
 			expect(calls).toEqual([]);
+		}
+	});
+
+	it("answers a failed query with a 500 JSON body that keeps CORS and hides the cause", async () => {
+		const cause = new Error('connection to "db.internal:5432" refused');
+		const log = vi.spyOn(console, "error").mockImplementation(() => {});
+		try {
+			const res = await publicEventsResponse(
+				new Request("https://site.test/api/v1/events"),
+				{
+					list: async () => {
+						throw cause;
+					},
+				},
+			);
+			expect(res.status).toBe(500);
+			expect(res.headers.get("access-control-allow-origin")).toBe("*");
+			expect(res.headers.get("cache-control")).toBe("no-store");
+			expect(res.headers.get("content-type")).toContain("application/json");
+			const text = await res.text();
+			expect(JSON.parse(text)).toEqual({ error: "INTERNAL" });
+			expect(text).not.toContain("db.internal");
+			expect(log).toHaveBeenCalledWith(expect.any(String), cause);
+		} finally {
+			log.mockRestore();
 		}
 	});
 });
