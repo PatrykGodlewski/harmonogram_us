@@ -180,8 +180,7 @@ test("[F8] nowy wygląd: lista wydarzeń to siatka ze wspólnymi liniami @uczest
 	await open(page, `/pl?search=${encodeURIComponent(`${tag} A`)}`);
 	const cards = page.locator("#wydarzenia article[data-slot=card]");
 	await expect(cards).toHaveCount(7);
-	// The interactive list replaces the server-rendered one; focus would be lost in the swap.
-	await expect(page.locator("[data-live-list]")).toBeVisible();
+	// Server-rendered list is the final list — no client swap. Grid is present immediately.
 
 	// Neighbours share one line: no gap between their layout boxes (the scroll reveal's
 	// transform aside), on one column or two.

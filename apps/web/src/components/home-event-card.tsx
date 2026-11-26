@@ -1,6 +1,9 @@
 import {
+	account_pending,
+	account_waitlisted,
 	event_room,
 	event_status_cancelled,
+	events_registered,
 	events_seats_remaining,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale } from "@repo/i18n/paraglide/runtime";
@@ -11,17 +14,18 @@ import { cn } from "@repo/ui/utils";
 import { Link } from "@tanstack/react-router";
 import { type CSSProperties, useState, useSyncExternalStore } from "react";
 import { EventCover } from "~/components/event-cover";
-import { EventRegistrationButton } from "~/components/event-registration-button";
 import { SeatsSentence } from "~/components/seats-sentence";
 import { formatEventDateForLocale } from "~/lib/events/format-event-date";
 import type { HomeEventListEvent } from "~/lib/events/types";
-import type { EventRegistrationActions } from "~/lib/registration/use-event-list-registrations";
+import type {
+	EventRegistrationState,
+	MyRegistrationsView,
+} from "~/lib/registration/use-my-registrations";
 
 type HomeEventCardProps = {
 	event: HomeEventListEvent;
-	user: { id: string; email: string } | null;
-	interactive: boolean;
-	registrations: EventRegistrationActions;
+	/** The signed-in visitor's own registration for the event, if any. */
+	registration: EventRegistrationState | undefined;
 	/** Position in the list (picks the header strip colour). */
 	index: number;
 };
@@ -85,11 +89,33 @@ function useStagger(index: number): CSSProperties | undefined {
 	return stagger;
 }
 
+/** The visitor's own registration, read-only: registering happens on the event page. */
+function RegistrationBadge({
+	registration,
+}: {
+	registration: EventRegistrationState | undefined;
+}) {
+	switch (registration?.state) {
+		case "registered":
+			return <Badge>{events_registered()}</Badge>;
+		case "waitlisted":
+			return (
+				<Badge variant="secondary">
+					{account_waitlisted({
+						position: registration.waitlistPosition ?? 0,
+					})}
+				</Badge>
+			);
+		case "pending":
+			return <Badge variant="secondary">{account_pending()}</Badge>;
+		default:
+			return null;
+	}
+}
+
 export function HomeEventCard({
 	event,
-	user,
-	interactive,
-	registrations,
+	registration,
 	index,
 }: HomeEventCardProps) {
 	const { seatsRemaining, maxSeats } = event;
@@ -143,7 +169,8 @@ export function HomeEventCard({
 								to="/events/$eventId"
 								params={{ eventId: event.id }}
 								viewTransition
-								className="underline-offset-4 hover:underline"
+								// Stretched over the card: the whole card opens the event, through this one link.
+								className="underline-offset-4 after:absolute after:inset-0 after:z-10 hover:underline"
 								style={{ viewTransitionName: `event-title-${event.id}` }}
 							>
 								{event.title}
@@ -179,15 +206,7 @@ export function HomeEventCard({
 						/>
 					</p>
 					{isCancelled ? null : (
-						<EventRegistrationButton
-							eventId={event.id}
-							user={user}
-							interactive={interactive}
-							seatsRemaining={seatsRemaining}
-							requiresApproval={event.requiresApproval}
-							hasQuestions={event.hasQuestions}
-							registrations={registrations}
-						/>
+						<RegistrationBadge registration={registration} />
 					)}
 				</div>
 			</div>
@@ -197,18 +216,14 @@ export function HomeEventCard({
 
 type HomeEventCardsProps = {
 	events: HomeEventListEvent[];
-	user: { id: string; email: string } | null;
+	registrationStates: MyRegistrationsView["byEvent"];
 	refetching: boolean;
-	interactive: boolean;
-	registrations: EventRegistrationActions;
 };
 
 export function HomeEventCards({
 	events,
-	user,
+	registrationStates,
 	refetching,
-	interactive,
-	registrations,
 }: HomeEventCardsProps) {
 	return (
 		<div
@@ -224,9 +239,7 @@ export function HomeEventCards({
 					key={event.id}
 					index={index}
 					event={event}
-					user={user}
-					interactive={interactive}
-					registrations={registrations}
+					registration={registrationStates.get(event.id)}
 				/>
 			))}
 		</div>

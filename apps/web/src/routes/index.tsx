@@ -23,7 +23,7 @@ import { EventFilters } from "@repo/ui/composed/events/event-filters";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { HomeEventListSection } from "~/components/home-event-list-section";
+import { HomeEventList } from "~/components/home-event-list";
 import { HomeMarquee } from "~/components/home-marquee";
 
 export const Route = createFileRoute("/")({
@@ -105,7 +105,7 @@ function HomePage() {
 					navigate({ search: updater, replace: options?.replace })
 				}
 			/>
-			<HomeEventListSection filters={filters} user={user} />
+			<HomeEventList filters={filters} userId={user?.id} />
 			<CampusCalendarLink />
 		</HomeShell>
 	);

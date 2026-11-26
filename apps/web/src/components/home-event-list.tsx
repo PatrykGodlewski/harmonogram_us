@@ -1,16 +1,15 @@
 import type { EventFiltersParams } from "@repo/api/events/schemas";
 import { HomeEventCards } from "~/components/home-event-card";
 import { HomeEventListShell } from "~/components/home-event-list-shell";
-import { createQueryRegistrationActions } from "~/lib/events/query-registration-actions";
 import { useEventListData } from "~/lib/events/use-event-list-data";
 
-export type HomeEventListProps = {
+type HomeEventListProps = {
 	filters: EventFiltersParams;
-	user: { id: string; email: string } | null;
+	userId: string | undefined;
 };
 
-/** Server-rendered list: loader data and the query cache, no registration actions. */
-export function HomeEventList({ filters, user }: HomeEventListProps) {
+/** The event list: rendered on the server, hydrated in place, refreshed every 15 s. */
+export function HomeEventList({ filters, userId }: HomeEventListProps) {
 	const {
 		events,
 		hasMore,
@@ -19,7 +18,7 @@ export function HomeEventList({ filters, user }: HomeEventListProps) {
 		loading,
 		refetching,
 		registrationStates,
-	} = useEventListData({ filters, userId: user?.id });
+	} = useEventListData({ filters, userId });
 
 	return (
 		<HomeEventListShell
@@ -31,10 +30,8 @@ export function HomeEventList({ filters, user }: HomeEventListProps) {
 		>
 			<HomeEventCards
 				events={events}
-				user={user}
+				registrationStates={registrationStates}
 				refetching={refetching}
-				interactive={false}
-				registrations={createQueryRegistrationActions(registrationStates)}
 			/>
 		</HomeEventListShell>
 	);
