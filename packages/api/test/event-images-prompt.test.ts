@@ -7,6 +7,24 @@ import {
 
 const STYLE = "flat editorial illustration, no text";
 
+// Product-specified wording: pinned character for character.
+const EXPECTED_SYSTEM_PROMPT = `You turn an event listing into one prompt for a text-to-image model.
+Output only the prompt: one line, in English, at most 60 words, whatever
+language the listing is in.
+
+Describe a single scene that captures the event's vibe:
+- type of place or setting
+- atmosphere and mood
+- lighting and time of day
+- 2 to 4 concrete visual elements
+- a color palette
+
+Never include people's names, brand names, logos, dates, prices, addresses,
+or any written words, letters or signs. Don't depict identifiable real people;
+show crowds, silhouettes or figures at a distance instead.
+If the listing is vague, infer the scene from the type of event. If there is no
+clue at all, describe a tasteful abstract scene in fitting colors.`;
+
 function deps(fetch: PromptDeps["fetch"]): PromptDeps {
 	return { fetch, apiKey: "sk-test", model: "claude-test", styleSuffix: STYLE };
 }
@@ -42,7 +60,7 @@ describe("buildImagePrompt", () => {
 			max_tokens: 150,
 			thinking: { type: "disabled" },
 		});
-		expect(body.system).toEqual(expect.any(String));
+		expect(body.system).toBe(EXPECTED_SYSTEM_PROMPT);
 		expect(body.messages).toEqual([
 			{ role: "user", content: "Jazz night\n\nLive quartet" },
 		]);

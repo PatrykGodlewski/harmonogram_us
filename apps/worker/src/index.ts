@@ -21,6 +21,7 @@ import {
 	QUEUE_DELETE_STORED_FILES,
 	QUEUE_EMAILS,
 	QUEUE_EVENT_IMAGES,
+	QUEUE_EVENT_IMAGES_DEAD,
 	QUEUE_EVENT_REMINDERS,
 	QUEUE_GROUP_INVITATION_EMAIL,
 	QUEUE_PRUNE_OLD_REGISTRATIONS,
@@ -31,6 +32,7 @@ import {
 import { closeExpired } from "./handlers/close-expired";
 import { deleteStoredFiles } from "./handlers/delete-stored-files";
 import { handleEventImageJob } from "./handlers/event-image";
+import { handleDeadEventImageJob } from "./handlers/event-image-dead";
 import { handleEmailJob } from "./handlers/send-email";
 import { sendInvitationEmail } from "./handlers/send-invitation";
 import { EMAIL_WORK } from "./work-options";
@@ -56,6 +58,13 @@ await boss.work(QUEUE_EVENT_IMAGES, async (jobs) => {
 	for (const job of jobs) {
 		const result = await handleEventImageJob(job.data);
 		console.log(`[worker] event image ${job.id}: ${result}`);
+	}
+});
+
+await boss.work(QUEUE_EVENT_IMAGES_DEAD, async (jobs) => {
+	for (const job of jobs) {
+		const result = await handleDeadEventImageJob(job.data);
+		console.log(`[worker] dead event image ${job.id}: ${result}`);
 	}
 });
 
