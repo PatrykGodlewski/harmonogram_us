@@ -1,4 +1,5 @@
 import "./loadEnv";
+import { isAbsolute } from "node:path";
 import { decodeBase64 } from "@oslojs/encoding";
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
@@ -66,6 +67,31 @@ export const env = createEnv({
 		S3_ACCESS_KEY_ID: z.string().min(1).optional(),
 		S3_SECRET_ACCESS_KEY: z.string().min(1).optional(),
 		S3_REGION: z.string().min(1).default("auto"),
+
+		/**
+		 * Generated event cover images: on when enabled, ANTHROPIC_API_KEY is set, the image
+		 * provider has its keys (fal: FAL_KEY; cloudflare: account id and API token) and the
+		 * image has a place to go (the S3 bucket or EVENT_IMAGE_DIR).
+		 * An enum, not z.coerce.boolean(): that turns "false" into true.
+		 */
+		EVENT_IMAGE_ENABLED: z.enum(["true", "false"]).default("true"),
+		ANTHROPIC_API_KEY: z.string().min(1).optional(),
+		/** Model that turns an event's title and description into an image prompt. */
+		EVENT_IMAGE_MODEL: z.string().min(1).default("claude-haiku-5-5"),
+		/** Appended to every image prompt; the code has a default. */
+		EVENT_IMAGE_STYLE: z.string().min(1).optional(),
+		IMAGE_PROVIDER: z.enum(["fal", "cloudflare"]).default("fal"),
+		FAL_KEY: z.string().min(1).optional(),
+		CLOUDFLARE_ACCOUNT_ID: z.string().min(1).optional(),
+		CLOUDFLARE_API_TOKEN: z.string().min(1).optional(),
+		/** Where images are kept when no S3 bucket is set; absolute (each app has its own working directory). */
+		EVENT_IMAGE_DIR: z
+			.string()
+			.min(1)
+			.refine(isAbsolute, {
+				message: "EVENT_IMAGE_DIR must be an absolute path",
+			})
+			.optional(),
 
 		SMTP_HOST: z.string().optional(),
 		SMTP_PORT: z.coerce.number().int().positive().optional(),

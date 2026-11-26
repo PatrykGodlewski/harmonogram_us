@@ -12,6 +12,6 @@
       "@repo/db/queries/users": ["../db/src/queries/users.ts"]
     }
   },
-  "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/**/*.d.ts"],
+  "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/**/*.d.ts", "./scripts/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }

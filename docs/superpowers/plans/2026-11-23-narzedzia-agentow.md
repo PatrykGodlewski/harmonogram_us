@@ -53,6 +53,8 @@ Live state verified at writing (23.11, tip `9e5d51d`):
 
 ### Task 1: Pre-commit hook (Biome + typecheck)
 
+> **26.11 note:** the hook is now run by lefthook (`lefthook.yml`, installed by `tooling/scripts/install-hooks.mjs`); `.git-hooks/` and `core.hooksPath` are no longer used. The steps below are the history of the first version.
+
 **Files:**
 - Create: `.git-hooks/pre-commit` (POSIX sh, executable)
 - Create: `scripts/install-hooks.mjs`

@@ -3,8 +3,10 @@ import { sql } from "drizzle-orm";
 import { fromDrizzle, PgBoss } from "pg-boss";
 import {
 	type EmailJob,
+	type EventImageJob,
 	type GroupInvitationEmailPayload,
 	QUEUE_EMAILS,
+	QUEUE_EVENT_IMAGES,
 	QUEUE_GROUP_INVITATION_EMAIL,
 	QUEUES,
 } from "./queues";
@@ -104,6 +106,23 @@ export async function enqueueEmails(
 
 /** Jobs per INSERT when queueing many e-mails. */
 const EMAIL_INSERT_BATCH = 500;
+
+/**
+ * Queues a cover-image job (one queued per event). Pass the caller's Drizzle
+ * transaction as `tx` so the job commits or rolls back with the event.
+ */
+export async function enqueueEventImage(
+	job: EventImageJob,
+	opts: { tx?: Parameters<typeof fromDrizzle>[0] } = {},
+): Promise<void> {
+	const boss = await getBoss();
+	await boss.send(QUEUE_EVENT_IMAGES, job, {
+		singletonKey: job.eventId,
+		// The worker records a failure on the event; a retry would only buy another image.
+		retryLimit: 0,
+		...(opts.tx ? { db: fromDrizzle(opts.tx, sql) } : {}),
+	});
+}
 
 /**
  * Starts the pg-boss producer ahead of time (called from the web server entry),

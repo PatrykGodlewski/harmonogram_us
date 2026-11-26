@@ -20,6 +20,11 @@ export const QUEUE_SURVEY_EMAILS = "survey-emails";
 export const QUEUE_DELETE_STORED_FILES = "delete-stored-files";
 export const DELETE_STORED_FILES_CRON = "*/15 * * * *";
 export const SURVEY_EMAILS_CRON = "*/15 * * * *";
+/**
+ * Generates an event's cover image. Policy "stately" + singletonKey=eventId: at most one
+ * queued and one running job per event (the job reads the event's current text).
+ */
+export const QUEUE_EVENT_IMAGES = "event-images";
 /** Reminders before events, checked every 5 minutes. */
 export const QUEUE_EVENT_REMINDERS = "event-reminders";
 export const EVENT_REMINDERS_CRON = "*/5 * * * *";
@@ -93,6 +98,14 @@ export const emailJob = z.discriminatedUnion("kind", [
 
 export type EmailJob = z.infer<typeof emailJob>;
 
+/** `force`: a new image even when the current one matches the event's text. */
+export const eventImageJob = z.object({
+	eventId: z.string().min(1),
+	force: z.boolean(),
+});
+
+export type EventImageJob = z.infer<typeof eventImageJob>;
+
 export const QUEUES = [
 	{ name: QUEUE_GROUP_INVITATION_EMAIL, policy: "short" },
 	{ name: QUEUE_CLOSE_EXPIRED_GROUPS, policy: "standard" },
@@ -103,4 +116,5 @@ export const QUEUES = [
 	{ name: QUEUE_CERTIFICATE_EMAILS, policy: "standard" },
 	{ name: QUEUE_SURVEY_EMAILS, policy: "standard" },
 	{ name: QUEUE_DELETE_STORED_FILES, policy: "standard" },
+	{ name: QUEUE_EVENT_IMAGES, policy: "stately" },
 ] as const;

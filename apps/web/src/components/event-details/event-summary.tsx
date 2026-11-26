@@ -29,6 +29,7 @@ import { RegistrationAnswersDialog } from "@repo/ui/composed/registration-answer
 import { formatEventDateTime } from "@repo/ui/time";
 import { Link, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
+import { EventCover } from "~/components/event-cover";
 import type {
 	EventDetailsData,
 	EventDetailsRegistrations,
@@ -89,6 +90,11 @@ export function EventSummary({
 						{formatEventDateTime(event.date, locale)}
 					</p>
 				</div>
+				<EventCover
+					event={event}
+					invite={invite}
+					className="border-t border-navy"
+				/>
 				{event.facultyLabel || event.locationLabel || event.room ? (
 					<div className="flex flex-wrap gap-2 border-t border-navy bg-manela px-5 py-3 sm:px-8">
 						{event.locationLabel ? (

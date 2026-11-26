@@ -1,0 +1,12 @@
+# Git hooks, installed by tooling/scripts/install-hooks.mjs (root `prepare`).
+assert_lefthook_installed: true
+
+pre-commit:
+  parallel: true
+  jobs:
+    - name: biome
+      run: pnpm exec biome check --no-errors-on-unmatched {staged_files}
+      fail_text: "Biome failed (if tools are missing, run pnpm install). Bypass only with a reason: git commit --no-verify (explain why in the commit body)."
+    - name: typecheck
+      run: sh tooling/scripts/typecheck-staged.sh {staged_files}
+      fail_text: "Typecheck failed (if tools are missing, run pnpm install). Bypass only with a reason: git commit --no-verify (explain why in the commit body)."

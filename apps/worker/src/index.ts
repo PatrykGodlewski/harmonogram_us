@@ -20,6 +20,7 @@ import {
 	QUEUE_CLOSE_EXPIRED_GROUPS,
 	QUEUE_DELETE_STORED_FILES,
 	QUEUE_EMAILS,
+	QUEUE_EVENT_IMAGES,
 	QUEUE_EVENT_REMINDERS,
 	QUEUE_GROUP_INVITATION_EMAIL,
 	QUEUE_PRUNE_OLD_REGISTRATIONS,
@@ -29,6 +30,7 @@ import {
 } from "@repo/jobs/queues";
 import { closeExpired } from "./handlers/close-expired";
 import { deleteStoredFiles } from "./handlers/delete-stored-files";
+import { handleEventImageJob } from "./handlers/event-image";
 import { handleEmailJob } from "./handlers/send-email";
 import { sendInvitationEmail } from "./handlers/send-invitation";
 import { EMAIL_WORK } from "./work-options";
@@ -47,6 +49,13 @@ await boss.work(QUEUE_GROUP_INVITATION_EMAIL, EMAIL_WORK, async (jobs) => {
 await boss.work(QUEUE_EMAILS, EMAIL_WORK, async (jobs) => {
 	for (const job of jobs) {
 		await handleEmailJob(emailJob.parse(job.data));
+	}
+});
+
+await boss.work(QUEUE_EVENT_IMAGES, async (jobs) => {
+	for (const job of jobs) {
+		const result = await handleEventImageJob(job.data);
+		console.log(`[worker] event image ${job.id}: ${result}`);
 	}
 });
 

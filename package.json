@@ -3,6 +3,9 @@
   "private": true,
   "type": "module",
   "pnpm": {
+    "ignoredBuiltDependencies": [
+      "lefthook"
+    ],
     "onlyBuiltDependencies": [
       "esbuild",
       "lightningcss"
@@ -42,10 +45,12 @@
     "rust:lint": "tooling/scripts/cargo.sh fmt --check && tooling/scripts/cargo.sh clippy --all-targets -- -D warnings",
     "rust:test": "tooling/scripts/cargo.sh test",
     "rust:build": "tooling/scripts/cargo.sh build --release",
-    "load:documents": "pnpm --filter e2e load:documents"
+    "load:documents": "pnpm --filter e2e load:documents",
+    "sample:event-images": "pnpm --dir packages/api exec tsx scripts/generate-sample-event-images.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.8",
+    "lefthook": "^2.2.4",
     "taze": "^19.17.2",
     "turbo": "^2.11.13"
   },
