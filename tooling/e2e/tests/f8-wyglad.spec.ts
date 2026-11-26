@@ -157,3 +157,145 @@ test("[F8] nowy wygląd: licznik w panelu pokazuje nową liczbę po dodaniu osob
 		"number-tick (number-ticker)",
 	]);
 });
+
+test("[F8] nowy wygląd: lista wydarzeń to siatka ze wspólnymi liniami @uczestnik", async ({
+	page,
+}) => {
+	const tag = `Siatka ${crypto.randomUUID().slice(0, 6)}`;
+	for (let index = 0; index < 7; index++) {
+		await createTestEvent({
+			title: `${tag} A${index}`,
+			startsInDays: 10 + index,
+		});
+	}
+	await createTestEvent({ title: `${tag} B0`, startsInDays: 20 });
+	await open(page, `/pl?search=${encodeURIComponent(`${tag} A`)}`);
+	const cards = page.locator("#wydarzenia article[data-slot=card]");
+	await expect(cards).toHaveCount(7);
+	// The interactive list replaces the server-rendered one; focus would be lost in the swap.
+	await expect(page.locator("[data-live-list]")).toBeVisible();
+
+	// Neighbours share one line: no gap between their layout boxes (the scroll reveal's
+	// transform aside), on one column or two.
+	const apart = await cards.evaluateAll((elements) => {
+		const [first, second] = elements as HTMLElement[];
+		return Math.max(
+			second.offsetLeft - (first.offsetLeft + first.offsetWidth),
+			second.offsetTop - (first.offsetTop + first.offsetHeight),
+		);
+	});
+	expect(Math.abs(apart)).toBeLessThanOrEqual(1);
+
+	// The filter controls sit in cells with 1 px navy lines, on a desktop and in the phone panel.
+	const toggle = page.getByRole("button", { name: /^Filtry/ });
+	if (await toggle.isVisible()) await toggle.click();
+	const filterCells = page
+		.locator("#wydarzenia")
+		.getByRole("combobox")
+		.locator("xpath=..");
+	await expect(filterCells).toHaveCount(6);
+	for (const side of ["right", "bottom"]) {
+		await expect(filterCells.first()).toHaveCSS(`border-${side}-width`, "1px");
+		await expect(filterCells.first()).toHaveCSS(
+			`border-${side}-color`,
+			"rgb(21, 42, 50)",
+		);
+	}
+
+	// A focused or hovered card lifts above its neighbours with the hard shadow
+	// (touch screens have no hover).
+	await cards.nth(0).getByRole("link").first().focus();
+	await expect(cards.nth(0)).toHaveCSS("box-shadow", /6px 6px 0px/);
+	await expect(cards.nth(0)).toHaveCSS("z-index", "10");
+	if (await page.evaluate(() => matchMedia("(hover: hover)").matches)) {
+		await cards.nth(1).hover();
+		await expect(cards.nth(1)).toHaveCSS("box-shadow", /6px 6px 0px/);
+		await expect(cards.nth(1)).toHaveCSS("z-index", "10");
+	}
+
+	// The first six cards stagger in; later cards keep the scroll reveal instead.
+	const staggers = (index: number) =>
+		cards.nth(index).evaluate((card) =>
+			card
+				.getAnimations({ subtree: true })
+				.filter(
+					(animation) =>
+						(animation as CSSAnimation).animationName === "stagger-in",
+				)
+				.map((animation) => animation.playState),
+		);
+	expect(await staggers(5)).toHaveLength(1);
+	expect(await staggers(6)).toEqual([]);
+	await expect(cards.nth(6).locator(".scroll-reveal")).toHaveCount(1);
+	// The contents move inside the cell; the cell itself stays put, so its lines never part.
+	const cellsMoving = await cards.evaluateAll(
+		(elements) =>
+			elements.filter((element) =>
+				element
+					.getAnimations()
+					.some((animation) => animation instanceof CSSAnimation),
+			).length,
+	);
+	expect(cellsMoving).toBe(0);
+	await expect.poll(() => staggers(0)).toEqual(["finished"]);
+
+	// New cards after a filter change do not replay it.
+	await page.getByPlaceholder("Wyszukaj wydarzenie...").fill(`${tag} B`);
+	await expect(cards).toHaveCount(1);
+	await expect(cards.nth(0)).toContainText(`${tag} B0`);
+	expect(await staggers(0)).not.toContain("running");
+});
+
+test("[F8] nowy wygląd: karta przechodzi płynnie w stronę wydarzenia @uczestnik", async ({
+	browser,
+}) => {
+	const event = await createTestEvent({});
+	for (const reducedMotion of ["no-preference", "reduce"] as const) {
+		const context = await browser.newContext({ reducedMotion });
+		const page = await context.newPage();
+		// Counts the view-transition animations of every transition the page starts.
+		await page.addInitScript(() => {
+			const record: number[] = [];
+			(window as unknown as { transitions: number[] }).transitions = record;
+			const start = document.startViewTransition?.bind(document);
+			if (!start) return;
+			document.startViewTransition = ((update: Parameters<typeof start>[0]) => {
+				const transition = start(update);
+				transition.ready.then(
+					() =>
+						record.push(
+							document
+								.getAnimations()
+								.filter((animation) =>
+									(
+										animation.effect as KeyframeEffect | null
+									)?.pseudoElement?.startsWith("::view-transition"),
+								).length,
+						),
+					() => record.push(-1),
+				);
+				return transition;
+			}) as typeof document.startViewTransition;
+		});
+		await open(page, `/pl?search=${encodeURIComponent(event.title)}`);
+		await page
+			.getByRole("heading", { level: 3, name: event.title })
+			.getByRole("link")
+			.click();
+		await expect(page).toHaveURL(new RegExp(`/events/${event.id}`));
+		await expect(
+			page.getByRole("heading", { level: 1, name: event.title }),
+		).toBeVisible();
+		const transitions = () =>
+			page.evaluate(
+				() => (window as unknown as { transitions: number[] }).transitions,
+			);
+		if (reducedMotion === "reduce") {
+			expect((await transitions()).filter((count) => count !== 0)).toEqual([]);
+		} else {
+			await expect.poll(transitions).toHaveLength(1);
+			expect((await transitions())[0]).toBeGreaterThan(0);
+		}
+		await context.close();
+	}
+});

@@ -25,6 +25,11 @@ import { cn } from "../../utils";
 import { EventErrorAlert } from "./event-error-alert";
 import { FILTER_SELECTS, filterValue } from "./filter-selects";
 
+/** A filter cell draws its right and bottom grid lines. */
+const CELL = "border-r border-b border-navy";
+/** Controls fill their cell, so their focus outline is drawn inside it. */
+const CELL_FOCUS = "focus-visible:-outline-offset-2 focus-visible:shadow-none";
+
 /** Typing pauses this long before the list reloads. */
 const SEARCH_DEBOUNCE_MS = 300;
 
@@ -99,11 +104,13 @@ export function EventFilters({ search, onSearchChange }: EventFiltersProps) {
 		: [];
 
 	return (
-		<div className="flex flex-col gap-3 border border-navy bg-cream p-3 text-navy sm:p-4">
+		<div className="border border-navy bg-cream text-navy">
 			{optionsQuery.isError ? (
-				<EventErrorAlert error={optionsQuery.error} />
+				<div className="border-b border-navy p-3">
+					<EventErrorAlert error={optionsQuery.error} />
+				</div>
 			) : null}
-			<div className="flex gap-2">
+			<div className="flex">
 				<div className="relative min-w-0 flex-1">
 					<SearchIcon
 						aria-hidden
@@ -115,14 +122,17 @@ export function EventFilters({ search, onSearchChange }: EventFiltersProps) {
 						placeholder={filter_search_placeholder()}
 						value={input}
 						onChange={(event) => setInput(event.target.value)}
-						className="h-11 pr-11 pl-9 [&::-webkit-search-cancel-button]:hidden"
+						className={cn(
+							CELL_FOCUS,
+							"h-12 border-0 pr-11 pl-9 [&::-webkit-search-cancel-button]:hidden",
+						)}
 					/>
 					{input ? (
 						<button
 							type="button"
 							onClick={clear}
 							aria-label={filter_clear_search()}
-							className="absolute top-1/2 right-1 grid size-9 -translate-y-1/2 place-items-center outline-none hover:bg-purple focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-navy"
+							className="absolute top-1/2 right-1.5 grid size-9 -translate-y-1/2 place-items-center outline-none hover:bg-purple focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-navy"
 						>
 							<XIcon aria-hidden className="size-4" />
 						</button>
@@ -130,8 +140,8 @@ export function EventFilters({ search, onSearchChange }: EventFiltersProps) {
 				</div>
 				<Button
 					type="button"
-					variant="outline"
-					className="h-11 md:hidden"
+					variant="ghost"
+					className={cn(CELL_FOCUS, "min-h-12 border-l border-navy md:hidden")}
 					aria-expanded={open}
 					aria-controls={panelId}
 					onClick={() => setOpen((value) => !value)}
@@ -145,59 +155,69 @@ export function EventFilters({ search, onSearchChange }: EventFiltersProps) {
 					) : null}
 				</Button>
 			</div>
+			{/* The outer cells' right and bottom lines fall outside the clipped panel. */}
 			<div
 				id={panelId}
 				className={cn(
-					"grid gap-2 sm:grid-cols-2 md:grid md:grid-cols-3",
-					open ? "grid" : "hidden",
+					"overflow-hidden border-t border-navy md:block",
+					open ? "block" : "hidden",
 				)}
 			>
-				{loading || optionsQuery.isError
-					? FILTER_SELECTS.map(({ id }) => (
-							<Skeleton key={id} className="h-9 w-full" />
-						))
-					: FILTER_SELECTS.map(({ id, placeholder, getOptions }) => {
-							const value = filterValue(search, id);
-							const options = getOptions(optionsQuery.data);
-							const selected = options.find((option) => option.value === value);
-							return (
-								<Select
-									key={id}
-									value={value}
-									onValueChange={(value) =>
-										onSearchChange((prev) => ({
-											...prev,
-											[id]: value === "all" ? undefined : value,
-										}))
-									}
-								>
-									<SelectTrigger
-										className={cn(
-											"w-full",
-											id !== "sortOrder" && value !== "all" && "bg-purple",
-										)}
-										// The name keeps the chosen value, which a plain label would hide.
-										aria-label={
-											selected
-												? `${placeholder()}: ${selected.label}`
-												: placeholder()
-										}
-									>
-										<SelectValue placeholder={placeholder()} />
-									</SelectTrigger>
-									<SelectContent>
-										{options.map((option) => (
-											<SelectItem key={option.value} value={option.value}>
-												{option.label}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							);
-						})}
+				<div className="-mr-px -mb-px grid sm:grid-cols-2 md:grid-cols-3">
+					{loading || optionsQuery.isError
+						? FILTER_SELECTS.map(({ id }) => (
+								<div key={id} className={cn(CELL, "p-1.5")}>
+									<Skeleton className="h-9 w-full" />
+								</div>
+							))
+						: FILTER_SELECTS.map(({ id, placeholder, getOptions }) => {
+								const value = filterValue(search, id);
+								const options = getOptions(optionsQuery.data);
+								const selected = options.find(
+									(option) => option.value === value,
+								);
+								const chosen = id !== "sortOrder" && value !== "all";
+								return (
+									<div key={id} className={CELL}>
+										<Select
+											value={value}
+											onValueChange={(value) =>
+												onSearchChange((prev) => ({
+													...prev,
+													[id]: value === "all" ? undefined : value,
+												}))
+											}
+										>
+											<SelectTrigger
+												className={cn(
+													CELL_FOCUS,
+													"w-full border-0 bg-transparent data-[size=default]:h-12",
+													chosen ? "bg-purple" : "hover:bg-white",
+												)}
+												// The name keeps the chosen value, which a plain label would hide.
+												aria-label={
+													selected
+														? `${placeholder()}: ${selected.label}`
+														: placeholder()
+												}
+											>
+												<SelectValue placeholder={placeholder()} />
+											</SelectTrigger>
+											<SelectContent>
+												{options.map((option) => (
+													<SelectItem key={option.value} value={option.value}>
+														{option.label}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+									</div>
+								);
+							})}
+				</div>
 			</div>
 			{active.length > 0 ? (
-				<div className="flex flex-wrap items-center gap-2">
+				<div className="flex flex-wrap items-center gap-2 border-t border-navy p-3">
 					<ul aria-label={filter_active()} className="flex flex-wrap gap-2">
 						{active.map((filter) => (
 							<li key={filter.id}>

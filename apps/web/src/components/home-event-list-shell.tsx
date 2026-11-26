@@ -10,6 +10,7 @@ import { Skeleton } from "@repo/ui/components/skeleton";
 import { EventErrorAlert } from "@repo/ui/composed/events/event-error-alert";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { RULED_CELL, RULED_GRID } from "~/components/home-event-card";
 import type { HomeEventListEvent } from "~/lib/events/types";
 
 type HomeEventListShellProps = {
@@ -34,10 +35,10 @@ export function HomeEventListShell({
 
 	if (loading) {
 		return (
-			<div className="flex flex-col gap-4" role="status" aria-busy="true">
+			<div className={RULED_GRID} role="status" aria-busy="true">
 				<span className="sr-only">{events_loading()}</span>
 				{(["skeleton-a", "skeleton-b", "skeleton-c"] as const).map((key) => (
-					<Card key={key} aria-hidden>
+					<Card key={key} aria-hidden className={RULED_CELL}>
 						<CardContent className="py-8">
 							<Skeleton className="h-16 w-full" />
 						</CardContent>
