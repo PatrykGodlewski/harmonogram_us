@@ -6,7 +6,7 @@ import { agendaItems, agendaSessions } from "../schema/agenda";
 import { eventOrganizers } from "../schema/event-organizers";
 import { events } from "../schema/events";
 import { DomainError } from "./domain-errors";
-import { newInviteToken } from "./events";
+import { type EventSaveHooks, newInviteToken } from "./events";
 
 export type DuplicateEventInput = {
 	eventId: string;
@@ -29,10 +29,12 @@ const STEP = { once: "0 days", weekly: "1 week", monthly: "1 month" } as const;
  * Each copy has the event's fields and, as chosen, its agenda and organizers
  * (plus the actor) — never registrations or groups. Times keep the wall clock in
  * the installation time zone (10:00 stays 10:00 across a daylight-saving change;
- * monthly from the 31st lands on shorter months' last day).
+ * monthly from the 31st lands on shorter months' last day). `saveHooks` runs for
+ * every copy in the transaction, as for a new event.
  */
 export async function duplicateEvent(
 	input: DuplicateEventInput,
+	saveHooks?: EventSaveHooks,
 ): Promise<{ id: string; ids: string[] }> {
 	const zone = env.VITE_APP_TIME_ZONE;
 	const repeat = input.repeat ?? "once";
@@ -63,12 +65,16 @@ export async function duplicateEvent(
 			: [];
 		const ids: string[] = [];
 		for (const row of dates) {
-			ids.push(
-				await copyEvent(tx, source, new Date(row.date), {
-					agenda: copy.agenda,
-					organizerIds: [...new Set([...organizerIds, input.actorId])],
-				}),
-			);
+			const id = await copyEvent(tx, source, new Date(row.date), {
+				agenda: copy.agenda,
+				organizerIds: [...new Set([...organizerIds, input.actorId])],
+			});
+			await saveHooks?.onEventSaved(tx, {
+				id,
+				title: source.title,
+				description: source.description,
+			});
+			ids.push(id);
 		}
 		return { id: ids[0] ?? "", ids };
 	});

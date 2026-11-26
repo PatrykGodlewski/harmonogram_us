@@ -1,5 +1,5 @@
 import { asc, eq, inArray } from "drizzle-orm";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "../src/client";
 import { createAgendaItem, listAgendaItems } from "../src/queries/agenda-items";
 import {
@@ -12,7 +12,7 @@ import {
 } from "../src/queries/event-organizers";
 import { registerForEvent } from "../src/queries/event-registrations";
 import { duplicateEvent } from "../src/queries/event-duplicate";
-import { createEvent } from "../src/queries/events";
+import { createEvent, type EventSaveHooks } from "../src/queries/events";
 import { agendaItems } from "../src/schema/agenda";
 import { eventRegistrations } from "../src/schema/event-registrations";
 import { eventTypes } from "../src/schema/event-lookups";
@@ -283,5 +283,56 @@ describe("speakers and materials", () => {
 		const { id } = await duplicateEvent({ eventId: sourceId, date: TARGET, actorId: actor });
 		const [copied] = await db.select({ materials: events.materials }).from(events).where(eq(events.id, id));
 		expect(copied?.materials).toEqual(links);
+	});
+});
+
+describe("save hooks", () => {
+	function hooks() {
+		const onEventSaved = vi.fn<EventSaveHooks["onEventSaved"]>(async () => {});
+		return { onEventSaved };
+	}
+
+	it("are called once per copy with that copy's id, title and description", async () => {
+		const actor = await createUser();
+		const sourceId = await sourceEvent(actor);
+		const saveHooks = hooks();
+		const { id } = await duplicateEvent(
+			{ eventId: sourceId, date: TARGET, actorId: actor },
+			saveHooks,
+		);
+		expect(saveHooks.onEventSaved).toHaveBeenCalledTimes(1);
+		expect(saveHooks.onEventSaved).toHaveBeenCalledWith(expect.anything(), {
+			id,
+			title: "Seminarium",
+			description: "Opis",
+		});
+	});
+
+	it("are called for every copy of a series", async () => {
+		const actor = await createUser();
+		const sourceId = await sourceEvent(actor);
+		const saveHooks = hooks();
+		const { ids } = await duplicateEvent(
+			{ eventId: sourceId, date: TARGET, repeat: "weekly", count: 3, actorId: actor },
+			saveHooks,
+		);
+		expect(saveHooks.onEventSaved.mock.calls.map(([, event]) => event.id)).toEqual(ids);
+	});
+
+	it("never copy the source's image", async () => {
+		const actor = await createUser();
+		const sourceId = await sourceEvent(actor);
+		await db
+			.update(events)
+			.set({ imageKey: "event-images/s/1", imageStatus: "ready", imageSourceHash: "h" })
+			.where(eq(events.id, sourceId));
+		const { id } = await duplicateEvent({ eventId: sourceId, date: TARGET, actorId: actor });
+		const [copy] = await db.select().from(events).where(eq(events.id, id));
+		expect(copy).toMatchObject({
+			imageKey: null,
+			imageUrl: null,
+			imageStatus: null,
+			imageSourceHash: null,
+		});
 	});
 });

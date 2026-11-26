@@ -59,3 +59,6 @@ deploy/.env.production
 
 # e2e stack stamp (tooling/scripts/e2e.sh)
 .e2e/
+
+# Generated event images without an S3 bucket (EVENT_IMAGE_DIR) and sample images
+data/

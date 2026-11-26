@@ -14,6 +14,7 @@ import {
 } from "../schema/event-registrations";
 import {
 	type AttendanceMode,
+	type EventImageStatus,
 	type EventStatus,
 	type EventVisibility,
 	events,
@@ -89,6 +90,9 @@ export type EventWithRelations = {
 	certificateIssuer: string | null;
 	certificateSigner: string | null;
 	certificateNote: string | null;
+	/** Generated cover image route; show a placeholder unless the status is `ready`. */
+	imageUrl: string | null;
+	imageStatus: EventImageStatus | null;
 	/** Registering asks questions (the list sends people to the event page to answer). */
 	hasQuestions: boolean;
 	/** End, else the end of its last agenda item, else a day after the start. */
@@ -253,6 +257,8 @@ async function queryEvents(
 			certificateIssuer: events.certificateIssuer,
 			certificateSigner: events.certificateSigner,
 			certificateNote: events.certificateNote,
+			imageUrl: events.imageUrl,
+			imageStatus: events.imageStatus,
 			hasQuestions: sql<boolean>`exists (select 1 from event_questions q where q.event_id = "events"."id" and q.form = 'registration')`,
 			effectiveEndsAt:
 				sql<Date>`${effectiveEventEndSql(sql`"events"`)}`.mapWith(
@@ -307,7 +313,18 @@ export type CreateEventInput = {
 	organizerId: string | null;
 };
 
-export async function createEvent(input: CreateEventInput) {
+/** Called inside the transaction after an event is created or updated (cover images). */
+export type EventSaveHooks = {
+	onEventSaved(
+		tx: TransactionClient,
+		event: { id: string; title: string; description: string | null },
+	): Promise<void>;
+};
+
+export async function createEvent(
+	input: CreateEventInput,
+	saveHooks?: EventSaveHooks,
+) {
 	return db.transaction(async (tx) => {
 		const [event] = await tx
 			.insert(events)
@@ -343,6 +360,9 @@ export async function createEvent(input: CreateEventInput) {
 			await tx
 				.insert(eventOrganizers)
 				.values({ eventId: event.id, userId: input.organizerId });
+		}
+		if (event) {
+			await saveHooks?.onEventSaved(tx, event);
 		}
 		return event;
 	});
@@ -456,6 +476,7 @@ export type UpdateEventInput = {
 export async function updateEvent(
 	input: UpdateEventInput,
 	hooks?: RegistrationHooks,
+	saveHooks?: EventSaveHooks,
 ) {
 	const { id, ...values } = input;
 	try {
@@ -541,6 +562,9 @@ export async function updateEvent(
 						});
 					}
 				}
+			}
+			if (event) {
+				await saveHooks?.onEventSaved(tx, event);
 			}
 			return event ?? null;
 		});

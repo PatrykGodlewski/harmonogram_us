@@ -30,6 +30,7 @@ import { Route as TicketsRegistrationIdRouteImport } from './routes/tickets/$reg
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiCalendarEventsRouteImport } from './routes/api/calendar/events'
 import { Route as ApiCertificatesRegistrationIdRouteImport } from './routes/api/certificates/$registrationId'
+import { Route as ApiEventImagesEventIdRouteImport } from './routes/api/event-images/$eventId'
 import { Route as ApiFilesFileIdRouteImport } from './routes/api/files/$fileId'
 import { Route as ApiV1EventsRouteImport } from './routes/api/v1/events'
 import { Route as RegistrationsRegistrationIdWithdrawRouteImport } from './routes/registrations.$registrationId.withdraw'
@@ -146,6 +147,11 @@ const ApiCertificatesRegistrationIdRoute =
     path: '/api/certificates/$registrationId',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiEventImagesEventIdRoute = ApiEventImagesEventIdRouteImport.update({
+  id: '/api/event-images/$eventId',
+  path: '/api/event-images/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiFilesFileIdRoute = ApiFilesFileIdRouteImport.update({
   id: '/api/files/$fileId',
   path: '/api/files/$fileId',
@@ -218,6 +224,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/calendar/events': typeof ApiCalendarEventsRoute
   '/api/certificates/$registrationId': typeof ApiCertificatesRegistrationIdRoute
+  '/api/event-images/$eventId': typeof ApiEventImagesEventIdRoute
   '/api/files/$fileId': typeof ApiFilesFileIdRoute
   '/api/v1/events': typeof ApiV1EventsRoute
   '/registrations/$registrationId/withdraw': typeof RegistrationsRegistrationIdWithdrawRoute
@@ -250,6 +257,7 @@ export interface FileRoutesByTo {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/calendar/events': typeof ApiCalendarEventsRoute
   '/api/certificates/$registrationId': typeof ApiCertificatesRegistrationIdRoute
+  '/api/event-images/$eventId': typeof ApiEventImagesEventIdRoute
   '/api/files/$fileId': typeof ApiFilesFileIdRoute
   '/api/v1/events': typeof ApiV1EventsRoute
   '/registrations/$registrationId/withdraw': typeof RegistrationsRegistrationIdWithdrawRoute
@@ -283,6 +291,7 @@ export interface FileRoutesById {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/calendar/events': typeof ApiCalendarEventsRoute
   '/api/certificates/$registrationId': typeof ApiCertificatesRegistrationIdRoute
+  '/api/event-images/$eventId': typeof ApiEventImagesEventIdRoute
   '/api/files/$fileId': typeof ApiFilesFileIdRoute
   '/api/v1/events': typeof ApiV1EventsRoute
   '/registrations/$registrationId/withdraw': typeof RegistrationsRegistrationIdWithdrawRoute
@@ -317,6 +326,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/calendar/events'
     | '/api/certificates/$registrationId'
+    | '/api/event-images/$eventId'
     | '/api/files/$fileId'
     | '/api/v1/events'
     | '/registrations/$registrationId/withdraw'
@@ -349,6 +359,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/calendar/events'
     | '/api/certificates/$registrationId'
+    | '/api/event-images/$eventId'
     | '/api/files/$fileId'
     | '/api/v1/events'
     | '/registrations/$registrationId/withdraw'
@@ -381,6 +392,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/calendar/events'
     | '/api/certificates/$registrationId'
+    | '/api/event-images/$eventId'
     | '/api/files/$fileId'
     | '/api/v1/events'
     | '/registrations/$registrationId/withdraw'
@@ -414,6 +426,7 @@ export interface RootRouteChildren {
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiCalendarEventsRoute: typeof ApiCalendarEventsRoute
   ApiCertificatesRegistrationIdRoute: typeof ApiCertificatesRegistrationIdRoute
+  ApiEventImagesEventIdRoute: typeof ApiEventImagesEventIdRoute
   ApiFilesFileIdRoute: typeof ApiFilesFileIdRoute
   ApiV1EventsRoute: typeof ApiV1EventsRoute
   RegistrationsRegistrationIdWithdrawRoute: typeof RegistrationsRegistrationIdWithdrawRoute
@@ -574,6 +587,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCertificatesRegistrationIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/event-images/$eventId': {
+      id: '/api/event-images/$eventId'
+      path: '/api/event-images/$eventId'
+      fullPath: '/api/event-images/$eventId'
+      preLoaderRoute: typeof ApiEventImagesEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/files/$fileId': {
       id: '/api/files/$fileId'
       path: '/api/files/$fileId'
@@ -662,6 +682,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiCalendarEventsRoute: ApiCalendarEventsRoute,
   ApiCertificatesRegistrationIdRoute: ApiCertificatesRegistrationIdRoute,
+  ApiEventImagesEventIdRoute: ApiEventImagesEventIdRoute,
   ApiFilesFileIdRoute: ApiFilesFileIdRoute,
   ApiV1EventsRoute: ApiV1EventsRoute,
   RegistrationsRegistrationIdWithdrawRoute:

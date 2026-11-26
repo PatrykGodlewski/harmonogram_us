@@ -22,6 +22,7 @@ import { Route as ApiMetricsRouteImport } from './routes/api/metrics'
 import { Route as AuthenticatedEventsIndexRouteImport } from './routes/_authenticated/events.index'
 import { Route as AuthenticatedEventsEventIdRouteImport } from './routes/_authenticated/events.$eventId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiEventImagesEventIdRouteImport } from './routes/api/event-images/$eventId'
 import { Route as ApiFilesFileIdRouteImport } from './routes/api/files/$fileId'
 import { Route as AuthenticatedEventsEventIdScanRouteImport } from './routes/_authenticated/events.$eventId_.scan'
 import { Route as ApiAgendaItemsItemIdImageRouteImport } from './routes/api/agenda-items/$itemId.image'
@@ -96,6 +97,11 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiEventImagesEventIdRoute = ApiEventImagesEventIdRouteImport.update({
+  id: '/api/event-images/$eventId',
+  path: '/api/event-images/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiFilesFileIdRoute = ApiFilesFileIdRouteImport.update({
   id: '/api/files/$fileId',
   path: '/api/files/$fileId',
@@ -138,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/api/metrics': typeof ApiMetricsRoute
   '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/event-images/$eventId': typeof ApiEventImagesEventIdRoute
   '/api/files/$fileId': typeof ApiFilesFileIdRoute
   '/events/': typeof AuthenticatedEventsIndexRoute
   '/events/$eventId/scan': typeof AuthenticatedEventsEventIdScanRoute
@@ -157,6 +164,7 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/event-images/$eventId': typeof ApiEventImagesEventIdRoute
   '/api/files/$fileId': typeof ApiFilesFileIdRoute
   '/events': typeof AuthenticatedEventsIndexRoute
   '/events/$eventId/scan': typeof AuthenticatedEventsEventIdScanRoute
@@ -178,6 +186,7 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/events/$eventId': typeof AuthenticatedEventsEventIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/event-images/$eventId': typeof ApiEventImagesEventIdRoute
   '/api/files/$fileId': typeof ApiFilesFileIdRoute
   '/_authenticated/events/': typeof AuthenticatedEventsIndexRoute
   '/_authenticated/events/$eventId_/scan': typeof AuthenticatedEventsEventIdScanRoute
@@ -199,6 +208,7 @@ export interface FileRouteTypes {
     | '/api/metrics'
     | '/events/$eventId'
     | '/api/auth/$'
+    | '/api/event-images/$eventId'
     | '/api/files/$fileId'
     | '/events/'
     | '/events/$eventId/scan'
@@ -218,6 +228,7 @@ export interface FileRouteTypes {
     | '/'
     | '/events/$eventId'
     | '/api/auth/$'
+    | '/api/event-images/$eventId'
     | '/api/files/$fileId'
     | '/events'
     | '/events/$eventId/scan'
@@ -238,6 +249,7 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/_authenticated/events/$eventId'
     | '/api/auth/$'
+    | '/api/event-images/$eventId'
     | '/api/files/$fileId'
     | '/_authenticated/events/'
     | '/_authenticated/events/$eventId_/scan'
@@ -253,6 +265,7 @@ export interface RootRouteChildren {
   ApiHealthRoute: typeof ApiHealthRoute
   ApiMetricsRoute: typeof ApiMetricsRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiEventImagesEventIdRoute: typeof ApiEventImagesEventIdRoute
   ApiFilesFileIdRoute: typeof ApiFilesFileIdRoute
   ApiAgendaItemsItemIdImageRoute: typeof ApiAgendaItemsItemIdImageRoute
   ApiEventsEventIdAttendanceRoute: typeof ApiEventsEventIdAttendanceRoute
@@ -351,6 +364,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/event-images/$eventId': {
+      id: '/api/event-images/$eventId'
+      path: '/api/event-images/$eventId'
+      fullPath: '/api/event-images/$eventId'
+      preLoaderRoute: typeof ApiEventImagesEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/files/$fileId': {
       id: '/api/files/$fileId'
       path: '/api/files/$fileId'
@@ -425,6 +445,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiHealthRoute: ApiHealthRoute,
   ApiMetricsRoute: ApiMetricsRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiEventImagesEventIdRoute: ApiEventImagesEventIdRoute,
   ApiFilesFileIdRoute: ApiFilesFileIdRoute,
   ApiAgendaItemsItemIdImageRoute: ApiAgendaItemsItemIdImageRoute,
   ApiEventsEventIdAttendanceRoute: ApiEventsEventIdAttendanceRoute,

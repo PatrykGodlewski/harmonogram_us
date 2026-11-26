@@ -1,3 +1,4 @@
+import { eventImageHooks } from "@repo/api/event-images/queue";
 import {
 	createAgendaItem,
 	deleteAgendaItem,
@@ -54,7 +55,10 @@ export const createAdminEventServer = panelActionFn
 	.validator((input: unknown) => createEventSchema.parse(input))
 	.handler(async ({ data, context }) => {
 		await assertCanCreateEvents(context.user);
-		return createEvent({ ...data, organizerId: context.user.id });
+		return createEvent(
+			{ ...data, organizerId: context.user.id },
+			eventImageHooks(),
+		);
 	});
 
 export const updateAdminEventServer = panelActionFn
@@ -62,7 +66,7 @@ export const updateAdminEventServer = panelActionFn
 	.handler(async ({ data, context }) => {
 		await assertCanManageEvent(context.user, data.id);
 		const event = await withDomainErrors(() =>
-			updateEvent(data, registrationEmailHooks),
+			updateEvent(data, registrationEmailHooks, eventImageHooks()),
 		);
 		if (!event) {
 			throw appError("NOT_FOUND");
@@ -109,14 +113,17 @@ export const duplicateAdminEventServer = panelActionFn
 		await assertCanManageEvent(context.user, data.id);
 		await assertCanCreateEvents(context.user);
 		return withDomainErrors(() =>
-			duplicateEvent({
-				eventId: data.id,
-				date: data.date,
-				repeat: data.repeat,
-				count: data.count,
-				copy: data.copy,
-				actorId: context.user.id,
-			}),
+			duplicateEvent(
+				{
+					eventId: data.id,
+					date: data.date,
+					repeat: data.repeat,
+					count: data.count,
+					copy: data.copy,
+					actorId: context.user.id,
+				},
+				eventImageHooks(),
+			),
 		);
 	});
 
