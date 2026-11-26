@@ -113,6 +113,14 @@ test("[F14] organizator dodaje plik i link, uczestnik pobiera ten sam plik @orga
 		maxRedirects: 0,
 	});
 	expect(gone.status()).toBe(404);
+
+	// The link is removed too: gone from the panel and the event page
+	await materials.getByRole("button", { name: "Usuń link Nagranie" }).click();
+	await expect(materials.getByRole("link", { name: "Nagranie" })).toHaveCount(
+		0,
+	);
+	await visitor.reload();
+	await expect(visitor.getByRole("link", { name: "Nagranie" })).toHaveCount(0);
 });
 
 test("[F14] plik szkicu nie jest dostępny publicznie @organizator", async ({

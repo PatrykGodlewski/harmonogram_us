@@ -803,6 +803,7 @@
 	"error_teams_not_online": "Spotkanie Teams można utworzyć tylko dla wydarzenia online lub hybrydowego.",
 	"error_teams_failed": "Nie udało się utworzyć spotkania w Teams. Spróbuj ponownie albo wklej link ręcznie.",
 	"error_event_files_limit": "To wydarzenie ma już 50 plików. Usuń któryś, aby dodać nowy.",
+	"error_event_links_limit": "Wydarzenie może mieć najwyżej 30 linków.",
 	"error_file_too_large": "Plik jest za duży. Największy dozwolony rozmiar to 25 MB.",
 	"error_image_type": "Obraz musi być plikiem PNG, JPG lub WebP.",
 	"error_image_too_large": "Obraz jest za duży. Największy dozwolony rozmiar to 5 MB.",

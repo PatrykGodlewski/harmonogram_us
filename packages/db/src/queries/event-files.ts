@@ -8,6 +8,9 @@ import { DomainError } from "./domain-errors";
 /** Most files one event may hold (bounds its page and the bucket). */
 export const EVENT_FILES_LIMIT = 50;
 
+/** Most links one event may hold. */
+export const EVENT_LINKS_LIMIT = 30;
+
 export type EventFile = {
 	id: string;
 	agendaItemId: string | null;
@@ -117,14 +120,60 @@ export async function getEventFile(
 	return file ?? null;
 }
 
-export async function setEventMaterialLinks(
+/**
+ * Appends one link in a single statement, so concurrent adds keep each other's.
+ * EVENT_LINKS_LIMIT when the event already has the most links.
+ */
+export async function addEventMaterialLink(
 	eventId: string,
-	links: AgendaMaterial[],
+	link: AgendaMaterial,
 ): Promise<void> {
-	await db
+	const updated = await db
 		.update(events)
-		.set({ materials: links, updatedAt: new Date() })
+		.set({
+			materials: sql`${events.materials} || ${JSON.stringify([link])}::jsonb`,
+			updatedAt: new Date(),
+		})
+		.where(
+			and(
+				eq(events.id, eventId),
+				sql`jsonb_array_length(${events.materials}) < ${EVENT_LINKS_LIMIT}`,
+			),
+		)
+		.returning({ id: events.id });
+	if (updated.length > 0) {
+		return;
+	}
+	const [event] = await db
+		.select({ id: events.id })
+		.from(events)
 		.where(eq(events.id, eventId));
+	throw new DomainError(event ? "EVENT_LINKS_LIMIT" : "EVENT_NOT_FOUND");
+}
+
+/**
+ * Removes the link at `index` only while that position still holds exactly
+ * `link`; false when the list changed first (nothing is removed).
+ */
+export async function removeEventMaterialLink(
+	eventId: string,
+	index: number,
+	link: AgendaMaterial,
+): Promise<boolean> {
+	const updated = await db
+		.update(events)
+		.set({
+			materials: sql`${events.materials} - ${index}::int`,
+			updatedAt: new Date(),
+		})
+		.where(
+			and(
+				eq(events.id, eventId),
+				sql`${events.materials} -> ${index}::int = ${JSON.stringify(link)}::jsonb`,
+			),
+		)
+		.returning({ id: events.id });
+	return updated.length > 0;
 }
 
 /** For an object stored without a row (its insert failed). */

@@ -3,13 +3,15 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "../src/client";
 import {
 	addEventFile,
+	addEventMaterialLink,
 	deleteEventFile,
 	EVENT_FILES_LIMIT,
+	EVENT_LINKS_LIMIT,
 	forgetStoredFileDeletions,
 	getEventFile,
 	listEventFiles,
 	recordStoredFileDeletion,
-	setEventMaterialLinks,
+	removeEventMaterialLink,
 	takeStoredFileDeletions,
 } from "../src/queries/event-files";
 import { getEventById } from "../src/queries/events";
@@ -121,11 +123,70 @@ describe("stored file deletions", () => {
 	});
 });
 
+function link(n: number) {
+	return { label: `Link ${n}`, url: `https://example.com/${n}` };
+}
+
+async function storedLinks(eventId: string) {
+	const [row] = await db
+		.select({ materials: events.materials })
+		.from(events)
+		.where(eq(events.id, eventId));
+	return row?.materials;
+}
+
+describe("material links", () => {
+	it(`appends links and refuses more than ${EVENT_LINKS_LIMIT}`, async () => {
+		const eventId = await createEvent();
+		await addEventMaterialLink(eventId, link(1));
+		await addEventMaterialLink(eventId, link(2));
+		expect(await storedLinks(eventId)).toEqual([link(1), link(2)]);
+
+		await db
+			.update(events)
+			.set({ materials: Array.from({ length: EVENT_LINKS_LIMIT }, (_, i) => link(i)) })
+			.where(eq(events.id, eventId));
+		expect(await rejectionCode(addEventMaterialLink(eventId, link(99)))).toBe(
+			"EVENT_LINKS_LIMIT",
+		);
+		expect(await storedLinks(eventId)).toHaveLength(EVENT_LINKS_LIMIT);
+	});
+
+	it("keeps both links when two are added at once", async () => {
+		const eventId = await createEvent();
+		await Promise.all([
+			addEventMaterialLink(eventId, link(1)),
+			addEventMaterialLink(eventId, link(2)),
+		]);
+		const stored = await storedLinks(eventId);
+		expect(stored).toHaveLength(2);
+		expect(stored).toEqual(expect.arrayContaining([link(1), link(2)]));
+	});
+
+	it("removes a link only while its position still holds it", async () => {
+		const eventId = await createEvent();
+		for (const n of [1, 2, 1]) {
+			await addEventMaterialLink(eventId, link(n));
+		}
+
+		expect(await removeEventMaterialLink(eventId, 0, link(2))).toBe(false);
+		expect(await removeEventMaterialLink(eventId, 3, link(1))).toBe(false);
+		expect(await storedLinks(eventId)).toEqual([link(1), link(2), link(1)]);
+
+		expect(await removeEventMaterialLink(eventId, 2, link(1))).toBe(true);
+		expect(await storedLinks(eventId)).toEqual([link(1), link(2)]);
+		// Someone else removed the first link: the shown index 1 now holds nothing
+		expect(await removeEventMaterialLink(eventId, 0, link(1))).toBe(true);
+		expect(await removeEventMaterialLink(eventId, 1, link(2))).toBe(false);
+		expect(await storedLinks(eventId)).toEqual([link(2)]);
+	});
+});
+
 describe("material links and the event page", () => {
 	it("stores links and gives them with the files on the event page", async () => {
 		const eventId = await createEvent();
 		const itemId = await createItem(eventId);
-		await setEventMaterialLinks(eventId, [{ label: "Nagranie", url: "https://example.com/rec" }]);
+		await addEventMaterialLink(eventId, { label: "Nagranie", url: "https://example.com/rec" });
 		const added = await file(eventId, "slides.pdf", itemId);
 
 		const event = await getEventById(eventId, { kind: "public", signedIn: true });

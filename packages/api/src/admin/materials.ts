@@ -1,12 +1,13 @@
 import {
+	addEventMaterialLink,
 	deleteEventFile,
-	setEventMaterialLinks,
+	removeEventMaterialLink,
 } from "@repo/db/queries/event-files";
 import { queryOptions } from "@tanstack/react-query";
 import { z } from "zod";
 import { assertCanManageEvent } from "../auth/event-access";
 import { panelActionFn, panelQueryFn } from "../auth/panel-middleware";
-import { withDomainErrors } from "../errors";
+import { appError, withDomainErrors } from "../errors";
 import { storeEventFile } from "../files/store";
 import { storageConfig } from "../storage/s3";
 
@@ -53,24 +54,43 @@ export const deleteEventFileServer = panelActionFn
 	)
 	.handler(async ({ data, context }) => {
 		await assertCanManageEvent(context.user, data.eventId);
-		await deleteEventFile(data.eventId, data.id);
+		if (!(await deleteEventFile(data.eventId, data.id))) {
+			throw appError("NOT_FOUND");
+		}
 	});
 
-const linksSchema = z
-	.array(
-		z.object({
-			label: z.string().trim().min(1).max(200),
-			url: z.url({ protocol: /^https?$/ }).max(2000),
-		}),
-	)
-	.max(30);
+const linkSchema = z.object({
+	label: z.string().trim().min(1).max(200),
+	url: z.url({ protocol: /^https?$/ }).max(2000),
+});
 
-/** Replaces the event's links (F14) with the given list. */
-export const setEventMaterialLinksServer = panelActionFn
+/** Appends one link to the event's links (F14); EVENT_LINKS_LIMIT when full. */
+export const addEventMaterialLinkServer = panelActionFn
 	.validator((input: unknown) =>
-		eventIdSchema.extend({ links: linksSchema }).parse(input),
+		eventIdSchema.extend({ link: linkSchema }).parse(input),
 	)
 	.handler(async ({ data, context }) => {
 		await assertCanManageEvent(context.user, data.eventId);
-		await setEventMaterialLinks(data.eventId, data.links);
+		await withDomainErrors(() => addEventMaterialLink(data.eventId, data.link));
+	});
+
+/**
+ * Removes the link shown at `index`. `removed: false` when someone changed the
+ * list first: nothing is removed and the caller refreshes.
+ */
+export const removeEventMaterialLinkServer = panelActionFn
+	.validator((input: unknown) =>
+		eventIdSchema
+			.extend({ index: z.number().int().nonnegative(), link: linkSchema })
+			.parse(input),
+	)
+	.handler(async ({ data, context }) => {
+		await assertCanManageEvent(context.user, data.eventId);
+		return {
+			removed: await removeEventMaterialLink(
+				data.eventId,
+				data.index,
+				data.link,
+			),
+		};
 	});

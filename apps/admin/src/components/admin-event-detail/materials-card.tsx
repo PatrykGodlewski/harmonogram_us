@@ -1,7 +1,8 @@
 import {
+	addEventMaterialLinkServer,
 	deleteEventFileServer,
 	filesAvailableQueryOptions,
-	setEventMaterialLinksServer,
+	removeEventMaterialLinkServer,
 	uploadEventFileServer,
 } from "@repo/api/admin/materials";
 import type { EventDetails } from "@repo/api/events/queries";
@@ -59,6 +60,8 @@ type MaterialsCardProps = {
 	onChanged: () => Promise<unknown>;
 };
 
+type Link = EventDetails["materials"][number];
+
 const LINK_URL = /^https?:\/\/\S+$/i;
 
 /** Files and links for the event page (F14), files also for programme items (F19). */
@@ -101,9 +104,20 @@ export function MaterialsCard({
 		onSuccess: onChanged,
 		onError: handleError,
 	});
-	const linksMutation = useMutation({
-		mutationFn: (links: EventDetails["materials"]) =>
-			setEventMaterialLinksServer({ data: { eventId, links } }),
+	const addLinkMutation = useMutation({
+		mutationFn: (link: Link) =>
+			addEventMaterialLinkServer({ data: { eventId, link } }),
+		onSuccess: async () => {
+			setLinkLabel("");
+			setLinkUrl("");
+			await onChanged();
+		},
+		onError: handleError,
+	});
+	// A lost race (`removed: false`) needs no message: the refresh shows the current list
+	const removeLinkMutation = useMutation({
+		mutationFn: ({ index, link }: { index: number; link: Link }) =>
+			removeEventMaterialLinkServer({ data: { eventId, index, link } }),
 		onSuccess: onChanged,
 		onError: handleError,
 	});
@@ -135,16 +149,8 @@ export function MaterialsCard({
 			return;
 		}
 		setLinkError(false);
-		linksMutation.mutate([...materials, { label, url }], {
-			onSuccess: () => {
-				setLinkLabel("");
-				setLinkUrl("");
-			},
-		});
+		addLinkMutation.mutate({ label, url });
 	};
-
-	const handleRemoveLink = (index: number) =>
-		linksMutation.mutate(materials.filter((_, i) => i !== index));
 
 	return (
 		<section aria-labelledby={headingId} className="flex flex-col gap-4">
@@ -212,7 +218,7 @@ export function MaterialsCard({
 					))}
 					{materials.map((link, index) => (
 						<li
-							// biome-ignore lint/suspicious/noArrayIndexKey: links may repeat; the list is replaced whole
+							// biome-ignore lint/suspicious/noArrayIndexKey: links may repeat; removal names the position
 							key={index}
 							className="flex flex-wrap items-center justify-between gap-2 p-3"
 						>
@@ -227,9 +233,9 @@ export function MaterialsCard({
 							<Button
 								size="sm"
 								variant="outline"
-								disabled={linksMutation.isPending}
+								disabled={removeLinkMutation.isPending}
 								aria-label={materials_remove_link({ label: link.label })}
-								onClick={() => handleRemoveLink(index)}
+								onClick={() => removeLinkMutation.mutate({ index, link })}
 							>
 								{admin_action_delete()}
 							</Button>
@@ -321,7 +327,7 @@ export function MaterialsCard({
 					type="submit"
 					variant="outline"
 					className="self-start"
-					disabled={linksMutation.isPending}
+					disabled={addLinkMutation.isPending}
 				>
 					{materials_add_link()}
 				</Button>

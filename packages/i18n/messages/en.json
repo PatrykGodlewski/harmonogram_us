@@ -803,6 +803,7 @@
 	"error_teams_not_online": "A Teams meeting can only be created for an online or hybrid event.",
 	"error_teams_failed": "The Teams meeting could not be created. Try again or paste a link yourself.",
 	"error_event_files_limit": "This event already has 50 files. Remove one to add another.",
+	"error_event_links_limit": "An event can have at most 30 links.",
 	"error_file_too_large": "The file is too large. The largest allowed size is 25 MB.",
 	"error_image_type": "The image must be a PNG, JPG or WebP file.",
 	"error_image_too_large": "The image is too large. The maximum size is 5 MB.",
