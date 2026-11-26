@@ -44,9 +44,9 @@
 	--sidebar-foreground: var(--manela);
 	--sidebar-primary: var(--green);
 	--sidebar-primary-foreground: var(--navy);
-	--sidebar-accent: #1f3a45;
+	--sidebar-accent: var(--slate);
 	--sidebar-accent-foreground: var(--manela);
-	--sidebar-border: #2b4a56;
+	--sidebar-border: var(--slate);
 	--sidebar-ring: var(--green);
 }
 
@@ -189,6 +189,15 @@
 	.animate-pixel-reveal,
 	.animate-pixel-flip,
 	.scroll-reveal {
+		animation: none !important;
+	}
+	/* The enter and exit animations of dialogs, sheets, menus, selects and tooltips
+	   (tailwindcss-animate, usually behind a `data-[state=…]:` variant) and the skeleton pulse.
+	   Radix unmounts a closed overlay at once when it has no exit animation.
+	   The loading toast's spinner is not covered: it keeps turning. */
+	[class*="animate-in"],
+	[class*="animate-out"],
+	[class*="animate-pulse"] {
 		animation: none !important;
 	}
 	*,

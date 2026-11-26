@@ -4,16 +4,15 @@ import { Slot } from "radix-ui";
 import type * as React from "react";
 
 const badgeVariants = cva(
-	"inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden border border-navy px-2 py-0.5 font-mono text-xs font-bold whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3",
+	"inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden border border-navy px-2 py-0.5 font-mono text-xs font-bold whitespace-nowrap transition-[color,box-shadow] outline-none focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-navy aria-invalid:border-destructive [&>svg]:pointer-events-none [&>svg]:size-3",
 	{
 		variants: {
 			variant: {
 				default: "bg-navy text-manela",
 				secondary: "bg-cream text-navy",
-				destructive:
-					"bg-destructive text-white focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40 [a&]:hover:bg-destructive/90",
+				destructive: "bg-destructive text-white [a&]:hover:bg-destructive/90",
 				outline: "bg-white text-navy [a&]:hover:bg-purple",
-				ghost: "[a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+				ghost: "border-transparent [a&]:hover:bg-purple",
 				link: "text-primary underline-offset-4 [a&]:hover:underline",
 			},
 		},

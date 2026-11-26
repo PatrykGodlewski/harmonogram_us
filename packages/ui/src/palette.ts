@@ -29,6 +29,7 @@ export const TEXT_PAIRS: [PaletteColor, PaletteColor][] = [
 	["slate", "manela"],
 	["slate", "white"],
 	["slate", "cream"],
+	["manela", "slate"],
 	["manela", "navy"],
 	["green", "navy"],
 	["lime", "navy"],

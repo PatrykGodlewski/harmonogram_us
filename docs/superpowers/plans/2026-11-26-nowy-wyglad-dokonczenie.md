@@ -69,9 +69,9 @@ Files/interfaces: `packages/ui/tailwind.css`; `packages/ui/src/components/{dialo
 Tests: `[F8] nowy wygląd: ograniczony ruch wyłącza animacje okien i menu` (reduced motion; open one dialog and one menu or select through an existing fixture path; no element has a running, finite animation). The existing reduced-motion test also checks `.scroll-reveal`. Palette unit test.
 Verification: `pnpm --filter @repo/ui test`; `pnpm --filter @repo/ui typecheck`; `pnpm --filter @repo/ui lint`; `pnpm --filter web build && pnpm --filter admin build`; e2e `tests/f8-wyglad.spec.ts tests/f8-dostepnosc.spec.ts` on both projects.
 
-- [ ] Write the tests and see them fail.
-- [ ] Implement; checks pass; screenshots saved.
-- [ ] Commit `fix(ui): no dialog or menu motion with reduced motion; shared components on brand tokens`.
+- [x] Write the tests and see them fail.
+- [x] Implement; checks pass; screenshots saved.
+- [x] Commit `fix(ui): no dialog or menu motion with reduced motion; shared components on brand tokens`.
 
 ### Task 2: Building blocks: number ticker, fold, section card, pixel heading
 
@@ -172,3 +172,4 @@ Verification: typecheck and lint of `web` and `@repo/ui`; `pnpm --filter web bui
 ## Findings
 
 - **Baseline (26.11):** `main` at 10e868f; its CI run is green (`checks`, `unit`, `e2e`, `rust`). No local baseline run.
+- **Task 1 (26.11):** the reduced-motion guard matches `[class*="animate-in|out|pulse"]`, not `.animate-in`: the components apply the plugin classes behind `data-[state=…]:` variants, so a plain class selector never matched (first green attempt still failed). `--sidebar-accent` and `--sidebar-border` are now `var(--slate)`; the palette test reads the theme's `--x`/`--x-foreground` pairs from `tailwind.css`. Open choices: overlays are `bg-navy/50`; dropdown and select get the 1 px navy outline plus the small hard shadow `3px 3px` navy (the dialog keeps `6px`); the sheet gets the outline only (a full-height edge panel); labels are Space Mono bold with `leading-tight` (the 320 px audits pass, long labels wrap). Left outside the file list: `button.tsx` still has one dead `dark:aria-invalid:…` class and `sidebar.tsx` has dead `rounded-*` and soft shadows in its unused `floating`/`inset` variants; so `@custom-variant dark` stays in the theme until they go.
