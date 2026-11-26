@@ -1,6 +1,8 @@
-// Points git at the committed .git-hooks/ directory. Runs from `pnpm install`
-// (prepare). Never overwrites an existing core.hooksPath.
+// Installs the git hooks from lefthook.yml. Runs from `pnpm install` (prepare).
+// Hook scripts go to the common .git/hooks, shared by all worktrees of a clone.
 import { execFileSync } from "node:child_process";
+
+const LEGACY_HOOKS_PATH = ".git-hooks";
 
 function git(args) {
 	return execFileSync("git", args, {
@@ -9,26 +11,33 @@ function git(args) {
 	}).trim();
 }
 
-function readHooksPath() {
+function readHooksPath(...scope) {
 	try {
-		return git(["config", "--local", "core.hooksPath"]);
+		return git(["config", ...scope, "core.hooksPath"]);
 	} catch {
 		return "";
 	}
 }
 
 try {
-	git(["rev-parse", "--git-dir"]);
+	git(["rev-parse", "--is-inside-work-tree"]);
 } catch {
 	process.exit(0);
 }
 
-const current = readHooksPath();
-if (current) {
+if (readHooksPath("--local") === LEGACY_HOOKS_PATH)
+	git(["config", "--local", "--unset", "core.hooksPath"]);
+
+const effective = readHooksPath();
+if (effective) {
 	console.log(
-		`git hooks: core.hooksPath already set to ${current}, left as is`,
+		`git hooks: lefthook hooks not installed, custom core.hooksPath is set (${effective})`,
 	);
-} else {
-	git(["config", "--local", "core.hooksPath", ".git-hooks"]);
-	console.log("git hooks: core.hooksPath set to .git-hooks");
+	process.exit(0);
+}
+
+try {
+	execFileSync("pnpm", ["exec", "lefthook", "install"], { stdio: "inherit" });
+} catch {
+	process.exit(1);
 }
