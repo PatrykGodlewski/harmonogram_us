@@ -1,5 +1,6 @@
+import { randomBytes } from "node:crypto";
 import { expect, type Page, test } from "@playwright/test";
-import { signInByEmail } from "../fixtures/auth";
+import { adminUrl, signInAsAdmin, signInByEmail } from "../fixtures/auth";
 import { createTestEvent, createTestUser, uniqueEmail } from "../fixtures/data";
 import { open } from "../fixtures/navigation";
 
@@ -36,7 +37,9 @@ test("[F8] nowy wygląd: ograniczony ruch zatrzymuje animacje @uczestnik", async
 		band.getByRole("button", { name: "Zatrzymaj pasek" }),
 	).toBeHidden();
 	const moving = await page
-		.locator(".animate-marquee, .animate-pixel-reveal, .animate-pixel-flip")
+		.locator(
+			".animate-marquee, .animate-pixel-reveal, .animate-pixel-flip, .animate-checker-reveal",
+		)
 		.evaluateAll(
 			(elements) =>
 				elements.filter(
@@ -105,4 +108,52 @@ test("[F8] nowy wygląd: ograniczony ruch wyłącza animacje okien i menu @uczes
 	});
 	expect(pulse).toBe("none");
 	await context.close();
+});
+
+test("[F8] nowy wygląd: licznik w panelu pokazuje nową liczbę po dodaniu osoby @organizator", async ({
+	page,
+}, testInfo) => {
+	const base = uniqueEmail(testInfo);
+	const password = randomBytes(18).toString("base64url");
+	const organizer = await createTestUser(`org-${base}`, {
+		role: "organizer",
+		password,
+	});
+	const event = await createTestEvent({
+		maxSeats: 5,
+		organizerId: organizer.id,
+	});
+	const pEmail = `p-${base}`;
+	await createTestUser(pEmail);
+
+	await signInAsAdmin(page, `org-${base}`, password);
+	await open(page, adminUrl(`/pl/events/${event.id}`));
+	const registered = page.locator(
+		"div:has(> dt:text-is('Zapisanych')) [data-slot=number-ticker]",
+	);
+	const left = page.locator(
+		"div:has(> dt:text-is('Wolne miejsca')) [data-slot=number-ticker]",
+	);
+	// The number alone is the text: assistive technology never gets a second copy.
+	await expect(registered).toHaveText("0");
+	await expect(left).toHaveText("5");
+	const started = await recordAnimations(page);
+
+	const list = page.getByRole("region", { name: /Zapisani/ });
+	await list.getByRole("button", { name: "Dodaj osobę" }).click();
+	const dialog = page.getByRole("dialog");
+	await dialog.getByLabel("E-mail").fill(pEmail);
+	await dialog.getByRole("button", { name: "Dodaj" }).click();
+	await expect(dialog).toBeHidden();
+
+	await expect(registered).toHaveText("1");
+	await expect(left).toHaveText("4");
+	// Each changed number steps once; refetches with the same value do not move it.
+	const ticks = (await started()).filter((name) =>
+		name.startsWith("number-tick"),
+	);
+	expect(ticks).toEqual([
+		"number-tick (number-ticker)",
+		"number-tick (number-ticker)",
+	]);
 });

@@ -64,6 +64,7 @@
     "@repo/config": "workspace:*",
     "@types/react": "^19.3.0",
     "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "tailwindcss": "^4.3.5",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^6.0.3",

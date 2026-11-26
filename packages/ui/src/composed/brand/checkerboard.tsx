@@ -16,7 +16,8 @@ function noise(x: number, y: number): number {
 
 /**
  * Decorative pixel art: a checkerboard that dissolves into solid colour along a diagonal,
- * like the brand's grid illustrations. Draws in `currentColor`.
+ * like the brand's grid illustrations. Draws in `currentColor`. It uncovers in steps once
+ * when it mounts; then the idle squares keep flipping.
  */
 export function Checkerboard({
 	columns,
@@ -41,7 +42,7 @@ export function Checkerboard({
 			viewBox={`0 0 ${columns} ${rows}`}
 			preserveAspectRatio="xMidYMid slice"
 			shapeRendering="crispEdges"
-			className={cn("fill-current", className)}
+			className={cn("animate-checker-reveal fill-current", className)}
 		>
 			{cells.map(({ x, y, flip }) => (
 				<rect

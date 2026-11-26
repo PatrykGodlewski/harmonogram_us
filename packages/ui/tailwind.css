@@ -140,6 +140,32 @@
 	animation: pixel-reveal 700ms steps(10, end) both;
 }
 
+/* Checkerboards uncover from their solid side once, when they mount. */
+@keyframes checker-reveal {
+	from {
+		clip-path: inset(0 0 0 100%);
+	}
+	to {
+		clip-path: inset(0 0 0 0);
+	}
+}
+.animate-checker-reveal {
+	animation: checker-reveal 900ms steps(8, end) both;
+}
+
+/* A changed count draws itself upward in a few steps. */
+@keyframes number-tick {
+	from {
+		clip-path: inset(100% 0 0 0);
+	}
+	to {
+		clip-path: inset(0 0 0 0);
+	}
+}
+.animate-number-tick {
+	animation: number-tick 320ms steps(4, end) both;
+}
+
 /* Scroll reveal: items rise into place as they enter the viewport (scroll-driven).
    Movement only, no fade: text keeps full contrast at every moment. */
 @keyframes rise-in {
@@ -188,6 +214,8 @@
 	.animate-marquee,
 	.animate-pixel-reveal,
 	.animate-pixel-flip,
+	.animate-checker-reveal,
+	.animate-number-tick,
 	.scroll-reveal {
 		animation: none !important;
 	}

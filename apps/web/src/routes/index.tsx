@@ -17,6 +17,7 @@ import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { Button } from "@repo/ui/components/button";
 import { Checkerboard } from "@repo/ui/composed/brand/checkerboard";
 import { Eyebrow } from "@repo/ui/composed/brand/eyebrow";
+import { PixelHeading } from "@repo/ui/composed/brand/pixel-heading";
 import { EventErrorAlert } from "@repo/ui/composed/events/event-error-alert";
 import { EventFilters } from "@repo/ui/composed/events/event-filters";
 import { useQuery } from "@tanstack/react-query";
@@ -46,9 +47,12 @@ function HomeShell({ children }: { children: ReactNode }) {
 				<div className="mx-auto grid max-w-6xl gap-8 px-4 pt-10 pb-6 sm:px-6 md:grid-cols-[1fr_auto] md:items-center md:py-16">
 					<div className="flex min-w-0 flex-col gap-5">
 						<Eyebrow>{home_hero_eyebrow()}</Eyebrow>
-						<h1 className="animate-pixel-reveal text-[clamp(2rem,9vw,4.75rem)] leading-none uppercase">
+						<PixelHeading
+							level={1}
+							className="text-[clamp(2rem,9vw,4.75rem)] leading-none uppercase"
+						>
 							{home_title()}
-						</h1>
+						</PixelHeading>
 						<p className="max-w-prose font-mono text-sm sm:text-base">
 							{home_description()}
 						</p>

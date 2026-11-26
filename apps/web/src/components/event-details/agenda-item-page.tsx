@@ -21,6 +21,7 @@ import {
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { findOverlaps } from "@repo/ui/agenda";
 import { Checkerboard } from "@repo/ui/composed/brand/checkerboard";
+import { PixelHeading } from "@repo/ui/composed/brand/pixel-heading";
 import { languageName } from "@repo/ui/languages";
 import { formatEventDayLong, formatEventTime } from "@repo/ui/time";
 import { useSearch } from "@tanstack/react-router";
@@ -82,9 +83,12 @@ export function AgendaItemPage({
 					<span>{item.typeLabel ?? event.typeLabel}</span>
 					<span className="truncate">{event.title}</span>
 				</p>
-				<h1 className="animate-pixel-reveal p-5 text-[clamp(1.75rem,6vw,3rem)] leading-tight sm:p-8">
+				<PixelHeading
+					level={1}
+					className="p-5 text-[clamp(1.75rem,6vw,3rem)] leading-tight sm:p-8"
+				>
 					{item.title}
-				</h1>
+				</PixelHeading>
 				{item.hasImage && item.imageAlt ? (
 					<img
 						src={`/api/agenda-items/${item.id}/image${invite ? `?invite=${encodeURIComponent(invite)}` : ""}`}

@@ -14,6 +14,8 @@ import {
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
+import { NumberTicker } from "@repo/ui/composed/brand/number-ticker";
+import { PixelHeading } from "@repo/ui/composed/brand/pixel-heading";
 import { AttendanceModeBadge } from "@repo/ui/composed/events/attendance-mode-badge";
 import { formatEventDateTime } from "@repo/ui/time";
 import { Link } from "@tanstack/react-router";
@@ -54,9 +56,12 @@ export function EventSummaryCard({ event, onChanged }: EventSummaryCardProps) {
 					<AttendanceModeBadge mode={event.attendanceMode} />
 				</div>
 				<div className="flex flex-col gap-2 p-4 sm:p-6">
-					<h1 className="text-[clamp(1.5rem,5vw,2.25rem)] leading-tight">
+					<PixelHeading
+						level={1}
+						className="text-[clamp(1.5rem,5vw,2.25rem)] leading-tight"
+					>
 						{event.title}
-					</h1>
+					</PixelHeading>
 					<p className="font-mono text-sm">
 						{formatEventDateTime(event.date, locale)}
 						{event.endsAt
@@ -72,7 +77,7 @@ export function EventSummaryCard({ event, onChanged }: EventSummaryCardProps) {
 							{admin_registered_label()}
 						</dt>
 						<dd className="font-pixel text-2xl tabular-nums">
-							{registered} / {event.maxSeats}
+							<NumberTicker value={registered} /> / {event.maxSeats}
 						</dd>
 					</div>
 					<div className="px-4 py-3">
@@ -80,7 +85,7 @@ export function EventSummaryCard({ event, onChanged }: EventSummaryCardProps) {
 							{admin_seats_left_label()}
 						</dt>
 						<dd className="font-pixel text-2xl tabular-nums">
-							{event.seatsRemaining}
+							<NumberTicker value={event.seatsRemaining} />
 						</dd>
 					</div>
 				</dl>

@@ -24,6 +24,7 @@ import {
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
+import { PixelHeading } from "@repo/ui/composed/brand/pixel-heading";
 import { AttendanceModeBadge } from "@repo/ui/composed/events/attendance-mode-badge";
 import { RegistrationAnswersDialog } from "@repo/ui/composed/registration-answers-dialog";
 import { formatEventDateTime } from "@repo/ui/time";
@@ -80,12 +81,13 @@ export function EventSummary({
 					<AttendanceModeBadge mode={event.attendanceMode} />
 				</div>
 				<div className="flex flex-col gap-3 p-5 sm:p-8">
-					<h1
-						className="animate-pixel-reveal text-[clamp(1.75rem,6vw,3rem)] leading-tight break-words"
+					<PixelHeading
+						level={1}
+						className="text-[clamp(1.75rem,6vw,3rem)] leading-tight break-words"
 						style={{ viewTransitionName: `event-title-${event.id}` }}
 					>
 						{event.title}
-					</h1>
+					</PixelHeading>
 					<p className="font-mono text-sm sm:text-base">
 						{formatEventDateTime(event.date, locale)}
 					</p>
