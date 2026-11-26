@@ -13,6 +13,7 @@ import { Toaster } from "@repo/ui/components/sonner";
 import { HumanCheckProvider } from "@repo/ui/composed/auth/human-check";
 import { Header } from "@repo/ui/composed/header";
 import { HydrationMarker } from "@repo/ui/composed/hydration-marker";
+import { NavigationMarker } from "@repo/ui/composed/navigation-marker";
 import type { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import {
@@ -76,6 +77,7 @@ function RootComponent() {
 			<>
 				<Outlet />
 				<HydrationMarker />
+				<NavigationMarker />
 			</>
 		);
 	}
@@ -87,6 +89,7 @@ function RootComponent() {
 			<SiteFooter />
 			<Toaster />
 			<HydrationMarker />
+			<NavigationMarker />
 		</>
 	);
 }

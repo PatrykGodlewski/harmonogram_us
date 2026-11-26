@@ -137,10 +137,10 @@
 	}
 }
 .animate-pixel-reveal {
-	animation: pixel-reveal 700ms steps(10, end) both;
+	animation: pixel-reveal 300ms steps(6, end) both;
 }
 
-/* Checkerboards uncover from their solid side once, when they mount. */
+/* Checkerboards uncover from their solid side once, on a full page load. */
 @keyframes checker-reveal {
 	from {
 		clip-path: inset(0 0 0 100%);
@@ -150,7 +150,7 @@
 	}
 }
 .animate-checker-reveal {
-	animation: checker-reveal 900ms steps(8, end) both;
+	animation: checker-reveal 400ms steps(8, end) both;
 }
 
 /* A changed count draws itself upward in a few steps. */
@@ -166,24 +166,6 @@
 	animation: number-tick 320ms steps(4, end) both;
 }
 
-/* Scroll reveal: items rise into place as they enter the viewport (scroll-driven).
-   Movement only, no fade: text keeps full contrast at every moment. */
-@keyframes rise-in {
-	from {
-		transform: translateY(24px);
-	}
-	to {
-		transform: none;
-	}
-}
-@supports (animation-timeline: view()) {
-	.scroll-reveal {
-		animation: rise-in linear both;
-		animation-timeline: view();
-		animation-range: entry 0% cover 25%;
-	}
-}
-
 /* Stagger: the first cards of a list rise into place one after another, once per page load.
    --stagger-index orders them; a list mounted later sets --stagger-elapsed to join the run in
    progress, so a remount continues it and a late one shows the end state. Movement only. */
@@ -196,10 +178,16 @@
 	}
 }
 .stagger-in {
-	animation: stagger-in 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+	animation: stagger-in 200ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 	animation-delay: calc(
-		var(--stagger-index, 0) * 70ms - var(--stagger-elapsed, 0ms)
+		var(--stagger-index, 0) * 40ms - var(--stagger-elapsed, 0ms)
 	);
+}
+
+/* The entry animations above play only on a full page load: once the router has navigated
+   (NavigationMarker), what mounts shows its final state at once. */
+html[data-navigated] :is(.animate-pixel-reveal, .animate-checker-reveal, .stagger-in) {
+	animation: none;
 }
 
 /* Idle animation: pixels flip on and off slowly, in steps. */
@@ -219,7 +207,7 @@
 
 /* View transition: the event title travels from its card to the event page. */
 ::view-transition-group(*) {
-	animation-duration: 280ms;
+	animation-duration: 160ms;
 	animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
