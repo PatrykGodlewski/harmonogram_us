@@ -40,3 +40,4 @@
 - Not done (left for later): number ticker for seat counts, animated folding of sessions, slide-style restyle of individual admin screens beyond the shared theme.
 - Checks: lint + typecheck clean; `@repo/ui` 71 tests; `pnpm e2e` on a freshly built stack: 218 passed, 1 skipped, 4 failed (`[F33]` day tests, time-of-day fixture) → fixture fixed, `f33-sesje.spec.ts` 12/12.
 
+- **26.11:** the items under "Not done" and the gaps found by an inventory of 26.11 are planned in [the follow-up](2026-11-26-nowy-wyglad-dokonczenie.md). Task 3's "ticker" and "programme blocks (accordion)" were ticked on 24.11 but not built; they are Tasks 2, 4 and 5 of the follow-up.
