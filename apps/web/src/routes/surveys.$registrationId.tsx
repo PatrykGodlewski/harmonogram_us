@@ -31,7 +31,12 @@ export const Route = createFileRoute("/surveys/$registrationId")({
 		queryClient.ensureQueryData(
 			surveyQueryOptions(params.registrationId, deps.token),
 		),
-	head: () => studentsPageHead(title_survey()),
+	head: () => ({
+		meta: [
+			...studentsPageHead(title_survey()).meta,
+			{ name: "referrer", content: "no-referrer" },
+		],
+	}),
 	component: SurveyPage,
 });
 

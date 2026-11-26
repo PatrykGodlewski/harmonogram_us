@@ -1,5 +1,5 @@
 import { and, asc, desc, eq, gt, lt, max, notInArray } from "drizzle-orm";
-import { db } from "../client";
+import { type DbExecutor, db } from "../client";
 import {
 	eventQuestions,
 	type QuestionForm,
@@ -67,8 +67,9 @@ function assertKindFits(kind: QuestionKind, form: QuestionForm): void {
 export async function listEventQuestions(
 	eventId: string,
 	form: QuestionForm,
+	executor: DbExecutor = db,
 ): Promise<EventQuestion[]> {
-	return db
+	return executor
 		.select(columns)
 		.from(eventQuestions)
 		.where(

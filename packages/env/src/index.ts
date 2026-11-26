@@ -35,12 +35,13 @@ export const env = createEnv({
 		ADMIN_URL: z.url().default("http://localhost:3001"),
 		TURNSTILE_SECRET_KEY: z.string().optional(),
 		HIBP_MIN_BREACH_COUNT: z.coerce.number().int().positive().default(1),
-		/** Days after an event ends before its registrations are deleted (GDPR). */
-		REGISTRATION_RETENTION_DAYS: z.coerce
-			.number()
-			.int()
-			.positive()
-			.default(365),
+		/**
+		 * Days after an event ends before its registrations are deleted (GDPR).
+		 * At least 30, the survey window (SURVEY_OPEN_DAYS in @repo/db, which
+		 * this package cannot import): retention must not delete a registration
+		 * while its survey is still open.
+		 */
+		REGISTRATION_RETENTION_DAYS: z.coerce.number().int().min(30).default(365),
 		/** Who controls personal data (GDPR art. 13), shown on the privacy page. */
 		PRIVACY_CONTROLLER: z.string().min(1).optional(),
 		PRIVACY_CONTACT_EMAIL: z.email().optional(),

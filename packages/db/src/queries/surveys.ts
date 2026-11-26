@@ -10,6 +10,12 @@ import { type Answers, normalizeAnswers } from "./registration-answers";
 /** How long after the event its survey takes answers (and its e-mail may go). */
 export const SURVEY_OPEN_DAYS = 30;
 
+/**
+ * A question's text answers are shown only from this many of them, so a lone
+ * respondent's words cannot be traced to a person.
+ */
+export const SURVEY_TEXT_MIN_RESPONSES = 3;
+
 /** Text answers shown per question in the summary (the total is always given). */
 const SUMMARY_TEXT_LIMIT = 100;
 
@@ -97,7 +103,7 @@ export async function submitSurvey(
 				current?.answered ? "SURVEY_ANSWERED" : "SURVEY_CLOSED",
 			);
 		}
-		const questions = await listEventQuestions(claimed.event_id, "survey");
+		const questions = await listEventQuestions(claimed.event_id, "survey", tx);
 		const kept = normalizeAnswers(questions, answers, { requireAll: true });
 		const [response] = await tx
 			.insert(surveyResponses)
@@ -169,7 +175,11 @@ export type SurveySummary = {
 	questions: SurveyQuestionSummary[];
 };
 
-/** Counts per question and answer, plus the latest text answers (capped). */
+/**
+ * Counts per question and answer, plus the latest text answers (capped). A
+ * question with fewer than SURVEY_TEXT_MIN_RESPONSES text answers lists none
+ * (`total` still counts them).
+ */
 export async function getSurveySummary(
 	eventId: string,
 ): Promise<SurveySummary> {
@@ -227,11 +237,15 @@ export async function getSurveySummary(
 			}
 			if (kind === "text") {
 				const rows = texts.filter((row) => row.question_id === question.id);
+				const total = rows[0]?.total ?? 0;
 				return {
 					...base,
 					kind,
-					total: rows[0]?.total ?? 0,
-					answers: rows.map((row) => row.value),
+					total,
+					answers:
+						total < SURVEY_TEXT_MIN_RESPONSES
+							? []
+							: rows.map((row) => row.value),
 				};
 			}
 			const values = kind === "yesno" ? ["yes", "no"] : question.options;
