@@ -51,8 +51,12 @@ export async function eventImageResponse(
 	canSee: (eventId: string) => Promise<boolean>,
 	deps: EventImageServeDeps = defaultDeps(),
 ): Promise<Response> {
+	// Access first: the key is not read for a viewer who may not see the event.
+	if (!(await canSee(eventId))) {
+		return NOT_FOUND();
+	}
 	const key = await deps.getKey(eventId);
-	if (!key || !(await canSee(eventId))) {
+	if (!key) {
 		return NOT_FOUND();
 	}
 	if (deps.config) {
