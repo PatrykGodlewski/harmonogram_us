@@ -14,8 +14,8 @@ export type EventImageServeDeps = {
 	config: StorageConfig | null;
 	getKey: (eventId: string) => Promise<string | null>;
 	presign: typeof presignDownload;
-	/** Used when `config` is null. */
-	dir: string;
+	/** Used when `config` is null; null when no directory is set either. */
+	dir: string | null;
 };
 
 const defaultDeps = (): EventImageServeDeps => ({
@@ -62,7 +62,7 @@ export async function eventImageResponse(
 			headers: { ...HEADERS, location: url },
 		});
 	}
-	const bytes = await readLocalImage(key, deps.dir);
+	const bytes = deps.dir ? await readLocalImage(key, deps.dir) : null;
 	if (!bytes) {
 		return NOT_FOUND();
 	}

@@ -113,14 +113,17 @@ export const duplicateAdminEventServer = panelActionFn
 		await assertCanManageEvent(context.user, data.id);
 		await assertCanCreateEvents(context.user);
 		return withDomainErrors(() =>
-			duplicateEvent({
-				eventId: data.id,
-				date: data.date,
-				repeat: data.repeat,
-				count: data.count,
-				copy: data.copy,
-				actorId: context.user.id,
-			}),
+			duplicateEvent(
+				{
+					eventId: data.id,
+					date: data.date,
+					repeat: data.repeat,
+					count: data.count,
+					copy: data.copy,
+					actorId: context.user.id,
+				},
+				eventImageHooks(),
+			),
 		);
 	});
 

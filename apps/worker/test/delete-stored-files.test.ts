@@ -100,5 +100,17 @@ describe("deleteStoredFiles", () => {
 			expect([...pending]).toEqual([missing, outside]);
 			await expect(readFile(join(dir, present))).rejects.toThrow("ENOENT");
 		});
+
+		it("keeps every record without a bucket or an image directory", async () => {
+			const key = "event-images/e1/present";
+			const { deps, pending } = fakes([key]);
+			const result = await deleteStoredFiles({
+				...deps,
+				config: null,
+				removeLocal: (stored) => removeLocalEventImage(stored, null),
+			});
+			expect(result).toEqual({ deleted: 0, failed: 1 });
+			expect([...pending]).toEqual([key]);
+		});
 	});
 });

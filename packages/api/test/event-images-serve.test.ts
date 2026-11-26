@@ -77,4 +77,11 @@ describe("eventImageResponse", () => {
 			).status,
 		).toBe(404);
 	});
+
+	it("answers 404 without a bucket or a directory", async () => {
+		await mkdir(join(dir, "event-images/e1"), { recursive: true });
+		await writeFile(join(dir, KEY), PNG);
+		const response = await eventImageResponse("e1", allowed, deps({ dir: null }));
+		expect(response.status).toBe(404);
+	});
 });

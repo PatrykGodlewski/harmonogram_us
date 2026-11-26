@@ -56,7 +56,7 @@ export async function generateEventImage(
 	if (!job.force && source.status === "ready" && source.sourceHash === hash) {
 		return "skipped";
 	}
-	// Text changed without a request (a duplicate, the feature turned on, a new style).
+	// Text changed without a request (saved while the feature was off, a new style).
 	await markImagePending(db, job.eventId, hash);
 	const prompt = await deps.prompt(source.title, source.description);
 	const seed = deps.seed();

@@ -6,6 +6,7 @@ import { env } from "@repo/env";
 import { enqueueEventImage } from "@repo/jobs/client";
 import { imageStyle, sourceHash } from "./prompt";
 import { imageProvider } from "./providers";
+import { imageStorageConfigured } from "./store";
 
 export type QueueDeps = {
 	enabled: boolean;
@@ -13,12 +14,16 @@ export type QueueDeps = {
 	enqueue?: typeof enqueueEventImage;
 };
 
-/** On when enabled and both the prompt model and the image provider have keys. */
+/**
+ * On when enabled, both the prompt model and the image provider have keys, and there is
+ * somewhere to keep the image (a bucket or EVENT_IMAGE_DIR).
+ */
 export function eventImagesEnabled(): boolean {
 	return (
 		env.EVENT_IMAGE_ENABLED === "true" &&
 		Boolean(env.ANTHROPIC_API_KEY) &&
-		imageProvider() !== null
+		imageProvider() !== null &&
+		imageStorageConfigured()
 	);
 }
 

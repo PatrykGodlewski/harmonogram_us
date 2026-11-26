@@ -1,6 +1,7 @@
 import { eq, sql } from "drizzle-orm";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@repo/db/client";
+import { duplicateEvent } from "@repo/db/queries/event-duplicate";
 import { setEventImage } from "@repo/db/queries/event-images";
 import { createEvent, updateEvent } from "@repo/db/queries/events";
 import { authUsers } from "@repo/db/schema/better-auth";
@@ -117,6 +118,35 @@ describe("requesting a cover image on save", () => {
 		expect(await queued(eventId)).toHaveLength(0);
 	});
 
+	it("marks every duplicated copy pending and queues a job for each", async () => {
+		const sourceId = await newEvent({ ...on, enabled: false });
+		const actor = await createUser();
+		const { ids } = await duplicateEvent(
+			{ eventId: sourceId, date: new Date(Date.now() + 2 * 86_400_000), repeat: "weekly", count: 2, actorId: actor },
+			eventImageHooks(on),
+		);
+		expect(ids).toHaveLength(2);
+		for (const id of ids) {
+			expect(await imageRow(id)).toMatchObject({
+				status: "pending",
+				hash: sourceHash("Jazz night", "Live quartet", STYLE),
+				key: null,
+			});
+			expect(await queued(id)).toEqual([{ force: false }]);
+		}
+	});
+
+	it("queues nothing for a duplicate when the feature is off", async () => {
+		const sourceId = await newEvent({ ...on, enabled: false });
+		const actor = await createUser();
+		const { id } = await duplicateEvent(
+			{ eventId: sourceId, date: new Date(Date.now() + 2 * 86_400_000), actorId: actor },
+			eventImageHooks({ ...on, enabled: false }),
+		);
+		expect((await imageRow(id))?.status).toBeNull();
+		expect(await queued(id)).toHaveLength(0);
+	});
+
 	it("a failing enqueue never fails the event save", async () => {
 		const error = vi.spyOn(console, "error").mockImplementation(() => {});
 		const eventId = await newEvent({
@@ -191,7 +221,7 @@ describe("the worker", () => {
 
 	it("uses the current title when the job is older than the last edit", async () => {
 		const eventId = await newEvent();
-		// An edit that bypassed the hook (e.g. a duplicate) leaves an outdated hash.
+		// An edit saved without the hook (the feature was off) leaves an outdated hash.
 		await updateEvent({ id: eventId, title: "Blues night" });
 		await generateEventImage({ eventId, force: false }, pipeline());
 		expect(await imageRow(eventId)).toMatchObject({
