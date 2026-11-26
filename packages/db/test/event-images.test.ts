@@ -126,6 +126,15 @@ describe("event cover images", () => {
 		expect(await imageColumns(eventId)).toMatchObject({ status: "failed" });
 	});
 
+	it("does not fail a request whose image is already saved", async () => {
+		const eventId = await createEvent();
+		await markImagePending(db, eventId, "h1");
+		await image(eventId, "event-images/a", "h1");
+
+		await failEventImage(eventId, "h1");
+		expect(await imageColumns(eventId)).toMatchObject({ status: "ready" });
+	});
+
 	it("rejects an unknown status", async () => {
 		const eventId = await createEvent();
 		await expectConstraintViolation(
