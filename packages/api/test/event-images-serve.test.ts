@@ -78,6 +78,17 @@ describe("eventImageResponse", () => {
 		).toBe(404);
 	});
 
+	it("does not read the image key when the viewer may not see the event", async () => {
+		const getKey = vi.fn(async () => KEY);
+		const response = await eventImageResponse(
+			"e1",
+			async () => false,
+			deps({ getKey }),
+		);
+		expect(response.status).toBe(404);
+		expect(getKey).not.toHaveBeenCalled();
+	});
+
 	it("answers 404 without a bucket or a directory", async () => {
 		await mkdir(join(dir, "event-images/e1"), { recursive: true });
 		await writeFile(join(dir, KEY), PNG);
