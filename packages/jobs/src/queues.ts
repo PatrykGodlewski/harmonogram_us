@@ -1,4 +1,5 @@
 import { env as clientEnv } from "@repo/env/client";
+import type { Queue } from "pg-boss";
 import { z } from "zod";
 
 /** Policy "short" + singletonKey=memberId: at most one queued send per member. */
@@ -25,6 +26,11 @@ export const SURVEY_EMAILS_CRON = "*/15 * * * *";
  * queued and one running job per event (the job reads the event's current text).
  */
 export const QUEUE_EVENT_IMAGES = "event-images";
+/**
+ * Event-image jobs pg-boss gave up on (failed, or expired because the worker died);
+ * the worker marks their covers failed.
+ */
+export const QUEUE_EVENT_IMAGES_DEAD = "event-images-dead";
 /** Reminders before events, checked every 5 minutes. */
 export const QUEUE_EVENT_REMINDERS = "event-reminders";
 export const EVENT_REMINDERS_CRON = "*/5 * * * *";
@@ -116,5 +122,13 @@ export const QUEUES = [
 	{ name: QUEUE_CERTIFICATE_EMAILS, policy: "standard" },
 	{ name: QUEUE_SURVEY_EMAILS, policy: "standard" },
 	{ name: QUEUE_DELETE_STORED_FILES, policy: "standard" },
-	{ name: QUEUE_EVENT_IMAGES, policy: "stately" },
-] as const;
+	// Before QUEUE_EVENT_IMAGES: a dead-letter queue must exist before a queue names it.
+	{ name: QUEUE_EVENT_IMAGES_DEAD, policy: "standard" },
+	{
+		name: QUEUE_EVENT_IMAGES,
+		policy: "stately",
+		deadLetter: QUEUE_EVENT_IMAGES_DEAD,
+		// A run takes at most 2-3 minutes; an active job older than this has lost its worker.
+		expireInSeconds: 5 * 60,
+	},
+] as const satisfies readonly Queue[];

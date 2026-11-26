@@ -11,11 +11,16 @@ import {
 	QUEUES,
 } from "./queues";
 
-/** Creates any missing queues (required before send/work in pg-boss ≥ 10). */
+/**
+ * Creates missing queues (required before send/work in pg-boss ≥ 10) and applies the
+ * configured options to existing ones, so a queue created by an older version gets them too.
+ */
 export async function ensureQueues(boss: PgBoss): Promise<void> {
-	for (const queue of QUEUES) {
-		if (!(await boss.getQueue(queue.name))) {
-			await boss.createQueue(queue.name, { policy: queue.policy });
+	for (const { name, policy, ...options } of QUEUES) {
+		if (!(await boss.getQueue(name))) {
+			await boss.createQueue(name, { policy, ...options });
+		} else if (Object.keys(options).length > 0) {
+			await boss.updateQueue(name, options);
 		}
 	}
 }
