@@ -4,6 +4,7 @@ import {
 	event_details_show_items,
 } from "@repo/i18n/paraglide/messages";
 import { Button } from "@repo/ui/components/button";
+import { Fold } from "@repo/ui/composed/brand/fold";
 import { sessionColorClasses } from "@repo/ui/session-colors";
 import { formatEventTime } from "@repo/ui/time";
 import { cn } from "@repo/ui/utils";
@@ -32,6 +33,7 @@ export function AgendaSessionBlock({
 }: AgendaSessionBlockProps) {
 	const [folded, setFolded] = useState(defaultFolded);
 	const listId = useId();
+	const list = <ol className="divide-y">{children}</ol>;
 	const headingId = `session-${session.id}`;
 	const Heading = headingLevel === 3 ? "h3" : "h4";
 
@@ -41,7 +43,7 @@ export function AgendaSessionBlock({
 				<span
 					aria-hidden
 					className={cn(
-						"w-1.5 shrink-0 rounded-full",
+						"w-1.5 shrink-0",
 						sessionColorClasses[session.color].bar,
 					)}
 				/>
@@ -73,11 +75,13 @@ export function AgendaSessionBlock({
 								: event_details_hide_items()}
 						</Button>
 					) : null}
-					{itemCount > 0 ? (
-						<ol id={listId} hidden={folded} className="divide-y">
-							{children}
-						</ol>
-					) : null}
+					{itemCount === 0 ? null : defaultFolded ? (
+						<Fold id={listId} open={!folded}>
+							{list}
+						</Fold>
+					) : (
+						list
+					)}
 				</div>
 			</section>
 		</li>

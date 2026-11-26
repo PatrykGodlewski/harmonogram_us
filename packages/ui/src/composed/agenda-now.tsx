@@ -44,8 +44,8 @@ function nowLabel(now: Date): string {
 /** "Now" between agenda list items: the ones above have started, the ones below haven't. */
 export function AgendaNowDivider({ now }: { now: Date }) {
 	return (
-		<li className="flex items-center gap-2 py-1 text-xs font-medium text-red-600 dark:text-red-400">
-			<span className="size-2 rounded-full bg-current" aria-hidden="true" />
+		<li className="flex items-center gap-2 py-1 text-xs font-medium text-destructive">
+			<span className="size-2 bg-current" aria-hidden="true" />
 			<span className="tabular-nums" aria-hidden="true">
 				{nowLabel(now)}
 			</span>
@@ -61,13 +61,10 @@ export function AgendaNowDivider({ now }: { now: Date }) {
 export function AgendaNowLine({ now, top }: { now: Date; top: number }) {
 	return (
 		<div
-			className="pointer-events-none absolute inset-x-0 z-10 flex items-center text-red-600 dark:text-red-400"
+			className="pointer-events-none absolute inset-x-0 z-10 flex items-center text-destructive"
 			style={{ top }}
 		>
-			<span
-				className="-ml-1 size-2 rounded-full bg-current"
-				aria-hidden="true"
-			/>
+			<span className="-ml-1 size-2 bg-current" aria-hidden="true" />
 			<hr
 				aria-label={nowLabel(now)}
 				className="h-0.5 flex-1 border-0 bg-current"

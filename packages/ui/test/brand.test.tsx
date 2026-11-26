@@ -47,9 +47,14 @@ describe("Fold", () => {
 		expect(html).toContain('data-state="open"');
 	});
 
+	it("is invisible once closed, so its content is not on the page for anyone", () => {
+		expect(renderToString(<Fold id="f" open={false} />)).toContain("invisible");
+		expect(renderToString(<Fold id="f" open />)).not.toContain("invisible");
+	});
+
 	it("folds through a transition that reduced motion cuts short", () => {
 		const html = renderToString(<Fold id="f" open />);
-		expect(html).toContain("transition-[grid-template-rows]");
+		expect(html).toContain("transition-[grid-template-rows,visibility]");
 		expect(reducedMotionBlock()).toMatch(/transition-duration: 0\.01ms/);
 	});
 });

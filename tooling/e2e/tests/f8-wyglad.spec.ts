@@ -1,6 +1,8 @@
 import { randomBytes } from "node:crypto";
 import { expect, type Page, test } from "@playwright/test";
 import { db } from "@repo/db/client";
+import { createAgendaItem } from "@repo/db/queries/agenda-items";
+import { createAgendaSession } from "@repo/db/queries/agenda-sessions";
 import { events } from "@repo/db/schema/events";
 import { eq } from "drizzle-orm";
 import { adminUrl, signInAsAdmin, signInByEmail } from "../fixtures/auth";
@@ -360,4 +362,99 @@ test("[F8] nowy wygląd: fakty wydarzenia w trzech komórkach @uczestnik", async
 
 	await open(page, `/pl/events/${hybrid.id}`);
 	await expect(fact("Miejsce")).toHaveText("sala C-1, Online");
+});
+
+test("[F8] nowy wygląd: sesja rozwija się z animacją, a przy ograniczonym ruchu od razu @uczestnik", async ({
+	browser,
+}) => {
+	// More than ten items: the programme starts with its sessions folded.
+	const event = await createTestEvent({});
+	const [row] = await db
+		.select({ date: events.date })
+		.from(events)
+		.where(eq(events.id, event.id));
+	const start = new Date(row?.date ?? Date.now());
+	start.setUTCDate(start.getUTCDate() + 1);
+	start.setUTCHours(8, 0, 0, 0);
+	const at = (minutes: number) => new Date(start.getTime() + minutes * 60_000);
+	const session = await createAgendaSession({
+		eventId: event.id,
+		title: "Wykłady",
+		startsAt: at(0),
+		endsAt: at(180),
+	});
+	for (let index = 0; index < 11; index++) {
+		await createAgendaItem({
+			eventId: event.id,
+			sessionId: session.id,
+			title: `Wykład ${index + 1}`,
+			startsAt: at(index * 15),
+			endsAt: at(index * 15 + 10),
+		});
+	}
+
+	for (const reducedMotion of ["no-preference", "reduce"] as const) {
+		const context = await browser.newContext({ reducedMotion });
+		const page = await context.newPage();
+		await open(page, `/pl/events/${event.id}`);
+		const region = page.getByRole("region", { name: "Wykłady" });
+		const toggle = region.getByRole("button", {
+			name: "Pokaż punkty programu (11)",
+		});
+		const first = region.getByText("Wykład 1", { exact: true });
+		await expect(toggle).toHaveAttribute("aria-expanded", "false");
+		await expect(first).toBeHidden();
+		const blockId = await toggle.getAttribute("aria-controls");
+		expect(blockId).toBeTruthy();
+
+		// Every transition that starts on the block the button controls, with its length in seconds.
+		await page.evaluate((id) => {
+			const started: { property: string; seconds: number }[] = [];
+			(window as unknown as { started: typeof started }).started = started;
+			document.addEventListener(
+				"transitionrun",
+				(event) => {
+					const target = event.target as Element;
+					if (target.id !== id) return;
+					const seconds = Number.parseFloat(
+						getComputedStyle(target).transitionDuration,
+					);
+					started.push({ property: event.propertyName, seconds });
+				},
+				true,
+			);
+		}, blockId);
+		const transitions = () =>
+			page.evaluate(
+				() =>
+					(
+						window as unknown as {
+							started: { property: string; seconds: number }[];
+						}
+					).started,
+			);
+
+		await toggle.click();
+		await expect(
+			region.getByRole("button", { name: "Ukryj punkty programu" }),
+		).toHaveAttribute("aria-expanded", "true");
+		await expect(first).toBeVisible();
+		await region.getByRole("button", { name: "Ukryj punkty programu" }).click();
+		await expect(toggle).toHaveAttribute("aria-expanded", "false");
+		await expect(first).toBeHidden();
+
+		const moved = (await transitions())
+			.filter((transition) => transition.seconds > 0.001)
+			.map((transition) => transition.property);
+		if (reducedMotion === "reduce") {
+			// Instant: no transition on the block lasts any time.
+			expect(moved).toEqual([]);
+		} else {
+			// Opening and closing each run the height transition.
+			expect(
+				moved.filter((property) => property === "grid-template-rows"),
+			).toHaveLength(2);
+		}
+		await context.close();
+	}
 });

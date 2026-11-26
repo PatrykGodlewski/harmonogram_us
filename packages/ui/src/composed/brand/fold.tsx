@@ -23,8 +23,10 @@ export function Fold({ id, open, children, className }: FoldProps) {
 			data-state={open ? "open" : "closed"}
 			inert={!open}
 			className={cn(
-				"grid transition-[grid-template-rows] duration-200 ease-out",
-				open ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+				// Invisible once closed (visibility flips after the height has shrunk), so the
+				// content is also gone for anything that asks what is visible.
+				"grid transition-[grid-template-rows,visibility] duration-200 ease-out",
+				open ? "grid-rows-[1fr]" : "invisible grid-rows-[0fr]",
 				className,
 			)}
 		>

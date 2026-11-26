@@ -83,10 +83,7 @@ export function AgendaCalendar({
 						>
 							<span
 								aria-hidden
-								className={cn(
-									"size-3 rounded-full",
-									sessionColorClasses[entry.color].bar,
-								)}
+								className={cn("size-3", sessionColorClasses[entry.color].bar)}
 							/>
 							{entry.title}
 						</li>

@@ -2,6 +2,7 @@ import {
 	event_details_all_sessions,
 	event_details_session,
 } from "@repo/i18n/paraglide/messages";
+import { Label } from "@repo/ui/components/label";
 import { useId } from "react";
 
 type AgendaSessionFilterProps = {
@@ -20,14 +21,12 @@ export function AgendaSessionFilter({
 	const id = useId();
 	return (
 		<div className="flex items-center gap-2">
-			<label htmlFor={id} className="text-sm text-muted-foreground">
-				{event_details_session()}:
-			</label>
+			<Label htmlFor={id}>{event_details_session()}:</Label>
 			<select
 				id={id}
 				value={value ?? ""}
 				onChange={(event) => onChange(event.target.value || null)}
-				className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm shadow-xs focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none sm:flex-none"
+				className="h-9 min-w-0 flex-1 border border-input bg-white px-3 text-sm outline-none focus-visible:shadow-[3px_3px_0_0_var(--green)] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-solid focus-visible:outline-navy sm:flex-none"
 			>
 				<option value="">{event_details_all_sessions()}</option>
 				{titles.map((title) => (

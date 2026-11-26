@@ -124,7 +124,7 @@ export function AgendaItemRow({
 					</p>
 				) : null}
 				{overlapsWith?.length ? (
-					<p className="text-sm text-amber-700 dark:text-amber-400">
+					<p className="w-fit self-start bg-cream px-1.5 text-sm font-medium">
 						{event_details_overlaps({ titles: overlapsWith.join(", ") })}
 					</p>
 				) : null}
