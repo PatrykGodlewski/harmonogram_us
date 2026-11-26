@@ -80,7 +80,10 @@ export async function setEventImage(
 		.where(eq(events.id, eventId));
 }
 
-/** Marks the request for `sourceHash` failed; a newer request stays pending. */
+/**
+ * Marks the pending request for `sourceHash` failed; a newer request stays pending, and an
+ * image saved meanwhile stays ready.
+ */
 export async function failEventImage(
 	eventId: string,
 	sourceHash: string,
@@ -88,7 +91,13 @@ export async function failEventImage(
 	await db
 		.update(events)
 		.set({ imageStatus: "failed" })
-		.where(and(eq(events.id, eventId), eq(events.imageSourceHash, sourceHash)));
+		.where(
+			and(
+				eq(events.id, eventId),
+				eq(events.imageSourceHash, sourceHash),
+				eq(events.imageStatus, "pending"),
+			),
+		);
 }
 
 /** The storage key of the event's image, only while it is `ready` (null otherwise). */
