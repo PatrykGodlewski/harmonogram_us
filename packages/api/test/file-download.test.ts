@@ -41,3 +41,18 @@ describe("fileDownloadResponse", () => {
 		);
 	});
 });
+
+describe("fileDownloadResponse for a signed-out visitor of a signed-in-only event", () => {
+	it("redirects to the sign-in page with a way back to the file", async () => {
+		const response = await fileDownloadResponse("file-1", async () => "sign-in", deps());
+		expect(response.status).toBe(302);
+		const location = new URL(response.headers.get("location") ?? "", "https://site.example");
+		expect(location.pathname).toBe("/login");
+		expect(location.searchParams.get("redirect")).toBe("/api/files/file-1");
+		expect(response.headers.get("cache-control")).toBe("private, no-store");
+	});
+
+	it("still answers 404 for an unknown file", async () => {
+		expect((await fileDownloadResponse("other", async () => "sign-in", deps())).status).toBe(404);
+	});
+});

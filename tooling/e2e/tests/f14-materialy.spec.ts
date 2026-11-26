@@ -5,6 +5,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { expectAccessible } from "../fixtures/a11y";
 import { adminUrl, signInAsAdmin } from "../fixtures/auth";
 import { createTestEvent, createTestUser, uniqueEmail } from "../fixtures/data";
+import { latestMessageTo } from "../fixtures/mailpit";
 import { open } from "../fixtures/navigation";
 
 /** A small PDF-like file with random content, so a match proves the same bytes came back. */
@@ -143,6 +144,55 @@ test("[F14] plik szkicu nie jest dostępny publicznie @organizator", async ({
 		(await downloadedBytes(page, panelLink)).bytes.equals(file.buffer),
 	).toBe(true);
 	void event;
+});
+
+test("[F14] plik wydarzenia dla zalogowanych prowadzi do logowania i z powrotem @uczestnik", async ({
+	browser,
+	page,
+}, testInfo) => {
+	await organizerOf(page, testInfo, { visibility: "authenticated" });
+	const materials = page.getByRole("region", { name: "Materiały" });
+	const file = pdf("dla-zalogowanych.pdf");
+	await materials.getByLabel("Plik", { exact: true }).setInputFiles(file);
+	await materials.getByRole("button", { name: "Dodaj plik" }).click();
+	const panelLink = materials.getByRole("link", {
+		name: /dla-zalogowanych\.pdf/,
+	});
+	await expect(panelLink).toBeVisible();
+	const fileId = (await panelLink.getAttribute("href"))?.split("/").pop();
+
+	// A signed-out visitor following the file link is asked to sign in; a link without a
+	// language prefix opens the site's base language, English
+	const visitor = await (await browser.newContext()).newPage();
+	await visitor.goto(`/api/files/${fileId}`);
+	await expect(visitor).toHaveURL(/\/en\/login\?redirect=/);
+	await expect(visitor.locator("html")).toHaveAttribute(
+		"data-hydrated",
+		"true",
+	);
+	const email = uniqueEmail(testInfo);
+	await createTestUser(email);
+	await visitor.getByLabel("Email").fill(email);
+	await visitor.getByRole("button", { name: "Send secure login link" }).click();
+	const message = await latestMessageTo(email);
+	const link = message.links.find((href) =>
+		href.includes("/magic-link/verify"),
+	);
+	expect(link, "magic link in the e-mail").toBeTruthy();
+
+	// Signing in leads straight back to the file
+	const [download] = await Promise.all([
+		visitor.waitForEvent("download"),
+		visitor.goto(link ?? "").catch(() => undefined),
+	]);
+	expect((await readFile(await download.path())).equals(file.buffer)).toBe(
+		true,
+	);
+	expect(download.suggestedFilename()).toBe("dla-zalogowanych.pdf");
+
+	// The way back stays on the site: a path a browser reads as another host is ignored
+	await visitor.goto("/login?redirect=/%5Cevil.invalid");
+	await expect(visitor).toHaveURL(/\/en\/my-events$/);
 });
 
 test("[F19] wystąpienie z prelegentem i plikiem jest na stronie wydarzenia @organizator", async ({
