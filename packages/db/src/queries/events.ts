@@ -733,6 +733,7 @@ export async function getEventForMeeting(eventId: string): Promise<{
 	end: Date;
 	attendanceMode: AttendanceMode;
 	onlineUrl: string | null;
+	status: EventStatus;
 } | null> {
 	const [row] = await db
 		.select({
@@ -741,6 +742,7 @@ export async function getEventForMeeting(eventId: string): Promise<{
 			end: sql<string>`${effectiveEventEndSql(sql`${events}`)}`,
 			attendanceMode: events.attendanceMode,
 			onlineUrl: events.onlineUrl,
+			status: events.status,
 		})
 		.from(events)
 		.where(eq(events.id, eventId));

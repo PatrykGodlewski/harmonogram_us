@@ -1,6 +1,7 @@
 // A stand-in for Microsoft Graph in the e2e stack: the client-credentials token
 // endpoint and POST /v1.0/users/{id}/onlineMeetings. Meetings it created are
-// listed at GET /__meetings so tests can check what the app asked for.
+// listed at GET /__meetings so tests can check what the app asked for. A
+// subject containing [błąd] makes creation fail.
 import { createServer } from "node:http";
 import { randomUUID } from "node:crypto";
 
@@ -41,6 +42,12 @@ createServer(async (req, res) => {
 			return send(res, 401, { error: { code: "InvalidAuthenticationToken" } });
 		}
 		const body = JSON.parse(await readBody(req));
+		// Lets a test exercise a failing Graph call
+		if (String(body.subject).includes("[błąd]")) {
+			return send(res, 500, {
+				error: { code: "InternalServerError", message: "Mock failure" },
+			});
+		}
 		const meeting = {
 			id: randomUUID(),
 			organizer: decodeURIComponent(meetingPath[1] ?? ""),

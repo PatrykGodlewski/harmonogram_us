@@ -23,6 +23,12 @@ export async function ensureTeamsMeeting(
 	if (event.attendanceMode === "onsite") {
 		throw appError("TEAMS_NOT_ONLINE");
 	}
+	if (event.status === "cancelled") {
+		throw appError("EVENT_CANCELLED");
+	}
+	if (event.end <= new Date()) {
+		throw appError("EVENT_ENDED");
+	}
 	if (event.onlineUrl?.trim()) {
 		return event.onlineUrl;
 	}

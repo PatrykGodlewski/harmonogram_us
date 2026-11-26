@@ -117,3 +117,56 @@ test("[F23] spotkanie utworzone w edycji zostaje po anulowaniu formularza @organ
 		meeting?.joinWebUrl ?? "missing",
 	);
 });
+
+test("[F23] nieudane utworzenie spotkania pokazuje komunikat @organizator", async ({
+	page,
+}, testInfo) => {
+	const email = uniqueEmail(testInfo);
+	const password = randomBytes(18).toString("base64url");
+	const organizer = await createTestUser(email, {
+		role: "organizer",
+		password,
+	});
+	// The stand-in refuses meetings whose subject contains [błąd]
+	const event = await createTestEvent({
+		title: `Webinar [błąd] ${randomBytes(4).toString("hex")}`,
+		organizerId: organizer.id,
+		status: "draft",
+		attendanceMode: "online",
+	});
+
+	await signInAsAdmin(page, email, password);
+	await open(page, adminUrl(`/pl/events/${event.id}`));
+	const linkRow = page
+		.getByRole("region", { name: "Przed publikacją" })
+		.getByRole("listitem")
+		.filter({ hasText: "Link online" });
+
+	// Hold the creation request, so the busy state can be seen
+	let release = () => {};
+	const held = new Promise<void>((resolve) => {
+		release = resolve;
+	});
+	await page.route("**/_serverFn/**", async (route) => {
+		if (route.request().method() === "POST") {
+			await held;
+		}
+		await route.continue();
+	});
+	await linkRow
+		.getByRole("button", { name: "Utwórz spotkanie w Teams" })
+		.click();
+	const busy = linkRow.getByRole("button", { name: "Tworzenie spotkania…" });
+	await expect(busy).toBeDisabled();
+	await expect(busy).toHaveAttribute("aria-busy", "true");
+	release();
+
+	await expect(
+		page.getByText("Nie udało się utworzyć spotkania w Teams"),
+	).toBeVisible();
+	await expect(
+		linkRow.getByRole("button", { name: "Utwórz spotkanie w Teams" }),
+	).toBeEnabled();
+	await expect(linkRow.getByText("Gotowe")).toHaveCount(0);
+	expect(await meetingFor(event.title)).toBeUndefined();
+});

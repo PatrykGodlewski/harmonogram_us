@@ -43,6 +43,11 @@ const meetingSchema = z.object({
 	joinWebUrl: z.url({ protocol: /^https$/ }),
 });
 
+/** Graph's `error.code`, kept only when it is a short machine code (the body is untrusted). */
+const graphErrorSchema = z.object({
+	error: z.object({ code: z.string().regex(/^[A-Za-z0-9._-]{1,64}$/) }),
+});
+
 const TIMEOUT_MS = 10_000;
 
 async function appToken(
@@ -71,7 +76,8 @@ async function appToken(
 
 /**
  * Creates an online meeting for the organizer account and returns its join
- * link. Errors carry only the HTTP status, never the secret or the token.
+ * link. Errors carry the HTTP status and Graph's error code when it is a safe
+ * short code, never the response body, the secret or the token.
  */
 export async function createTeamsMeeting(
 	config: TeamsConfig,
@@ -96,7 +102,13 @@ export async function createTeamsMeeting(
 		},
 	);
 	if (!response.ok) {
-		throw new Error(`Teams meeting request failed: HTTP ${response.status}`);
+		const body = graphErrorSchema.safeParse(
+			await response.json().catch(() => null),
+		);
+		const code = body.success ? ` (${body.data.error.code})` : "";
+		throw new Error(
+			`Teams meeting request failed: HTTP ${response.status}${code}`,
+		);
 	}
 	const parsed = meetingSchema.safeParse(await response.json());
 	if (!parsed.success) {
