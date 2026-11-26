@@ -43,50 +43,71 @@ describe("handleDeadEventImageJob", () => {
 		expect(fail).not.toHaveBeenCalled();
 	});
 
-	it("logs instead of throwing on a bad payload or an unexpected error", async () => {
+	it("logs and skips a bad payload", async () => {
 		const error = vi.spyOn(console, "error").mockImplementation(() => {});
 		const { load, fail } = fakes(source({}));
-		expect(await handleDeadEventImageJob({ eventId: "e1" }, load, fail)).toBe("error");
+		expect(await handleDeadEventImageJob({ eventId: "e1" }, load, fail)).toBe("skipped");
 		expect(load).not.toHaveBeenCalled();
 		expect(fail).not.toHaveBeenCalled();
+		expect(error).toHaveBeenCalledTimes(1);
+		error.mockRestore();
+	});
 
-		const broken = vi.fn(async () => {
+	it("lets database errors propagate so pg-boss retries the job", async () => {
+		const { load, fail } = fakes(source({}));
+		const brokenLoad = vi.fn(async () => {
 			throw new Error("database down");
 		});
-		expect(await handleDeadEventImageJob(JOB, broken, fail)).toBe("error");
+		await expect(handleDeadEventImageJob(JOB, brokenLoad, fail)).rejects.toThrow("database down");
 		expect(fail).not.toHaveBeenCalled();
-		expect(error).toHaveBeenCalledTimes(2);
-		error.mockRestore();
+
+		const brokenFail = vi.fn(async () => {
+			throw new Error("database down");
+		});
+		await expect(handleDeadEventImageJob(JOB, load, brokenFail)).rejects.toThrow("database down");
 	});
 });
 
 describe("the event-images dead-letter queue", () => {
 	const job = { eventId: "dead-letter-test", force: true };
 
-	async function clearQueues() {
+	async function clearOwnJobs() {
 		await db.execute(
-			sql`DELETE FROM pgboss.job WHERE name IN (${QUEUE_EVENT_IMAGES}, ${QUEUE_EVENT_IMAGES_DEAD})`,
+			sql`DELETE FROM pgboss.job WHERE name IN (${QUEUE_EVENT_IMAGES}, ${QUEUE_EVENT_IMAGES_DEAD}) AND data->>'eventId' = ${job.eventId}`,
+		);
+	}
+
+	function ownJobs(queue: string) {
+		return db.execute<{
+			id: string;
+			data: unknown;
+			expire_seconds: number;
+			retry_limit: number;
+			retry_delay: number;
+		}>(
+			sql`SELECT id, data, expire_seconds, retry_limit, retry_delay FROM pgboss.job WHERE name = ${queue} AND data->>'eventId' = ${job.eventId}`,
 		);
 	}
 
 	beforeEach(async () => {
 		await getBoss();
-		await clearQueues();
+		await clearOwnJobs();
 	});
 
 	afterAll(async () => {
-		await clearQueues();
+		await clearOwnJobs();
 		await (await getBoss()).stop();
 	});
 
 	it("receives an event-images job that failed (no retries)", async () => {
 		const boss = await getBoss();
 		await enqueueEventImage(job);
-		const [active] = await boss.fetch(QUEUE_EVENT_IMAGES);
-		expect(active?.data).toEqual(job);
-		await boss.fail(QUEUE_EVENT_IMAGES, active?.id ?? "");
+		const [sent] = await ownJobs(QUEUE_EVENT_IMAGES);
+		expect(sent?.expire_seconds).toBe(300);
+		await boss.fail(QUEUE_EVENT_IMAGES, sent?.id ?? "");
 
-		const [dead] = await boss.fetch(QUEUE_EVENT_IMAGES_DEAD);
-		expect(dead?.data).toEqual(job);
+		const dead = await ownJobs(QUEUE_EVENT_IMAGES_DEAD);
+		expect(dead).toHaveLength(1);
+		expect(dead[0]).toMatchObject({ data: job, retry_limit: 3, retry_delay: 60 });
 	});
 });

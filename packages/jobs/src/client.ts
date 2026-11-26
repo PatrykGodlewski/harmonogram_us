@@ -14,6 +14,8 @@ import {
 /**
  * Creates missing queues (required before send/work in pg-boss ≥ 10) and applies the
  * configured options to existing ones, so a queue created by an older version gets them too.
+ * An option removed from QUEUES is not cleared in the database (pg-boss only clears a dead letter
+ * with `deadLetter: null`).
  */
 export async function ensureQueues(boss: PgBoss): Promise<void> {
 	for (const { name, policy, ...options } of QUEUES) {

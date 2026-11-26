@@ -27,8 +27,8 @@ export const SURVEY_EMAILS_CRON = "*/15 * * * *";
  */
 export const QUEUE_EVENT_IMAGES = "event-images";
 /**
- * Event-image jobs pg-boss gave up on (failed, or expired because the worker died);
- * the worker marks their covers failed.
+ * Event-image jobs pg-boss failed (the handler threw, the job timed out, or a worker shutdown
+ * cut it off); the worker marks their covers failed.
  */
 export const QUEUE_EVENT_IMAGES_DEAD = "event-images-dead";
 /** Reminders before events, checked every 5 minutes. */
@@ -123,7 +123,14 @@ export const QUEUES = [
 	{ name: QUEUE_SURVEY_EMAILS, policy: "standard" },
 	{ name: QUEUE_DELETE_STORED_FILES, policy: "standard" },
 	// Before QUEUE_EVENT_IMAGES: a dead-letter queue must exist before a queue names it.
-	{ name: QUEUE_EVENT_IMAGES_DEAD, policy: "standard" },
+	// Retries are free here (no image is generated), unlike event-images, so they can outlast a
+	// short database outage.
+	{
+		name: QUEUE_EVENT_IMAGES_DEAD,
+		policy: "standard",
+		retryLimit: 3,
+		retryDelay: 60,
+	},
 	{
 		name: QUEUE_EVENT_IMAGES,
 		policy: "stately",
