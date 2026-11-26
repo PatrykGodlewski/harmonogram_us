@@ -5,6 +5,7 @@ import {
 import {
 	widget_all_events,
 	widget_empty,
+	widget_new_tab,
 	widget_title,
 } from "@repo/i18n/paraglide/messages";
 import { getLocale, localizeHref } from "@repo/i18n/paraglide/runtime";
@@ -18,7 +19,12 @@ export const Route = createFileRoute("/widget")({
 	loaderDeps: ({ search }) => search,
 	loader: ({ context: { queryClient }, deps }) =>
 		queryClient.ensureQueryData(widgetEventsQueryOptions(deps)),
-	head: () => studentsPageHead(widget_title()),
+	head: () => ({
+		meta: [
+			...studentsPageHead(widget_title()).meta,
+			{ name: "robots", content: "noindex" },
+		],
+	}),
 	component: WidgetPage,
 });
 
@@ -52,7 +58,8 @@ function WidgetPage() {
 								rel="noopener"
 								className="font-medium break-words text-primary underline-offset-2 hover:underline"
 							>
-								{event.title}
+								{event.title}{" "}
+								<span className="sr-only">{widget_new_tab()}</span>
 							</a>
 							<span className="text-sm text-muted-foreground">
 								{formatEventDateTime(event.startsAt, locale)}
@@ -68,7 +75,8 @@ function WidgetPage() {
 				rel="noopener"
 				className="text-sm text-primary underline underline-offset-2"
 			>
-				{widget_all_events()}
+				{widget_all_events()}{" "}
+				<span className="sr-only">{widget_new_tab()}</span>
 			</a>
 		</main>
 	);

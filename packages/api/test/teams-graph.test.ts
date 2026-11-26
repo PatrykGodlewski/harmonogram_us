@@ -72,6 +72,34 @@ describe("createTeamsMeeting", () => {
 		}
 	});
 
+	it("names Graph's error code in the failure, and nothing else of the body", async () => {
+		const body = {
+			error: {
+				code: "Authorization_RequestDenied",
+				message: "Insufficient privileges for ola.nowak@uni.test",
+			},
+		};
+		const { fetchImpl } = graph(body, { meetingStatus: 403 });
+		const error = await createTeamsMeeting(CONFIG, MEETING, fetchImpl).catch((e: unknown) => e);
+		expect(String(error)).toBe("Error: Teams meeting request failed: HTTP 403 (Authorization_RequestDenied)");
+		expect(String(error)).not.toContain("ola.nowak");
+	});
+
+	it("leaves out a Graph code that is not a short machine code", async () => {
+		const codes = ["ola.nowak@uni.test", "two words", "x".repeat(65), "", 42, null];
+		for (const code of codes) {
+			const { fetchImpl } = graph({ error: { code, message: "secret detail" } }, { meetingStatus: 400 });
+			const error = await createTeamsMeeting(CONFIG, MEETING, fetchImpl).catch((e: unknown) => e);
+			expect(String(error)).toBe("Error: Teams meeting request failed: HTTP 400");
+		}
+		const html = new Response("<html>tok-1 ola.nowak@uni.test</html>", { status: 502 });
+		const error = await createTeamsMeeting(CONFIG, MEETING, (async (url: string | URL | Request) =>
+			String(url).includes("/oauth2/")
+				? new Response(JSON.stringify({ access_token: "tok-1" }))
+				: html) as typeof fetch).catch((e: unknown) => e);
+		expect(String(error)).toBe("Error: Teams meeting request failed: HTTP 502");
+	});
+
 	it("refuses a meeting without a usable https join link", async () => {
 		for (const body of [{ id: "m" }, { joinWebUrl: "http://teams.example/x" }, { joinWebUrl: "javascript:x" }]) {
 			const { fetchImpl } = graph(body);

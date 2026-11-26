@@ -76,6 +76,13 @@ async function newEvent(deps: QueueDeps = on) {
 	return event.id;
 }
 
+async function recordedForDeletion(key: string): Promise<boolean> {
+	const rows = await db.execute(
+		sql`SELECT 1 FROM stored_file_deletions WHERE storage_key = ${key}`,
+	);
+	return rows.length > 0;
+}
+
 function pipeline(overrides: Partial<PipelineDeps> = {}): PipelineDeps {
 	let stored = 0;
 	return {
@@ -196,7 +203,7 @@ describe("the worker", () => {
 		error.mockRestore();
 	});
 
-	it("marks the event failed when saving the image fails", async () => {
+	it("marks the event failed and records the stored image for deletion when saving fails", async () => {
 		const error = vi.spyOn(console, "error").mockImplementation(() => {});
 		const eventId = await newEvent();
 		const deps = pipeline({
@@ -206,7 +213,20 @@ describe("the worker", () => {
 		});
 		expect(await generateEventImage({ eventId, force: false }, deps)).toBe("failed");
 		expect(await imageRow(eventId)).toMatchObject({ status: "failed", key: null });
+		expect(await recordedForDeletion(`event-images/${eventId}/1`)).toBe(true);
 		error.mockRestore();
+	});
+
+	it("records the stored image for deletion when the event is gone before saving", async () => {
+		const eventId = await newEvent();
+		const deps = pipeline({
+			store: async (id) => {
+				await db.delete(events).where(eq(events.id, id));
+				return `event-images/${id}/1`;
+			},
+		});
+		expect(await generateEventImage({ eventId, force: false }, deps)).toBe("skipped");
+		expect(await recordedForDeletion(`event-images/${eventId}/1`)).toBe(true);
 	});
 
 	it("skips a duplicate job for an image that is already ready", async () => {

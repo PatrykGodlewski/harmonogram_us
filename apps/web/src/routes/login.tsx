@@ -9,9 +9,23 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { z } from "zod";
 import { EventRegistrationChoice } from "~/components/auth/event-registration-choice";
 
-/** Same-site paths only: "//host" would be another site. */
+/** Any fixed origin: a path is resolved against it to see where it leads. */
+const SAME_SITE = "http://same.site";
+
+/** Same-site paths only: browsers read "//host" and "/\host" as another site. */
 function safePath(path: string | undefined): string | null {
-	return path?.startsWith("/") && !path.startsWith("//") ? path : null;
+	if (!path?.startsWith("/")) {
+		return null;
+	}
+	try {
+		// `new URL`, not `URL.parse`: Safari before 18 and Chrome before 126 lack the latter.
+		const url = new URL(path, SAME_SITE);
+		return url.origin === SAME_SITE
+			? url.pathname + url.search + url.hash
+			: null;
+	} catch {
+		return null;
+	}
 }
 
 export const Route = createFileRoute("/login")({

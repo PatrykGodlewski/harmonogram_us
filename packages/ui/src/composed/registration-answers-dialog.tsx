@@ -4,6 +4,7 @@ import {
 	answers_no,
 	answers_none,
 	answers_optional,
+	answers_rating_anchors,
 	answers_required,
 	answers_title,
 	answers_yes,
@@ -145,6 +146,7 @@ export function AnswerField({
 }) {
 	const fieldId = useId();
 	const errorId = useId();
+	const hintId = useId();
 	const label = (
 		<Label htmlFor={fieldId}>
 			{question.label}
@@ -158,7 +160,11 @@ export function AnswerField({
 			)}
 		</Label>
 	);
-	const describedBy = isMissing ? errorId : undefined;
+	const hasHint = question.kind === "rating";
+	const describedBy =
+		[hasHint ? hintId : null, isMissing ? errorId : null]
+			.filter(Boolean)
+			.join(" ") || undefined;
 	const choices =
 		question.kind === "yesno"
 			? [
@@ -174,6 +180,11 @@ export function AnswerField({
 	return (
 		<div className="flex flex-col gap-2">
 			{label}
+			{hasHint ? (
+				<p id={hintId} className="text-sm text-muted-foreground">
+					{answers_rating_anchors()}
+				</p>
+			) : null}
 			{question.kind === "text" ? (
 				<Input
 					id={fieldId}

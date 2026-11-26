@@ -101,3 +101,46 @@ test("[F24] widżet na stronie zewnętrznej pokazuje trzy najbliższe @uczestnik
 	await open(page, src);
 	await expectAccessible(page, "widżet", "Najbliższe wydarzenia");
 });
+
+test("[F24] widżet nie trafia do wyszukiwarek @uczestnik", async ({ page }) => {
+	await open(page, "/pl/widget");
+	await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+		"content",
+		"noindex",
+	);
+});
+
+test("[F24] linki widżetu zapowiadają nową kartę @uczestnik", async ({
+	page,
+}) => {
+	const faculty = await uniqueFaculty();
+	const event = await facultyEvent(faculty.id, { startsInDays: 1 });
+
+	await open(page, `/pl/widget?faculty=${faculty.slug}`);
+	await expect(
+		page.getByRole("link", {
+			name: `${event.title} (otwiera się w nowej karcie)`,
+			exact: true,
+		}),
+	).toBeVisible();
+	await expect(
+		page.getByRole("link", {
+			name: "Wszystkie wydarzenia (otwiera się w nowej karcie)",
+			exact: true,
+		}),
+	).toBeVisible();
+
+	await open(page, `/en/widget?faculty=${faculty.slug}`);
+	await expect(
+		page.getByRole("link", {
+			name: `${event.title} (opens in a new tab)`,
+			exact: true,
+		}),
+	).toBeVisible();
+	await expect(
+		page.getByRole("link", {
+			name: "All events (opens in a new tab)",
+			exact: true,
+		}),
+	).toBeVisible();
+});

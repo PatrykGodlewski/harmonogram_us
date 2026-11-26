@@ -2,6 +2,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { removeLocalEventImage } from "@repo/api/event-images/store";
+import { STORED_FILE_GRACE_MS } from "@repo/db/queries/event-files";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
 	type DeleteStoredFilesDeps,
@@ -20,10 +21,12 @@ function fakes(keys: string[], failing: string[] = []) {
 	const pending = new Set(keys);
 	const removed: string[] = [];
 	let asked = 0;
+	let cutoff: Date | undefined;
 	const deps: DeleteStoredFilesDeps = {
 		config: CONFIG,
-		take: async (limit) => {
+		take: async (limit, before) => {
 			asked = limit;
+			cutoff = before;
 			return [...pending].slice(0, limit);
 		},
 		remove: async (_config, key) => {
@@ -37,7 +40,7 @@ function fakes(keys: string[], failing: string[] = []) {
 			for (const key of forgotten) pending.delete(key);
 		},
 	};
-	return { deps, pending, removed, asked: () => asked };
+	return { deps, pending, removed, asked: () => asked, cutoff: () => cutoff };
 }
 
 describe("deleteStoredFiles", () => {
@@ -47,6 +50,17 @@ describe("deleteStoredFiles", () => {
 		expect(removed).toEqual(["a", "b"]);
 		expect(pending.size).toBe(0);
 		expect(asked()).toBe(500);
+	});
+
+	it("takes only keys older than the grace period (uploads in progress stay)", async () => {
+		const { deps, cutoff } = fakes(["a"]);
+		const before = Date.now();
+		await deleteStoredFiles(deps);
+		const after = Date.now();
+		expect(STORED_FILE_GRACE_MS).toBe(60 * 60 * 1000);
+		const taken = cutoff()?.getTime() ?? 0;
+		expect(taken).toBeGreaterThanOrEqual(before - STORED_FILE_GRACE_MS);
+		expect(taken).toBeLessThanOrEqual(after - STORED_FILE_GRACE_MS);
 	});
 
 	it("keeps a key whose delete failed for the next run", async () => {

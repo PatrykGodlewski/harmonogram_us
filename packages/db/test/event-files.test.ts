@@ -3,13 +3,16 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "../src/client";
 import {
 	addEventFile,
+	addEventMaterialLink,
 	deleteEventFile,
 	EVENT_FILES_LIMIT,
+	EVENT_LINKS_LIMIT,
 	forgetStoredFileDeletions,
 	getEventFile,
 	listEventFiles,
 	recordStoredFileDeletion,
-	setEventMaterialLinks,
+	removeEventMaterialLink,
+	STORED_FILE_GRACE_MS,
 	takeStoredFileDeletions,
 } from "../src/queries/event-files";
 import { getEventById } from "../src/queries/events";
@@ -34,8 +37,11 @@ function file(eventId: string, name: string, agendaItemId?: string) {
 	});
 }
 
+/** A cutoff after every key recorded so far. */
+const later = () => new Date(Date.now() + 60_000);
+
 async function pendingKeys(): Promise<string[]> {
-	return (await takeStoredFileDeletions(100)).sort();
+	return (await takeStoredFileDeletions(100, later())).sort();
 }
 
 describe("event files", () => {
@@ -114,10 +120,91 @@ describe("stored file deletions", () => {
 		await recordStoredFileDeletion("events/x/1");
 		await recordStoredFileDeletion("events/x/2");
 
-		expect(await takeStoredFileDeletions(1)).toHaveLength(1);
+		expect(await takeStoredFileDeletions(1, later())).toHaveLength(1);
 		expect(await pendingKeys()).toEqual(["events/x/1", "events/x/2"]);
 		await forgetStoredFileDeletions(["events/x/1"]);
 		expect(await pendingKeys()).toEqual(["events/x/2"]);
+	});
+
+	it("adding the file forgets the key recorded before its upload", async () => {
+		const eventId = await createEvent();
+		await recordStoredFileDeletion(`events/${eventId}/a.pdf`);
+		await recordStoredFileDeletion("events/x/other");
+
+		await file(eventId, "a.pdf");
+
+		expect(await pendingKeys()).toEqual(["events/x/other"]);
+	});
+
+	it("takes only keys recorded before the cutoff (the grace period)", async () => {
+		expect(STORED_FILE_GRACE_MS).toBe(60 * 60 * 1000);
+		await recordStoredFileDeletion("events/x/old");
+		await recordStoredFileDeletion("events/x/young");
+		await db.execute(
+			sql`UPDATE stored_file_deletions SET created_at = now() - interval '2 hours' WHERE storage_key = 'events/x/old'`,
+		);
+
+		const cutoff = new Date(Date.now() - STORED_FILE_GRACE_MS);
+		expect(await takeStoredFileDeletions(10, cutoff)).toEqual(["events/x/old"]);
+	});
+});
+
+function link(n: number) {
+	return { label: `Link ${n}`, url: `https://example.com/${n}` };
+}
+
+async function storedLinks(eventId: string) {
+	const [row] = await db
+		.select({ materials: events.materials })
+		.from(events)
+		.where(eq(events.id, eventId));
+	return row?.materials;
+}
+
+describe("material links", () => {
+	it(`appends links and refuses more than ${EVENT_LINKS_LIMIT}`, async () => {
+		const eventId = await createEvent();
+		await addEventMaterialLink(eventId, link(1));
+		await addEventMaterialLink(eventId, link(2));
+		expect(await storedLinks(eventId)).toEqual([link(1), link(2)]);
+
+		await db
+			.update(events)
+			.set({ materials: Array.from({ length: EVENT_LINKS_LIMIT }, (_, i) => link(i)) })
+			.where(eq(events.id, eventId));
+		expect(await rejectionCode(addEventMaterialLink(eventId, link(99)))).toBe(
+			"EVENT_LINKS_LIMIT",
+		);
+		expect(await storedLinks(eventId)).toHaveLength(EVENT_LINKS_LIMIT);
+	});
+
+	it("keeps both links when two are added at once", async () => {
+		const eventId = await createEvent();
+		await Promise.all([
+			addEventMaterialLink(eventId, link(1)),
+			addEventMaterialLink(eventId, link(2)),
+		]);
+		const stored = await storedLinks(eventId);
+		expect(stored).toHaveLength(2);
+		expect(stored).toEqual(expect.arrayContaining([link(1), link(2)]));
+	});
+
+	it("removes a link only while its position still holds it", async () => {
+		const eventId = await createEvent();
+		for (const n of [1, 2, 1]) {
+			await addEventMaterialLink(eventId, link(n));
+		}
+
+		expect(await removeEventMaterialLink(eventId, 0, link(2))).toBe(false);
+		expect(await removeEventMaterialLink(eventId, 3, link(1))).toBe(false);
+		expect(await storedLinks(eventId)).toEqual([link(1), link(2), link(1)]);
+
+		expect(await removeEventMaterialLink(eventId, 2, link(1))).toBe(true);
+		expect(await storedLinks(eventId)).toEqual([link(1), link(2)]);
+		// Someone else removed the first link: the shown index 1 now holds nothing
+		expect(await removeEventMaterialLink(eventId, 0, link(1))).toBe(true);
+		expect(await removeEventMaterialLink(eventId, 1, link(2))).toBe(false);
+		expect(await storedLinks(eventId)).toEqual([link(2)]);
 	});
 });
 
@@ -125,7 +212,7 @@ describe("material links and the event page", () => {
 	it("stores links and gives them with the files on the event page", async () => {
 		const eventId = await createEvent();
 		const itemId = await createItem(eventId);
-		await setEventMaterialLinks(eventId, [{ label: "Nagranie", url: "https://example.com/rec" }]);
+		await addEventMaterialLink(eventId, { label: "Nagranie", url: "https://example.com/rec" });
 		const added = await file(eventId, "slides.pdf", itemId);
 
 		const event = await getEventById(eventId, { kind: "public", signedIn: true });

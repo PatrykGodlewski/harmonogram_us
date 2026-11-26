@@ -5,12 +5,28 @@ import {
 import {
 	admin_error_generic,
 	teams_create_meeting,
+	teams_creating_meeting,
+	teams_event_cancelled,
+	teams_event_ended,
 	teams_meeting_created,
 } from "@repo/i18n/paraglide/messages";
+import { getAppErrorCode } from "@repo/ui/app-errors";
 import { Button } from "@repo/ui/components/button";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { formatMutationError } from "~/lib/format-mutation-error";
+
+// The generic messages for these codes talk about registration.
+function createErrorMessage(error: unknown): string {
+	switch (getAppErrorCode(error)) {
+		case "EVENT_CANCELLED":
+			return teams_event_cancelled();
+		case "EVENT_ENDED":
+			return teams_event_ended();
+		default:
+			return formatMutationError(error, admin_error_generic);
+	}
+}
 
 /**
  * Creates the event's Teams meeting and saves its join link as the meeting
@@ -30,8 +46,7 @@ export function TeamsMeetingButton({
 			toast.success(teams_meeting_created());
 			await onCreated(onlineUrl);
 		},
-		onError: (error) =>
-			toast.error(formatMutationError(error, admin_error_generic)),
+		onError: (error) => toast.error(createErrorMessage(error)),
 	});
 	if (!available) {
 		return null;
@@ -43,9 +58,10 @@ export function TeamsMeetingButton({
 			variant="outline"
 			className="self-start"
 			disabled={create.isPending}
+			aria-busy={create.isPending}
 			onClick={() => create.mutate()}
 		>
-			{teams_create_meeting()}
+			{create.isPending ? teams_creating_meeting() : teams_create_meeting()}
 		</Button>
 	);
 }

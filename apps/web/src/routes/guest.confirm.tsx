@@ -16,7 +16,12 @@ import { z } from "zod";
 
 export const Route = createFileRoute("/guest/confirm")({
 	validateSearch: z.object({ token: z.string().max(200).catch("") }),
-	head: () => studentsPageHead(title_guest_confirm()),
+	head: () => ({
+		meta: [
+			...studentsPageHead(title_guest_confirm()).meta,
+			{ name: "referrer", content: "no-referrer" },
+		],
+	}),
 	component: GuestConfirmPage,
 });
 

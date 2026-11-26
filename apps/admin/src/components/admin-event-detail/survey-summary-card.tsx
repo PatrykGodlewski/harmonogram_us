@@ -10,6 +10,7 @@ import {
 	survey_results_option,
 	survey_results_responses,
 	survey_results_responses_only,
+	survey_results_text_hidden,
 	survey_results_text_shown,
 	survey_results_title,
 } from "@repo/i18n/paraglide/messages";
@@ -55,6 +56,13 @@ function QuestionResult({ question }: { question: SurveyQuestionSummary }) {
 	if (question.kind === "text") {
 		if (question.total === 0) {
 			return <NoAnswers />;
+		}
+		if (question.answers.length === 0) {
+			return (
+				<p className="mt-2 text-sm text-muted-foreground">
+					{survey_results_text_hidden()}
+				</p>
+			);
 		}
 		return (
 			<div className="mt-2 flex flex-col gap-2 text-sm">

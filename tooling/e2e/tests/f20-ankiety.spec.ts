@@ -137,6 +137,42 @@ test("[F20] zmieniony link do ankiety nie działa @uczestnik", async ({
 	).toHaveCount(0);
 });
 
+test("[F20] ocena w ankiecie ma opisane końce skali @uczestnik", async ({
+	page,
+}, testInfo) => {
+	const base = uniqueEmail(testInfo);
+	const person = await createTestUser(base);
+	const { event } = await endedEventWithSurvey();
+	await registerForEvent(event.id, person.id, "pl");
+	await endEvent(event.id);
+	await sendSurveyEmails();
+	const message = await latestMessageTo(base, { subject: "Ankieta" });
+
+	await open(
+		page,
+		message.links.find((href) => href.includes("/surveys/")) ?? "",
+	);
+	await expect(page.getByText("1 = bardzo źle")).toBeVisible();
+	await expect(page.getByText("5 = bardzo dobrze")).toBeVisible();
+});
+
+test("[F20] strony z osobistym linkiem nie wysyłają adresu strony dalej @uczestnik", async ({
+	page,
+}) => {
+	const token = "x".repeat(43);
+	for (const path of [
+		`/pl/surveys/nope?token=${token}`,
+		`/pl/registrations/nope/withdraw?token=${token}`,
+		`/pl/guest/confirm?token=${token}`,
+	]) {
+		await open(page, path);
+		await expect(page.locator('meta[name="referrer"]'), path).toHaveAttribute(
+			"content",
+			"no-referrer",
+		);
+	}
+});
+
 async function addSurveyQuestion(
 	page: Page,
 	question: { label: string; kind: string; required?: boolean },
@@ -226,6 +262,10 @@ test("[F20] organizator układa ankietę i widzi podsumowanie @organizator", asy
 	await expect(results).toContainText("2 z 3 osób");
 	await expect(results).toContainText("Średnia 4,5");
 	await expect(results).toContainText("Tak: 1 (50%)");
-	await expect(results).toContainText("Za krótkie przerwy");
+	// One text answer is not enough to show it without pointing at a person
+	await expect(results).toContainText(
+		"Odpowiedzi tekstowe pokażemy, gdy będą co najmniej 3, żeby nie dało się ich przypisać do osoby.",
+	);
+	await expect(results).not.toContainText("Za krótkie przerwy");
 	await expectAccessible(page, "wydarzenie z ankietą", event.title);
 });

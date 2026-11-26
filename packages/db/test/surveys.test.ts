@@ -8,6 +8,7 @@ import {
 	getSurveySummary,
 	queueSurveyInvitations,
 	SURVEY_OPEN_DAYS,
+	SURVEY_TEXT_MIN_RESPONSES,
 	submitSurvey,
 } from "../src/queries/surveys";
 import { authUsers } from "../src/schema/better-auth";
@@ -148,14 +149,41 @@ describe("submitting a survey", () => {
 
 describe("survey summary", () => {
 	it("counts, averages and lists answers", async () => {
+		const { eventId, registrationIds, rating, recommend, notes } = await endedEventWithSurvey({ people: 4 });
+		const [a, b, c] = registrationIds;
+		await submitSurvey(a ?? "", { [rating.id]: "4", [recommend.id]: "yes", [notes.id]: "Dobre" });
+		await submitSurvey(b ?? "", { [rating.id]: "5", [recommend.id]: "no", [notes.id]: "Za krótko" });
+		await submitSurvey(c ?? "", { [rating.id]: "5", [recommend.id]: "yes", [notes.id]: "Więcej przerw" });
+
+		const summary = await getSurveySummary(eventId);
+		expect(summary.responses).toBe(3);
+		expect(summary.invited).toBe(4);
+		const [ratingResult, recommendResult, notesResult] = summary.questions;
+		expect(ratingResult).toEqual({ id: rating.id, label: "Ocena", kind: "rating", average: 4.7, counts: [0, 0, 0, 1, 2] });
+		expect(recommendResult).toEqual({
+			id: recommend.id,
+			label: "Polecisz?",
+			kind: "yesno",
+			options: [
+				{ value: "yes", count: 2 },
+				{ value: "no", count: 1 },
+			],
+		});
+		expect(notesResult).toMatchObject({ id: notes.id, kind: "text", total: 3 });
+		expect(notesResult).toHaveProperty("answers");
+		const answers = notesResult?.kind === "text" ? notesResult.answers : [];
+		expect([...answers].sort()).toEqual(["Dobre", "Więcej przerw", "Za krótko"]);
+	});
+
+	it(`hides text answers below ${SURVEY_TEXT_MIN_RESPONSES} but still counts them and the other questions`, async () => {
+		expect(SURVEY_TEXT_MIN_RESPONSES).toBe(3);
 		const { eventId, registrationIds, rating, recommend, notes } = await endedEventWithSurvey({ people: 3 });
 		const [a, b] = registrationIds;
 		await submitSurvey(a ?? "", { [rating.id]: "4", [recommend.id]: "yes", [notes.id]: "Dobre" });
-		await submitSurvey(b ?? "", { [rating.id]: "5", [recommend.id]: "no" });
+		await submitSurvey(b ?? "", { [rating.id]: "5", [recommend.id]: "no", [notes.id]: "Za krótko" });
 
 		const summary = await getSurveySummary(eventId);
 		expect(summary.responses).toBe(2);
-		expect(summary.invited).toBe(3);
 		expect(summary.questions).toEqual([
 			{ id: rating.id, label: "Ocena", kind: "rating", average: 4.5, counts: [0, 0, 0, 1, 1] },
 			{
@@ -167,7 +195,7 @@ describe("survey summary", () => {
 					{ value: "no", count: 1 },
 				],
 			},
-			{ id: notes.id, label: "Uwagi", kind: "text", total: 1, answers: ["Dobre"] },
+			{ id: notes.id, label: "Uwagi", kind: "text", total: 2, answers: [] },
 		]);
 	});
 

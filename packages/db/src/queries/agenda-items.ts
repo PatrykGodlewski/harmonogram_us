@@ -8,6 +8,7 @@ import {
 	agendaItems,
 	agendaSessions,
 } from "../schema/agenda";
+import { storedFileDeletions } from "../schema/event-files";
 import {
 	eventFaculties,
 	eventLocations,
@@ -260,22 +261,33 @@ export async function updateAgendaItem(
 
 /**
  * Sets (or with null removes) the item's image; returns false for an unknown item. The
- * previous object is queued for deletion by a trigger.
+ * previous object is queued for deletion by a trigger; the new key, recorded before its
+ * upload, is forgotten in the same transaction.
  */
 export async function setAgendaItemImage(
 	id: string,
 	image: { key: string; alt: string } | null,
 ): Promise<boolean> {
-	const updated = await db
-		.update(agendaItems)
-		.set({
-			imageKey: image?.key ?? null,
-			imageAlt: image?.alt ?? null,
-			updatedAt: new Date(),
-		})
-		.where(eq(agendaItems.id, id))
-		.returning({ id: agendaItems.id });
-	return updated.length > 0;
+	return db.transaction(async (tx) => {
+		const updated = await tx
+			.update(agendaItems)
+			.set({
+				imageKey: image?.key ?? null,
+				imageAlt: image?.alt ?? null,
+				updatedAt: new Date(),
+			})
+			.where(eq(agendaItems.id, id))
+			.returning({ id: agendaItems.id });
+		if (updated.length === 0) {
+			return false;
+		}
+		if (image) {
+			await tx
+				.delete(storedFileDeletions)
+				.where(eq(storedFileDeletions.storageKey, image.key));
+		}
+		return true;
+	});
 }
 
 /** The item's event and image key, for serving the image. */

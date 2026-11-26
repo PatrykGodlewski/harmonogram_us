@@ -2,7 +2,7 @@
 import { getEventFile } from "@repo/db/queries/event-files";
 import { canManageEvent } from "@repo/db/queries/event-organizers";
 import { getCurrentSession, getCurrentUser } from "../auth/user";
-import { canViewEvent } from "../events/access";
+import { canViewEvent, eventViewAccess } from "../events/access";
 import {
 	presignDownload,
 	type StorageConfig,
@@ -29,27 +29,39 @@ const NOT_FOUND = () =>
 		headers: { "cache-control": "private, no-store" },
 	});
 
+function redirectTo(location: string): Response {
+	return new Response(null, {
+		status: 302,
+		headers: { location, "cache-control": "private, no-store" },
+	});
+}
+
 /**
- * 302 to the bucket when `canSee` allows the file's event; 404 otherwise, the
- * same as an unknown file, so ids reveal nothing.
+ * 302 to the bucket when `canSee` allows the file's event; 302 to the sign-in
+ * page and back to the file for `"sign-in"`; 404 otherwise, the same as an
+ * unknown file, so ids reveal nothing.
  */
 export async function fileDownloadResponse(
 	fileId: string,
-	canSee: (eventId: string) => Promise<boolean>,
+	canSee: (eventId: string) => Promise<boolean | "sign-in">,
 	deps: FileDownloadDeps = defaultDeps(),
 ): Promise<Response> {
 	if (!deps.config) {
 		return NOT_FOUND();
 	}
 	const file = await deps.getFile(fileId);
-	if (!file || !(await canSee(file.eventId))) {
+	const access = file ? await canSee(file.eventId) : false;
+	if (access === "sign-in") {
+		return redirectTo(
+			`/login?${new URLSearchParams({ redirect: `/api/files/${fileId}` })}`,
+		);
+	}
+	if (!file || !access) {
 		return NOT_FOUND();
 	}
-	const url = await deps.presign(deps.config, file.storageKey, file.name);
-	return new Response(null, {
-		status: 302,
-		headers: { location: url, "cache-control": "private, no-store" },
-	});
+	return redirectTo(
+		await deps.presign(deps.config, file.storageKey, file.name),
+	);
 }
 
 type CanSee = (eventId: string) => Promise<boolean>;
@@ -72,7 +84,11 @@ export async function publicFileResponse(
 	fileId: string,
 	invite: string | undefined,
 ): Promise<Response> {
-	return fileDownloadResponse(fileId, await visitorCanSee(invite));
+	const userId = (await getCurrentSession())?.user.id ?? null;
+	return fileDownloadResponse(fileId, async (eventId) => {
+		const access = await eventViewAccess(eventId, userId, invite);
+		return access === "sign-in" ? access : access === "allowed";
+	});
 }
 
 export async function panelFileResponse(fileId: string): Promise<Response> {

@@ -18,7 +18,12 @@ import { z } from "zod";
 export const Route = createFileRoute("/registrations/$registrationId/withdraw")(
 	{
 		validateSearch: z.object({ token: z.string().max(200).catch("") }),
-		head: () => studentsPageHead(title_withdraw()),
+		head: () => ({
+			meta: [
+				...studentsPageHead(title_withdraw()).meta,
+				{ name: "referrer", content: "no-referrer" },
+			],
+		}),
 		component: WithdrawPage,
 	},
 );

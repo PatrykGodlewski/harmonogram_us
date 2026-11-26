@@ -23,6 +23,15 @@ async function onlineEvent(onlineUrl: string | null) {
 	return id;
 }
 
+function neverCalled() {
+	let count = 0;
+	const create = async () => {
+		count++;
+		return "https://teams.test/never";
+	};
+	return { create, calls: () => count };
+}
+
 describe("ensureTeamsMeeting", () => {
 	it("creates a meeting for an event without a link and stores its join link", async () => {
 		const id = await onlineEvent(null);
@@ -46,6 +55,26 @@ describe("ensureTeamsMeeting", () => {
 		});
 		expect(url).toBe("https://zoom.test/x");
 		expect(calls).toBe(0);
+	});
+
+	it("refuses a cancelled event without calling Graph", async () => {
+		const id = await onlineEvent(null);
+		await db.update(events).set({ status: "cancelled" }).where(eq(events.id, id));
+		const { create, calls } = neverCalled();
+		await expect(ensureTeamsMeeting(id, CONFIG, create)).rejects.toMatchObject({ message: "EVENT_CANCELLED" });
+		expect(calls()).toBe(0);
+	});
+
+	it("refuses an ended event without calling Graph", async () => {
+		const id = await onlineEvent(null);
+		const end = new Date(Date.now() - 3_600_000);
+		await db
+			.update(events)
+			.set({ date: new Date(end.getTime() - 3_600_000), endsAt: end })
+			.where(eq(events.id, id));
+		const { create, calls } = neverCalled();
+		await expect(ensureTeamsMeeting(id, CONFIG, create)).rejects.toMatchObject({ message: "EVENT_ENDED" });
+		expect(calls()).toBe(0);
 	});
 
 	it("refuses an on-site event and an unknown one", async () => {

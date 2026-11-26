@@ -2,6 +2,7 @@ import { removeLocalEventImage } from "@repo/api/event-images/store";
 import { deleteObject, storageConfig } from "@repo/api/storage/s3";
 import {
 	forgetStoredFileDeletions,
+	STORED_FILE_GRACE_MS,
 	takeStoredFileDeletions,
 } from "@repo/db/queries/event-files";
 
@@ -30,7 +31,10 @@ const defaultDeps = (): DeleteStoredFilesDeps => ({
 	forget: forgetStoredFileDeletions,
 });
 
-/** Deletes the objects of removed files; a failed delete stays queued for the next run. */
+/**
+ * Deletes the objects of removed files; a failed delete stays queued for the next run.
+ * Keys younger than the grace period are left alone: they may be uploads in progress.
+ */
 export async function deleteStoredFiles(
 	deps: DeleteStoredFilesDeps = defaultDeps(),
 ): Promise<{ deleted: number; failed: number }> {
@@ -38,7 +42,10 @@ export async function deleteStoredFiles(
 	const remove = config
 		? (key: string) => deps.remove(config, key)
 		: deps.removeLocal;
-	const keys = await deps.take(BATCH);
+	const keys = await deps.take(
+		BATCH,
+		new Date(Date.now() - STORED_FILE_GRACE_MS),
+	);
 	const deleted: string[] = [];
 	for (let start = 0; start < keys.length; start += PARALLEL) {
 		const chunk = keys.slice(start, start + PARALLEL);

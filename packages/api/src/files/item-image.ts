@@ -5,7 +5,10 @@ import {
 	setAgendaItemImage,
 } from "@repo/db/queries/agenda-items";
 import { DomainError } from "@repo/db/queries/domain-errors";
-import { recordStoredFileDeletion } from "@repo/db/queries/event-files";
+import {
+	forgetStoredFileDeletions,
+	recordStoredFileDeletion,
+} from "@repo/db/queries/event-files";
 import {
 	deleteObject,
 	presignDownload,
@@ -32,7 +35,8 @@ const defaultDeps = (): ItemImageDeps => ({
 
 /**
  * Stores the image and sets it on the item; the previous one is queued for deletion
- * (trigger). Refuses other types and images over 5 MB before storing anything.
+ * (trigger). Refuses other types and images over 5 MB before storing anything. The
+ * key is recorded for deletion before the upload and forgotten when the image is set.
  */
 export async function storeAgendaItemImage(
 	input: { itemId: string; file: File; alt: string },
@@ -53,10 +57,16 @@ export async function storeAgendaItemImage(
 		throw new DomainError("ITEM_NOT_FOUND");
 	}
 	const key = `events/${item.eventId}/items/${input.itemId}-${randomUUID()}`;
-	await deps.put(deps.config, key, await input.file.arrayBuffer(), contentType);
+	const bytes = await input.file.arrayBuffer();
+	await recordStoredFileDeletion(key);
+	await deps.put(deps.config, key, bytes, contentType);
 	const config = deps.config;
+	// When the delete fails, the recorded key stays for the worker.
 	const removeStored = () =>
-		deps.remove(config, key).catch(() => recordStoredFileDeletion(key));
+		deps.remove(config, key).then(
+			() => forgetStoredFileDeletions([key]),
+			() => {},
+		);
 	let set: boolean;
 	try {
 		set = await setAgendaItemImage(input.itemId, { key, alt: input.alt });
