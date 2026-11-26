@@ -1,5 +1,5 @@
+import { regenerateEventImageServer } from "@repo/api/admin/event-image";
 import type { AdminEventDetails } from "@repo/api/admin/queries";
-import { regenerateEventImageServer } from "@repo/api/event-images/regenerate";
 import {
 	admin_error_generic,
 	admin_event_image_failed,

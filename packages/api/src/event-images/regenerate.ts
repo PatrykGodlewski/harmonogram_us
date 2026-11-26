@@ -1,13 +1,14 @@
-/** A new cover image on an organizer's request (a fresh seed, same text). */
+/**
+ * Server-only: a new cover image on an organizer's request (a fresh seed, same text).
+ * The panel calls it through `admin/event-image.ts`.
+ */
 import { db } from "@repo/db/client";
 import {
 	getEventImageSource,
 	markImagePending,
 } from "@repo/db/queries/event-images";
 import { enqueueEventImage } from "@repo/jobs/client";
-import { eventIdActionSchema } from "../admin/schemas";
 import { assertCanManageEvent } from "../auth/event-access";
-import { panelActionFn } from "../auth/panel-middleware";
 import type { AuthenticatedUser } from "../auth/user";
 import { appError } from "../errors";
 import { consumeRateLimit, type RateLimit } from "../security/rate-limit";
@@ -46,10 +47,3 @@ export async function regenerateEventImage(
 		await enqueue({ eventId, force: true }, { tx });
 	});
 }
-
-export const regenerateEventImageServer = panelActionFn
-	.validator((input: unknown) => eventIdActionSchema.parse(input))
-	.handler(async ({ data, context }) => {
-		await assertCanManageEvent(context.user, data.id);
-		await regenerateEventImage(context.user, data.id);
-	});
