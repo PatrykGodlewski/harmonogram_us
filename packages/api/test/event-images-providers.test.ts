@@ -34,6 +34,14 @@ const falResult = () =>
 		seed: 7,
 	});
 const bytes = () => new Response(PNG, { headers: { "content-type": "image/png" } });
+const cfResult = (image: Uint8Array = PNG) =>
+	Response.json({
+		result: { image: Buffer.from(image).toString("base64") },
+		success: true,
+		errors: [],
+		messages: [],
+	});
+const LIMIT = 10 * 1024 * 1024;
 
 describe("fal", () => {
 	it("posts the prompt with key auth, size object and seed, then downloads images[0].url", async () => {
@@ -75,14 +83,52 @@ describe("fal", () => {
 		expect(seed).toBeGreaterThanOrEqual(0);
 		expect(seed).toBeLessThanOrEqual(2_147_483_647);
 	});
+
+	it("refuses a non-https download URL without requesting it", async () => {
+		const fetch = vi.fn<ProviderDeps["fetch"]>(async (url) =>
+			String(url) === FAL_URL
+				? Response.json({ images: [{ url: "http://cdn.fal.media/x.png" }] })
+				: bytes(),
+		);
+		await expect(
+			generateImage("p", { seed: 1, ...SIZE }, deps(FAL, fetch)),
+		).rejects.toThrow("https");
+		expect(fetch).toHaveBeenCalledTimes(1);
+	});
+
+	it("refuses a download whose content-length is over the limit", async () => {
+		const fetch = vi.fn<ProviderDeps["fetch"]>(async (url) =>
+			String(url) === FAL_URL
+				? falResult()
+				: new Response(PNG, { headers: { "content-length": String(LIMIT + 1) } }),
+		);
+		await expect(
+			generateImage("p", { seed: 1, ...SIZE }, deps(FAL, fetch)),
+		).rejects.toThrow("too large");
+	});
+
+	it("stops reading a download that grows past the limit", async () => {
+		const chunk = new Uint8Array(1024 * 1024);
+		let sent = 0;
+		const stream = new ReadableStream<Uint8Array>({
+			pull(controller) {
+				sent++;
+				controller.enqueue(sent === 1 ? new Uint8Array([...PNG, ...chunk]) : chunk);
+			},
+		});
+		const fetch = vi.fn<ProviderDeps["fetch"]>(async (url) =>
+			String(url) === FAL_URL ? falResult() : new Response(stream),
+		);
+		await expect(
+			generateImage("p", { seed: 1, ...SIZE }, deps(FAL, fetch)),
+		).rejects.toThrow("too large");
+		expect(sent).toBeLessThan(20);
+	});
 });
 
 describe("cloudflare", () => {
-	it("posts prompt, size and seed with bearer auth; the body is the image", async () => {
-		const fetch = vi.fn<ProviderDeps["fetch"]>(
-			async () =>
-				new Response(PNG, { headers: { "content-type": "application/octet-stream" } }),
-		);
+	it("posts prompt, size and seed with bearer auth; decodes result.image", async () => {
+		const fetch = vi.fn<ProviderDeps["fetch"]>(async () => cfResult());
 		const image = await generateImage(
 			"a scene",
 			{ seed: 9, ...SIZE },
@@ -107,7 +153,7 @@ describe("cloudflare", () => {
 		const fetch = vi
 			.fn<ProviderDeps["fetch"]>()
 			.mockResolvedValueOnce(new Response("busy", { status: 503 }))
-			.mockResolvedValueOnce(new Response(PNG));
+			.mockResolvedValueOnce(cfResult());
 		const image = await generateImage("p", { seed: 1, ...SIZE }, deps(CLOUDFLARE, fetch));
 		expect(fetch).toHaveBeenCalledTimes(2);
 		expect(new Uint8Array(image.bytes)).toEqual(PNG);
@@ -154,9 +200,31 @@ describe("cloudflare", () => {
 		expect(Date.now() - started).toBeLessThan(1000);
 	});
 
-	it("rejects a reply that is not an image", async () => {
+	it("rejects a JSON reply without result.image", async () => {
 		const fetch = vi.fn<ProviderDeps["fetch"]>(async () =>
-			Response.json({ errors: [] }),
+			Response.json({ result: {}, success: true, errors: [], messages: [] }),
+		);
+		await expect(
+			generateImage("p", { seed: 1, ...SIZE }, deps(CLOUDFLARE, fetch)),
+		).rejects.toThrow("Image provider returned no image");
+	});
+
+	it("rejects a reply that is not JSON without echoing it", async () => {
+		const fetch = vi.fn<ProviderDeps["fetch"]>(
+			async () => new Response("secret page"),
+		);
+		const error = await generateImage(
+			"p",
+			{ seed: 1, ...SIZE },
+			deps(CLOUDFLARE, fetch),
+		).catch((caught: Error) => caught);
+		expect(String(error)).toContain("not JSON");
+		expect(String(error)).not.toContain("secret");
+	});
+
+	it("rejects a decoded image that is not an image", async () => {
+		const fetch = vi.fn<ProviderDeps["fetch"]>(async () =>
+			cfResult(new TextEncoder().encode("<html>")),
 		);
 		await expect(
 			generateImage("p", { seed: 1, ...SIZE }, deps(CLOUDFLARE, fetch)),

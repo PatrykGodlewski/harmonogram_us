@@ -11,10 +11,12 @@ function deps(fetch: PromptDeps["fetch"]): PromptDeps {
 	return { fetch, apiKey: "sk-test", model: "claude-test", styleSuffix: STYLE };
 }
 
-const reply = (text: string) =>
-	new Response(JSON.stringify({ content: [{ type: "text", text }] }), {
+const reply = (text: string) => blocks([{ type: "text", text }]);
+const blocks = (content: unknown[]) =>
+	new Response(JSON.stringify({ content }), {
 		headers: { "content-type": "application/json" },
 	});
+const THINKING = { type: "thinking", thinking: "", signature: "sig" };
 
 describe("buildImagePrompt", () => {
 	it("asks the Messages API and appends the style suffix to its scene", async () => {
@@ -35,14 +37,27 @@ describe("buildImagePrompt", () => {
 			"content-type": "application/json",
 		});
 		const body = JSON.parse(String(init.body));
-		expect(body).toMatchObject({ model: "claude-test", max_tokens: 150 });
+		expect(body).toMatchObject({
+			model: "claude-test",
+			max_tokens: 150,
+			thinking: { type: "disabled" },
+		});
 		expect(body.system).toEqual(expect.any(String));
 		expect(body.messages).toEqual([
 			{ role: "user", content: "Jazz night\n\nLive quartet" },
 		]);
 	});
 
+	it("takes the scene from the first text block after a thinking block", async () => {
+		const fetch = vi.fn(async () =>
+			blocks([THINKING, { type: "text", text: "A rooftop at dusk." }]),
+		);
+		const prompt = await buildImagePrompt("Party", null, deps(fetch));
+		expect(prompt).toBe(`A rooftop at dusk, ${STYLE}`);
+	});
+
 	it.each([
+		["a reply with only a thinking block", async () => blocks([THINKING])],
 		["an HTTP error", async () => new Response("overloaded", { status: 529 })],
 		["a network error", async () => Promise.reject(new TypeError("fetch failed"))],
 		["an empty reply", async () => reply("  ")],

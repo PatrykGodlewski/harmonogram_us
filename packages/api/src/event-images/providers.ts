@@ -24,6 +24,7 @@ export type ProviderDeps = {
 
 const FAL_URL = "https://fal.run/fal-ai/flux/schnell";
 const CLOUDFLARE_MODEL = "@cf/black-forest-labs/flux-1-schnell";
+const MAX_REPLY_BYTES = 10 * 1024 * 1024;
 
 /** The provider `IMAGE_PROVIDER` names, or null when its keys are missing. */
 export function imageProvider(): ImageProvider | null {
@@ -75,12 +76,15 @@ export async function generateImage(
 				output_format: "png",
 			}),
 		});
-		const body = (await result.json()) as { images?: { url?: string }[] };
+		const body = (await readJson(result)) as { images?: { url?: string }[] };
 		const url = body.images?.[0]?.url;
 		if (!url) {
 			throw new Error("Image provider returned no image URL");
 		}
-		return asImage(await (await request(deps, url, {})).arrayBuffer());
+		if (new URL(url).protocol !== "https:") {
+			throw new Error("Image provider download URL is not https");
+		}
+		return asImage(await readBody(await request(deps, url, {})));
 	}
 	const response = await request(
 		deps,
@@ -99,7 +103,50 @@ export async function generateImage(
 			}),
 		},
 	);
-	return asImage(await response.arrayBuffer());
+	const body = (await readJson(response)) as { result?: { image?: string } };
+	const image = body.result?.image;
+	if (!image) {
+		throw new Error("Image provider returned no image");
+	}
+	return asImage(new Uint8Array(Buffer.from(image, "base64")).buffer);
+}
+
+/** The reply body, refused past MAX_REPLY_BYTES (announced or counted while reading). */
+async function readBody(response: Response): Promise<ArrayBuffer> {
+	const tooLarge = () => new Error("Image provider reply is too large");
+	if (Number(response.headers.get("content-length")) > MAX_REPLY_BYTES) {
+		await response.body?.cancel();
+		throw tooLarge();
+	}
+	const chunks: Uint8Array[] = [];
+	let size = 0;
+	const reader = response.body?.getReader();
+	while (reader) {
+		const { done, value } = await reader.read();
+		if (done) break;
+		size += value.byteLength;
+		if (size > MAX_REPLY_BYTES) {
+			await reader.cancel();
+			throw tooLarge();
+		}
+		chunks.push(value);
+	}
+	const bytes = new Uint8Array(size);
+	let offset = 0;
+	for (const chunk of chunks) {
+		bytes.set(chunk, offset);
+		offset += chunk.byteLength;
+	}
+	return bytes.buffer;
+}
+
+async function readJson(response: Response): Promise<unknown> {
+	const text = new TextDecoder().decode(await readBody(response));
+	try {
+		return JSON.parse(text);
+	} catch {
+		throw new Error("Image provider reply is not JSON");
+	}
 }
 
 /** One retry after a network error, a timeout or a 5xx; errors carry only the status. */

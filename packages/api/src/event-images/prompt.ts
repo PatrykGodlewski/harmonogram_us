@@ -90,6 +90,8 @@ async function describeScene(
 		body: JSON.stringify({
 			model: deps.model,
 			max_tokens: 150,
+			// Thinking tokens would count toward max_tokens.
+			thinking: { type: "disabled" },
 			system: SYSTEM_PROMPT,
 			messages: [
 				{
@@ -103,9 +105,12 @@ async function describeScene(
 	if (!response.ok) {
 		throw new Error(`Messages API HTTP ${response.status}`);
 	}
-	const body = (await response.json()) as { content?: { text?: string }[] };
+	const body = (await response.json()) as {
+		content?: { type?: string; text?: string }[];
+	};
+	const text = body.content?.find((block) => block.type === "text")?.text;
 	// The suffix follows a comma, so a closing full stop goes.
-	const scene = body.content?.[0]?.text?.trim().replace(/[.\s]+$/, "");
+	const scene = text?.trim().replace(/[.\s]+$/, "");
 	if (!scene) {
 		throw new Error("Messages API returned no text");
 	}
