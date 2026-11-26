@@ -1,8 +1,9 @@
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@repo/db/client";
 import { listEventFiles, takeStoredFileDeletions } from "@repo/db/queries/event-files";
 import { eventFiles } from "@repo/db/schema/event-files";
+import { events } from "@repo/db/schema/events";
 import { createEvent, createItem, rejectionCode, resetDb } from "../../db/test/helpers";
 import { type StoreFileDeps, storeEventFile } from "../src/files/store";
 import type { StorageConfig } from "../src/storage/s3";
@@ -20,11 +21,18 @@ beforeEach(async () => {
 	await db.execute(sql`TRUNCATE stored_file_deletions`);
 });
 
-function fakeStorage(opts: { failDelete?: boolean } = {}) {
+/** A cutoff after every key recorded so far. */
+const later = () => new Date(Date.now() + 60_000);
+const pendingKeys = () => takeStoredFileDeletions(10, later());
+
+function fakeStorage(opts: { failDelete?: boolean; onPut?: (key: string) => Promise<void> } = {}) {
 	const objects = new Map<string, { bytes: ArrayBuffer; type: string }>();
+	const puts: string[] = [];
 	const deps: StoreFileDeps = {
 		config: CONFIG,
 		put: async (_config, key, bytes, type) => {
+			puts.push(key);
+			await opts.onPut?.(key);
 			objects.set(key, { bytes, type });
 		},
 		remove: async (_config, key) => {
@@ -32,7 +40,7 @@ function fakeStorage(opts: { failDelete?: boolean } = {}) {
 			objects.delete(key);
 		},
 	};
-	return { objects, deps };
+	return { objects, puts, deps };
 }
 
 const pdf = (name = "Slajdy.pdf", bytes = 3) => new File([new Uint8Array(bytes)], name);
@@ -81,17 +89,47 @@ describe("storeEventFile", () => {
 		);
 	});
 
-	it("removes the object when the row cannot be added, or leaves its key for the clean-up", async () => {
+	it("records the key before storing and forgets it with the row", async () => {
+		const eventId = await createEvent();
+		const recordedAtPut: string[][] = [];
+		const { objects, deps } = fakeStorage({
+			onPut: async () => {
+				recordedAtPut.push(await pendingKeys());
+			},
+		});
+
+		await storeEventFile({ eventId, file: pdf() }, deps);
+
+		expect(recordedAtPut).toEqual([[...objects.keys()]]);
+		expect(await pendingKeys()).toEqual([]);
+	});
+
+	it("refuses another event's programme item before storing anything", async () => {
 		const eventId = await createEvent();
 		const foreignItem = await createItem(await createEvent());
-		const ok = fakeStorage();
-		expect(
-			await rejectionCode(storeEventFile({ eventId, agendaItemId: foreignItem, file: pdf() }, ok.deps)),
-		).toBe("ITEM_NOT_FOUND");
-		expect(ok.objects.size).toBe(0);
+		const { puts, deps } = fakeStorage();
 
-		const failing = fakeStorage({ failDelete: true });
-		await rejectionCode(storeEventFile({ eventId, agendaItemId: foreignItem, file: pdf() }, failing.deps));
-		expect(await takeStoredFileDeletions(10)).toEqual([...failing.objects.keys()]);
+		expect(
+			await rejectionCode(storeEventFile({ eventId, agendaItemId: foreignItem, file: pdf() }, deps)),
+		).toBe("ITEM_NOT_FOUND");
+		expect(puts).toEqual([]);
+		expect(await pendingKeys()).toEqual([]);
+	});
+
+	it("removes the object when the row cannot be added, or leaves its key for the clean-up", async () => {
+		// The event is deleted between the checks and the insert.
+		const deleteEvent = (eventId: string) => async () => {
+			await db.delete(events).where(eq(events.id, eventId));
+		};
+		const gone = await createEvent();
+		const ok = fakeStorage({ onPut: deleteEvent(gone) });
+		await expect(storeEventFile({ eventId: gone, file: pdf() }, ok.deps)).rejects.toThrow();
+		expect(ok.objects.size).toBe(0);
+		expect(await pendingKeys()).toEqual([]);
+
+		const goneToo = await createEvent();
+		const failing = fakeStorage({ failDelete: true, onPut: deleteEvent(goneToo) });
+		await expect(storeEventFile({ eventId: goneToo, file: pdf() }, failing.deps)).rejects.toThrow();
+		expect(await pendingKeys()).toEqual([...failing.objects.keys()]);
 	});
 });

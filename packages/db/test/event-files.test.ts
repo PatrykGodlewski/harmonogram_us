@@ -12,6 +12,7 @@ import {
 	listEventFiles,
 	recordStoredFileDeletion,
 	removeEventMaterialLink,
+	STORED_FILE_GRACE_MS,
 	takeStoredFileDeletions,
 } from "../src/queries/event-files";
 import { getEventById } from "../src/queries/events";
@@ -36,8 +37,11 @@ function file(eventId: string, name: string, agendaItemId?: string) {
 	});
 }
 
+/** A cutoff after every key recorded so far. */
+const later = () => new Date(Date.now() + 60_000);
+
 async function pendingKeys(): Promise<string[]> {
-	return (await takeStoredFileDeletions(100)).sort();
+	return (await takeStoredFileDeletions(100, later())).sort();
 }
 
 describe("event files", () => {
@@ -116,10 +120,32 @@ describe("stored file deletions", () => {
 		await recordStoredFileDeletion("events/x/1");
 		await recordStoredFileDeletion("events/x/2");
 
-		expect(await takeStoredFileDeletions(1)).toHaveLength(1);
+		expect(await takeStoredFileDeletions(1, later())).toHaveLength(1);
 		expect(await pendingKeys()).toEqual(["events/x/1", "events/x/2"]);
 		await forgetStoredFileDeletions(["events/x/1"]);
 		expect(await pendingKeys()).toEqual(["events/x/2"]);
+	});
+
+	it("adding the file forgets the key recorded before its upload", async () => {
+		const eventId = await createEvent();
+		await recordStoredFileDeletion(`events/${eventId}/a.pdf`);
+		await recordStoredFileDeletion("events/x/other");
+
+		await file(eventId, "a.pdf");
+
+		expect(await pendingKeys()).toEqual(["events/x/other"]);
+	});
+
+	it("takes only keys recorded before the cutoff (the grace period)", async () => {
+		expect(STORED_FILE_GRACE_MS).toBe(60 * 60 * 1000);
+		await recordStoredFileDeletion("events/x/old");
+		await recordStoredFileDeletion("events/x/young");
+		await db.execute(
+			sql`UPDATE stored_file_deletions SET created_at = now() - interval '2 hours' WHERE storage_key = 'events/x/old'`,
+		);
+
+		const cutoff = new Date(Date.now() - STORED_FILE_GRACE_MS);
+		expect(await takeStoredFileDeletions(10, cutoff)).toEqual(["events/x/old"]);
 	});
 });
 

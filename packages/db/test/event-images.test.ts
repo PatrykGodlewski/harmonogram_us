@@ -17,6 +17,9 @@ beforeEach(async () => {
 	await db.execute(sql`TRUNCATE stored_file_deletions`);
 });
 
+/** A cutoff after every key recorded so far. */
+const later = () => new Date(Date.now() + 60_000);
+
 function image(eventId: string, key: string, sourceHash: string) {
 	return setEventImage(eventId, {
 		key,
@@ -136,6 +139,13 @@ describe("event cover images", () => {
 		);
 	});
 
+	it("reports whether it saved the image (false once the event is gone)", async () => {
+		const eventId = await createEvent();
+		expect(await image(eventId, "event-images/c", "h1")).toBe(true);
+		await db.delete(events).where(eq(events.id, eventId));
+		expect(await image(eventId, "event-images/d", "h1")).toBe(false);
+	});
+
 	it("leaves a replaced or deleted image's key for the worker to delete", async () => {
 		const eventId = await createEvent();
 		await image(eventId, "event-images/a", "h1");
@@ -143,13 +153,13 @@ describe("event cover images", () => {
 			.update(events)
 			.set({ title: "Nowy tytuł" })
 			.where(eq(events.id, eventId));
-		expect(await takeStoredFileDeletions(10)).toEqual([]);
+		expect(await takeStoredFileDeletions(10, later())).toEqual([]);
 
 		await image(eventId, "event-images/b", "h1");
-		expect(await takeStoredFileDeletions(10)).toEqual(["event-images/a"]);
+		expect(await takeStoredFileDeletions(10, later())).toEqual(["event-images/a"]);
 
 		await db.delete(events).where(eq(events.id, eventId));
-		expect((await takeStoredFileDeletions(10)).sort()).toEqual([
+		expect((await takeStoredFileDeletions(10, later())).sort()).toEqual([
 			"event-images/a",
 			"event-images/b",
 		]);

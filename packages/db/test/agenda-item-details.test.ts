@@ -13,7 +13,10 @@ import {
 	createAgendaSession,
 } from "../src/queries/agenda-sessions";
 import { duplicateEvent } from "../src/queries/event-duplicate";
-import { takeStoredFileDeletions } from "../src/queries/event-files";
+import {
+	recordStoredFileDeletion,
+	takeStoredFileDeletions,
+} from "../src/queries/event-files";
 import { eventFaculties, eventTypes } from "../src/schema/event-lookups";
 import { events } from "../src/schema/events";
 import { createEvent, createUser, hoursFromNow, resetDb } from "./helpers";
@@ -22,6 +25,9 @@ beforeEach(async () => {
 	await resetDb();
 	await db.execute(sql`TRUNCATE stored_file_deletions`);
 });
+
+/** A cutoff after every key recorded so far. */
+const later = () => new Date(Date.now() + 60_000);
 
 const details = {
 	typeId: "lecture",
@@ -103,16 +109,35 @@ describe("programme item details", () => {
 		expect(withImage).toMatchObject({ hasImage: true, imageAlt: "Fortepian" });
 		// Editing other fields keeps the image.
 		await updateAgendaItem(item.id, { title: "Nowy tytuł" });
-		expect(await takeStoredFileDeletions(10)).toEqual([]);
+		expect(await takeStoredFileDeletions(10, later())).toEqual([]);
 
 		await setAgendaItemImage(item.id, { key: "items/b", alt: "Scena" });
-		expect(await takeStoredFileDeletions(10)).toEqual(["items/a"]);
+		expect(await takeStoredFileDeletions(10, later())).toEqual(["items/a"]);
 		await setAgendaItemImage(item.id, null);
-		expect(await takeStoredFileDeletions(10)).toEqual(["items/a", "items/b"]);
+		expect(await takeStoredFileDeletions(10, later())).toEqual(["items/a", "items/b"]);
 
 		await setAgendaItemImage(item.id, { key: "items/c", alt: "Sala" });
 		await deleteAgendaItem(item.id);
-		expect(await takeStoredFileDeletions(10)).toContain("items/c");
+		expect(await takeStoredFileDeletions(10, later())).toContain("items/c");
+	});
+
+	it("setting an image forgets the key recorded before its upload", async () => {
+		const eventId = await createEvent();
+		const item = await createAgendaItem({
+			eventId,
+			title: "Z obrazem",
+			startsAt: hoursFromNow(24),
+			endsAt: hoursFromNow(25),
+		});
+		await recordStoredFileDeletion("items/f");
+		await recordStoredFileDeletion("items/g");
+
+		expect(await setAgendaItemImage(item.id, { key: "items/f", alt: "Sala" })).toBe(true);
+		expect(await takeStoredFileDeletions(10, later())).toEqual(["items/g"]);
+
+		// A missing item keeps the record: its object is deleted later.
+		expect(await setAgendaItemImage("missing", { key: "items/g", alt: "Sala" })).toBe(false);
+		expect(await takeStoredFileDeletions(10, later())).toEqual(["items/g"]);
 	});
 
 	it("deleting the event queues its items' images", async () => {
@@ -125,7 +150,7 @@ describe("programme item details", () => {
 		});
 		await setAgendaItemImage(item.id, { key: "items/d", alt: "Sala" });
 		await db.delete(events).where(eq(events.id, eventId));
-		expect(await takeStoredFileDeletions(10)).toEqual(["items/d"]);
+		expect(await takeStoredFileDeletions(10, later())).toEqual(["items/d"]);
 	});
 
 	it("duplicating an event or copying a session keeps the details, not the image", async () => {

@@ -62,13 +62,13 @@ export async function markImagePending(
 /**
  * Saves a generated image. It becomes `ready` only if no newer source was requested
  * meanwhile; otherwise the status stays as it is (`pending`), and nothing is served
- * until the newer image is saved.
+ * until the newer image is saved. False when the event is gone (nothing saved).
  */
 export async function setEventImage(
 	eventId: string,
 	image: GeneratedEventImage,
-): Promise<void> {
-	await db
+): Promise<boolean> {
+	const updated = await db
 		.update(events)
 		.set({
 			imageKey: image.key,
@@ -77,7 +77,9 @@ export async function setEventImage(
 			imageSeed: image.seed,
 			imageStatus: sql`case when ${events.imageSourceHash} is not distinct from ${image.sourceHash} then 'ready' else ${events.imageStatus} end`,
 		})
-		.where(eq(events.id, eventId));
+		.where(eq(events.id, eventId))
+		.returning({ id: events.id });
+	return updated.length > 0;
 }
 
 /** Marks the request for `sourceHash` failed; a newer request stays pending. */

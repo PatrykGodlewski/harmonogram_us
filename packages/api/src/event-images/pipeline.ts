@@ -1,5 +1,6 @@
 /** Server-only (worker): prompt → image → storage → event row. */
 import { db } from "@repo/db/client";
+import { recordStoredFileDeletion } from "@repo/db/queries/event-files";
 import {
 	failEventImage,
 	getEventImageSource,
@@ -43,6 +44,8 @@ const SIZE = { width: 1024, height: 576 };
 /**
  * Generates the image from the event's current text (a queued job may predate an edit).
  * A provider, storage or save failure marks the event failed; the placeholder stays.
+ * A stored image that is not saved (the save failed, the event is gone) is recorded
+ * for deletion.
  */
 export async function generateEventImage(
 	job: EventImageJob,
@@ -60,10 +63,12 @@ export async function generateEventImage(
 	await markImagePending(db, job.eventId, hash);
 	const prompt = await deps.prompt(source.title, source.description);
 	const seed = deps.seed();
+	let key: string | undefined;
+	let saved: boolean;
 	try {
 		const image = await deps.generate(prompt, { seed, ...SIZE });
-		const key = await deps.store(job.eventId, image);
-		await deps.save(job.eventId, {
+		key = await deps.store(job.eventId, image);
+		saved = await deps.save(job.eventId, {
 			key,
 			url: `/api/event-images/${job.eventId}`,
 			prompt,
@@ -73,7 +78,15 @@ export async function generateEventImage(
 	} catch (error) {
 		console.error(`[event-images] event ${job.eventId} failed:`, error);
 		await failEventImage(job.eventId, hash);
+		if (key) {
+			await recordStoredFileDeletion(key);
+		}
 		return "failed";
+	}
+	if (!saved) {
+		// Deleted meanwhile.
+		await recordStoredFileDeletion(key);
+		return "skipped";
 	}
 	return "ready";
 }

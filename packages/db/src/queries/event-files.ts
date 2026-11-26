@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, lt, sql } from "drizzle-orm";
 import { db } from "../client";
 import { type AgendaMaterial, agendaItems } from "../schema/agenda";
 import { eventFiles, storedFileDeletions } from "../schema/event-files";
@@ -47,6 +47,7 @@ const fileColumns = {
 /**
  * EVENT_FILES_LIMIT when the event is full, ITEM_NOT_FOUND for a programme item
  * of another event. The event row is locked so two uploads cannot both pass the limit.
+ * Forgets the storage key recorded before the upload (`recordStoredFileDeletion`).
  */
 export async function addEventFile(input: EventFileInput): Promise<EventFile> {
 	return db.transaction(async (tx) => {
@@ -81,6 +82,9 @@ export async function addEventFile(input: EventFileInput): Promise<EventFile> {
 		if (!file) {
 			throw new Error("event file insert failed");
 		}
+		await tx
+			.delete(storedFileDeletions)
+			.where(eq(storedFileDeletions.storageKey, input.storageKey));
 		return file;
 	});
 }
@@ -176,7 +180,14 @@ export async function removeEventMaterialLink(
 	return updated.length > 0;
 }
 
-/** For an object stored without a row (its insert failed). */
+/**
+ * How long a recorded key waits before its object is deleted. Uploads record
+ * their key before storing and forget it with the row, so an upload in
+ * progress is never deleted under it.
+ */
+export const STORED_FILE_GRACE_MS = 60 * 60 * 1000;
+
+/** Before an upload (forgotten with its row), or for an object stored without a row. */
 export async function recordStoredFileDeletion(key: string): Promise<void> {
 	await db
 		.insert(storedFileDeletions)
@@ -184,13 +195,15 @@ export async function recordStoredFileDeletion(key: string): Promise<void> {
 		.onConflictDoNothing();
 }
 
-/** Keys waiting for their objects to be deleted, oldest first. */
+/** Keys recorded before `before` whose objects wait to be deleted, oldest first. */
 export async function takeStoredFileDeletions(
 	limit: number,
+	before: Date,
 ): Promise<string[]> {
 	const rows = await db
 		.select({ key: storedFileDeletions.storageKey })
 		.from(storedFileDeletions)
+		.where(lt(storedFileDeletions.createdAt, before))
 		.orderBy(asc(storedFileDeletions.createdAt))
 		.limit(limit);
 	return rows.map((row) => row.key);
