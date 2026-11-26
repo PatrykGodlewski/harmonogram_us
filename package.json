@@ -47,7 +47,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.8",
-    "taze": "^19.17.2",
+    "taze": "^21.3.0",
     "turbo": "^2.11.13"
   },
   "packageManager": "pnpm@10.33.2",
