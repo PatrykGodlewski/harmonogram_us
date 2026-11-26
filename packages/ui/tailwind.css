@@ -190,15 +190,18 @@ html[data-navigated] :is(.animate-pixel-reveal, .animate-checker-reveal, .stagge
 	animation: none;
 }
 
-/* Idle animation: pixels flip on and off slowly, in steps. */
+/* Idle animation: pixels flip on and off slowly, in steps. It animates
+   visibility, not opacity: an opacity animation puts each square on its own
+   compositing layer, and at fractional display scaling (1.25x, 1.5x) the layer
+   edges show as thin lines between squares. */
 @keyframes pixel-flip {
 	0%,
 	70% {
-		opacity: 1;
+		visibility: visible;
 	}
 	71%,
 	100% {
-		opacity: 0;
+		visibility: hidden;
 	}
 }
 .animate-pixel-flip {
