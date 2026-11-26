@@ -1,7 +1,15 @@
 import { randomBytes } from "node:crypto";
 import { expect, type Page, test } from "@playwright/test";
+import { db } from "@repo/db/client";
+import { events } from "@repo/db/schema/events";
+import { eq } from "drizzle-orm";
 import { adminUrl, signInAsAdmin, signInByEmail } from "../fixtures/auth";
-import { createTestEvent, createTestUser, uniqueEmail } from "../fixtures/data";
+import {
+	createTestEvent,
+	createTestLocation,
+	createTestUser,
+	uniqueEmail,
+} from "../fixtures/data";
 import { open } from "../fixtures/navigation";
 
 test("[F8] nowy wygląd: pasek skrótów zatrzymuje się i filtruje listę @uczestnik", async ({
@@ -298,4 +306,58 @@ test("[F8] nowy wygląd: karta przechodzi płynnie w stronę wydarzenia @uczestn
 		}
 		await context.close();
 	}
+});
+
+test("[F8] nowy wygląd: fakty wydarzenia w trzech komórkach @uczestnik", async ({
+	page,
+}) => {
+	const locationId = await createTestLocation("Aula Kopernika");
+	const onsite = await createTestEvent({ maxSeats: 7 });
+	await db
+		.update(events)
+		.set({ locationId, room: "B-204" })
+		.where(eq(events.id, onsite.id));
+	const online = await createTestEvent({
+		attendanceMode: "online",
+		onlineUrl: "https://example.com/spotkanie",
+	});
+	const hybrid = await createTestEvent({ attendanceMode: "hybrid" });
+	await db.update(events).set({ room: "C-1" }).where(eq(events.id, hybrid.id));
+
+	// A description list under the cover: date, place, seats, one cell each.
+	const fact = (term: string) =>
+		page.locator(`dl > div:has(> dt:text-is('${term}')) > dd`);
+
+	await open(page, `/pl/events/${onsite.id}`);
+	const summary = page.locator("section").first();
+	await expect(page.locator("dl > div")).toHaveCount(3);
+	await expect(fact("Termin")).toHaveText(/\d{4}.*\d{2}:\d{2}/);
+	await expect(fact("Miejsce")).toContainText("Aula Kopernika");
+	await expect(fact("Miejsce")).toContainText("sala B-204");
+	await expect(fact("Miejsca")).toHaveText("Wolne miejsca: 7 / 7");
+	// Cells are divided by 1 px navy lines: above the second and third on a phone, beside them
+	// on a desktop.
+	const dividers = await page.locator("dl > div").evaluateAll((elements) =>
+		elements.slice(1).map((element) => {
+			const style = getComputedStyle(element);
+			return [style.borderTop, style.borderLeft];
+		}),
+	);
+	for (const [top, left] of dividers) {
+		expect(
+			[top, left].some((edge) => edge === "1px solid rgb(21, 42, 50)"),
+		).toBe(true);
+	}
+	// The count has a ticker and is the page's one live region for it, in the seats cell.
+	await expect(fact("Miejsca").locator("[data-slot=number-ticker]")).toHaveText(
+		"7",
+	);
+	await expect(summary.locator("[aria-live]")).toHaveCount(1);
+	await expect(fact("Miejsca")).toHaveAttribute("aria-live", "polite");
+
+	await open(page, `/pl/events/${online.id}`);
+	await expect(fact("Miejsce")).toHaveText("Online");
+
+	await open(page, `/pl/events/${hybrid.id}`);
+	await expect(fact("Miejsce")).toHaveText("sala C-1, Online");
 });

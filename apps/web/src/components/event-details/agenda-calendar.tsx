@@ -17,6 +17,7 @@ import { sessionColorClasses } from "@repo/ui/session-colors";
 import { formatEventTime } from "@repo/ui/time";
 import { cn } from "@repo/ui/utils";
 import * as React from "react";
+import { SeatsSentence } from "~/components/seats-sentence";
 import { isItemFull } from "~/lib/event-details/item-seats";
 import type {
 	AgendaItemData,
@@ -118,12 +119,15 @@ export function AgendaCalendar({
 							) : null}
 							{item.requiresRegistration && seatCount.maxSeats !== null ? (
 								<span className="tabular-nums">
-									{isItemFull(seatCount)
-										? event_details_full()
-										: event_details_places_left({
-												remaining: seatCount.seatsRemaining ?? 0,
-												max: seatCount.maxSeats,
-											})}
+									{isItemFull(seatCount) ? (
+										event_details_full()
+									) : (
+										<SeatsSentence
+											message={event_details_places_left}
+											remaining={seatCount.seatsRemaining ?? 0}
+											max={seatCount.maxSeats}
+										/>
+									)}
 								</span>
 							) : null}
 						</>

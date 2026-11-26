@@ -21,7 +21,9 @@ import {
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { findOverlaps } from "@repo/ui/agenda";
 import { Checkerboard } from "@repo/ui/composed/brand/checkerboard";
+import { NumberTicker } from "@repo/ui/composed/brand/number-ticker";
 import { PixelHeading } from "@repo/ui/composed/brand/pixel-heading";
+import { SectionCard } from "@repo/ui/composed/brand/section-card";
 import { languageName } from "@repo/ui/languages";
 import { formatEventDayLong, formatEventTime } from "@repo/ui/time";
 import { useSearch } from "@tanstack/react-router";
@@ -216,7 +218,7 @@ function ItemSeats({
 				aria-live="polite"
 				aria-atomic="true"
 			>
-				{Math.max(remaining, 0)} / {max}
+				<NumberTicker value={Math.max(remaining, 0)} /> / {max}
 				{remaining <= 0 ? ` · ${event_details_full()}` : ""}
 			</span>
 			<span className="font-mono text-xs text-muted-foreground">
@@ -229,17 +231,10 @@ function ItemSeats({
 }
 
 function Panel({ title, children }: { title: string; children: ReactNode }) {
-	const headingId = useId();
 	return (
-		<section
-			aria-labelledby={headingId}
-			className="flex flex-col gap-3 border border-navy bg-white p-4 sm:p-6"
-		>
-			<h2 id={headingId} className="text-xl">
-				{title}
-			</h2>
-			{children}
-		</section>
+		<SectionCard heading={title} level={2}>
+			<div className="flex flex-col gap-3 p-4 sm:p-6">{children}</div>
+		</SectionCard>
 	);
 }
 

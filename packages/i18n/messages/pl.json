@@ -155,6 +155,7 @@
 	"event_details_back": "Wszystkie wydarzenia",
 	"event_details_details": "Szczegóły",
 	"event_details_places_left": "Wolne miejsca: {remaining} / {max}",
+	"event_details_seats": "Miejsca",
 	"event_details_registered_count": "Zapisanych: {count}",
 	"event_details_closed": "Zapisy zamknięte",
 	"events_item_full": "Brak wolnych miejsc na ten punkt programu.",

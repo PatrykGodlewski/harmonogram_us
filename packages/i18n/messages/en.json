@@ -155,6 +155,7 @@
 	"event_details_back": "All events",
 	"event_details_details": "Details",
 	"event_details_places_left": "{remaining} / {max} places left",
+	"event_details_seats": "Seats",
 	"event_details_registered_count": "{count} registered",
 	"event_details_closed": "Registration closed",
 	"events_item_full": "This session is full.",

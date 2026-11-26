@@ -12,6 +12,7 @@ import { Link } from "@tanstack/react-router";
 import { type CSSProperties, useState, useSyncExternalStore } from "react";
 import { EventCover } from "~/components/event-cover";
 import { EventRegistrationButton } from "~/components/event-registration-button";
+import { SeatsSentence } from "~/components/seats-sentence";
 import { formatEventDateForLocale } from "~/lib/events/format-event-date";
 import type { HomeEventListEvent } from "~/lib/events/types";
 import type { EventRegistrationActions } from "~/lib/registration/use-event-list-registrations";
@@ -171,10 +172,11 @@ export function HomeEventCard({
 				</div>
 				<div className="flex flex-wrap items-center justify-between gap-3 border-t border-navy px-4 py-3">
 					<p className="font-mono text-sm tabular-nums">
-						{events_seats_remaining({
-							remaining: seatsRemaining,
-							max: maxSeats,
-						})}
+						<SeatsSentence
+							message={events_seats_remaining}
+							remaining={seatsRemaining}
+							max={maxSeats}
+						/>
 					</p>
 					{isCancelled ? null : (
 						<EventRegistrationButton

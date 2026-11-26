@@ -16,6 +16,7 @@ import { Button } from "@repo/ui/components/button";
 import { formatEventTime } from "@repo/ui/time";
 import { cn } from "@repo/ui/utils";
 import { Link, useSearch } from "@tanstack/react-router";
+import { SeatsSentence } from "~/components/seats-sentence";
 import { isItemFull } from "~/lib/event-details/item-seats";
 import type {
 	AgendaItemData,
@@ -111,12 +112,15 @@ export function AgendaItemRow({
 						aria-live="polite"
 						aria-atomic="true"
 					>
-						{isFull
-							? event_details_full()
-							: event_details_places_left({
-									remaining: seatCount.seatsRemaining ?? 0,
-									max: seatCount.maxSeats,
-								})}
+						{isFull ? (
+							event_details_full()
+						) : (
+							<SeatsSentence
+								message={event_details_places_left}
+								remaining={seatCount.seatsRemaining ?? 0}
+								max={seatCount.maxSeats}
+							/>
+						)}
 					</p>
 				) : null}
 				{overlapsWith?.length ? (

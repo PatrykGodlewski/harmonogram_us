@@ -1,10 +1,14 @@
 import {
+	agenda_item_place,
+	agenda_item_when,
+	attendance_mode_online,
 	calendar_add,
 	event_cancelled_banner,
 	event_details_closed,
 	event_details_ended,
 	event_details_places_left,
 	event_details_requires_approval,
+	event_details_seats,
 	event_join_online,
 	event_room,
 	events_join_waitlist,
@@ -24,13 +28,15 @@ import {
 import { getLocale } from "@repo/i18n/paraglide/runtime";
 import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
+import { Eyebrow } from "@repo/ui/composed/brand/eyebrow";
 import { PixelHeading } from "@repo/ui/composed/brand/pixel-heading";
 import { AttendanceModeBadge } from "@repo/ui/composed/events/attendance-mode-badge";
 import { RegistrationAnswersDialog } from "@repo/ui/composed/registration-answers-dialog";
 import { formatEventDateTime } from "@repo/ui/time";
 import { Link, useSearch } from "@tanstack/react-router";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { EventCover } from "~/components/event-cover";
+import { SeatsSentence } from "~/components/seats-sentence";
 import type {
 	EventDetailsData,
 	EventDetailsRegistrations,
@@ -64,6 +70,7 @@ export function EventSummary({
 		strict: false,
 		select: (search) => search.invite,
 	});
+	const isRegistered = user !== null && registrations.isEventRegistered;
 
 	return (
 		<section className="flex flex-col gap-4">
@@ -76,11 +83,11 @@ export function EventSummary({
 				</div>
 			) : null}
 			<header className="border border-navy bg-green">
-				<div className="flex items-center justify-between gap-3 border-b border-navy px-3 py-1.5 font-mono text-[11px] font-bold tracking-widest uppercase">
-					<span className="truncate">{event.typeLabel}</span>
+				<div className="flex items-center justify-between gap-3 border-b border-navy px-3 py-1.5">
+					<Eyebrow className="truncate text-[11px]">{event.typeLabel}</Eyebrow>
 					<AttendanceModeBadge mode={event.attendanceMode} />
 				</div>
-				<div className="flex flex-col gap-3 p-5 sm:p-8">
+				<div className="flex flex-col items-start gap-3 p-5 sm:p-8">
 					<PixelHeading
 						level={1}
 						className="text-[clamp(1.75rem,6vw,3rem)] leading-tight break-words"
@@ -88,30 +95,36 @@ export function EventSummary({
 					>
 						{event.title}
 					</PixelHeading>
-					<p className="font-mono text-sm sm:text-base">
-						{formatEventDateTime(event.date, locale)}
-					</p>
+					{event.facultyLabel ? (
+						<Badge variant="outline">{event.facultyLabel}</Badge>
+					) : null}
 				</div>
 				<EventCover
 					event={event}
 					invite={invite}
 					className="border-t border-navy"
 				/>
-				{event.facultyLabel || event.locationLabel || event.room ? (
-					<div className="flex flex-wrap gap-2 border-t border-navy bg-manela px-5 py-3 sm:px-8">
-						{event.locationLabel ? (
-							<Badge variant="outline">{event.locationLabel}</Badge>
-						) : null}
-						{event.room ? (
-							<Badge variant="outline">
-								{event_room({ room: event.room })}
-							</Badge>
-						) : null}
-						{event.facultyLabel ? (
-							<Badge variant="outline">{event.facultyLabel}</Badge>
-						) : null}
-					</div>
-				) : null}
+				<dl className="grid border-t border-navy bg-white sm:grid-cols-3">
+					<Fact term={agenda_item_when()}>
+						{formatEventDateTime(event.date, locale)}
+					</Fact>
+					<Fact term={agenda_item_place()}>{placeText(event)}</Fact>
+					<Fact term={event_details_seats()} live>
+						{isClosed ? (
+							isCancelled ? (
+								event_details_closed()
+							) : (
+								event_details_ended()
+							)
+						) : (
+							<SeatsSentence
+								message={event_details_places_left}
+								remaining={seatCount.seatsRemaining}
+								max={seatCount.maxSeats}
+							/>
+						)}
+					</Fact>
+				</dl>
 			</header>
 
 			{event.description ? (
@@ -142,31 +155,20 @@ export function EventSummary({
 				</div>
 			) : null}
 
-			<div className="flex flex-col gap-3 border border-navy bg-cream p-4 shadow-[6px_6px_0_0_var(--navy)] sm:flex-row sm:items-center sm:justify-between">
-				{isClosed ? null : (
-					<p
-						className="font-mono font-bold tabular-nums"
-						aria-live="polite"
-						aria-atomic="true"
-					>
-						{event_details_places_left({
-							remaining: seatCount.seatsRemaining,
-							max: seatCount.maxSeats,
-						})}
-					</p>
-				)}
-				<EventRegistrationAction
-					eventId={event.id}
-					user={user}
-					interactive={interactive}
-					isClosed={isClosed}
-					isCancelled={isCancelled}
-					isFull={seatCount.seatsRemaining <= 0}
-					requiresApproval={event.requiresApproval}
-					questions={event.questions}
-					registrations={registrations}
-				/>
-			</div>
+			{isClosed && !isRegistered ? null : (
+				<div className="flex flex-col gap-3 border border-navy bg-cream p-4 shadow-[6px_6px_0_0_var(--navy)] sm:flex-row sm:items-center">
+					<EventRegistrationAction
+						eventId={event.id}
+						user={user}
+						interactive={interactive}
+						isClosed={isClosed}
+						isFull={seatCount.seatsRemaining <= 0}
+						requiresApproval={event.requiresApproval}
+						questions={event.questions}
+						registrations={registrations}
+					/>
+				</div>
+			)}
 			{user &&
 			!isClosed &&
 			event.questions.length > 0 &&
@@ -210,12 +212,48 @@ export function EventSummary({
 	);
 }
 
+/** Location and room; "Online" for an event with no place and next to the place of a hybrid one. */
+function placeText(event: EventDetailsData): string {
+	const parts = [
+		event.locationLabel,
+		event.room ? event_room({ room: event.room }) : null,
+	].filter((part): part is string => Boolean(part));
+	if (event.attendanceMode === "hybrid" || parts.length === 0) {
+		parts.push(attendance_mode_online());
+	}
+	return parts.join(", ");
+}
+
+type FactProps = {
+	term: string;
+	/** Announce changes to the value (the seat count). */
+	live?: boolean;
+	children: ReactNode;
+};
+
+/** One cell of the facts grid: the lines between cells are the cells' own top or left edge. */
+function Fact({ term, live, children }: FactProps) {
+	return (
+		<div className="flex min-w-0 flex-col gap-1 border-t border-navy px-4 py-3 first:border-t-0 sm:border-t-0 sm:border-l sm:first:border-l-0">
+			<dt className="font-mono text-xs font-bold tracking-widest uppercase">
+				{term}
+			</dt>
+			<dd
+				className="font-mono text-sm font-bold break-words tabular-nums"
+				aria-live={live ? "polite" : undefined}
+				aria-atomic={live ? "true" : undefined}
+			>
+				{children}
+			</dd>
+		</div>
+	);
+}
+
 type EventRegistrationActionProps = {
 	eventId: string;
 	user: { id: string; email: string } | null;
 	interactive: boolean;
 	isClosed: boolean;
-	isCancelled: boolean;
 	isFull: boolean;
 	requiresApproval: boolean;
 	questions: EventDetailsData["questions"];
@@ -227,7 +265,6 @@ function EventRegistrationAction({
 	user,
 	interactive,
 	isClosed,
-	isCancelled,
 	isFull,
 	requiresApproval,
 	questions,
@@ -236,17 +273,10 @@ function EventRegistrationAction({
 	const busy = !interactive || registrations.isBusy;
 	const [answering, setAnswering] = useState(false);
 
-	// Ended or cancelled: a record of what happened, nothing to click.
+	// Ended or cancelled: the seats cell words the state; only the record of a registration is
+	// left here (the caller shows this box for a registered user only).
 	if (isClosed) {
-		const text = isCancelled ? event_details_closed() : event_details_ended();
-		return user && registrations.isEventRegistered ? (
-			<div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-				<Badge>{events_registered()} ✓</Badge>
-				<p className="text-sm text-muted-foreground">{text}</p>
-			</div>
-		) : (
-			<p className="text-muted-foreground">{text}</p>
-		);
+		return <Badge>{events_registered()} ✓</Badge>;
 	}
 
 	if (!user) {
